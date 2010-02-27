@@ -31,8 +31,14 @@ sub run_command_init {
         "$ENV{HOME}/.pb/perls",
         "$ENV{HOME}/.pb/dists",
         "$ENV{HOME}/.pb/build",
-        "$ENV{HOME}/.pb/etc"
+        "$ENV{HOME}/.pb/etc",
+        "$ENV{HOME}/.pb/bin"
     );
+
+    system <<RC;
+echo 'export PATH=$ENV{HOME}/.pb/perls/bin:$ENV{HOME}/.pb/perls/current/bin:\${PATH}' > $ENV{HOME}/.pb/etc/bashrc
+RC
+
     print "Perl Environmet Initiated";
 }
 
@@ -68,6 +74,18 @@ sub run_command_install {
             "make",
             "make test && make install"
         );
+    }
+}
+
+sub run_command_switch {
+    my ($self, $dist) = @_;
+    die "${dist} is not installed\n" unless -d "$ENV{HOME}/.pb/perls/${dist}";
+    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)$/;
+    unlink "$ENV{HOME}/.pb/perls/current";
+    system "cd $ENV{HOME}/.pb/perls; ln -s $dist current";
+    for my $executable (<$ENV{HOME}/.pb/perls/current/bin/*${dist_version}>) {
+        my ($name) = $executable =~ m/bin\/(.+)${dist_version}/;
+        system("ln -fs $executable $ENV{HOME}/.pb/bin/${name}");
     }
 }
 
