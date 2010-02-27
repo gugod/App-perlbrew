@@ -50,7 +50,8 @@ sub run_command_install {
             "cd $ENV{HOME}/.pe/build",
             "$tarx $ENV{HOME}/.pe/dists/${dist_tarball}",
             "cd $dist",
-            "perl Configure -de -Dprefix=$ENV{HOME}/.pe/perls/$dist ${usedevel}",
+            "rm -f config.sh Policy.sh",
+            "sh Configure -de -Dprefix=$ENV{HOME}/.pe/perls/$dist ${usedevel}",
             "make",
             "make test && make install"
         );
