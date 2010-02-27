@@ -8,8 +8,21 @@ sub run_command {
     my (undef, $x, @args) = @_;
     my $self = bless {}, __PACKAGE__;
 
+    $x ||= "help";
     my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?\n";
     $self->$s(@args);
+}
+
+sub run_command_help {
+    print <<HELP;
+
+Usage:
+
+    pb init
+    pb install perl-5.11.1
+    pb switch perl-5.11.1
+
+HELP
 }
 
 sub run_command_init {
