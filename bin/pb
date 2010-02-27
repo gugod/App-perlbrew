@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 use strict;
-package App::perlenv;
+package App::perlbrew;
 
 local $\ = "\n";
 
@@ -15,10 +15,10 @@ sub run_command {
 sub run_command_init {
     require File::Path;
     File::Path::make_path(
-        "$ENV{HOME}/.pe/perls",
-        "$ENV{HOME}/.pe/dists",
-        "$ENV{HOME}/.pe/build",
-        "$ENV{HOME}/.pe/etc"
+        "$ENV{HOME}/.pb/perls",
+        "$ENV{HOME}/.pb/dists",
+        "$ENV{HOME}/.pb/build",
+        "$ENV{HOME}/.pb/etc"
     );
     print "Perl Environmet Initiated";
 }
@@ -39,7 +39,7 @@ sub run_command_install {
         my ($dist_path, $dist_tarball) = $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
 
         $r = $ua->get("http://search.cpan.org/${dist_path}",
-                      ":content_file" => "$ENV{HOME}/.pe/dists/${dist_tarball}");
+                      ":content_file" => "$ENV{HOME}/.pb/dists/${dist_tarball}");
         die "Fail to fetch the dist of $dist." unless $r->is_success;
 
         my $usedevel = $dist_version =~ /5\.11/ ? "-Dusedevel" : "";
@@ -47,11 +47,11 @@ sub run_command_install {
 
         my $tarx = "tar " . ($dist_tarball =~ /bz2/ ? "xjf" : "xzf");
         system(join ";",
-            "cd $ENV{HOME}/.pe/build",
-            "$tarx $ENV{HOME}/.pe/dists/${dist_tarball}",
+            "cd $ENV{HOME}/.pb/build",
+            "$tarx $ENV{HOME}/.pb/dists/${dist_tarball}",
             "cd $dist",
             "rm -f config.sh Policy.sh",
-            "sh Configure -de -Dprefix=$ENV{HOME}/.pe/perls/$dist ${usedevel}",
+            "sh Configure -de -Dprefix=$ENV{HOME}/.pb/perls/$dist ${usedevel}",
             "make",
             "make test && make install"
         );
@@ -59,25 +59,25 @@ sub run_command_install {
 }
 
 package main;
-App::perlenv->run_command(@ARGV);
+App::perlbrew->run_command(@ARGV);
 
 __END__
 
 =head1 NAME
 
-pe - Perl Environment manager.
+pb - Perl Environment manager.
 
 =head1 SYNOPSIS
 
-    pe init
+    pb init
 
-    pe install perl-5.8.1
-    pe install perl-5.11.5
+    pb install perl-5.8.1
+    pb install perl-5.11.5
 
-    pe switch perl-5.11.5
+    pb switch perl-5.11.5
     perl -v
 
-    pe switch perl-5.8.1
+    pb switch perl-5.8.1
     perl -v
 
 =head1 AUTHOR
