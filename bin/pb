@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!/usr/bin/perl
 use strict;
 package App::perlbrew;
 
@@ -20,6 +20,7 @@ Usage:
 
     pb init
     pb install perl-5.11.1
+    pb installed
     pb switch perl-5.11.1
 
 HELP
@@ -40,6 +41,8 @@ echo 'export PATH=$ENV{HOME}/.pb/perls/bin:$ENV{HOME}/.pb/perls/current/bin:\${P
 RC
 
     print "Perl Environmet Initiated";
+    print "Please add this to the end of your ~/.bashrc:\n";
+    print "    source ~/.pb/etc/bashrc\n";
 }
 
 sub run_command_install {
@@ -77,6 +80,14 @@ sub run_command_install {
     }
 }
 
+sub run_command_installed {
+    my $self = shift;
+    for (<$ENV{HOME}/.pb/perls/perl-*>) {
+        my ($name) = $_ =~ m/(perl-.+)$/;
+        print $name;
+    }
+}
+
 sub run_command_switch {
     my ($self, $dist) = @_;
     die "${dist} is not installed\n" unless -d "$ENV{HOME}/.pb/perls/${dist}";
@@ -100,11 +111,17 @@ pb - Perl Environment manager.
 
 =head1 SYNOPSIS
 
+    # Initialize
     pb init
 
+    # Install some Perls
     pb install perl-5.8.1
     pb install perl-5.11.5
 
+    # See what were installed
+    pb installed
+
+    # Switch perl in the $PATH
     pb switch perl-5.11.5
     perl -v
 
