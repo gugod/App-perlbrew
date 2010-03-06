@@ -2,7 +2,6 @@ package App::perlbrew;
 use strict;
 
 our $VERSION = "0.01";
-local $\ = "\n";
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 
 sub run_command {
@@ -10,7 +9,7 @@ sub run_command {
 
     my $self = bless $opt, __PACKAGE__;
     $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?\n";
+    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?";
     $self->$s(@args);
 }
 
@@ -38,10 +37,9 @@ sub run_command_init {
 echo 'export PATH=$ROOT/perls/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
 RC
 
-    print
-"\nPerlbrew environmet Initiated. Required directories are created under $ROOT.";
-    print "Please add this to the end of your ~/.bashrc:\n";
-    print "    source $ROOT/etc/bashrc\n";
+    print "Perlbrew environmet Initiated. Required directories are created under $ROOT.";
+    print "Please add this to the end of your ~/.bashrc:";
+    print "    source $ROOT/etc/bashrc";
 }
 
 sub run_command_install {
@@ -91,7 +89,7 @@ sub run_command_installed {
     my $self = shift;
     for (<$ROOT/perls/perl-*>) {
         my ($name) = $_ =~ m/(perl-.+)$/;
-        print $name;
+        print "$name";
     }
 }
 
