@@ -1,4 +1,9 @@
 #!perl
 use strict;
 use App::perlbrew;
-App::perlbrew->run_command(@ARGV);
+use Getopt::Long qw(:config pass_through);
+
+my $opt = {};
+my $result = GetOptions( 'f|force!' => \$opt->{force}, );
+
+App::perlbrew->run_command($opt, @ARGV );
