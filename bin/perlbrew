@@ -3,7 +3,14 @@ use strict;
 use App::perlbrew;
 use Getopt::Long qw(:config pass_through);
 
-my $opt = {};
-my $result = GetOptions( 'f|force!' => \$opt->{force}, );
+my $opt = {
+    force => undef,
+    quiet => 1,
+};
+my $result = GetOptions(
+    'f|force!'  => \$opt->{force},
+    'q|quiet'   => \$opt->{quiet},
+    'v|verbose' => \$opt->{verbose},
+);
 
-App::perlbrew->run_command($opt, @ARGV );
+App::perlbrew->run_command( $opt, @ARGV );

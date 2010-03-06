@@ -6,7 +6,7 @@ my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 
 sub run_command {
     my ( undef, $opt, $x, @args ) = @_;
-
+    $opt->{log_file} = "$ROOT/build.log";
     my $self = bless $opt, __PACKAGE__;
     $x ||= "help";
     my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?";
@@ -37,7 +37,8 @@ sub run_command_init {
 echo 'export PATH=$ROOT/perls/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
 RC
 
-    print "Perlbrew environmet Initiated. Required directories are created under $ROOT.";
+    print
+"Perlbrew environmet Initiated. Required directories are created under $ROOT.";
     print "Please add this to the end of your ~/.bashrc:";
     print "    source $ROOT/etc/bashrc";
 }
@@ -68,8 +69,8 @@ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
         print "Installing $dist...";
 
         my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
-        system(
-            join ";",
+        my $cmd = join ";",
+          (
             "cd $ROOT/build",
             "$tarx $ROOT/dists/${dist_tarball}",
             "cd $dist",
@@ -80,8 +81,11 @@ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
                 $self->{force}
                 ? ( 'make test', 'make install' )
                 : "make test && make install"
-            ),
-        );
+            )
+          );
+        $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
+          if ( $self->{quiet} && !$self->{verbose} );
+        system($cmd);
     }
 }
 
