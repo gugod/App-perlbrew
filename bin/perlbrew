@@ -6,11 +6,12 @@ use Getopt::Long qw(:config pass_through);
 my $opt = {
     force => undef,
     quiet => 1,
+    D     => [],
 };
 my $result = GetOptions(
     'f|force!'  => \$opt->{force},
     'q|quiet'   => \$opt->{quiet},
     'v|verbose' => \$opt->{verbose},
+    'D|D=s@'    => $opt->{D},
 );
-
 App::perlbrew->run_command( $opt, @ARGV );

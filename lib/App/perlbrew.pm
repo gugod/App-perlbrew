@@ -64,18 +64,19 @@ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
             ":content_file" => "$ROOT/dists/${dist_tarball}"
         );
         die "Fail to fetch the dist of $dist." unless $r->is_success;
-
-        my $usedevel = $dist_version =~ /5\.11/ ? "-Dusedevel" : "";
+        my @d_options = @{ $self->{D} };
+        unshift @d_options, qq(prefix=$ROOT/perls/$dist);
+        push @d_options, "usedevel" if $dist_version =~ /5\.11/;
         print "Installing $dist...";
-
         my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
+
         my $cmd = join ";",
           (
             "cd $ROOT/build",
             "$tarx $ROOT/dists/${dist_tarball}",
             "cd $dist",
             "rm -f config.sh Policy.sh",
-            "sh Configure -de -Dprefix=$ROOT/perls/$dist ${usedevel}",
+            "sh Configure -de " . join( ' ', map { "-D$_" } @d_options ),
             "make",
             (
                 $self->{force}
