@@ -10,7 +10,7 @@ my $opt = {
 };
 my $result = GetOptions(
     'f|force!'  => \$opt->{force},
-    'q|quiet'   => \$opt->{quiet},
+    'q|quiet!'  => \$opt->{quiet},
     'v|verbose' => \$opt->{verbose},
     'D|D=s@'    => $opt->{D},
 );
