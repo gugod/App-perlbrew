@@ -55,7 +55,9 @@ RC
     print "    source $ROOT/etc/bashrc";
     if ($local_lib) {
         print "local::lib found and automatically configured";
-        print "you will need to remove the existing local::lib config if any";
+        print "Please be sure you put the perlbrew configuration *after* any local::lib configuration:";
+		print '    eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)';
+		print "    source $ROOT/etc/bashrc";
     }
 }
 
@@ -118,9 +120,9 @@ sub run_command_switch {
     my ( $self, $dist ) = @_;
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
     my ( $dist_name, $dist_version ) = $dist =~ m/^(.*)-([\d.]+)$/;
-    unlink "$CURRENT_PERL";
+	unlink "$ROOT/perls/current";
     system "cd $ROOT/perls; ln -s $dist current";
-    for my $executable (<$CURRENT_PERL/bin/*${dist_version}>) {
+	for my $executable (<$ROOT/perls/current/bin/*${dist_version}>) {
         my ($name) = $executable =~ m/bin\/(.+)${dist_version}/;
         system("ln -fs $executable $ROOT/bin/${name}");
     }
