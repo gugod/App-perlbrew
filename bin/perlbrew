@@ -12,6 +12,7 @@ my $result = GetOptions(
     'f|force!'  => \$opt->{force},
     'q|quiet!'  => \$opt->{quiet},
     'v|verbose' => \$opt->{verbose},
+    'as=s'      => \$opt->{as},
     'D|D=s@'    => $opt->{D},
 );
 App::perlbrew->run_command( $opt, @ARGV );

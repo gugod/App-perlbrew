@@ -36,7 +36,7 @@ sub run_command_init {
     );
 
     system <<"RC";
-echo 'export PATH=$ROOT/perls/bin:$CURRENT_PERL/bin:\${PATH}' > $ROOT/etc/bashrc
+echo 'export PATH=$ROOT/bin:$CURRENT_PERL/bin:\${PATH}' > $ROOT/etc/bashrc
 RC
     my $local_lib;
     eval { require local::lib };
@@ -55,9 +55,10 @@ RC
     print "    source $ROOT/etc/bashrc";
     if ($local_lib) {
         print "local::lib found and automatically configured";
-        print "Please be sure you put the perlbrew configuration *after* any local::lib configuration:";
-		print '    eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)';
-		print "    source $ROOT/etc/bashrc";
+        print
+"Please be sure you put the perlbrew configuration *after* any local::lib configuration:";
+        print '    eval $(perl -I$HOME/perl5/lib/perl5 -Mlocal::lib)';
+        print "    source $ROOT/etc/bashrc";
     }
 }
 
@@ -83,7 +84,8 @@ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
         );
         die "Fail to fetch the dist of $dist." unless $r->is_success;
         my @d_options = @{ $self->{D} };
-        unshift @d_options, qq(prefix=$ROOT/perls/$dist);
+        my $as = $self->{as} || $dist;
+        unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $dist_version =~ /5\.11/;
         print "Installing $dist...";
         my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
@@ -110,8 +112,9 @@ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
 
 sub run_command_installed {
     my $self = shift;
-    for (<$ROOT/perls/perl-*>) {
-        my ($name) = $_ =~ m/(perl-.+)$/;
+    for (<$ROOT/perls/*>) {
+        next if m/current$/;
+        my ($name) = $_ =~ m/\/([^\/]+$)/;
         print "$name";
     }
 }
@@ -119,11 +122,10 @@ sub run_command_installed {
 sub run_command_switch {
     my ( $self, $dist ) = @_;
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
-    my ( $dist_name, $dist_version ) = $dist =~ m/^(.*)-([\d.]+)$/;
-	unlink "$ROOT/perls/current";
+    unlink "$ROOT/perls/current";
     system "cd $ROOT/perls; ln -s $dist current";
-	for my $executable (<$ROOT/perls/current/bin/*${dist_version}>) {
-        my ($name) = $executable =~ m/bin\/(.+)${dist_version}/;
+    for my $executable (<$ROOT/perls/current/bin/*>) {
+        my ($name) = $executable =~ m/bin\/(.+)5\.\d.*$/;
         system("ln -fs $executable $ROOT/bin/${name}");
     }
 }
