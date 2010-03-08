@@ -2,7 +2,9 @@ package App::perlbrew;
 use strict;
 
 our $VERSION = "0.01";
+
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+my $CURRENT_PERL = "$ROOT/perls/current";
 
 sub run_command {
     my ( undef, $opt, $x, @args ) = @_;
@@ -33,14 +35,28 @@ sub run_command_init {
         "$ROOT/bin"
     );
 
-    system <<RC;
-echo 'export PATH=$ROOT/perls/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
+    system <<"RC";
+echo 'export PATH=$ROOT/perls/bin:$CURRENT_PERL/bin:\${PATH}' > $ROOT/etc/bashrc
+RC
+    my $local_lib;
+    eval { require local::lib };
+    unless ($@) {
+        local::lib->import($CURRENT_PERL);
+        system <<"RC";
+echo 'eval \$(perl -I\$HOME/perl5/lib/perl5 -Mlocal::lib=$CURRENT_PERL)' >> $ROOT/etc/bashrc
 RC
 
-    print
-"Perlbrew environmet Initiated. Required directories are created under $ROOT.";
+        $local_lib = 1;
+    }
+
+    print "Perlbrew environmet Initiated.";
+    print "Required directories are created under $ROOT.";
     print "Please add this to the end of your ~/.bashrc:";
     print "    source $ROOT/etc/bashrc";
+    if ($local_lib) {
+        print "local::lib found and automatically configured";
+        print "you will need to remove the existing local::lib config if any";
+    }
 }
 
 sub run_command_install {
@@ -102,9 +118,9 @@ sub run_command_switch {
     my ( $self, $dist ) = @_;
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
     my ( $dist_name, $dist_version ) = $dist =~ m/^(.*)-([\d.]+)$/;
-    unlink "$ROOT/perls/current";
+    unlink "$CURRENT_PERL";
     system "cd $ROOT/perls; ln -s $dist current";
-    for my $executable (<$ROOT/perls/current/bin/*${dist_version}>) {
+    for my $executable (<$CURRENT_PERL/bin/*${dist_version}>) {
         my ($name) = $executable =~ m/bin\/(.+)${dist_version}/;
         system("ln -fs $executable $ROOT/bin/${name}");
     }
