@@ -107,6 +107,7 @@ sub run_command_installed {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
     for (<$ROOT/perls/*>) {
+        next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         print $name, ( $name eq $current ? '(*)' : '' ), "\n";
     }
