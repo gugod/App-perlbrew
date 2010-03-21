@@ -4,3 +4,6 @@ Makefile
 Makefile.old
 README
 inc
+*~
+pm_to_blib
+blib
