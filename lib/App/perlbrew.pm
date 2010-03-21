@@ -1,6 +1,6 @@
 package App::perlbrew;
 use strict;
-
+use 5.8.0;
 our $VERSION = "0.01";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
