@@ -1,4 +1,4 @@
-#!perl -l
+#!perl
 use strict;
 use App::perlbrew;
 use Getopt::Long qw(:config pass_through);
