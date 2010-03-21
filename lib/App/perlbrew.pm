@@ -94,9 +94,10 @@ sub run_command_install {
 
 sub run_command_installed {
     my $self = shift;
+    my $current = readlink("$ROOT/perls/current");
     for (<$ROOT/perls/perl-*>) {
         my ($name) = $_ =~ m/(perl-.+)$/;
-        print $name, "\n";
+        print $name, ($name eq $current ? '(*)' : ''), "\n";
     }
 }
 
