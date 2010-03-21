@@ -41,11 +41,20 @@ sub run_command_init {
 
     system <<RC;
 echo 'export PATH=$ROOT/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
+echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
 RC
 
+    my($shrc, $yourshrc);
+    if ($ENV{SHELL} =~ /(t?csh)/) {
+        $shrc = 'cshrc';
+        $yourshrc = $1 . "rc";
+    } else {
+        $shrc = $yourshrc = 'bashrc';
+    }
+
     print "\nPerlbrew environmet Initiated. Required directories are created under $ROOT.";
-    print "Please add this to the end of your ~/.bashrc:\n";
-    print "    source $ROOT/etc/bashrc\n";
+    print "Please add this to the end of your ~/.$yourshrc:\n";
+    print "    source $ROOT/etc/$shrc\n";
 }
 
 sub run_command_install {
@@ -85,9 +94,10 @@ sub run_command_install {
 
 sub run_command_installed {
     my $self = shift;
+    my $current = readlink("$ROOT/perls/current");
     for (<$ROOT/perls/perl-*>) {
         my ($name) = $_ =~ m/(perl-.+)$/;
-        print $name;
+        print $name, ($name eq $current ? '(*)' : ''), "\n";
     }
 }
 
