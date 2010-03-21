@@ -6,12 +6,13 @@ if ($author) {
     open CODE, "< lib/App/perlbrew.pm";
     local $/ = undef;
     my $code = <CODE>;
-    $code =~ s/\n__END__\n.*\Z/\n/ms;
+    $code =~ s/(\n__END__\n.*\Z)/\n/ms;
+    my $pod = $1;
 
     open OUT, "> perlbrew";
     local $, = "\n";
-
     print OUT "#!/usr/bin/env perl",
+        '# DO NOT EDIT -- this is an auto generated file',
         $code,
         'package main;',
         'App::perlbrew->run_command(@ARGV);', "\n";
