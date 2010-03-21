@@ -40,7 +40,7 @@ sub run_command_init {
     );
 
     system <<RC;
-echo 'export PATH=$ROOT/perls/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
+echo 'export PATH=$ROOT/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
 RC
 
     print "\nPerlbrew environmet Initiated. Required directories are created under $ROOT.";
