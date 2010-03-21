@@ -96,7 +96,7 @@ sub run_command_installed {
     my $self = shift;
     for (<$ROOT/perls/perl-*>) {
         my ($name) = $_ =~ m/(perl-.+)$/;
-        print $name;
+        print $name, "\n";
     }
 }
 
