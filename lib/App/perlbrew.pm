@@ -58,12 +58,12 @@ RC
 sub run_command_install {
     my ( $self, $dist, $opts ) = @_;
 
-    my ( $dist_name, $dist_version ) = $dist =~ m/^(.*)-([\d.]+)$/;
+    my ( $dist_name, $dist_version ) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
     if ( $dist_name eq 'perl' ) {
         require LWP::UserAgent;
         my $ua = LWP::UserAgent->new;
 
-        print "Fetching $dist...";
+        print "Fetching $dist...\n";
         my $r = $ua->get("http://search.cpan.org/dist/$dist");
         die "Fail to fetch the dist of $dist." unless $r->is_success;
 
