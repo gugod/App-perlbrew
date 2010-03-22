@@ -1,5 +1,6 @@
 MANIFEST
 META.yml
+MYMETA.yml
 Makefile
 Makefile.old
 README
