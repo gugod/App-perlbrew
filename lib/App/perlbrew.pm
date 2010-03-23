@@ -82,7 +82,7 @@ INSTRUCTION
 sub run_command_install {
     my ($self, $dist) = @_;
 
-    if ($dist == undef) {
+    unless ($dist) {
         require File::Spec;
         require File::Path;
         require File::Copy;
