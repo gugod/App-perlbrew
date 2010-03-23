@@ -116,6 +116,7 @@ Next, if this is the first time you run perlbrew installation, run:
 
 And follow the instruction on screen.
 HELP
+        return;
     }
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
