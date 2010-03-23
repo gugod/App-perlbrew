@@ -1,18 +1,17 @@
 package App::perlbrew;
 use strict;
-
+use 5.8.0;
 our $VERSION = "0.01";
 
-local $\ = "\n";
-
-my $ROOT = "$ENV{HOME}/perl5/perlbrew";
+my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+my $CURRENT_PERL = "$ROOT/perls/current";
 
 sub run_command {
-    my (undef, $x, @args) = @_;
-    my $self = bless {}, __PACKAGE__;
-
+    my ( undef, $opt, $x, @args ) = @_;
+    $opt->{log_file} = "$ROOT/build.log";
+    my $self = bless $opt, __PACKAGE__;
     $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?\n";
+    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?";
     $self->$s(@args);
 }
 
@@ -32,10 +31,7 @@ HELP
 sub run_command_init {
     require File::Path;
     File::Path::make_path(
-        "$ROOT/perls",
-        "$ROOT/dists",
-        "$ROOT/build",
-        "$ROOT/etc",
+        "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
 
@@ -44,11 +40,12 @@ echo 'export PATH=$ROOT/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
 echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
 RC
 
-    my($shrc, $yourshrc);
-    if ($ENV{SHELL} =~ /(t?csh)/) {
-        $shrc = 'cshrc';
+    my ( $shrc, $yourshrc );
+    if ( $ENV{SHELL} =~ /(t?csh)/ ) {
+        $shrc     = 'cshrc';
         $yourshrc = $1 . "rc";
-    } else {
+    }
+    else {
         $shrc = $yourshrc = 'bashrc';
     }
 
@@ -80,7 +77,7 @@ INSTRUCTION
 }
 
 sub run_command_install {
-    my ($self, $dist) = @_;
+    my ( $self, $dist, $opts ) = @_;
 
     unless ($dist) {
         require File::Spec;
@@ -147,14 +144,14 @@ HELP
 
         my $ua = HTTP::Lite->new;
 
-        print "Fetching $dist...\n";
+
 
         my $html = $http_get->("http://search.cpan.org/dist/$dist");
 
-        my ($dist_path, $dist_tarball) = $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+        my ($dist_path, $dist_tarball) =
+            $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
 
-        print "As ${ROOT}/dists/${dist_tarball}\n";
-        print "Grab: http://search.cpan.org${dist_path}\n";
+        print "Fetching $dist as ${ROOT}/dists/${dist_tarball}\n";
 
         $http_get->(
             "http://search.cpan.org${dist_path}",
@@ -167,38 +164,51 @@ HELP
         );
 
         my $usedevel = $dist_version =~ /5\.11/ ? "-Dusedevel" : "";
-        print "Installing $dist...\n";
 
-        my $tarx = "tar " . ($dist_tarball =~ /bz2/ ? "xjf" : "xzf");
-        system(join ";",
+        my @d_options = @{ $self->{D} };
+        my $as = $self->{as} || $dist;
+        unshift @d_options, qq(prefix=$ROOT/perls/$as);
+        push @d_options, "usedevel" if $dist_version =~ /5\.11/;
+        print "Installing $dist...";
+        my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
+
+        my $cmd = join ";",
+          (
             "cd $ROOT/build",
             "$tarx $ROOT/dists/${dist_tarball}",
             "cd $dist",
             "rm -f config.sh Policy.sh",
-            "sh Configure -de -Dprefix=$ROOT/perls/$dist ${usedevel}",
+            "sh Configure -de " . join( ' ', map { "-D$_" } @d_options ),
             "make",
-            "make test && make install"
-        );
+            (
+                $self->{force}
+                ? ( 'make test', 'make install' )
+                : "make test && make install"
+            )
+          );
+        $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
+          if ( $self->{quiet} && !$self->{verbose} );
+        system($cmd);
     }
 }
 
 sub run_command_installed {
-    my $self = shift;
+    my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
-    for (<$ROOT/perls/perl-*>) {
-        my ($name) = $_ =~ m/(perl-.+)$/;
-        print $name, ($name eq $current ? '(*)' : ''), "\n";
+    for (<$ROOT/perls/*>) {
+        next if m/current/;
+        my ($name) = $_ =~ m/\/([^\/]+$)/;
+        print $name, ( $name eq $current ? '(*)' : '' ), "\n";
     }
 }
 
 sub run_command_switch {
-    my ($self, $dist) = @_;
+    my ( $self, $dist ) = @_;
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
     unlink "$ROOT/perls/current";
     system "cd $ROOT/perls; ln -s $dist current";
-    for my $executable (<$ROOT/perls/current/bin/*${dist_version}>) {
-        my ($name) = $executable =~ m/bin\/(.+)${dist_version}/;
+    for my $executable (<$ROOT/perls/current/bin/*>) {
+        my ($name) = $executable =~ m/bin\/(.+)5\.\d.*$/;
         system("ln -fs $executable $ROOT/bin/${name}");
     }
 }

@@ -1,4 +1,88 @@
 #!perl
 use strict;
 use App::perlbrew;
-App::perlbrew->run_command(@ARGV);
+use Getopt::Long qw(:config pass_through);
+use Pod::Usage;
+
+my $opt = {
+    force => undef,
+    quiet => 1,
+    D     => [],
+};
+GetOptions(
+    'f|force!'  => \$opt->{force},
+    'q|quiet!'  => \$opt->{quiet},
+    'v|verbose' => \$opt->{verbose},
+    'as=s'      => \$opt->{as},
+    'D|D=s@'    => $opt->{D},
+    'help|?'    => sub { pod2usage(1) },
+) or pod2usage(2);
+App::perlbrew->run_command( $opt, @ARGV );
+
+__END__
+
+=head1 NAME
+
+perlbrew - Perl Environment manager.
+
+=head1 SYNOPSIS
+
+    perlbrew [options] [init|install|installed|switch]
+
+    # Initialize
+    perlbrew init
+
+    # Install some Perls
+    perlbrew install perl-5.10.1
+    perlbrew install perl-5.11.5
+
+    # See what were installed
+    perlbrew installed
+
+    # Switch perl in the $PATH
+    perlbrew switch perl-5.11.5
+    perl -v
+    
+    perlbrew switch perl-5.10.1
+    perl -v
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-?|help>
+
+prints this help
+
+=item B<-f|force>
+
+Force installation of a perl
+
+=item B<-q|quiet>
+
+Log output to a log file rather than STDOUT. This is the default.
+
+=item B<-v|verbose>
+
+Log output to STDOUT rather than a logfile
+
+=item B<-as>
+
+Install a given perl under an alias. 
+
+    perlbrew install perl-5.6.2 -as legacy-perl
+
+=item B<-D>
+
+pass through switches to the perl Configure script
+
+    perlbrew install perl-5.10.1 -D=usemymalloc
+
+=back
+
+=head1 DESCRIPTION
+
+B<This program> will read the given input file(s) and do something
+useful with the contents thereof.
+
+=cut
