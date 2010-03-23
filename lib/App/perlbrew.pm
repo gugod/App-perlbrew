@@ -123,25 +123,48 @@ HELP
     if ($dist_name eq 'perl') {
         require HTTP::Lite;
 
+        my $http_get = sub {
+            my ($url, $cb) = @_;
+            my $ua = HTTP::Lite->new;
+
+            my $loc = $url;
+            my $status = $ua->request($loc) or die "Fail to get $loc";
+
+            my $redir_count = 0;
+            while ($status == 302 || $status == 301) {
+                last if $redir_count++ > 5;
+                for ($ua->headers_array) {
+                    /Location: (\S+)/ and $loc = $1, last;
+                }
+                $loc or last;
+                $status = $ua->request($loc) or die "Fail to get $loc";
+            }
+            if ($cb) {
+                return $cb->($ua->body);
+            }
+            return $ua->body;
+        };
+
         my $ua = HTTP::Lite->new;
 
         print "Fetching $dist...\n";
-        my $r = $ua->request("http://search.cpan.org/dist/$dist")
-            or die "Fail to fetch the dist of $dist.";
 
-        my $html = $r->body;
+        my $html = $http_get->("http://search.cpan.org/dist/$dist");
+
         my ($dist_path, $dist_tarball) = $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
 
-        open BALL, "> $ROOT/dists/${dist_tarball}";
-        $r = $ua->request(
-            "http://search.cpan.org/${dist_path}",
+        print "As ${ROOT}/dists/${dist_tarball}\n";
+        print "Grab: http://search.cpan.org${dist_path}\n";
+
+        $http_get->(
+            "http://search.cpan.org${dist_path}",
             sub {
-                my ($self, $phase, $dataref) = @_;
-                print BALL $$dataref;
-                return;
+                my ($body) = @_;
+                open my $BALL, "> ${ROOT}/dists/${dist_tarball}";
+                print $BALL $body;
+                close $BALL;
             }
-        ) or die "Fail to fetch the dist of $dist.";
-        close BALL;
+        );
 
         my $usedevel = $dist_version =~ /5\.11/ ? "-Dusedevel" : "";
         print "Installing $dist...\n";

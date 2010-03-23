@@ -24,7 +24,7 @@ all_from 'lib/App/perlbrew.pm';
 readme_pod_from 'lib/App/perlbrew.pm';
 readme_from 'lib/App/perlbrew.pm';
 
-requires 'LWP'   => 5.828;
+requires 'HTTP::Lite'   => 2.2;
 
 install_script 'bin/perlbrew';
 
