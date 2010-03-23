@@ -121,6 +121,18 @@ __END__
 
 perlbrew - Perl Environment manager.
 
+=head1 INSTALLATION
+
+The quickest way to install this is to copy and paste these lines
+
+    curl -LO http://xrl.us/perlbrew
+    chmod +x perlbrew
+    ./perlbrew install
+
+After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
+and you should follow the instruction to setup your C<.bashrc> or
+C<.cshrc> to put it in your PATH.
+
 =head1 SYNOPSIS
 
     # Initialize
