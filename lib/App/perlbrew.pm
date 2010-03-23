@@ -60,6 +60,31 @@ RC
 sub run_command_install {
     my ($self, $dist) = @_;
 
+    if ($dist == undef) {
+        require File::Spec;
+        require File::Path;
+        require File::Copy;
+
+        my $executable = $0;
+
+        unless (File::Spec->file_name_is_absolute($executable)) {
+            $executable = File::Spec->rel2abs($executable);
+        }
+
+        my $target = File::Spec->catfile($ROOT, "bin", "perlbrew");
+        if ($executable eq $target) {
+            print "You are already running the installed perlbrew:\n\n    $executable\n";
+            exit;
+        }
+
+        File::Path::make_path("$ROOT/bin");
+        File::Copy::copy($executable, $target);
+        chmod(0755, $target);
+
+        print "The perlbrew is installed as:\n\n    $target\n";
+        return;
+    }
+
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
     if ($dist_name eq 'perl') {
         require LWP::UserAgent;
