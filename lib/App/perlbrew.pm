@@ -81,7 +81,16 @@ sub run_command_install {
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 
-        print "The perlbrew is installed as:\n\n    $target\n";
+        print "\nThe perlbrew is installed as:\n\n    $target\n";
+        print <<HELP;
+
+Run:
+
+    perlbrew init
+
+if this is the first time you run perlbrew.
+
+HELP
         return;
     }
 
