@@ -142,10 +142,6 @@ HELP
             return $ua->body;
         };
 
-        my $ua = HTTP::Lite->new;
-
-
-
         my $html = $http_get->("http://search.cpan.org/dist/$dist");
 
         my ($dist_path, $dist_tarball) =
