@@ -120,19 +120,27 @@ HELP
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
     if ($dist_name eq 'perl') {
-        require LWP::UserAgent;
-        my $ua = LWP::UserAgent->new;
+        require HTTP::Lite;
+
+        my $ua = HTTP::Lite->new;
 
         print "Fetching $dist...\n";
-        my $r = $ua->get("http://search.cpan.org/dist/$dist");
-        die "Fail to fetch the dist of $dist." unless $r->is_success;
+        my $r = $ua->request("http://search.cpan.org/dist/$dist")
+            or die "Fail to fetch the dist of $dist.";
 
-        my $html = $r->content;
+        my $html = $r->body;
         my ($dist_path, $dist_tarball) = $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
 
-        $r = $ua->get("http://search.cpan.org/${dist_path}",
-                      ":content_file" => "$ROOT/dists/${dist_tarball}");
-        die "Fail to fetch the dist of $dist." unless $r->is_success;
+        open BALL, "> $ROOT/dists/${dist_tarball}";
+        $r = $ua->request(
+            "http://search.cpan.org/${dist_path}",
+            sub {
+                my ($self, $phase, $dataref) = @_;
+                print BALL $$dataref;
+                return;
+            }
+        ) or die "Fail to fetch the dist of $dist.";
+        close BALL;
 
         my $usedevel = $dist_version =~ /5\.11/ ? "-Dusedevel" : "";
         print "Installing $dist...\n";
