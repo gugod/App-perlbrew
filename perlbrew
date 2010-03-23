@@ -54,9 +54,31 @@ RC
         $shrc = $yourshrc = 'bashrc';
     }
 
-    print "\nPerlbrew environmet Initiated. Required directories are created under $ROOT.";
-    print "Please add this to the end of your ~/.$yourshrc:\n";
-    print "    source $ROOT/etc/$shrc\n";
+    print <<INSTRUCTION;
+Perlbrew environment initiated, required directories are created under
+
+    $ROOT
+
+Well-done! Congradulations! Please add the following line to the end
+of your ~/.${yourshrc}
+
+    source $ROOT/etc/${shrc}
+
+After that, exit this shell, start a new one, and install some fresh
+perls:
+
+    perlbrew install perl-5.12.0-RC0
+    perlbrew install perl-5.10.1
+
+For further instructions, simply run:
+
+    perlbrew
+
+The default help messages will popup an tell you what to do!
+
+Enjoy perlbrew at \$HOME!!
+INSTRUCTION
+
 }
 
 sub run_command_install {
@@ -83,17 +105,19 @@ sub run_command_install {
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 
-        print "\nThe perlbrew is installed as:\n\n    $target\n";
         print <<HELP;
+The perlbrew is installed as:
 
-Run:
+    $target
 
-    perlbrew init
+You may trash the downloaded $executable from now on.
 
-if this is the first time you run perlbrew.
+Next, if this is the first time you run perlbrew installation, run:
 
+    $target init
+
+And follow the instruction on screen.
 HELP
-        return;
     }
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
