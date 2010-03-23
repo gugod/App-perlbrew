@@ -52,13 +52,71 @@ RC
         $shrc = $yourshrc = 'bashrc';
     }
 
-    print "\nPerlbrew environmet Initiated. Required directories are created under $ROOT.";
-    print "Please add this to the end of your ~/.$yourshrc:\n";
-    print "    source $ROOT/etc/$shrc\n";
+    print <<INSTRUCTION;
+Perlbrew environment initiated, required directories are created under
+
+    $ROOT
+
+Well-done! Congradulations! Please add the following line to the end
+of your ~/.${yourshrc}
+
+    source $ROOT/etc/${shrc}
+
+After that, exit this shell, start a new one, and install some fresh
+perls:
+
+    perlbrew install perl-5.12.0-RC0
+    perlbrew install perl-5.10.1
+
+For further instructions, simply run:
+
+    perlbrew
+
+The default help messages will popup an tell you what to do!
+
+Enjoy perlbrew at \$HOME!!
+INSTRUCTION
+
 }
 
 sub run_command_install {
     my ($self, $dist) = @_;
+
+    if ($dist == undef) {
+        require File::Spec;
+        require File::Path;
+        require File::Copy;
+
+        my $executable = $0;
+
+        unless (File::Spec->file_name_is_absolute($executable)) {
+            $executable = File::Spec->rel2abs($executable);
+        }
+
+        my $target = File::Spec->catfile($ROOT, "bin", "perlbrew");
+        if ($executable eq $target) {
+            print "You are already running the installed perlbrew:\n\n    $executable\n";
+            exit;
+        }
+
+        File::Path::make_path("$ROOT/bin");
+        File::Copy::copy($executable, $target);
+        chmod(0755, $target);
+
+        print <<HELP;
+The perlbrew is installed as:
+
+    $target
+
+You may trash the downloaded $executable from now on.
+
+Next, if this is the first time you run perlbrew installation, run:
+
+    $target init
+
+And follow the instruction on screen.
+HELP
+    }
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
     if ($dist_name eq 'perl') {
@@ -120,6 +178,18 @@ __END__
 =head1 NAME
 
 perlbrew - Perl Environment manager.
+
+=head1 INSTALLATION
+
+The quickest way to install this is to copy and paste these lines
+
+    curl -LO http://xrl.us/perlbrew
+    chmod +x perlbrew
+    ./perlbrew install
+
+After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
+and you should follow the instruction to setup your C<.bashrc> or
+C<.cshrc> to put it in your PATH.
 
 =head1 SYNOPSIS
 
