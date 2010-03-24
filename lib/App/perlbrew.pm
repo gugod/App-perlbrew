@@ -26,6 +26,7 @@ Usage:
     perlbrew install perl-5.12.0-RC0
     perlbrew installed
     perlbrew switch perl-5.12.0-RC0
+    perlbrew switch /usr/bin/perl
 
 HELP
 }
@@ -193,15 +194,28 @@ HELP
 sub run_command_installed {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
+
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         print $name, ( $name eq $current ? '(*)' : '' ), "\n";
     }
+
+    my $current_perl_executable = readlink("$ROOT/bin/perl");
+    for ( grep { -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+        print $_, ($current_perl_executable eq $_ ? "(*)" : ""), "\n";
+    }
 }
 
 sub run_command_switch {
     my ( $self, $dist ) = @_;
+    if (-x $dist) {
+        unlink "$ROOT/perls/current";
+        system "ln -fs $dist $ROOT/bin/perl";
+        print "Switched to $dist\n";
+        return;
+    }
+
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
     unlink "$ROOT/perls/current";
     system "cd $ROOT/perls; ln -s $dist current";
@@ -249,6 +263,10 @@ C<.cshrc> to put it in your PATH.
 
     perlbrew switch perl-5.8.1
     perl -v
+
+    # Switch to a certain perl executable not managed by perlbrew.
+    # Useful when you messed up too deep.
+    perlbrew switch /usr/bin/perl
 
 =head1 AUTHOR
 
