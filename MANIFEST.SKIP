@@ -20,3 +20,5 @@
 ^\.shipit$
 ^\.gitignore$
 ^README\.pod$
+^perlbrew$
+
