@@ -233,18 +233,6 @@ __END__
 
 perlbrew - Perl Environment manager.
 
-=head1 INSTALLATION
-
-The quickest way to install this is to copy and paste these lines
-
-    curl -LO http://xrl.us/perlbrew
-    chmod +x perlbrew
-    ./perlbrew install
-
-After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
-and you should follow the instruction to setup your C<.bashrc> or
-C<.cshrc> to put it in your PATH.
-
 =head1 SYNOPSIS
 
     # Initialize
@@ -268,17 +256,96 @@ C<.cshrc> to put it in your PATH.
     # Useful when you messed up too deep.
     perlbrew switch /usr/bin/perl
 
+=head1 DESCRIPTION
+
+perlbrew is a program to automate the building and installation of
+perl in the users HOME. At the moment, it installs everthing to
+C<~/perl5/perlbrew>, and requies you to tweak your PATH by including a
+bashrc/cshrc file it provides. You then can be benifit from not having
+to run 'sudo' commands to install cpan modules because those are
+installed inside your HOME too. It's almost like an isolated perl
+environments.
+
+=head1 INSTALLATION
+
+The recommended way to install perlbrew is to run these statements in
+your shell:
+
+    curl -LO http://xrl.us/perlbrew
+    chmod +x perlbrew
+    ./perlbrew install
+
+After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
+and you should follow the instruction on screen to setup your
+C<.bashrc> or C<.cshrc> to put it in your PATH.
+
+The downloaded perlbrew is a self-contianed standalone program that
+embed all non-core modules it uses. It should be runnable with perl
+5.8 or high versions of perls.
+
+You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
+
+    cpan App::perlbrew
+
+This installs 'perlbrew' into your current PATH and it is alwasy
+executed with your current perl.
+
+=head1 USAGE
+
+Please read the program usage by running
+
+    perlbrew
+
+(No arguments.) To read a more detail one:
+
+    perlbrew -h
+
+Alternatively, this should also do:
+
+    perldoc perlbrew
+
+If you messed up to much or get confused by having to many perls
+installed, you can do:
+
+    perlbrew switch /usr/bin/perl
+
+It will make sure that your current perl in the PATH is pointing
+to C</usr/bin/perl>.
+
+As a matter of fact the C<switch> command checks whether the given
+argument is an executale or not, and create a symlink named 'perl' to
+it if it is. If you really want to you are able to do:
+
+    perlbrew switch /usr/bin/perl6
+
+But maybe not. After running this you might not be able to run
+perlbrew anymore. So be careful not making mistakes there.
+
 =head1 AUTHOR
 
 Kang-min Liu  C<< <gugod@gugod.org> >>
 
-=head1 LICENCE AND COPYRIGHT
+=head1 COPYRIGHT
 
 Copyright (c) 2010, Kang-min Liu C<< <gugod@gugod.org> >>.
 
-This is free software, licensed under:
+The standalone executable contains the following modules embedded.
 
-    The MIT (X11) License
+=over 4
+
+=item L<HTTP::Lite> Copyright 2000-2002 Roy Hopper, 2009 Adam Kennedy
+
+=back
+
+=head1 LICENCE
+
+Same as Perl
+
+=head2 CONTRIBUTORS
+
+Patches and code improvements were contributed by:
+
+Tatsuhiko Miyagawa, Chris Prather
 
 =head1 DISCLAIMER OF WARRANTY
 

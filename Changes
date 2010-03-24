@@ -1,3 +1,7 @@
+0.02:
+- Officially prepare a standalone program for quick download.
+- license changed to "Same as Perl" due to the fact HTTP::Lite is included
+
 0.01:
 - First release. Installs perl-5.11.[12345] of my mac.
 
