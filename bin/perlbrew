@@ -1,8 +1,8 @@
 #!perl
 use strict;
-use App::perlbrew;
 use Getopt::Long qw(:config pass_through);
 use Pod::Usage;
+require App::perlbrew;
 
 my $opt = {
     force => undef,

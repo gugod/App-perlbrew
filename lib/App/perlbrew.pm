@@ -17,13 +17,15 @@ sub run_command {
 
 sub run_command_help {
     print <<HELP;
+perlbrew - $VERSION
 
 Usage:
 
     perlbrew init
     perlbrew install perl-5.11.1
+    perlbrew install perl-5.12.0-RC0
     perlbrew installed
-    perlbrew switch perl-5.11.1
+    perlbrew switch perl-5.12.0-RC0
 
 HELP
 }
