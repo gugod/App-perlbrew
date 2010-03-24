@@ -1,7 +1,7 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
@@ -231,7 +231,7 @@ __END__
 
 =head1 NAME
 
-perlbrew - Perl Environment manager.
+App::perlbrew - Manage perl installations in your $HOME
 
 =head1 SYNOPSIS
 

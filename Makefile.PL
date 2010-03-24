@@ -31,7 +31,6 @@ if ($author) {
     require HTTP::Lite;
 
     my $script = slurp 'bin/perlbrew';
-    # $script =~ s/\nuse App::perlbrew;\n/\n/ms;
 
     open OUT, "> perlbrew";
     local $, = "\n";
@@ -45,6 +44,7 @@ if ($author) {
 
 use inc::Module::Install;
 
+license 'perl';
 all_from 'lib/App/perlbrew.pm';
 
 requires 'HTTP::Lite'   => 2.2;
