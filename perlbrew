@@ -983,7 +983,18 @@ sub run_command_switch {
     system "cd $ROOT/perls; ln -s $dist current";
     for my $executable (<$ROOT/perls/current/bin/*>) {
         my ($name) = $executable =~ m/bin\/(.+)5\.\d.*$/;
-        system("ln -fs $executable $ROOT/bin/${name}");
+        $name ||= $executable;
+        my $target = "$ROOT/bin/${name}";
+        next unless -l $target;
+        system("ln -fs $executable $target");
+    }
+}
+
+sub run_command_off {
+    local $_ = "$ROOT/perls/current";
+    unlink if -l;
+    for my $executable (<$ROOT/bin/*>) {
+        unlink($executable) if -l $executable;
     }
 }
 

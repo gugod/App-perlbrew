@@ -42,9 +42,15 @@ perlbrew - Perl Environment manager.
     # Switch perl in the $PATH
     perlbrew switch perl-5.11.5
     perl -v
-    
+
     perlbrew switch perl-5.10.1
     perl -v
+
+    # Turn it off.
+    perlbrew off
+
+    # Turn it back on
+    perlbrew switch perl-5.10.1
 
 =head1 OPTIONS
 

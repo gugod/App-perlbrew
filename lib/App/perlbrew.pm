@@ -22,11 +22,15 @@ perlbrew - $VERSION
 Usage:
 
     perlbrew init
-    perlbrew install perl-5.11.1
+
+    perlbrew install perl-5.11.5
     perlbrew install perl-5.12.0-RC0
     perlbrew installed
+
     perlbrew switch perl-5.12.0-RC0
     perlbrew switch /usr/bin/perl
+
+    perlbrew off
 
 HELP
 }
@@ -221,7 +225,18 @@ sub run_command_switch {
     system "cd $ROOT/perls; ln -s $dist current";
     for my $executable (<$ROOT/perls/current/bin/*>) {
         my ($name) = $executable =~ m/bin\/(.+)5\.\d.*$/;
-        system("ln -fs $executable $ROOT/bin/${name}");
+        $name ||= $executable;
+        my $target = "$ROOT/bin/${name}";
+        next unless -l $target;
+        system("ln -fs $executable $target");
+    }
+}
+
+sub run_command_off {
+    local $_ = "$ROOT/perls/current";
+    unlink if -l;
+    for my $executable (<$ROOT/bin/*>) {
+        unlink($executable) if -l $executable;
     }
 }
 
@@ -249,12 +264,18 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew switch perl-5.11.5
     perl -v
 
+    # Switch to another version
     perlbrew switch perl-5.8.1
     perl -v
 
     # Switch to a certain perl executable not managed by perlbrew.
-    # Useful when you messed up too deep.
     perlbrew switch /usr/bin/perl
+
+    # Or turn it off completely. Useful when you messed up too deep.
+    perlbrew off
+
+    # Use 'switch' command to turn it back on.
+    perlbrew switch perl-5.11.5
 
 =head1 DESCRIPTION
 
