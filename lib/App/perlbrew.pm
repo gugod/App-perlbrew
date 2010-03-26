@@ -224,10 +224,9 @@ sub run_command_switch {
     unlink "$ROOT/perls/current";
     system "cd $ROOT/perls; ln -s $dist current";
     for my $executable (<$ROOT/perls/current/bin/*>) {
-        my ($name) = $executable =~ m/bin\/(.+)5\.\d.*$/;
-        $name ||= $executable;
+        my ($name) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
         my $target = "$ROOT/bin/${name}";
-        next unless -l $target;
+        next unless -l $target || !-e $target;
         system("ln -fs $executable $target");
     }
 }
