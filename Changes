@@ -1,3 +1,6 @@
+0.03:
+- Fixed a bug that switch fail after 'off'
+
 0.02:
 - Officially prepare a standalone program for quick download.
 - license changed to "Same as Perl" due to the fact HTTP::Lite is included

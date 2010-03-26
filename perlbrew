@@ -763,7 +763,7 @@ $INC{'HTTP/Lite.pm'} = __FILE__;
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.02";
+our $VERSION = "0.03";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
