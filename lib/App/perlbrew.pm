@@ -353,15 +353,19 @@ The standalone executable contains the following modules embedded.
 
 =over 4
 
-=item L<HTTP::Lite> Copyright 2000-2002 Roy Hopper, 2009 Adam Kennedy
+=item L<HTTP::Lite>
+
+Copyright (c) 2000-2002 Roy Hopper, 2009 Adam Kennedy.
+
+Licensed under the same term as Perl itself.
 
 =back
 
 =head1 LICENCE
 
-Same as Perl
+The MIT License
 
-=head2 CONTRIBUTORS
+=head1 CONTRIBUTORS
 
 Patches and code improvements were contributed by:
 
