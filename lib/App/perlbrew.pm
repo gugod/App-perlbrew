@@ -21,6 +21,9 @@ perlbrew - $VERSION
 
 Usage:
 
+    # Read more help
+    perlbrew -h
+
     perlbrew init
 
     perlbrew install perl-5.11.5
