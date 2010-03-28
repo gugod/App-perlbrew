@@ -1,1103 +1,884 @@
-#!/usr/bin/env perl
-# DO NOT EDIT -- this is an auto generated file
-package HTTP::Lite;
-
-use 5.005;
-use strict;
-use Socket 1.3;
-use Fcntl;
-use Errno qw(EAGAIN);
-
-use vars qw($VERSION);
-BEGIN {
-	$VERSION = "2.2";
-}
-
-my $BLOCKSIZE = 65536;
-my $CRLF = "\r\n";
-my $URLENCODE_VALID = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.";
-
-# Forward declarations
-sub prepare_post;
-sub http_write;
-sub http_readline;
-sub http_read;
-sub http_readbytes;
-
-# Prepare the urlencode validchars lookup hash
-my @urlencode_valid;
-foreach my $char (split('', $URLENCODE_VALID)) {
-  $urlencode_valid[ord $char]=$char;
-}
-for (my $n=0;$n<255;$n++) {
-  if (!defined($urlencode_valid[$n])) {
-    $urlencode_valid[$n]=sprintf("%%%02X", $n);
-  }
-}
-
-sub new 
-{
-  my $self = {};
-  bless $self;
-  $self->initialize();
-  return $self;
-}
-
-sub initialize
-{
-  my $self = shift;
-  $self->reset;
-  $self->{timeout} = 120;
-  $self->{HTTP11} = 0;
-  $self->{DEBUG} = 0;
-  $self->{header_at_once} = 0; 
-  $self->{holdback} = 0;       # needed for http_write 
-}
-
-sub header_at_once
-{
-  my $self=shift;
-  $self->{header_at_once} = 1;
-}
-
-sub local_addr
-{
-  my $self = shift;
-  my $val = shift;
-  my $oldval = $self->{'local_addr'};
-  if (defined($val)) {
-    $self->{'local_addr'} = $val;
-  }
-  return $oldval;
-}
-
-sub local_port
-{
-  my $self = shift;
-  my $val = shift;
-  my $oldval = $self->{'local_port'};
-  if (defined($val)) {
-    $self->{'local_port'} = $val;
-   }
-  return $oldval;
-}
-
-sub method
-{
-  my $self = shift;
-  my $method = shift;
-  $method = uc($method);
-  $self->{method} = $method;
-}
-
-sub DEBUG
-{
-  my $self = shift;
-  if ($self->{DEBUG}) {
-    print STDERR join(" ", @_),"\n";
-  }
-}
-
-sub reset
-{
-  my $self = shift;
-  foreach my $var ("body", "request", "content", "status", "proxy",
-    "proxyport", "resp-protocol", "error-message",  
-    "resp-headers", "CBARGS", "callback_function", "callback_params")
-  {
-    $self->{$var} = undef;
-  }
-  $self->{HTTPReadBuffer} = "";
-  $self->{method} = "GET";
-  $self->{headers} = { 'user-agent' => "HTTP::Lite/$VERSION" };
-  $self->{headermap} = { 'user-agent'  => 'User-Agent' };
-}
-
-
-# URL-encode data
-sub escape {
-  my $toencode = shift;
-  return join('', 
-    map { $urlencode_valid[ord $_] } split('', $toencode));
-}
-
-sub set_callback {
-  my ($self, $callback, @callbackparams) = @_;
-  $self->{'callback_function'} = $callback;
-  $self->{'callback_params'} = [ @callbackparams ];
-}
-
-sub request
-{
-  my ($self, $url, $data_callback, $cbargs) = @_;
-  
-  my $method = $self->{method};
-  if (defined($cbargs)) {
-    $self->{CBARGS} = $cbargs;
-  }
-
-  my $callback_func = $self->{'callback_function'};
-  my $callback_params = $self->{'callback_params'};
-
-  # Parse URL 
-  my ($protocol,$host,$junk,$port,$object) = 
-    $url =~ m{^([^:/]+)://([^/:]*)(:(\d+))?(/.*)$};
-
-  # Only HTTP is supported here
-  if ($protocol ne "http")
-  {
-    warn "Only http is supported by HTTP::Lite";
-    return undef;
-  }
-  
-  # Setup the connection
-  my $proto = getprotobyname('tcp');
-  local *FH;
-  socket(FH, PF_INET, SOCK_STREAM, $proto);
-  $port = 80 if !$port;
-
-  my $connecthost = $self->{'proxy'} || $host;
-  $connecthost = $connecthost ? $connecthost : $host;
-  my $connectport = $self->{'proxyport'} || $port;
-  $connectport = $connectport ? $connectport : $port;
-  my $addr = inet_aton($connecthost);
-  if (!$addr) {
-    close(FH);
-    return undef;
-  }
-  if ($connecthost ne $host)
-  {
-    # if proxy active, use full URL as object to request
-    $object = "$url";
-  }
-
-  # choose local port and address
-  my $local_addr = INADDR_ANY; 
-  my $local_port = "0";
-  if (defined($self->{'local_addr'})) {
-    $local_addr = $self->{'local_addr'};
-    if ($local_addr eq "0.0.0.0" || $local_addr eq "0") {
-      $local_addr = INADDR_ANY;
-    } else {
-      $local_addr = inet_aton($local_addr);
-    }
-  }
-  if (defined($self->{'local_port'})) {
-    $local_port = $self->{'local_port'};
-  }
-  my $paddr = pack_sockaddr_in($local_port, $local_addr); 
-  bind(FH, $paddr) || return undef;  # Failing to bind is fatal.
-
-  my $sin = sockaddr_in($connectport,$addr);
-  connect(FH, $sin) || return undef;
-  # Set nonblocking IO on the handle to allow timeouts
-  if ( $^O ne "MSWin32" ) {
-    fcntl(FH, F_SETFL, O_NONBLOCK);
-  }
-
-  if (defined($callback_func)) {
-    &$callback_func($self, "connect", undef, @$callback_params);
-  }  
-
-  if ($self->{header_at_once}) {
-    $self->{holdback} = 1;    # http_write should buffer only, no sending yet
-  }
-
-  # Start the request (HTTP/1.1 mode)
-  if ($self->{HTTP11}) {
-    $self->http_write(*FH, "$method $object HTTP/1.1$CRLF");
-  } else {
-    $self->http_write(*FH, "$method $object HTTP/1.0$CRLF");
-  }
-
-  # Add some required headers
-  # we only support a single transaction per request in this version.
-  $self->add_req_header("Connection", "close");    
-  if ($port != 80) {
-    $self->add_req_header("Host", "$host:$port");
-  } else {
-    $self->add_req_header("Host", $host);
-  }
-  if (!defined($self->get_req_header("Accept"))) {
-    $self->add_req_header("Accept", "*/*");
-  }
-
-  if ($method eq 'POST') {
-    $self->http_write(*FH, "Content-Type: application/x-www-form-urlencoded$CRLF");
-  }
-  
-  # Purge a couple others
-  $self->delete_req_header("Content-Type");
-  $self->delete_req_header("Content-Length");
-  
-  # Output headers
-  foreach my $header ($self->enum_req_headers())
-  {
-    my $value = $self->get_req_header($header);
-    $self->http_write(*FH, $self->{headermap}{$header}.": ".$value."$CRLF");
-  }
-  
-  my $content_length;
-  if (defined($self->{content}))
-  {
-    $content_length = length($self->{content});
-  }
-  if (defined($callback_func)) {
-    my $ncontent_length = &$callback_func($self, "content-length", undef, @$callback_params);
-    if (defined($ncontent_length)) {
-      $content_length = $ncontent_length;
-    }
-  }  
-
-  if ($content_length) {
-    $self->http_write(*FH, "Content-Length: $content_length$CRLF");
-  }
-  
-  if (defined($callback_func)) {
-    &$callback_func($self, "done-headers", undef, @$callback_params);
-  }  
-  # End of headers
-  $self->http_write(*FH, "$CRLF");
-  
-  if ($self->{header_at_once}) {
-    $self->{holdback} = 0; 
-    $self->http_write(*FH, ""); # pseudocall to get http_write going
-  }  
-  
-  my $content_out = 0;
-  if (defined($callback_func)) {
-    while (my $content = &$callback_func($self, "content", undef, @$callback_params)) {
-      $self->http_write(*FH, $content);
-      $content_out++;
-    }
-  } 
-  
-  # Output content, if any
-  if (!$content_out && defined($self->{content}))
-  {
-    $self->http_write(*FH, $self->{content});
-  }
-  
-  if (defined($callback_func)) {
-    &$callback_func($self, "content-done", undef, @$callback_params);
-  }  
-
-
-  # Read response from server
-  my $headmode=1;
-  my $chunkmode=0;
-  my $chunksize=0;
-  my $chunklength=0;
-  my $chunk;
-  my $line = 0;
-  my $data;
-  while ($data = $self->http_read(*FH,$headmode,$chunkmode,$chunksize))
-  {
-    $self->{DEBUG} && $self->DEBUG("reading: $chunkmode, $chunksize, $chunklength, $headmode, ".
-        length($self->{'body'}));
-    if ($self->{DEBUG}) {
-      foreach my $var ("body", "request", "content", "status", "proxy",
-        "proxyport", "resp-protocol", "error-message", 
-        "resp-headers", "CBARGS", "HTTPReadBuffer") 
-      {
-        $self->DEBUG("state $var ".length($self->{$var}));
-      }
-    }
-    $line++;
-    if ($line == 1)
-    {
-      my ($proto,$status,$message) = split(' ', $$data, 3);
-      $self->{DEBUG} && $self->DEBUG("header $$data");
-      $self->{status}=$status;
-      $self->{'resp-protocol'}=$proto;
-      $self->{'error-message'}=$message;
-      next;
-    } 
-    if (($headmode || $chunkmode eq "entity-header") && $$data =~ /^[\r\n]*$/)
-    {
-      if ($chunkmode)
-      {
-        $chunkmode = 0;
-      }
-      $headmode = 0;
-      
-      # Check for Transfer-Encoding
-      my $te = $self->get_header("Transfer-Encoding");
-      if (defined($te)) {
-        my $header = join(' ',@{$te});
-        if ($header =~ /chunked/i)
-        {
-          $chunkmode = "chunksize";
-        }
-      }
-      next;
-    }
-    if ($headmode || $chunkmode eq "entity-header")
-    {
-      my ($var,$datastr) = $$data =~ /^([^:]*):\s*(.*)$/;
-      if (defined($var))
-      {
-        $datastr =~s/[\r\n]$//g;
-        $var = lc($var);
-        $var =~ s/^(.)/&upper($1)/ge;
-        $var =~ s/(-.)/&upper($1)/ge;
-        my $hr = ${$self->{'resp-headers'}}{$var};
-        if (!ref($hr))
-        {
-          $hr = [ $datastr ];
-        }
-        else 
-        {
-          push @{ $hr }, $datastr;
-        }
-        ${$self->{'resp-headers'}}{$var} = $hr;
-      }
-    } elsif ($chunkmode)
-    {
-      if ($chunkmode eq "chunksize")
-      {
-        $chunksize = $$data;
-        $chunksize =~ s/^\s*|;.*$//g;
-        $chunksize =~ s/\s*$//g;
-        my $cshx = $chunksize;
-        if (length($chunksize) > 0) {
-          # read another line
-          if ($chunksize !~ /^[a-f0-9]+$/i) {
-            $self->{DEBUG} && $self->DEBUG("chunksize not a hex string");
-          }
-          $chunksize = hex($chunksize);
-          $self->{DEBUG} && $self->DEBUG("chunksize was $chunksize (HEX was $cshx)");
-          if ($chunksize == 0)
-          {
-            $chunkmode = "entity-header";
-          } else {
-            $chunkmode = "chunk";
-            $chunklength = 0;
-          }
-        } else {
-          $self->{DEBUG} && $self->DEBUG("chunksize empty string, checking next line!");
-        }
-      } elsif ($chunkmode eq "chunk")
-      {
-        $chunk .= $$data;
-        $chunklength += length($$data);
-        if ($chunklength >= $chunksize)
-        {
-          $chunkmode = "chunksize";
-          if ($chunklength > $chunksize)
-          {
-            $chunk = substr($chunk,0,$chunksize);
-          } 
-          elsif ($chunklength == $chunksize && $chunk !~ /$CRLF$/) 
-          {
-            # chunk data is exactly chunksize -- need CRLF still
-            $chunkmode = "ignorecrlf";
-          }
-          $self->add_to_body(\$chunk, $data_callback);
-          $chunk="";
-          $chunklength = 0;
-          $chunksize = "";
-        } 
-      } elsif ($chunkmode eq "ignorecrlf")
-      {
-        $chunkmode = "chunksize";
-      }
-    } else {
-      $self->add_to_body($data, $data_callback);
-    }
-  }
-  if (defined($callback_func)) {
-    &$callback_func($self, "done", undef, @$callback_params);
-  }
-  close(FH);
-  return $self->{status};
-}
-
-sub add_to_body
-{
-  my $self = shift;
-  my ($dataref, $data_callback) = @_;
-  
-  my $callback_func = $self->{'callback_function'};
-  my $callback_params = $self->{'callback_params'};
-
-  if (!defined($data_callback) && !defined($callback_func)) {
-    $self->{DEBUG} && $self->DEBUG("no callback");
-    $self->{'body'}.=$$dataref;
-  } else {
-    my $newdata;
-    if (defined($callback_func)) {
-      $newdata = &$callback_func($self, "data", $dataref, @$callback_params);
-    } else {
-      $newdata = &$data_callback($self, $dataref, $self->{CBARGS});
-    }
-    if ($self->{DEBUG}) {
-      $self->DEBUG("callback got back a ".ref($newdata));
-      if (ref($newdata) eq "SCALAR") {
-        $self->DEBUG("callback got back ".length($$newdata)." bytes");
-      }
-    }
-    if (defined($newdata) && ref($newdata) eq "SCALAR") {
-      $self->{'body'} .= $$newdata;
-    }
-  }
-}
-
-sub add_req_header
-{
-  my $self = shift;
-  my ($header, $value) = @_;
-  
-  my $lcheader = lc($header);
-  $self->{DEBUG} && $self->DEBUG("add_req_header $header $value");
-  ${$self->{headers}}{$lcheader} = $value;
-  ${$self->{headermap}}{$lcheader} = $header;
-}
-
-sub get_req_header
-{
-  my $self = shift;
-  my ($header) = @_;
-  
-  return $self->{headers}{lc($header)};
-}
-
-sub delete_req_header
-{
-  my $self = shift;
-  my ($header) = @_;
-  
-  my $exists;
-  if ($exists=defined(${$self->{headers}}{lc($header)}))
-  {
-    delete ${$self->{headers}}{lc($header)};
-    delete ${$self->{headermap}}{lc($header)};
-  }
-  return $exists;
-}
-
-sub enum_req_headers
-{
-  my $self = shift;
-  my ($header) = @_;
-  
-  my $exists;
-  return keys %{$self->{headermap}};
-}
-
-sub body
-{
-  my $self = shift;
-  return $self->{'body'};
-}
-
-sub status
-{
-  my $self = shift;
-  return $self->{status};
-}
-
-sub protocol
-{
-  my $self = shift;
-  return $self->{'resp-protocol'};
-}
-
-sub status_message
-{
-  my $self = shift;
-  return $self->{'error-message'};
-}
-
-sub proxy
-{
-  my $self = shift;
-  my ($value) = @_;
-  
-  # Parse URL 
-  my ($protocol,$host,$junk,$port,$object) = 
-    $value =~ m{^(\S+)://([^/:]*)(:(\d+))?(/.*)$};
-  if (!$host)
-  {
-    ($host,$port) = $value =~ /^([^:]+):(.*)$/;
-  }
-
-  $self->{'proxy'} = $host || $value;
-  $self->{'proxyport'} = $port || 80;
-}
-
-sub headers_array
-{
-  my $self = shift;
-  
-  my @array = ();
-  
-  foreach my $header (keys %{$self->{'resp-headers'}})
-  {
-    my $aref = ${$self->{'resp-headers'}}{$header};
-    foreach my $value (@$aref)
-    {
-      push @array, "$header: $value";
-    }
-  }
-  return @array;
-}
-
-sub headers_string
-{
-  my $self = shift;
-  
-  my $string = "";
-  
-  foreach my $header (keys %{$self->{'resp-headers'}})
-  {
-    my $aref = ${$self->{'resp-headers'}}{$header};
-    foreach my $value (@$aref)
-    {
-      $string .= "$header: $value\n";
-    }
-  }
-  return $string;
-}
-
-sub get_header
-{
-  my $self = shift;
-  my $header = shift;
-
-  return $self->{'resp-headers'}{$header};
-}
-
-sub http11_mode
-{
-  my $self = shift;
-  my $mode = shift;
-
-  $self->{HTTP11} = $mode;
-}
-
-sub prepare_post
-{
-  my $self = shift;
-  my $varref = shift;
-  
-  my $body = "";
-  while (my ($var,$value) = map { escape($_) } each %$varref)
-  {
-    if ($body)
-    {
-      $body .= "&$var=$value";
-    } else {
-      $body = "$var=$value";
-    }
-  }
-  $self->{content} = $body;
-  $self->{headers}{'Content-Type'} = "application/x-www-form-urlencoded"
-    unless defined ($self->{headers}{'Content-Type'}) and 
-    $self->{headers}{'Content-Type'};
-  $self->{method} = "POST";
-}
-
-sub http_write
-{
-  my $self = shift;
-  my ($fh,$line) = @_;
-
-  if ($self->{holdback}) {
-     $self->{HTTPWriteBuffer} .= $line;
-     return;
-  } else {
-     if (defined $self->{HTTPWriteBuffer}) {   # copy previously buffered, if any
-         $line = $self->{HTTPWriteBuffer} . $line;
-     }
-  }
-
-  my $size = length($line);
-  my $bytes = syswrite($fh, $line, length($line) , 0 );  # please double check new length limit
-                                                         # is this ok?
-  while ( ($size - $bytes) > 0) {
-    $bytes += syswrite($fh, $line, length($line)-$bytes, $bytes );  # also here
-  }
-}
- 
-sub http_read
-{
-  my $self = shift;
-  my ($fh,$headmode,$chunkmode,$chunksize) = @_;
-
-  $self->{DEBUG} && $self->DEBUG("read handle=$fh, headm=$headmode, chunkm=$chunkmode, chunksize=$chunksize");
-
-  my $res;
-  if (($headmode == 0 && $chunkmode eq "0") || ($chunkmode eq "chunk")) {
-    my $bytes_to_read = $chunkmode eq "chunk" ?
-        ($chunksize < $BLOCKSIZE ? $chunksize : $BLOCKSIZE) :
-        $BLOCKSIZE;
-    $res = $self->http_readbytes($fh,$self->{timeout},$bytes_to_read);
-  } else { 
-    $res = $self->http_readline($fh,$self->{timeout});  
-  }
-  if ($res) {
-    if ($self->{DEBUG}) {
-      $self->DEBUG("read got ".length($$res)." bytes");
-      my $str = $$res;
-      $str =~ s{([\x00-\x1F\x7F-\xFF])}{.}g;
-      $self->DEBUG("read: ".$str);
-    }
-  }
-  return $res;
-}
-
-sub http_readline
-{
-  my $self = shift;
-  my ($fh, $timeout) = @_;
-  my $EOL = "\n";
-
-  $self->{DEBUG} && $self->DEBUG("readline handle=$fh, timeout=$timeout");
-  
-  # is there a line in the buffer yet?
-  while ($self->{HTTPReadBuffer} !~ /$EOL/)
-  {
-    # nope -- wait for incoming data
-    my ($inbuf,$bits,$chars) = ("","",0);
-    vec($bits,fileno($fh),1)=1;
-    my $nfound = select($bits, undef, $bits, $timeout);
-    if ($nfound == 0)
-    {
-      # Timed out
-      return undef;
-    } else {
-      # Get the data
-      $chars = sysread($fh, $inbuf, $BLOCKSIZE);
-      $self->{DEBUG} && $self->DEBUG("sysread $chars bytes");
-    }
-    # End of stream?
-    if ($chars <= 0 && !$!{EAGAIN})
-    {
-      last;
-    }
-    # tag data onto end of buffer
-    $self->{HTTPReadBuffer}.=$inbuf;
-  }
-  # get a single line from the buffer
-  my $nlat = index($self->{HTTPReadBuffer}, $EOL);
-  my $newline;
-  my $oldline;
-  if ($nlat > -1)
-  {
-    $newline = substr($self->{HTTPReadBuffer},0,$nlat+1);
-    $oldline = substr($self->{HTTPReadBuffer},$nlat+1);
-  } else {
-    $newline = substr($self->{HTTPReadBuffer},0);
-    $oldline = "";
-  }
-  # and update the buffer
-  $self->{HTTPReadBuffer}=$oldline;
-  return length($newline) ? \$newline : 0;
-}
-
-sub http_readbytes
-{
-  my $self = shift;
-  my ($fh, $timeout, $bytes) = @_;
-  my $EOL = "\n";
-
-  $self->{DEBUG} && $self->DEBUG("readbytes handle=$fh, timeout=$timeout, bytes=$bytes");
-  
-  # is there enough data in the buffer yet?
-  while (length($self->{HTTPReadBuffer}) < $bytes)
-  {
-    # nope -- wait for incoming data
-    my ($inbuf,$bits,$chars) = ("","",0);
-    vec($bits,fileno($fh),1)=1;
-    my $nfound = select($bits, undef, $bits, $timeout);
-    if ($nfound == 0)
-    {
-      # Timed out
-      return undef;
-    } else {
-      # Get the data
-      $chars = sysread($fh, $inbuf, $BLOCKSIZE);
-      $self->{DEBUG} && $self->DEBUG("sysread $chars bytes");
-    }
-    # End of stream?
-    if ($chars <= 0 && !$!{EAGAIN})
-    {
-      last;
-    }
-    # tag data onto end of buffer
-    $self->{HTTPReadBuffer}.=$inbuf;
-  }
-  my $newline;
-  my $buflen;
-  if (($buflen=length($self->{HTTPReadBuffer})) >= $bytes)
-  {
-    $newline = substr($self->{HTTPReadBuffer},0,$bytes+1);
-    if ($bytes+1 < $buflen) {
-      $self->{HTTPReadBuffer} = substr($self->{HTTPReadBuffer},$bytes+1);
-    } else {
-      $self->{HTTPReadBuffer} = "";
-    }
-  } else {
-    $newline = substr($self->{HTTPReadBuffer},0);
-    $self->{HTTPReadBuffer} = "";
-  }
-  return length($newline) ? \$newline : 0;
-}
-
-sub upper
-{
-  my ($str) = @_;
-  if (defined($str)) {
-    return uc($str);
-  } else {
-    return undef;
-  }
-}
-
-1;
-
-
-$INC{'HTTP/Lite.pm'} = __FILE__;
-
-package App::perlbrew;
-use strict;
-use 5.8.0;
-our $VERSION = "0.03";
-
-my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
-my $CURRENT_PERL = "$ROOT/perls/current";
-
-sub run_command {
-    my ( undef, $opt, $x, @args ) = @_;
-    $opt->{log_file} = "$ROOT/build.log";
-    my $self = bless $opt, __PACKAGE__;
-    $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?";
-    $self->$s(@args);
-}
-
-sub run_command_help {
-    print <<HELP;
-perlbrew - $VERSION
-
-Usage:
-
-    perlbrew init
-
-    perlbrew install perl-5.11.5
-    perlbrew install perl-5.12.0-RC0
-    perlbrew installed
-
-    perlbrew switch perl-5.12.0-RC0
-    perlbrew switch /usr/bin/perl
-
-    perlbrew off
-
-HELP
-}
-
-sub run_command_init {
-    require File::Path;
-    File::Path::make_path(
-        "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
-        "$ROOT/bin"
-    );
-
-    system <<RC;
-echo 'export PATH=$ROOT/bin:$ROOT/perls/current/bin:\${PATH}' > $ROOT/etc/bashrc
-echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
-RC
-
-    my ( $shrc, $yourshrc );
-    if ( $ENV{SHELL} =~ /(t?csh)/ ) {
-        $shrc     = 'cshrc';
-        $yourshrc = $1 . "rc";
-    }
-    else {
-        $shrc = $yourshrc = 'bashrc';
-    }
-
-    print <<INSTRUCTION;
-Perlbrew environment initiated, required directories are created under
-
-    $ROOT
-
-Well-done! Congradulations! Please add the following line to the end
-of your ~/.${yourshrc}
-
-    source $ROOT/etc/${shrc}
-
-After that, exit this shell, start a new one, and install some fresh
-perls:
-
-    perlbrew install perl-5.12.0-RC0
-    perlbrew install perl-5.10.1
-
-For further instructions, simply run:
-
-    perlbrew
-
-The default help messages will popup an tell you what to do!
-
-Enjoy perlbrew at \$HOME!!
-INSTRUCTION
-
-}
-
-sub run_command_install {
-    my ( $self, $dist, $opts ) = @_;
-
-    unless ($dist) {
-        require File::Spec;
-        require File::Path;
-        require File::Copy;
-
-        my $executable = $0;
-
-        unless (File::Spec->file_name_is_absolute($executable)) {
-            $executable = File::Spec->rel2abs($executable);
-        }
-
-        my $target = File::Spec->catfile($ROOT, "bin", "perlbrew");
-        if ($executable eq $target) {
-            print "You are already running the installed perlbrew:\n\n    $executable\n";
-            exit;
-        }
-
-        File::Path::make_path("$ROOT/bin");
-        File::Copy::copy($executable, $target);
-        chmod(0755, $target);
-
-        print <<HELP;
-The perlbrew is installed as:
-
-    $target
-
-You may trash the downloaded $executable from now on.
-
-Next, if this is the first time you run perlbrew installation, run:
-
-    $target init
-
-And follow the instruction on screen.
-HELP
-        return;
-    }
-
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
-    if ($dist_name eq 'perl') {
-        require HTTP::Lite;
-
-        my $http_get = sub {
-            my ($url, $cb) = @_;
-            my $ua = HTTP::Lite->new;
-
-            my $loc = $url;
-            my $status = $ua->request($loc) or die "Fail to get $loc";
-
-            my $redir_count = 0;
-            while ($status == 302 || $status == 301) {
-                last if $redir_count++ > 5;
-                for ($ua->headers_array) {
-                    /Location: (\S+)/ and $loc = $1, last;
-                }
-                $loc or last;
-                $status = $ua->request($loc) or die "Fail to get $loc";
-            }
-            if ($cb) {
-                return $cb->($ua->body);
-            }
-            return $ua->body;
-        };
-
-        my $html = $http_get->("http://search.cpan.org/dist/$dist");
-
-        my ($dist_path, $dist_tarball) =
-            $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
-
-        print "Fetching $dist as ${ROOT}/dists/${dist_tarball}\n";
-
-        $http_get->(
-            "http://search.cpan.org${dist_path}",
-            sub {
-                my ($body) = @_;
-                open my $BALL, "> ${ROOT}/dists/${dist_tarball}";
-                print $BALL $body;
-                close $BALL;
-            }
+#!/Users/gugod/local/bin/perl
+#line 2 "/Users/gugod/local/bin/par.pl"
+
+eval 'exec /Users/gugod/local/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+eval 'exec /usr/bin/perl  -S $0 ${1+"$@"}'
+    if 0; # not running under some shell
+
+package __par_pl;
+
+# --- This script must not use any modules at compile time ---
+# use strict;
+
+#line 161
+
+my ($par_temp, $progname, @tmpfile);
+END { if ($ENV{PAR_CLEAN}) {
+    require File::Temp;
+    require File::Basename;
+    require File::Spec;
+    my $topdir = File::Basename::dirname($par_temp);
+    outs(qq{Removing files in "$par_temp"});
+    File::Find::finddepth(sub { ( -d ) ? rmdir : unlink }, $par_temp);
+    rmdir $par_temp;
+    # Don't remove topdir because this causes a race with other apps
+    # that are trying to start.
+
+    if (-d $par_temp && $^O ne 'MSWin32') {
+        # Something went wrong unlinking the temporary directory.  This
+        # typically happens on platforms that disallow unlinking shared
+        # libraries and executables that are in use. Unlink with a background
+        # shell command so the files are no longer in use by this process.
+        # Don't do anything on Windows because our parent process will
+        # take care of cleaning things up.
+
+        my $tmp = new File::Temp(
+            TEMPLATE => 'tmpXXXXX',
+            DIR => File::Basename::dirname($topdir),
+            SUFFIX => '.cmd',
+            UNLINK => 0,
         );
 
-        my $usedevel = $dist_version =~ /5\.11/ ? "-Dusedevel" : "";
-
-        my @d_options = @{ $self->{D} };
-        my $as = $self->{as} || $dist;
-        unshift @d_options, qq(prefix=$ROOT/perls/$as);
-        push @d_options, "usedevel" if $dist_version =~ /5\.11/;
-        print "Installing $dist...";
-        my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
-
-        my $cmd = join ";",
-          (
-            "cd $ROOT/build",
-            "$tarx $ROOT/dists/${dist_tarball}",
-            "cd $dist",
-            "rm -f config.sh Policy.sh",
-            "sh Configure -de " . join( ' ', map { "-D$_" } @d_options ),
-            "make",
-            (
-                $self->{force}
-                ? ( 'make test', 'make install' )
-                : "make test && make install"
-            )
-          );
-        $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
-          if ( $self->{quiet} && !$self->{verbose} );
+        print $tmp "#!/bin/sh
+x=1; while [ \$x -lt 10 ]; do
+   rm -rf '$par_temp'
+   if [ \! -d '$par_temp' ]; then
+       break
+   fi
+   sleep 1
+   x=`expr \$x + 1`
+done
+rm '" . $tmp->filename . "'
+";
+            chmod 0700,$tmp->filename;
+        my $cmd = $tmp->filename . ' >/dev/null 2>&1 &';
+        close $tmp;
         system($cmd);
+        outs(qq(Spawned background process to perform cleanup: )
+             . $tmp->filename);
+    }
+} }
+
+BEGIN {
+    Internals::PAR::BOOT() if defined &Internals::PAR::BOOT;
+
+    eval {
+
+_par_init_env();
+
+if (exists $ENV{PAR_ARGV_0} and $ENV{PAR_ARGV_0} ) {
+    @ARGV = map $ENV{"PAR_ARGV_$_"}, (1 .. $ENV{PAR_ARGC} - 1);
+    $0 = $ENV{PAR_ARGV_0};
+}
+else {
+    for (keys %ENV) {
+        delete $ENV{$_} if /^PAR_ARGV_/;
     }
 }
 
-sub run_command_installed {
-    my $self    = shift;
-    my $current = readlink("$ROOT/perls/current");
+my $quiet = !$ENV{PAR_DEBUG};
 
-    for (<$ROOT/perls/*>) {
-        next if m/current/;
-        my ($name) = $_ =~ m/\/([^\/]+$)/;
-        print $name, ( $name eq $current ? '(*)' : '' ), "\n";
+# fix $progname if invoked from PATH
+my %Config = (
+    path_sep    => ($^O =~ /^MSWin/ ? ';' : ':'),
+    _exe        => ($^O =~ /^(?:MSWin|OS2|cygwin)/ ? '.exe' : ''),
+    _delim      => ($^O =~ /^MSWin|OS2/ ? '\\' : '/'),
+);
+
+_set_progname();
+_set_par_temp();
+
+# Magic string checking and extracting bundled modules {{{
+my ($start_pos, $data_pos);
+{
+    local $SIG{__WARN__} = sub {};
+
+    # Check file type, get start of data section {{{
+    open _FH, '<', $progname or last;
+    binmode(_FH);
+
+    my $buf;
+    seek _FH, -8, 2;
+    read _FH, $buf, 8;
+    last unless $buf eq "\nPAR.pm\n";
+
+    seek _FH, -12, 2;
+    read _FH, $buf, 4;
+    seek _FH, -12 - unpack("N", $buf), 2;
+    read _FH, $buf, 4;
+
+    $data_pos = (tell _FH) - 4;
+    # }}}
+
+    # Extracting each file into memory {{{
+    my %require_list;
+    while ($buf eq "FILE") {
+        read _FH, $buf, 4;
+        read _FH, $buf, unpack("N", $buf);
+
+        my $fullname = $buf;
+        outs(qq(Unpacking file "$fullname"...));
+        my $crc = ( $fullname =~ s|^([a-f\d]{8})/|| ) ? $1 : undef;
+        my ($basename, $ext) = ($buf =~ m|(?:.*/)?(.*)(\..*)|);
+
+        read _FH, $buf, 4;
+        read _FH, $buf, unpack("N", $buf);
+
+        if (defined($ext) and $ext !~ /\.(?:pm|pl|ix|al)$/i) {
+            my ($out, $filename) = _tempfile($ext, $crc);
+            if ($out) {
+                binmode($out);
+                print $out $buf;
+                close $out;
+                chmod 0755, $filename;
+            }
+            $PAR::Heavy::FullCache{$fullname} = $filename;
+            $PAR::Heavy::FullCache{$filename} = $fullname;
+        }
+        elsif ( $fullname =~ m|^/?shlib/| and defined $ENV{PAR_TEMP} ) {
+            # should be moved to _tempfile()
+            my $filename = "$ENV{PAR_TEMP}/$basename$ext";
+            outs("SHLIB: $filename\n");
+            open my $out, '>', $filename or die $!;
+            binmode($out);
+            print $out $buf;
+            close $out;
+        }
+        else {
+            $require_list{$fullname} =
+            $PAR::Heavy::ModuleCache{$fullname} = {
+                buf => $buf,
+                crc => $crc,
+                name => $fullname,
+            };
+        }
+        read _FH, $buf, 4;
+    }
+    # }}}
+
+    local @INC = (sub {
+        my ($self, $module) = @_;
+
+        return if ref $module or !$module;
+
+        my $filename = delete $require_list{$module} || do {
+            my $key;
+            foreach (keys %require_list) {
+                next unless /\Q$module\E$/;
+                $key = $_; last;
+            }
+            delete $require_list{$key} if defined($key);
+        } or return;
+
+        $INC{$module} = "/loader/$filename/$module";
+
+        if ($ENV{PAR_CLEAN} and defined(&IO::File::new)) {
+            my $fh = IO::File->new_tmpfile or die $!;
+            binmode($fh);
+            print $fh $filename->{buf};
+            seek($fh, 0, 0);
+            return $fh;
+        }
+        else {
+            my ($out, $name) = _tempfile('.pm', $filename->{crc});
+            if ($out) {
+                binmode($out);
+                print $out $filename->{buf};
+                close $out;
+            }
+            open my $fh, '<', $name or die $!;
+            binmode($fh);
+            return $fh;
+        }
+
+        die "Bootstrapping failed: cannot find $module!\n";
+    }, @INC);
+
+    # Now load all bundled files {{{
+
+    # initialize shared object processing
+    require XSLoader;
+    require PAR::Heavy;
+    require Carp::Heavy;
+    require Exporter::Heavy;
+    PAR::Heavy::_init_dynaloader();
+
+    # now let's try getting helper modules from within
+    require IO::File;
+
+    # load rest of the group in
+    while (my $filename = (sort keys %require_list)[0]) {
+        #local $INC{'Cwd.pm'} = __FILE__ if $^O ne 'MSWin32';
+        unless ($INC{$filename} or $filename =~ /BSDPAN/) {
+            # require modules, do other executable files
+            if ($filename =~ /\.pmc?$/i) {
+                require $filename;
+            }
+            else {
+                # Skip ActiveState's sitecustomize.pl file:
+                do $filename unless $filename =~ /sitecustomize\.pl$/;
+            }
+        }
+        delete $require_list{$filename};
     }
 
-    my $current_perl_executable = readlink("$ROOT/bin/perl");
-    for ( grep { -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
-        print $_, ($current_perl_executable eq $_ ? "(*)" : ""), "\n";
+    # }}}
+
+    last unless $buf eq "PK\003\004";
+    $start_pos = (tell _FH) - 4;
+}
+# }}}
+
+# Argument processing {{{
+my @par_args;
+my ($out, $bundle, $logfh, $cache_name);
+
+delete $ENV{PAR_APP_REUSE}; # sanitize (REUSE may be a security problem)
+
+$quiet = 0 unless $ENV{PAR_DEBUG};
+# Don't swallow arguments for compiled executables without --par-options
+if (!$start_pos or ($ARGV[0] eq '--par-options' && shift)) {
+    my %dist_cmd = qw(
+        p   blib_to_par
+        i   install_par
+        u   uninstall_par
+        s   sign_par
+        v   verify_par
+    );
+
+    # if the app is invoked as "appname --par-options --reuse PROGRAM @PROG_ARGV",
+    # use the app to run the given perl code instead of anything from the
+    # app itself (but still set up the normal app environment and @INC)
+    if (@ARGV and $ARGV[0] eq '--reuse') {
+        shift @ARGV;
+        $ENV{PAR_APP_REUSE} = shift @ARGV;
+    }
+    else { # normal parl behaviour
+
+        my @add_to_inc;
+        while (@ARGV) {
+            $ARGV[0] =~ /^-([AIMOBLbqpiusTv])(.*)/ or last;
+
+            if ($1 eq 'I') {
+                push @add_to_inc, $2;
+            }
+            elsif ($1 eq 'M') {
+                eval "use $2";
+            }
+            elsif ($1 eq 'A') {
+                unshift @par_args, $2;
+            }
+            elsif ($1 eq 'O') {
+                $out = $2;
+            }
+            elsif ($1 eq 'b') {
+                $bundle = 'site';
+            }
+            elsif ($1 eq 'B') {
+                $bundle = 'all';
+            }
+            elsif ($1 eq 'q') {
+                $quiet = 1;
+            }
+            elsif ($1 eq 'L') {
+                open $logfh, ">>", $2 or die "XXX: Cannot open log: $!";
+            }
+            elsif ($1 eq 'T') {
+                $cache_name = $2;
+            }
+
+            shift(@ARGV);
+
+            if (my $cmd = $dist_cmd{$1}) {
+                delete $ENV{'PAR_TEMP'};
+                init_inc();
+                require PAR::Dist;
+                &{"PAR::Dist::$cmd"}() unless @ARGV;
+                &{"PAR::Dist::$cmd"}($_) for @ARGV;
+                exit;
+            }
+        }
+
+        unshift @INC, @add_to_inc;
     }
 }
 
-sub run_command_switch {
-    my ( $self, $dist ) = @_;
-    if (-x $dist) {
-        unlink "$ROOT/perls/current";
-        system "ln -fs $dist $ROOT/bin/perl";
-        print "Switched to $dist\n";
+# XXX -- add --par-debug support!
+
+# }}}
+
+# Output mode (-O) handling {{{
+if ($out) {
+    {
+        #local $INC{'Cwd.pm'} = __FILE__ if $^O ne 'MSWin32';
+        require IO::File;
+        require Archive::Zip;
+    }
+
+    my $par = shift(@ARGV);
+    my $zip;
+
+
+    if (defined $par) {
+        open my $fh, '<', $par or die "Cannot find '$par': $!";
+        binmode($fh);
+        bless($fh, 'IO::File');
+
+        $zip = Archive::Zip->new;
+        ( $zip->readFromFileHandle($fh, $par) == Archive::Zip::AZ_OK() )
+            or die "Read '$par' error: $!";
+    }
+
+
+    my %env = do {
+        if ($zip and my $meta = $zip->contents('META.yml')) {
+            $meta =~ s/.*^par:$//ms;
+            $meta =~ s/^\S.*//ms;
+            $meta =~ /^  ([^:]+): (.+)$/mg;
+        }
+    };
+
+    # Open input and output files {{{
+    local $/ = \4;
+
+    if (defined $par) {
+        open PAR, '<', $par or die "$!: $par";
+        binmode(PAR);
+        die "$par is not a PAR file" unless <PAR> eq "PK\003\004";
+    }
+
+    CreatePath($out) ;
+    
+    my $fh = IO::File->new(
+        $out,
+        IO::File::O_CREAT() | IO::File::O_WRONLY() | IO::File::O_TRUNC(),
+        0777,
+    ) or die $!;
+    binmode($fh);
+
+    $/ = (defined $data_pos) ? \$data_pos : undef;
+    seek _FH, 0, 0;
+    my $loader = scalar <_FH>;
+    if (!$ENV{PAR_VERBATIM} and $loader =~ /^(?:#!|\@rem)/) {
+        require PAR::Filter::PodStrip;
+        PAR::Filter::PodStrip->new->apply(\$loader, $0)
+    }
+    foreach my $key (sort keys %env) {
+        my $val = $env{$key} or next;
+        $val = eval $val if $val =~ /^['"]/;
+        my $magic = "__ENV_PAR_" . uc($key) . "__";
+        my $set = "PAR_" . uc($key) . "=$val";
+        $loader =~ s{$magic( +)}{
+            $magic . $set . (' ' x (length($1) - length($set)))
+        }eg;
+    }
+    $fh->print($loader);
+    $/ = undef;
+    # }}}
+
+    # Write bundled modules {{{
+    if ($bundle) {
+        require PAR::Heavy;
+        PAR::Heavy::_init_dynaloader();
+        init_inc();
+
+        require_modules();
+
+        my @inc = sort {
+            length($b) <=> length($a)
+        } grep {
+            !/BSDPAN/
+        } grep {
+            ($bundle ne 'site') or
+            ($_ ne $Config::Config{archlibexp} and
+             $_ ne $Config::Config{privlibexp});
+        } @INC;
+
+        if ($Config{_delim} eq '\\') { s{\\}{/}g for @inc }
+
+        # File exists test added to fix RT #41790:
+        # Funny, non-existing entry in _<....auto/Compress/Raw/Zlib/autosplit.ix.
+        # This is a band-aid fix with no deeper grasp of the issue.
+        # Somebody please go through the pain of understanding what's happening,
+        # I failed. -- Steffen
+        my %files;
+        /^_<(.+)$/ and -e $1 and $files{$1}++ for keys %::;
+        $files{$_}++ for values %INC;
+
+        my $lib_ext = $Config::Config{lib_ext};
+        my %written;
+
+        foreach (sort keys %files) {
+            my ($name, $file);
+
+            foreach my $dir (@inc) {
+                if ($name = $PAR::Heavy::FullCache{$_}) {
+                    $file = $_;
+                    last;
+                }
+                elsif (/^(\Q$dir\E\/(.*[^Cc]))\Z/i) {
+                    ($file, $name) = ($1, $2);
+                    last;
+                }
+                elsif (m!^/loader/[^/]+/(.*[^Cc])\Z!) {
+                    if (my $ref = $PAR::Heavy::ModuleCache{$1}) {
+                        ($file, $name) = ($ref, $1);
+                        last;
+                    }
+                    elsif (-f "$dir/$1") {
+                        ($file, $name) = ("$dir/$1", $1);
+                        last;
+                    }
+                }
+            }
+
+            next unless defined $name and not $written{$name}++;
+            next if !ref($file) and $file =~ /\.\Q$lib_ext\E$/;
+            outs( join "",
+                qq(Packing "), ref $file ? $file->{name} : $file,
+                qq("...)
+            );
+
+            my $content;
+            if (ref($file)) {
+                $content = $file->{buf};
+            }
+            else {
+                open FILE, '<', $file or die "Can't open $file: $!";
+                binmode(FILE);
+                $content = <FILE>;
+                close FILE;
+
+                PAR::Filter::PodStrip->new->apply(\$content, $file)
+                    if !$ENV{PAR_VERBATIM} and $name =~ /\.(?:pm|ix|al)$/i;
+
+                # Do not let XSLoader pick up auto/* from environment
+                $content =~ s/goto +retry +unless +.*/goto retry;/
+                    if lc($name) eq lc("XSLoader.pm");
+            }
+
+            outs(qq(Written as "$name"));
+            $fh->print("FILE");
+            $fh->print(pack('N', length($name) + 9));
+            $fh->print(sprintf(
+                "%08x/%s", Archive::Zip::computeCRC32($content), $name
+            ));
+            $fh->print(pack('N', length($content)));
+            $fh->print($content);
+        }
+    }
+    # }}}
+
+    # Now write out the PAR and magic strings {{{
+    $zip->writeToFileHandle($fh) if $zip;
+
+    $cache_name = substr $cache_name, 0, 40;
+    if (!$cache_name and my $mtime = (stat($out))[9]) {
+        my $ctx = eval { require Digest::SHA; Digest::SHA->new(1) }
+            || eval { require Digest::SHA1; Digest::SHA1->new }
+            || eval { require Digest::MD5; Digest::MD5->new };
+
+        # Workaround for bug in Digest::SHA 5.38 and 5.39
+        my $sha_version = eval { $Digest::SHA::VERSION } || 0;
+        if ($sha_version eq '5.38' or $sha_version eq '5.39') {
+            $ctx->addfile($out, "b") if ($ctx);
+        }
+        else {
+            if ($ctx and open(my $fh, "<$out")) {
+                binmode($fh);
+                $ctx->addfile($fh);
+                close($fh);
+            }
+        }
+
+        $cache_name = $ctx ? $ctx->hexdigest : $mtime;
+    }
+    $cache_name .= "\0" x (41 - length $cache_name);
+    $cache_name .= "CACHE";
+    $fh->print($cache_name);
+    $fh->print(pack('N', $fh->tell - length($loader)));
+    $fh->print("\nPAR.pm\n");
+    $fh->close;
+    chmod 0755, $out;
+    # }}}
+
+    exit;
+}
+# }}}
+
+# Prepare $progname into PAR file cache {{{
+{
+    last unless defined $start_pos;
+
+    _fix_progname();
+
+    # Now load the PAR file and put it into PAR::LibCache {{{
+    require PAR;
+    PAR::Heavy::_init_dynaloader();
+
+
+    {
+        #local $INC{'Cwd.pm'} = __FILE__ if $^O ne 'MSWin32';
+        require File::Find;
+        require Archive::Zip;
+    }
+    my $zip = Archive::Zip->new;
+    my $fh = IO::File->new;
+    $fh->fdopen(fileno(_FH), 'r') or die "$!: $@";
+    $zip->readFromFileHandle($fh, $progname) == Archive::Zip::AZ_OK() or die "$!: $@";
+
+    push @PAR::LibCache, $zip;
+    $PAR::LibCache{$progname} = $zip;
+
+    $quiet = !$ENV{PAR_DEBUG};
+    outs(qq(\$ENV{PAR_TEMP} = "$ENV{PAR_TEMP}"));
+
+    if (defined $ENV{PAR_TEMP}) { # should be set at this point!
+        foreach my $member ( $zip->members ) {
+            next if $member->isDirectory;
+            my $member_name = $member->fileName;
+            next unless $member_name =~ m{
+                ^
+                /?shlib/
+                (?:$Config::Config{version}/)?
+                (?:$Config::Config{archname}/)?
+                ([^/]+)
+                $
+            }x;
+            my $extract_name = $1;
+            my $dest_name = File::Spec->catfile($ENV{PAR_TEMP}, $extract_name);
+            if (-f $dest_name && -s _ == $member->uncompressedSize()) {
+                outs(qq(Skipping "$member_name" since it already exists at "$dest_name"));
+            } else {
+                outs(qq(Extracting "$member_name" to "$dest_name"));
+                $member->extractToFileNamed($dest_name);
+                chmod(0555, $dest_name) if $^O eq "hpux";
+            }
+        }
+    }
+    # }}}
+}
+# }}}
+
+# If there's no main.pl to run, show usage {{{
+unless ($PAR::LibCache{$progname}) {
+    die << "." unless @ARGV;
+Usage: $0 [ -Alib.par ] [ -Idir ] [ -Mmodule ] [ src.par ] [ program.pl ]
+       $0 [ -B|-b ] [-Ooutfile] src.par
+.
+    $ENV{PAR_PROGNAME} = $progname = $0 = shift(@ARGV);
+}
+# }}}
+
+sub CreatePath {
+    my ($name) = @_;
+    
+    require File::Basename;
+    my ($basename, $path, $ext) = File::Basename::fileparse($name, ('\..*'));
+    
+    require File::Path;
+    
+    File::Path::mkpath($path) unless(-e $path); # mkpath dies with error
+}
+
+sub require_modules {
+    #local $INC{'Cwd.pm'} = __FILE__ if $^O ne 'MSWin32';
+
+    require lib;
+    require DynaLoader;
+    require integer;
+    require strict;
+    require warnings;
+    require vars;
+    require Carp;
+    require Carp::Heavy;
+    require Errno;
+    require Exporter::Heavy;
+    require Exporter;
+    require Fcntl;
+    require File::Temp;
+    require File::Spec;
+    require XSLoader;
+    require Config;
+    require IO::Handle;
+    require IO::File;
+    require Compress::Zlib;
+    require Archive::Zip;
+    require PAR;
+    require PAR::Heavy;
+    require PAR::Dist;
+    require PAR::Filter::PodStrip;
+    eval { require Cwd };
+    eval { require Win32 };
+    eval { require Scalar::Util };
+    eval { require Archive::Unzip::Burst };
+    eval { require Tie::Hash::NamedCapture };
+}
+
+# The C version of this code appears in myldr/mktmpdir.c
+# This code also lives in PAR::SetupTemp as set_par_temp_env!
+sub _set_par_temp {
+    if (defined $ENV{PAR_TEMP} and $ENV{PAR_TEMP} =~ /(.+)/) {
+        $par_temp = $1;
         return;
     }
 
-    die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
-    unlink "$ROOT/perls/current";
-    system "cd $ROOT/perls; ln -s $dist current";
-    for my $executable (<$ROOT/perls/current/bin/*>) {
-        my ($name) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-        my $target = "$ROOT/bin/${name}";
-        next unless -l $target || !-e $target;
-        system("ln -fs $executable $target");
+    foreach my $path (
+        (map $ENV{$_}, qw( PAR_TMPDIR TMPDIR TEMPDIR TEMP TMP )),
+        qw( C:\\TEMP /tmp . )
+    ) {
+        next unless defined $path and -d $path and -w $path;
+        my $username;
+        my $pwuid;
+        # does not work everywhere:
+        eval {($pwuid) = getpwuid($>) if defined $>;};
+
+        if ( defined(&Win32::LoginName) ) {
+            $username = &Win32::LoginName;
+        }
+        elsif (defined $pwuid) {
+            $username = $pwuid;
+        }
+        else {
+            $username = $ENV{USERNAME} || $ENV{USER} || 'SYSTEM';
+        }
+        $username =~ s/\W/_/g;
+
+        my $stmpdir = "$path$Config{_delim}par-$username";
+        mkdir $stmpdir, 0755;
+        if (!$ENV{PAR_CLEAN} and my $mtime = (stat($progname))[9]) {
+            open (my $fh, "<". $progname);
+            seek $fh, -18, 2;
+            sysread $fh, my $buf, 6;
+            if ($buf eq "\0CACHE") {
+                seek $fh, -58, 2;
+                sysread $fh, $buf, 41;
+                $buf =~ s/\0//g;
+                $stmpdir .= "$Config{_delim}cache-" . $buf;
+            }
+            else {
+                my $ctx = eval { require Digest::SHA; Digest::SHA->new(1) }
+                    || eval { require Digest::SHA1; Digest::SHA1->new }
+                    || eval { require Digest::MD5; Digest::MD5->new };
+
+                # Workaround for bug in Digest::SHA 5.38 and 5.39
+                my $sha_version = eval { $Digest::SHA::VERSION } || 0;
+                if ($sha_version eq '5.38' or $sha_version eq '5.39') {
+                    $ctx->addfile($progname, "b") if ($ctx);
+                }
+                else {
+                    if ($ctx and open(my $fh, "<$progname")) {
+                        binmode($fh);
+                        $ctx->addfile($fh);
+                        close($fh);
+                    }
+                }
+
+                $stmpdir .= "$Config{_delim}cache-" . ( $ctx ? $ctx->hexdigest : $mtime );
+            }
+            close($fh);
+        }
+        else {
+            $ENV{PAR_CLEAN} = 1;
+            $stmpdir .= "$Config{_delim}temp-$$";
+        }
+
+        $ENV{PAR_TEMP} = $stmpdir;
+        mkdir $stmpdir, 0755;
+        last;
+    }
+
+    $par_temp = $1 if $ENV{PAR_TEMP} and $ENV{PAR_TEMP} =~ /(.+)/;
+}
+
+sub _tempfile {
+    my ($ext, $crc) = @_;
+    my ($fh, $filename);
+
+    $filename = "$par_temp/$crc$ext";
+
+    if ($ENV{PAR_CLEAN}) {
+        unlink $filename if -e $filename;
+        push @tmpfile, $filename;
+    }
+    else {
+        return (undef, $filename) if (-r $filename);
+    }
+
+    open $fh, '>', $filename or die $!;
+    binmode($fh);
+    return($fh, $filename);
+}
+
+# same code lives in PAR::SetupProgname::set_progname
+sub _set_progname {
+    if (defined $ENV{PAR_PROGNAME} and $ENV{PAR_PROGNAME} =~ /(.+)/) {
+        $progname = $1;
+    }
+
+    $progname ||= $0;
+
+    if ($ENV{PAR_TEMP} and index($progname, $ENV{PAR_TEMP}) >= 0) {
+        $progname = substr($progname, rindex($progname, $Config{_delim}) + 1);
+    }
+
+    if (!$ENV{PAR_PROGNAME} or index($progname, $Config{_delim}) >= 0) {
+        if (open my $fh, '<', $progname) {
+            return if -s $fh;
+        }
+        if (-s "$progname$Config{_exe}") {
+            $progname .= $Config{_exe};
+            return;
+        }
+    }
+
+    foreach my $dir (split /\Q$Config{path_sep}\E/, $ENV{PATH}) {
+        next if exists $ENV{PAR_TEMP} and $dir eq $ENV{PAR_TEMP};
+        $dir =~ s/\Q$Config{_delim}\E$//;
+        (($progname = "$dir$Config{_delim}$progname$Config{_exe}"), last)
+            if -s "$dir$Config{_delim}$progname$Config{_exe}";
+        (($progname = "$dir$Config{_delim}$progname"), last)
+            if -s "$dir$Config{_delim}$progname";
     }
 }
 
-sub run_command_off {
-    local $_ = "$ROOT/perls/current";
-    unlink if -l;
-    for my $executable (<$ROOT/bin/*>) {
-        unlink($executable) if -l $executable;
+sub _fix_progname {
+    $0 = $progname ||= $ENV{PAR_PROGNAME};
+    if (index($progname, $Config{_delim}) < 0) {
+        $progname = ".$Config{_delim}$progname";
+    }
+
+    # XXX - hack to make PWD work
+    my $pwd = (defined &Cwd::getcwd) ? Cwd::getcwd()
+                : ((defined &Win32::GetCwd) ? Win32::GetCwd() : `pwd`);
+    chomp($pwd);
+    $progname =~ s/^(?=\.\.?\Q$Config{_delim}\E)/$pwd$Config{_delim}/;
+
+    $ENV{PAR_PROGNAME} = $progname;
+}
+
+sub _par_init_env {
+    if ( $ENV{PAR_INITIALIZED}++ == 1 ) {
+        return;
+    } else {
+        $ENV{PAR_INITIALIZED} = 2;
+    }
+
+    for (qw( SPAWNED TEMP CLEAN DEBUG CACHE PROGNAME ARGC ARGV_0 ) ) {
+        delete $ENV{'PAR_'.$_};
+    }
+    for (qw/ TMPDIR TEMP CLEAN DEBUG /) {
+        $ENV{'PAR_'.$_} = $ENV{'PAR_GLOBAL_'.$_} if exists $ENV{'PAR_GLOBAL_'.$_};
+    }
+
+    my $par_clean = "__ENV_PAR_CLEAN__               ";
+
+    if ($ENV{PAR_TEMP}) {
+        delete $ENV{PAR_CLEAN};
+    }
+    elsif (!exists $ENV{PAR_GLOBAL_CLEAN}) {
+        my $value = substr($par_clean, 12 + length("CLEAN"));
+        $ENV{PAR_CLEAN} = $1 if $value =~ /^PAR_CLEAN=(\S+)/;
     }
 }
+
+sub outs {
+    return if $quiet;
+    if ($logfh) {
+        print $logfh "@_\n";
+    }
+    else {
+        print "@_\n";
+    }
+}
+
+sub init_inc {
+    require Config;
+    push @INC, grep defined, map $Config::Config{$_}, qw(
+        archlibexp privlibexp sitearchexp sitelibexp
+        vendorarchexp vendorlibexp
+    );
+}
+
+########################################################################
+# The main package for script execution
+
+package main;
+
+require PAR;
+unshift @INC, \&PAR::find_par;
+PAR->import(@par_args);
+
+die qq(par.pl: Can't open perl script "$progname": No such file or directory\n)
+    unless -e $progname;
+
+do $progname;
+CORE::exit($1) if ($@ =~/^_TK_EXIT_\((\d+)\)/);
+die $@ if $@;
+
+};
+
+$::__ERROR = $@ if $@;
+}
+
+CORE::exit($1) if ($::__ERROR =~/^_TK_EXIT_\((\d+)\)/);
+die $::__ERROR if $::__ERROR;
 
 1;
 
-
-$INC{'App/perlbrew.pm'} = __FILE__;
-
-package main;
-#!perl
-use strict;
-use Getopt::Long qw(:config pass_through);
-use Pod::Usage;
-require App::perlbrew;
-
-my $opt = {
-    force => undef,
-    quiet => 1,
-    D     => [],
-};
-GetOptions(
-    'f|force!'  => \$opt->{force},
-    'q|quiet!'  => \$opt->{quiet},
-    'v|verbose' => \$opt->{verbose},
-    'as=s'      => \$opt->{as},
-    'D|D=s@'    => $opt->{D},
-    'help|?'    => sub { pod2usage(1) },
-) or pod2usage(2);
-App::perlbrew->run_command( $opt, @ARGV );
+#line 1015
 
 __END__
-
-=head1 NAME
-
-perlbrew - Perl Environment manager.
-
-=head1 SYNOPSIS
-
-    perlbrew [options] [init|install|installed|switch]
-
-    # Initialize
-    perlbrew init
-
-    # Install some Perls
-    perlbrew install perl-5.10.1
-    perlbrew install perl-5.11.5
-
-    # See what were installed
-    perlbrew installed
-
-    # Switch perl in the $PATH
-    perlbrew switch perl-5.11.5
-    perl -v
-
-    perlbrew switch perl-5.10.1
-    perl -v
-
-    # Turn it off.
-    perlbrew off
-
-    # Turn it back on
-    perlbrew switch perl-5.10.1
-
-=head1 OPTIONS
-
-=over 4
-
-=item B<-?|help>
-
-prints this help
-
-=item B<-f|force>
-
-Force installation of a perl
-
-=item B<-q|quiet>
-
-Log output to a log file rather than STDOUT. This is the default.
-
-=item B<-v|verbose>
-
-Log output to STDOUT rather than a logfile
-
-=item B<-as>
-
-Install a given perl under an alias. 
-
-    perlbrew install perl-5.6.2 -as legacy-perl
-
-=item B<-D>
-
-pass through switches to the perl Configure script
-
-    perlbrew install perl-5.10.1 -D=usemymalloc
-
-=back
-
-=head1 DESCRIPTION
-
-B<This program> will read the given input file(s) and do something
-useful with the contents thereof.
-
-=cut
+PK     |<               lib/PK     |<               script/PK    |<- \       MANIFESTuPËnÂ0¼ó¨$)JÜCOyI9€¨DRs •Vr‡¸rl×6¥¨ê¿7Rµ‡ì™íÌ, @8t]ÀEA´¦9#€5¼båW”!´JÒ™'±¢4Y=ÌgP…h$£˜È•8j¢4¸n<è%ƒt–%Ş©aFs”H‰$Q,WäèÉæÌ-²l–ÔHqR¡È¼õÕ¿Éµ]¶?äºİÖÃ~ó@ŠJƒL¹'YÆmUCX›†Åa.ÊÎ.£Ñ;V°‰JQÂ×Í<Ê9Q‹,]zº-jl´ãÈ	:å6²BZ)ÜĞªˆ&oa‚¾ï6'F®£ª51¾¢ûÚ5éÿşî&8ÒÒÔİï¢ŠCtY‡[A%”İ¹}t×Ş8Ÿ´²‡›§g¯Á¦¨mô²Ó·cäL&g’¾7µ³¶ÙCµ"Õ5€5í4SëjÔÃáØúú§u´ÅßPK    |<šÆò    ×      META.yml-1ƒ0E÷œÂ¢U²õ¨ˆ’à"0­“¡ªw¯)ŸÿÿÏ¡ĞÔ;Ág!Ádáı1qáûD1ÔSÊıŒ(S\7¡P2-ìòöØ3/¦ß´GÑí,4f@Fñ{6Uw½YÛù8¢À%éNuÓœşCNê)<ò²²QŸ5 qBÏ»	 ÑÀ>ÑRU)« øLó‘şu
+uÛ^ÌPK    |<:]íı†	  L     lib/App/perlbrew.pmXñs›¸ş¿B¡L’v2ïİ8Í¥éµóòÒŒ“ŞÍ›¦ÇÉ Ç´Q]×÷·¿]@€“¾yL&iõiwõíj¥'Q3rHÌÓ$q&¢™`÷N²4„ú_è#Ğ1©±‘§Œ¤™ı¬x?rşéŒbı~>½~÷ş’óÀ9xac¹&Öôıûh³Î/ß\O/~ÿáaã–üøALÙşöı¿Ï·R£JÃÏ>L§ç—7Eh‰'…R×Ï…`q†3¥ùŒˆ<ö|¾\Ò8 ƒÀ 6Éã€ÍÄâIÿWòŠŠ»”ôí•7–rØ7œl"~çÍÃˆmë‰fyt˜c…h¥,šƒÄ,biZÂzŞÕéÙ¿N;÷â
+¬”‹}(zÇ'>mSSÙ³VfŸpA‚óCü%æ÷¤ì‘¿¬Õ_¹Y'ü¤„+a¬Ô–öôÇÆ¶ã§/}‘ˆ0ÎÈË—oÏ/®Æ†ò2VgRXò‘!ÅŸ)£YrÁ¢Õ¨…Ñlã0ë4¥"Ù0<r£Ç;ÃéÙÁN!´ĞÓû0ó-eÜ<î,Œ%kZ0|>7tÉ.ï¡Q¥÷ûš‡àŠ7@ÑèŠf‹bêïÑhI¿0/W[vá£ÓÕ¨Ï L3íSr¬şd™oÚ ¾)Û`åoºN3¶„õœæ/8é±UÂEF®NoŞW£F;F¶ßZ”ÜöÈ„T»3š.„_¦,cñ7	Hş@lÂùmzfÔáhaâ’¾¢EØÎ±³Á5¬ÇÄàßÄµ³€è»­›Ê%A¾“œ¡7®;+\ˆ´CâSøeÄlåAŞjƒ7Æõ
+/ôÔ°Fü¼»¼¾™~8»ˆWŠGà§Pğx	Î±ÒŒE› ‚Z0?ã"d)¡À#_0”ÉIH¯Æ,Š†Ù9ãñ AÑ,äqºG®"FA{$[02çQÄïÃøÈ<qÙÊâÀàs‚ö¿]ÇÚ(ËJCRøô™¶HÖ¦ì=gL …ŒÆVÀıl¦$…ğö)‹’£&f‚iV…pÊ— `éBf–tô“\ğX¨WBÎ¡a¼Œ8Ï&¤€È}éP(\&Ñ¶5›aÜ€ éÓ<Êdò"KHÕÛRrâ<ÉĞŸd`:ŠÜƒÍè¿€ïÆyü™¯kµ çÖÂjoÏĞßØ1
+6:ß!Oß1è‹]¨Ş{¤TËÄ–:Ï›9ç:aşø¾:uûÎx².gR»[1?Ï(l`Hü­WéRO9œàèÅtÉ¼0õè,åQ1[éëJK&7&Ğ±‹Dct­ø¶©&îe-Ÿf¨-é9#üTUƒ‡EW…}U˜m…‹Ø6ÿLÀà¤Dg ©ctaTUûPEŒÑm|·Ì½ÍqÃh§»7-Ûk†Ô9ùğ_·jPÙTËû‹%ìƒé½Uw³ÀX©C0Õ¥*ŒKÃ@-éšd¤tKÀïãˆÓ ÄuWÏ_,`xìÆ%[õa9d>?™¼B‘BÌ…80Á×L ÓŞ@‹pE‰¢Ú8…T¤Àj…Êì Ó’R,ƒÙåæ^‡F–‹¸‘×1HeèI—ê}c" TÙ€»ÑÒıÓvõ‡öÇÛÀù´ß·OFÄnƒış‰åÖ›X†Œë¡Q½]aıöææj4º3Ö
+ÏE–%^Á|Ì/MªJus	Ùògz«#ä:jüá$Æâ½#q¹óZ Ëe¹šSŒÛ¯9K3‡ÔEêF˜5QWì1wÌ›_( ?æ1ÚsĞœè~Ì{ÔdÇäÅÁs<4ZÛáŠODaQÀİúûûP|;²sPØ–v, ®ae=*]ï‚ÅÇ½à¾¤ŞˆØ·×ûP}àV§¼u8swgÙvZä˜{·üÿëâ‡ç”ìCVtí*ˆœN
+WÌx°î?†¦†(a-u»ŒĞE\˜ÂÄ÷‘ë¦Œ
+áø	.îdéëÊ1ûM”2n0ª „hŸA –7·—b>È/)Y6?6m÷ìêôÒ¥y¶à"uÃÀuö]ÛÚ ÎÖ Ç¾ûşcöıy¿ß7'¯Ë¬õÒ¥“OÌh¾ªh‰¿}
+§¼<±•»[À*õ¶2éšv•j?à’íŞju?>İè¯|%WoGôãÃËuùõôâöÆÉãê›]„Âr<±šk¯?âP‰J‘‡HÔZ`+OYÀ¾±HåT•de¥t'D—œsøZ	šdDL³‰ò*ğ „Â
+­ß¨cğæõi©OGµÃö†¦òºAÎ[‹åqºç™: _¿Ú	P*\ë@Ó‚%ÉaûÓ™µÊ˜“°nÜ&Ú»bŸ«¨æ8Ù4i…·ğKL8ÍØÍĞàÀjé¸Õç¹ôØê;ü¶ï/ÀùÌÃ˜˜ãÏZ,õÒ8–6{…´cl‡Mƒ.œ÷V»X’áœø<‡wxóŠG¡¿†·¶ ôI©öÌaÀ¤Ğ›ôHo õHB6ÈË3ÉVçG¿…„eVİîğZöŸuSú	¬@àìf0}ñQ,=ÒïŒKyòô)ÑåÍ†´>V#[¹t¦/}2™R²º°ê‘ç“§‡DÇ+ÎÓ¥ T,Ûâô{ª	è9ƒŞêS—
+ÅDªHzø”Ã´k¶âRŒà‘\†T}åU^@ÕÀõ/öÎK<EX¹Y¿Ô%Mô-†b[V—ˆ±-¬¼dİæEÛ­küóÖı´oõ;h5Ÿ]¼È‚Ò÷„ôìgı¬_–B¼ªíëÂQ	{¨¨×8õ´U÷Oª®—f’;Á½Ãj»U\¶¼BZÒ$
+3ÛÁ§¸AÅ+›~ã:¤´Äàæÿ€>h˜‡9L*²jË¢«\Ş=p”mÜŸ"×Ğ†ö	“à‚‡.m›¬#fCJHKø–×:©óZj„âHh½vÔù²œ*<ƒÄ<«Ï:0X}‡ASßrH	şs‹”5U•Bc‚Ö)ãš#
+­cy3 ´[¶V04	¯™ò@~gÿ¤oÃ‡–gõIE1¸:dk<µ6©2è”ƒ¢jì¨{C¦>;y¤ZQM±RÖ|,¿ğù¼´*^ÉH~Ìåå¢ ‡ÑO]Úub1¼q'Q`éã5u!SyŞùåkÏ3Œ'òêíÅ/¿üPK    |<Kıjò­  ®E     lib/HTTP/Lite.pmí<kwÛ6–ŸW¿¦•X´©‡ÓMÛ±«$N"'™qí¬í>fbW‡– ‹Eª$[uÕß¾÷^ $ R4söì‡i{îû…°Ûaq¶Ïœ·——ïÛ'AÆ[Ó‰S›úƒş-g8zp€Ã‡µÚ,åìi«ÓyzH?Ó,	™ø}>òŒí·¾ÏÇƒ(ÅÏ^’D1ûí®Ñ;zsôîÔ•€>ùIŠ£õ{çïÎpüeïÍ»SöPû/5ÆºÌyÒzâÖµÚdÎê/OÎ^ıãâİ¿zğæë§O¿úú†_ŸãÜ«ä*rÄĞç'½ÓWg¯{ıNŞ½Æ·şÍ`ÈG·ãà×á$Š§¿%i6ûtw?ÿıèå«×½ã7oßıı'ßŸ½ÿŸó‹Ë~üéçş«³ÿä«ÿ~úõ7ßş­ßlèÚ6;“;?²!„~âgA¥µtvÃ¦	Ÿú	ïOã¤‚#ã,›öï’^şœpˆB·†¬Ç›yÆSÂ÷^€eÙ˜³YòhQ|a0ŒQˆaœMÙØOÇÈú‹|RŸ&ÖF1@ŒÊ—°F:ƒ¬±³ã•åº  Æê1pL‹¯»ôªà²ºÃzôİ“§Oá¯½="±ÆX6JğêÑµDU^vÓiDÙ¨á<zô¨óägHÀF[ 1 ¬"~ÇjIHy8%?,pÊMÈÓTŒá#ıh>¢  şï¼A€Í’HM“@‹I6ètŒ2\ÂS®??dÁ„Ç³ls÷Ÿtô7èEûûøÂ~İ{ùÃ›Òè´Ï“¾ŸõãhÀÅk¦¿Ãá¸§|#şÙiğ!2ÔIavL±e5XëÚŒUP°ŸË'Œ~Ø÷‡Ãd©|pôhÙbT¡Ù)`íÚĞbrƒ¹…T­@H0I˜D¡MÆ¢w'Ù¿‹^„õyôŠ½«ğlW+¦&™Íùàê*CDƒø™ã##\ŠY4ÍUñHîÉ.._÷ÎÏÙ¯q5Nú¢ïzEaÍSÉU–âĞÃÓ'ŒNÎM<œ,'á¿ÍxšáÏAe<¢Ÿiæg³M“ø&=âE-V¦Ó&Œdñ q€'Iœ4' ­Á ‹h°w‚øêåÑù›Bè‡!ºY4‹äAˆÈş$u\€bª9@1Ï"°e›z8d/g£§iS­%çMïÒ)ûdŠïØ$Ğ¤	ŒDÙë>É[¤é¶Ê[”×Oüi±ó‰YäHM™p†~æ“2y:ğ§œ)mf±œ iTš6Y&’àÄÕ‰¥ÍLKJ
+¨ëæv
+ÔWâWÈ…iÂ|õìOır¬}];%Å
+×TÃÕs4šùÁÆÁ®C'ƒ­ÙôÓğ'Š°_ZÜøÉ­F¢íŞ–Y”B\oGaÃ‚)š!ÌPB7Ø×£[…\í5’áªUJB‡ˆª¨L8ÚS¢PŞèÕÇP yõ_gÑG¯ëÕã›_ù CIäëşÉ&¿4>ürĞ¾ŞsÚmøÙ>¸Şu«áë>o´[»n]a<‹Â9Õ«,HY:›"dHˆcpÈ	,™ƒYRs`¨é"æ|c¹™k•0ùenä†£!ğbJå­ˆ“,¥ ‰ àò–gôófùŞØÉÓŠ×”0Øîñ[|H©¨n¿õØûãş»ÓŞ¥Ç.  î_\÷¾÷$<è‘R€ümYİ¢ÇÃ\ç‚”»®;Š˜`ÓüÁH'Çš«?>7ŠUI‡‰Df@D$c¥ùúãsóñ X…ˆ0ıÃ
+ğj”8jèT¹ÊK¶hòA§$é.×YˆÎ	1XØÈ6N"†˜jıÄ=†[™Ñ,ÉÔı”	Kf eÈ å0v´m'÷Èm6Ç@šT<±ëGC†´C®’e@xwzôúõyÿèôŸ‡Ìx/%étœR¤¨ªŸŠ¸a€_ZI	i“ùo€¬Eÿ:¤[û£PØH4èı‚ñ0åK&kŠ.Æ¥"šò–p+lÏæÖ6S»¶[(•Dà†¸‰Ïı §…â3C­ÜÑW pQ<†Ñ¡êı 6‚·h,8CÎRDØR~›¦U«æ^=„aUŸŠL,Š£ ö#"~wÆâˆ"ÕŒ.äH	ÄóøÉ½L*EËê¿œQĞüşâ§ úê‰Ã”8G¸Ñ'¼Çı‹Şåñ‰ÇÎú§g§´Sws;7ó–irÅ<6ÇUît$oP~'âí|$Ğ@ôµ
+VkcçI}#µ(ü[Û:¥ãxBè§ZäÎ=Ô!Ñe7çYáÄ™æ„‚”^ÏÔOÙoí³	Ö1erChQT oì¢DU
+¨ğ¡`RÃÃ‘lkó™p::ÁÈÑpö6|	åO*<éí'9¨ÄÈ|¶v‹v“øQêS¦cS–’B€Öfı	 À»VQ[éöaV_€o8¯òTIu6†k ™Ê“7bÜÂg‰Íõ6[
+Ş´n¹¬–,®ç¹DE—-+¼@
+7|
+ˆìrÌF ç}»í]Çô¥';ïÏ..wÖÈ+±+j^Î§ü€ùS¨ Ô‘jß7ïîîš°µš4óŠ{hè[V+ïgÉ-MâÙ4ƒ“¶%Ê!yÆmUåH}—¹bî	n³±˜-ªµY6ešué»@1š»fjÚp‹”,7ï3^sK3šLK$YŞ&=Èu‹–sÀœ–@ÒrÊ"”µ²Ù‰ÍeéWÎZhä[+	ñ£¼F·Å5‘”Zr%À+â+©HL\f-,4®–ğKØ“µ®Ånà† ìëÀÆZÖÖ$¢aq­W°6¡™÷ ­Ç#ÍÌ—†è‚Ò¿ÅD£p9Œ¨ÛlšòÙë•ó=x‹õnaÏ~›3`™7Tª[¹ïÆ”†`½®’«f[KœX‘†ÊÂ÷öt{³Âœç![~4Ï·:ã³Mzu|)¹ó×FdşhšHÄ4¶ °'7#Ü½$ñªšr´T7ZV-İı|o7†Í:uŒ¡4øİgª:l’„ÏØÁßÒTè¹äùaÉ0'Ë+Èñ
+2Ê:PıuPœ¡†ƒ ÁÊ4¾<!ÏàÄ+äoIËbvœŞÁ%n3´­ReßôßÕïü=Ïbİò¶§Ù¢„œ\ô/6e‰ÄqÁ‡Ó²dB½P7÷ÆE­ø“,A¹¤ØW’i@%îÖt|EëÈ«AxuÉ¶‹dÏaÓ¬Çc_î¿Æd™!:¥eİ¢+ñÚ¯wyïÀ<ú]šfh§ÉŸjbÄï3µÎÅÑÈ6Ö¹Ò¾ì"ÈæR "dLºÎŸ¬ıË<½Ş­·MIŠìª ¹e½H¤‡êb…è/å_ÛìÕ˜>ÒÙÓ%îÀrš=,9E.‘z¬gV‘¦ŠÄÒšBFlÌ¸–˜^)ve¯ìàÅÌ[ä $ßjÈ‡ØäÃvàæS
+˜–œ<(8À…%M5áfê+›;¸GúL³\W.öC¯wİƒ«t·İÏv¥¤ ‚[¡a	 ¥ma%õvû¶àŒÜJĞ€`¿ø“¥@@Ëm?†ıVÖûn»°c}V£¹|©:M¦+Éx´³XˆÈaªp+á#kÁ—¥6ù¡àñº¬0&ö•ë§³tÌ^<œ…—ƒ©²ndmœXQQWy`µw’¶·ÌYñen‡•/Ig`,¶v-e[³`’9²w:¾§î¬šk*Eü"³g¬ã’İf˜o¡¬¢­%Ã8¯½-ø&J¶(€ùÍQ§ù·ë½:8©k}L/@>ØÖù=]TÑƒŠ©NK˜°@çG_³9î;?Õ¡6Şö~–c O×¤Ä’ ¤À«½¶Ø7¢“IöÌ†jÕbz01£ğÑ½)±
+à›‹†O¦Ù\ªÄcLØNÃ J¶±¥K'µe÷)\d©{°Ö2ßîÛmšfg}î3İşjê¨‚[	¶ZïXğÌn@v„×ñ–˜ê‚i†ì”ruvH_: íE¡|`KÉÁcœMy)H¿÷Y8gÄf“n¤0ºš•fA®0Åà6‚šx„#g©İ´,îcÁÜ¸’B°VM—¥)]Ç)V[¹ôe¹D—Ù¢ÆÄšâªÂ4´,Áím®Î³¬q+9®<ùüÇÚ}dÍ:NÓïQes~&®‘¿êV‹`-A¼wöùøÿÉ	¶ÙòµwÙZ#áu1Š™Zè˜­Iµ•luëJ$¥æ5uøø]Ú6Ğ9Ë—¬hÃĞNHj YÕ´MUmH+¿Q¨×¼§ Yïê}³•QÔ][ÈóôÃ‡(‰’×ØEoÈa/^;îÒ½mE±ÅÍAµFw5Ê}®Ù,UØÁ6 Ç²‘Í­×ü¬h{¯v51Ç“­ó’‡…ƒ|_…{­¾Î¬M"òı™À#òòYİi‚ºYaT·äf¼j*öåíÉâgmÌæÿ&R0¸·b™¢ğACÙJçŸçòû ÍRÕS•İÜh*¤¥£µ½9•ò5É_1YHØ®_WTäJØg3_(‰å#Ÿ§ìQm9â•ùÄR£ô â.¥¨MWÛ	Mµ|6Æn5Š,2ú²´18«¡¤Óu¿&Å–İıKojÉ³7qWëêbÍE-ÕW7¯Õ4$Äàæ@ëw Ô¢ÙA§¥¥;L]qdKí–"~T]BêÊ»R0óÛÎ¡yA:íûIâ/¢~A“`¼¡Îkª/-¶{æ&fÆ5-ó„ûš=d”Vã1»
+¢«AäÒ88PáØ,¥™‰Ù%¹ˆÛÁÔÅ¬¼rş,Ej«[’‹¼½\’Œ\b¤šõq¿hQÊÑe"çHcH)!Ë¦ûû}Ü>¬¾nÜÃÕ ø æh!£ødeÍıøDèÁÖ8FÖ\ßÅ‰ŸlbæñF\şW‡õ¾‹õ#jé‘„\èœ’ BµôEˆP[qI×4a«UDUÌ¬™7²ÕyJWéQ#Oş;úŠ ÎÚ«¡›Eô%ŠLæö™n´K—ÿŒİÀ²©:¥Ú½q¼6â†#!Wç…ÑØ£•jÖ´:cÎ‹Sİ°~BøêJ;©âë&š',½´Ñëâ¥° £VC<£¥~
+âYÎå,>ÔNkUù.Ï—Sg·PÙDÜµ£-¿ªïIÊú©ÀG¡ÍSq¦‹ <sóX‡¹t»orÆ³p
+jtÑ'K²ï“ +HÿÜ¶±íBw«âÏ×CQûEmôc%{›0Ò“=µHğä‡i¬nTãÆƒ™­­7²5g¸…ùmr†+o-v‰	‚ÜÕÎj‚®~Æ[œY8qS"©Nx^†k8Ø-dy»/·B	±¤#©_Å!b„hîÚ€Ä
+ö<·½üşÍãs½;u ½qÙA±…ÍGeW!áZ»Ãü¾PèDJZ}¾æ™7çØ*h7•ÑvjÚ%ëíR‹öí÷Ix¸×öà¨¼ÿ–…ŒH•
+p™8zh|¸ºïtšW÷ûÇW÷ßÃããkwñĞZÜ.ÅM—Àğ@®º6 DzÔUYë¬.åTÔå8½wv‚ñœŠ‘ı¢ŸîpWaĞîßQô Gf>uİÅMM®n»Îy¦=œêŸ/Q¯èlë7ä£xJİß;?ÈèD8€„8ÁR‹¾ ’
+jÔƒp­YêÑ¥ô!LÃq<ø¯#¥ü‰ÃN”¦Œ€’(F¹Ş¾+n¦È>Ø(Eô5li™œ¯z˜ò)—qÑ.Ëæ.Êğ¶Ù%Ì2˜/Gì«Ô¥’c›½áâpÎ%ßËÊ¼A×X„ºçºûZV·TÉlØıBÊ_Ş8KåşäyÁ­Xòf[õ­ñ=öÂä=ôÓÌ˜ùBuÊöû^Ø‰Q¨XÖÑê
+FUÿ`›nšå7†ÉèèêQavÒò£ĞÏèÚÿâª¡{ä y‚†¼ªòºütS=
+M#Äg¬¹¯İ’K´#•%˜:­ßÛWmZ	}ıJ}y÷xsäe¤Sˆ«ÅÙtˆWp1.×Õ%#mZSI’Yæ*§ï€uÊQÌnó°æå¥È†7Qˆ¬Šop‰n]ó3ÚA™İå¹ÕŠgİd²äèb^Lı'òı'ò­‰|
+Ş‚R‹bS<w×XK‡Ğ–İ}V £µy$[m1DMT” ÊŸ-¯|&êcÍ¥_C«;º_0× Ñj·# İgÒ¾íÍ´N¶yßŞ(1*4òêÑ`­ü)"`'¯õû½Ó×ı~­¶-ş-§ßÔşPK    |<ıÅÄa  A     lib/Mac/MoreFiles.pm}S]oÚ0}Æ¿â®e"‘+Z5­AL0š´H|©aÕ¹ÁkIl§Uü÷]'¤LEñ9çcßë\F<aĞ…‹)?N…d˜ê¤ñ!—wMH¦(-y¨{„¤4üM1À
+Ç)KøæŞgğBFì‚É,»W³"dJ1Uáî.R3	Pa·û„N]!šcúL¥‚í«ùè>øãùc÷Çbş°„÷Ã4xH5‰©)U}hu;WŸZˆå}ãQ¦VQ¦èd–kH£áùéH2ªÙ”'<Îâò7T²âó{¢ª…iÄH¤ûbuË%µû
+c"š•ÌQ¸¼cz¸XLNKŸé‘ˆc–èšà1¦„Oıü¤‡9¼5*Ç	ŒöªÍùÔ–œ9!ò¾¿n»i^1Œª¹Ş×+SRDªì	<w9º7–ñŞj*­ÛĞä+Kqåk°ŞåÄ‡¯/Èl#ÎÕ4MMF.işœÛBw?÷[…¦±â=4ŸŞ­ã%sœGe1S–}T5Œæ¼ŞmkÃvn/¶eìÚĞmÃµm›íå6Up/Æ.Gø: ‹°/yP=§¼Ü3ñ=¬jñ„'ka¬O½èqÌ@F2ÉêüÆÙ;ı©_>ÍÙ«¡[ëÍá›	?	¡±4ı×´Ï“0ÊVçuvêrsCHÙ pg·A@şPK    |<‹O‘`  é     lib/Mac/Processes.pm•–{k#7ÀÿÎ~
+‘óÜëÚq4Á%½NLı^_{…‚QÖŠ-¼+íIZ?ùî•´íË”¬FúÍŒf4Ã|ò1A .§Ğûõ…Qqø—0¸´¬OzïæÆ²" {âŞ²BèíàIÜİeÈİİ*ù“7:…á½uqæ¨Ôñè<gàİºPšcH™@ Ğ¼¾eÃ
+×Rªe±t?Í‡±ÛÎ÷—ùb	>'ŠAã/gáç³ø|º=pÕşbÿv%¥šë)™McHa©N}Æº¸˜ÀˆxÛ~úØƒS’É†ˆïú²KÙIJŸDŒ!"wbÙˆÑ’d†EA.l,H¸ôo¸CßB³va€ÌÊ9b±¤îù¾rÑa²Î¹=¢Lé—[›/ãaa-Å"ùûl”ËßnFÍzç¸@ANP¹º¯ƒ47À$B™`FGØG#nÌ¡oM1ÁAd¢¡äÜŞ6õ}Ÿ:İG,2Ñ˜lñ+Cˆ³€®Q9-J6|ã¬%’Bk7â!"ëâQ€ù ’Gùd7ŒFdj¤ˆ÷=÷P 9=e~©Í9ñO"Mû@FÇPæcˆÑzÊ7‰ì¦#¯3 A(sôê§N<ãÍv‚öÈwö2¤ıdéÎ„zĞï+Ÿ*ĞóDH¸Bg±S‘Á]Êç¬±pÛc™ô^˜‡><M!‘ÊFÖÀ‡e½R*d¹Ã°Z¸£¬àZàGóš€Ô—´‘¶ı»Å£W`’,lPó÷n>í{ğC…Wæ ve•ÊAe®vbW‹oø¬UûØµíÌÕÊ;/s)dß–!S[Ô-C¦TÎC2dŠé<Ô.C…r+r$/Uˆä×[­ R™Õ (X9j¬–J·.j—¡JuçÑ²»%¨PúgÜÓ¦òP}oHèÊ'ºÚ3J¦2¨[„Š=åÔ©@¦çœ»S>Ñ5M©œèJB5=Ë€ê úvV¼T*µ¹sîµPM¬sÏ¾-$·Ú k¡®~ñÉƒ¿ıú’«©Oeu9vûî³š‹‚S³¡ô\ËQäa¥™ÙÅş}ÿh½¥[µÂFÎrAùo­FÈI,;R;t45d”îòOç¥·†ÏM1MÛP3ç{
+ı„3yeE/†»\Ì•¾Dà.çGFßcîÀ¥¬Ú+¼-$2ŞaÒè±¼ÔešÉ¡3q–"‘†©à„„F²äÅMç2$Ù!èß+¿:Ô|‹ßD|5µ!ÿ{`%Oê¡U®šÈ6­ÆúŠçÒÃ«ªŠ7@²£4©a5V-`·@çúZ»ùCm–ëõ0ñüh€İ<}ŒnÛ²V+g6\­¬ÿ PK    |<åäªÙï       lib/MacPerl.pm½XmoÛÈşLşŠ)Í„”«Hv®E)N,ØÎÁHÏÊYnp…å+jeoM‘w[Õß~3ûBQ²íĞ~°Èİ™×gf‡ŞËDÎá‚ŸXú™WY§œ~ÉÒ{vËÁîõ}¿âß¢âpöX•âUß_HRU"Uæı;«$|{ˆÃ/g—£óáŸp|öËçáå•{&ÃOğÊ¾^~AxÅª[®Z¨¢>xÑaçà¯îiG$Ö)&N'T|ïŞšyÁ¿óêç…P›-ZÏ.¹s¾Ùdl)_bı(*©Fi%Jå7T‘İVÛˆ«"ãçù¬ğ½›‹¼ÇŸ\>ğÊ÷NîŠB¢ÊÏ"Å]£êã M¹”¾÷»çG£’§æı3Sw¾÷¥Ès.}ß¿ğJŠ"Ç·A•Ş	ÅSµ¨PZxRÌKTX!Ó%/³¥ïƒ²Ì¸µÙó½¿lzöˆ¡ÊY&µ[?‚˜e½‡kë\»‘â—‹	<*Ä-Ï[ÁAÖ[[!¶L‡»L›€[·/‹i„ŸWğñù{€&âƒWP I•˜ŠüŠLùŒ-2J#	„ºƒĞJíõ¾|‹3xzBt–Rñù?ÎG¼BI„³=˜…B8³Ò„D­gÓ%ˆy™‰T¨l	ÓËe²„e±¨jÖ‰ÈYµôy†é…8ü:ş"$GQV¾·T#'E>·}ZÎ—N³dšñG…9	©×3ÏU¤	Ñyw8£É"Çw²ÚsUyºÌ¥êÒ+òN_¢ù½g>’t§Œ¬b­¡Ó"wäQÕ†¼PDµkcÒaˆæl¡Š®=àÚà ÕÎ
+ŒbzññùÅ‰†ñITt>LºMtÀËÉUÍ7SÍÚ·§TµÔ§pëem^Æ¤1«-|33§^¿ÖOdAD‘Q:ób
+16º×r¶Åá£lC(—óŠÏZ$“¸ããM4{=T™‰	Ò¥9µQk¡âö™È§	'E‡IJGBZÇzÇq+ˆHhÏsy"—
+ë!yÄ2Šƒp…‚Ö½^ã ö mB¡•¼FQ1élÙ8ä…íâ‘3Üz`Uå%ië¯ˆ¨¾·oº›wûÉ	«&En6V'ÃÓ3Âê>öÀ&UŞoHÔ	4Z:âÚôœ-™UJPYaË#àË;1S¦'¥Šœ‚rœÀ¨¨I!‚qÑƒhø‰¼hğÌñ”#ÙıŸ°<åY+ì†‡Ğ}½Ä?hİñãéÛğèŞZŠŞ3«0¡Õº©vÈ¾šX:QĞ¢vƒË`İö¨£­ãˆ–øOîÔVû|îq…hˆm Ú0vGÛµ¼7‡.¤¤âÒè°ÇOÓIãwïÎ†#äT?+©—1…×–‘QøK•øÎ÷TÈ2cØéËŠ[ä1à<]Îé`]w_³S[æó|
+¤ÏGÕt£9ãş²ÛÙÿ@!o}LC·¿Cãë`<¾iñ¶Ñ@ÈIg|Ğé„{Ö„­¸•JĞJÃì,½FÒÕÖä½Ú&ÎÎ…–Fç|Ô—Gôû3wĞúÌ—3›™z
+œÍLšr íğÓól¾İM£õ¯ìpHcŞºNÔ:|–Q“ğ}J¸Öó_eİåÔ0í6	j»™;şÎ²—uâìÚu TâTŒÇZ	„	¬İ1[ªõ™­rŞb™£=¢Ô—ËËqî¨0ü b¬š&y†S› 0ëá…O#jN >c«ïs4¥ÖŞ†ÿEõ§zn…ê†Là•†ÕnÔ#<ôleògz—ãërã´óycîïÒ×®üiõ”Ád‹úu< › j¦+GĞ.ŞA·]«ìıÈ\Ğ¤^9|íÄ}k¯yûşB2%›d·>¡¨Ã~½÷wºSQjPmZÊ$B…Ò66.(rƒ…¹Ğ§µ ‹jp¢>rW®*3N«k——ƒš±V3Ôêí$T¢Ä‡®Pš–iÒÂN³ººChRK^²
+aGuZÌçL¶zã\Oqkàß¸#¨>ãÛ!1_ÌÑŒç·ˆÌcg|=È@§áŞÊÖMÃgÀõ«p…2ÖÓx%Q8Æ5Ù„şÍûë0¹±#[ÃÎf_Ğy s]h»\x;8È=q„zäMÔ¼q0œÖêFrG#ì ”Kèëª—1¹Îô(òntuz~ñ¾år¸“"Ëu¿©±1†Şáa8ÁnhKd,÷ÛøGUBÌ7Ö-Ì`Ì¥_ãƒ½€;5ÍnàE±yG=û63nlrâNóMM¹h?ÍÏLÁ]m¹}Ô‘E9Xi~’œ]œ&	~êÿ…üåğoş¯PK    îQy<¦¯{’è  :     lib/perlbrew…TQoÚ0~÷¯¸©• ©D£Z÷ …–6¬Cê :iê*d'±–Ø©í€ºÒÿ¾³C(°©ã!$wß÷İùî|Gr¦RRhÚ(˜{¿aFæ¦İ¾•"†§U½HñrªõÜ$JqÒ(¡¶Û÷šÆ¬C{*¸bĞÏóvÛ
+/[uÉáõ /ğI0èö !‹Nœ™ÌX[«üöíÃ~?<×Á”Æ¹áRèºó×¢µ“ùPs¨Ÿ6@³÷âl¯¥DíiíT ÎVA–ë%S©Ym²±U ª»ºUBˆêÊï¯ı®¾¬mü·_y–æë‹Ê«‹¼@.ÃÓÂ­Şj  Õñ‹»WÄfObÈ,£"¬»'pÙ¿»ù%óù`äÏç„tFÃŒúß„TdhÂ_a –\I‘1a u0ò¶”éÑx2N‰KzK}eÑánÖ\hCÓ´úgáZ¯¸	’Ç’wCDqšòßl_È²ß0ZfÌ¥¦±¥ßšg^ë£×zĞòÎ*í)c°J¨ÃIÜ¦ùO>š+–;„ LÂàxÒŸ}İ§é7TµòCsIŞïa>‚Y¡p2Š¼}>ZAü)ş§êéx2GØÒ®Ä‰†OøÂËàê¼y±¶cÙÃ!Q\'æ¬i³¹aúâ.ì¦jÔ¦Ôİ!lîne²0yaÀH¦øñ”¢X[…á¨€éÌßÏ<˜ÙØ\»ªã> Ej¼ÕíıK·ØÓt¡l¤ª‘YÍ…˜/™(û`÷KK9ÕwÇì³w
+()‹iğÜ<8¼o‹‰û6ûqÓ¦m¦öh.âµ[¤¦ÏÍûm7¡éwqÑfÏ:d€íl{ì¦×wC×hB®Î]-s%cE³¬8j)Ä¹Êƒsa«gKT×<{¡t7G@Äv§GEŠL“8n~ÃÊ	Á%#Û™ 0äPK    |<?Ğé}%       script/main.pl]Ájƒ@†ïûƒT¨)½`K!µ’ĞJaY×	.èºY×˜Ôøîİ5¥‡şÇaşo†ˆ%„Äiö1æÉ&yNwéû>B	ØLKğÒ3òŞ°¢F;è€kdÆöaª¶7`*„(ÒØwóJ«Œhåöˆà+ÔuÙrPÊ_~Io5Sñ,Lğ®ÈDi.°ø
+aaâx+ŠãZùîí9K^Ói‚ëÍ+qÂ8ş*ZKJŸ^¶)¥è`6jËÃ«aœéÑú6ÍXƒeàw\eî\¡qğC˜f1—VC)Ç aB.UÃ†IßØ»P‚«À­Ş?ŒCÖB×ó
+Â=Â‘4rÓêN#´Š6óT÷’Ş¬‚_ç;pO!?PK    |<¦¯{’è  :     script/perlbrew…TQoÚ0~÷¯¸©• ©D£Z÷ …–6¬Cê :iê*d'±–Ø©í€ºÒÿ¾³C(°©ã!$wß÷İùî|Gr¦RRhÚ(˜{¿aFæ¦İ¾•"†§U½HñrªõÜ$JqÒ(¡¶Û÷šÆ¬C{*¸bĞÏóvÛ
+/[uÉáõ /ğI0èö !‹Nœ™ÌX[«üöíÃ~?<×Á”Æ¹áRèºó×¢µ“ùPs¨Ÿ6@³÷âl¯¥DíiíT ÎVA–ë%S©Ym²±U ª»ºUBˆêÊï¯ı®¾¬mü·_y–æë‹Ê«‹¼@.ÃÓÂ­Şj  Õñ‹»WÄfObÈ,£"¬»'pÙ¿»ù%óù`äÏç„tFÃŒúß„TdhÂ_a –\I‘1a u0ò¶”éÑx2N‰KzK}eÑánÖ\hCÓ´úgáZ¯¸	’Ç’wCDqšòßl_È²ß0ZfÌ¥¦±¥ßšg^ë£×zĞòÎ*í)c°J¨ÃIÜ¦ùO>š+–;„ LÂàxÒŸ}İ§é7TµòCsIŞïa>‚Y¡p2Š¼}>ZAü)ş§êéx2GØÒ®Ä‰†OøÂËàê¼y±¶cÙÃ!Q\'æ¬i³¹aúâ.ì¦jÔ¦Ôİ!lîne²0yaÀH¦øñ”¢X[…á¨€éÌßÏ<˜ÙØ\»ªã> Ej¼ÕíıK·ØÓt¡l¤ª‘YÍ…˜/™(û`÷KK9ÕwÇì³w
+()‹iğÜ<8¼o‹‰û6ûqÓ¦m¦öh.âµ[¤¦ÏÍûm7¡éwqÑfÏ:d€íl{ì¦×wC×hB®Î]-s%cE³¬8j)Ä¹Êƒsa«gKT×<{¡t7G@Äv§GEŠL“8n~ÃÊ	Á%#Û™ 0äPK     |<                      íAr\  lib/PK     |<                      íA”\  script/PK    |<- \               ¤¹\  MANIFESTPK    |<šÆò    ×              ¤;^  META.ymlPK    |<:]íı†	  L             ¤_  lib/App/perlbrew.pmPK    |<Kıjò­  ®E             ¤¸h  lib/HTTP/Lite.pmPK    |<ıÅÄa  A             ¤“{  lib/Mac/MoreFiles.pmPK    |<‹O‘`  é             ¤Ü}  lib/Mac/Processes.pmPK    |<åäªÙï               ¤!‚  lib/MacPerl.pmPK    îQy<¦¯{’è  :            í<‰  lib/perlbrewPK    |<?Ğé}%               ¤NŒ  script/main.plPK    |<¦¯{’è  :             ¤Ÿ  script/perlbrewPK      Å  ´    969f6458c3f10eff5749572cd1aafb0cdfb6c09d CACHE  7K
+PAR.pm

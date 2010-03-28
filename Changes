@@ -1,5 +1,6 @@
 0.03:
 - Fixed a bug that switch fail after 'off'
+- License changed back to MIT.
 
 0.02:
 - Officially prepare a standalone program for quick download.
