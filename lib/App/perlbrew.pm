@@ -175,7 +175,14 @@ HELP
         my $as = $self->{as} || $dist;
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $dist_version =~ /5\.11/;
-        print "Installing $dist...";
+        print "Installing $dist into $ROOT/perls/$as\n";
+        print <<INSTALL if $self->{quiet} && !$self->{verbose};
+This would take a while. You can run the following command on another shell to track the status:
+
+  tail -f $self->{log_file}
+
+INSTALL
+
         my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
 
         my $cmd = join ";",
@@ -194,7 +201,18 @@ HELP
           );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
           if ( $self->{quiet} && !$self->{verbose} );
-        system($cmd);
+        print !system($cmd) ? <<SUCCESS : <<FAIL;
+Installed $dist as $as successfully. Run the following command to switch to it.
+
+  perlbrew switch $as
+
+SUCCESS
+Installing $dist failed. See $self->{log_file} to see why.
+If you want to force install the distribution, try:
+
+  perlbrew --force install $dist_name
+
+FAIL
     }
 }
 
