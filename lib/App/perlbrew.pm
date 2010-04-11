@@ -40,7 +40,7 @@ HELP
 
 sub run_command_init {
     require File::Path;
-    File::Path::make_path(
+    File::Path::mkpath(
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
@@ -106,7 +106,7 @@ sub run_command_install {
             exit;
         }
 
-        File::Path::make_path("$ROOT/bin");
+        File::Path::mkpath("$ROOT/bin");
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 
