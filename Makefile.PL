@@ -47,6 +47,8 @@ use inc::Module::Install;
 license 'perl';
 all_from 'lib/App/perlbrew.pm';
 
+repository 'git://github.com/gugod/App-perlbrew.git';
+
 requires 'HTTP::Lite'   => 2.2;
 # requires 'local::lib' => 1.004009;
 
