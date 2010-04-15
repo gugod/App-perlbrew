@@ -64,7 +64,7 @@ Perlbrew environment initiated, required directories are created under
 
     $ROOT
 
-Well-done! Congradulations! Please add the following line to the end
+Well-done! Congratulations! Please add the following line to the end
 of your ~/.${yourshrc}
 
     source $ROOT/etc/${shrc}
