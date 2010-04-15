@@ -48,6 +48,7 @@ license 'perl';
 all_from 'lib/App/perlbrew.pm';
 
 requires 'HTTP::Lite'   => 2.2;
+requires File::Path     => '2.06_05';
 # requires 'local::lib' => 1.004009;
 
 install_script 'bin/perlbrew';
