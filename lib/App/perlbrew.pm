@@ -64,7 +64,7 @@ Perlbrew environment initiated, required directories are created under
 
     $ROOT
 
-Well-done! Congradulations! Please add the following line to the end
+Well-done! Congratulations! Please add the following line to the end
 of your ~/.${yourshrc}
 
     source $ROOT/etc/${shrc}
@@ -300,9 +300,9 @@ App::perlbrew - Manage perl installations in your $HOME
 =head1 DESCRIPTION
 
 perlbrew is a program to automate the building and installation of
-perl in the users HOME. At the moment, it installs everthing to
-C<~/perl5/perlbrew>, and requies you to tweak your PATH by including a
-bashrc/cshrc file it provides. You then can be benifit from not having
+perl in the users HOME. At the moment, it installs everything to
+C<~/perl5/perlbrew>, and requires you to tweak your PATH by including a
+bashrc/cshrc file it provides. You then can benefit from not having
 to run 'sudo' commands to install cpan modules because those are
 installed inside your HOME too. It's almost like an isolated perl
 environments.
@@ -320,7 +320,7 @@ After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
 and you should follow the instruction on screen to setup your
 C<.bashrc> or C<.cshrc> to put it in your PATH.
 
-The downloaded perlbrew is a self-contianed standalone program that
+The downloaded perlbrew is a self-contained standalone program that
 embed all non-core modules it uses. It should be runnable with perl
 5.8 or high versions of perls.
 
@@ -328,7 +328,7 @@ You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
 
     cpan App::perlbrew
 
-This installs 'perlbrew' into your current PATH and it is alwasy
+This installs 'perlbrew' into your current PATH and it is always
 executed with your current perl.
 
 =head1 USAGE
