@@ -1,7 +1,7 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.03";
+our $VERSION = "0.04";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
