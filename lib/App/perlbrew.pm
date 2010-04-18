@@ -40,7 +40,7 @@ HELP
 
 sub run_command_init {
     require File::Path;
-    File::Path::mkpath(
+    File::Path::mkpath($_) for (
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
