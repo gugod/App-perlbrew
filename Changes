@@ -1,3 +1,7 @@
+0.04:
+- Use File::Path::mkpath instead of make_path to make in runnable with older versions of Perl
+- a few document typo fixes.
+       
 0.03:
 - Fixed a bug that switch fail after 'off'
 
