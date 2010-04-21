@@ -227,7 +227,7 @@ sub run_command_installed {
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl");
-    for ( grep { -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+    for ( grep { -x $_ && !-l $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
         print $_, ($current_perl_executable eq $_ ? "(*)" : ""), "\n";
     }
 }
