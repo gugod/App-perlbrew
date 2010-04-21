@@ -169,7 +169,7 @@ HELP
             }
         );
 
-        my $usedevel = $dist_version =~ /5\.11/ ? "-Dusedevel" : "";
+        my $usedevel = $dist_version =~ /5\.1[13579]/ ? "-Dusedevel" : "";
 
         my @d_options = @{ $self->{D} };
         my $as = $self->{as} || $dist;
