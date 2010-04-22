@@ -130,12 +130,19 @@ HELP
     if ($dist_name eq 'perl') {
         require HTTP::Lite;
 
-        my ($dist_path, $dist_tarball);
+        my ($dist_path, $dist_tarball, $dist_commit);
         if ($dist_version eq 'git') {
-            require File::Path;
-            File::Path::rmtree("${ROOT}/dists/perl-git");
-            system qw[git clone git://perl5.git.perl.org/perl.git]
-                => "${ROOT}/dists/perl-git";
+            if (-d "${ROOT}/dists/perl-git/.git") {
+                system qq[ cd ${ROOT}/dists/perl-git && git pull ];
+            }
+            else {
+                system qw[git clone git://perl5.git.perl.org/perl.git]
+                    => "${ROOT}/dists/perl-git";
+
+            }
+
+            chomp($dist_commit = `cd ${ROOT}/dists/perl-git && git describe`);
+            $dist_version = $dist_commit;
         }
         else {
             my $http_get = sub {
@@ -182,6 +189,7 @@ HELP
         my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
 
 
+        $dist = "perl-git-$dist_commit" if $dist_commit;
         my @d_options = @{ $self->{D} };
         my $as = $self->{as} || $dist;
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
@@ -196,8 +204,9 @@ INSTALL
 
 
         my ($extract_command, $configure_flags);
-        if ($dist_version eq 'git') {
-            $extract_command = "ln -sf ../dists/$dist";
+        if ($dist_commit) { # installing perl-git
+            $dist = "perl-git-$dist_commit";
+            $extract_command = "ln -sf ../dists/perl-git $dist";
             $configure_flags = '-des'
         }
         else {
