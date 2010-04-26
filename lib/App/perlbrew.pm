@@ -126,55 +126,90 @@ HELP
         return;
     }
 
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+)(?:-RC\d+)?$/;
+    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
+    my $dist_git_describe;
+
+    if (-d $dist && !$dist_name || !$dist_version) {
+        if (-d "$dist/.git") {
+            if (`git describe` =~ /v((5\.\d+\.\d+)(-\d+-\w+)?)$/) {
+                $dist_name = "perl";
+                $dist_git_describe = "v$1";
+                $dist_version = $2;
+            }
+        }
+        else {
+            print <<HELP;
+
+The given directory $dist is not a git checkout of perl repository. To
+brew a perl from git, clone it first:
+
+    git clone git://github.com/mirrors/perl.git
+    perlbrew install perl
+
+HELP
+                return;
+        }
+    }
+
     if ($dist_name eq 'perl') {
-        require HTTP::Lite;
+        my ($dist_path, $dist_tarball, $dist_commit);
 
-        my $http_get = sub {
-            my ($url, $cb) = @_;
-            my $ua = HTTP::Lite->new;
+        unless ($dist_git_describe) {
+            require HTTP::Lite;
 
-            my $loc = $url;
-            my $status = $ua->request($loc) or die "Fail to get $loc";
+            my $http_get = sub {
+                my ($url, $cb) = @_;
+                my $ua = HTTP::Lite->new;
 
-            my $redir_count = 0;
-            while ($status == 302 || $status == 301) {
-                last if $redir_count++ > 5;
-                for ($ua->headers_array) {
-                    /Location: (\S+)/ and $loc = $1, last;
+                my $loc = $url;
+                my $status = $ua->request($loc) or die "Fail to get $loc";
+
+                my $redir_count = 0;
+                while ($status == 302 || $status == 301) {
+                    last if $redir_count++ > 5;
+                    for ($ua->headers_array) {
+                        /Location: (\S+)/ and $loc = $1, last;
+                    }
+                    $loc or last;
+                    $status = $ua->request($loc) or die "Fail to get $loc";
                 }
-                $loc or last;
-                $status = $ua->request($loc) or die "Fail to get $loc";
+                if ($cb) {
+                    return $cb->($ua->body);
+                }
+                return $ua->body;
+            };
+
+            my $html = $http_get->("http://search.cpan.org/dist/$dist");
+
+            ($dist_path, $dist_tarball) =
+                $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+
+            my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+            if (-f $dist_tarball_path) {
+                print "Use the previously fetched ${dist_tarball}\n";
             }
-            if ($cb) {
-                return $cb->($ua->body);
+            else {
+                print "Fetching $dist as $dist_tarball_path\n";
+
+                $http_get->(
+                    "http://search.cpan.org${dist_path}",
+                    sub {
+                        my ($body) = @_;
+                        open my $BALL, "> $dist_tarball_path";
+                        print $BALL $body;
+                        close $BALL;
+                    }
+                );
             }
-            return $ua->body;
-        };
 
-        my $html = $http_get->("http://search.cpan.org/dist/$dist");
+        }
 
-        my ($dist_path, $dist_tarball) =
-            $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
-
-        print "Fetching $dist as ${ROOT}/dists/${dist_tarball}\n";
-
-        $http_get->(
-            "http://search.cpan.org${dist_path}",
-            sub {
-                my ($body) = @_;
-                open my $BALL, "> ${ROOT}/dists/${dist_tarball}";
-                print $BALL $body;
-                close $BALL;
-            }
-        );
-
-        my $usedevel = $dist_version =~ /5\.1[13579]/ ? "-Dusedevel" : "";
+        my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
 
         my @d_options = @{ $self->{D} };
-        my $as = $self->{as} || $dist;
+        my $as = $self->{as} || $dist_git_describe ? "perl-$dist_git_describe" : $dist;
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
-        push @d_options, "usedevel" if $dist_version =~ /5\.11/;
+        push @d_options, "usedevel" if $usedevel;
         print "Installing $dist into $ROOT/perls/$as\n";
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
 This would take a while. You can run the following command on another shell to track the status:
@@ -183,24 +218,39 @@ This would take a while. You can run the following command on another shell to t
 
 INSTALL
 
-        my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
+        my ($extract_command, $configure_flags) = ("", "-des");
+
+        my $dist_extracted_dir;
+        if ($dist_git_describe) {
+            $extract_command = "echo 'Building perl in the git checkout dir'";
+            $dist_extracted_dir = File::Spec->rel2abs( $dist );
+        } else {
+            $dist_extracted_dir = "$ROOT/build/${dist}";
+
+            my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
+            $extract_command = "cd $ROOT/build; $tarx $ROOT/dists/${dist_tarball}";
+            $configure_flags = '-de';
+        }
 
         my $cmd = join ";",
-          (
-            "cd $ROOT/build",
-            "$tarx $ROOT/dists/${dist_tarball}",
-            "cd $dist",
+        (
+            $extract_command,
+            "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
-            "sh Configure -de " . join( ' ', map { "-D$_" } @d_options ),
+            "sh Configure $configure_flags " . join( ' ', map { "-D$_" } @d_options ),
             "make",
             (
                 $self->{force}
                 ? ( 'make test', 'make install' )
                 : "make test && make install"
             )
-          );
+        );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
-          if ( $self->{quiet} && !$self->{verbose} );
+            if ( $self->{quiet} && !$self->{verbose} );
+
+
+        print $cmd, "\n";
+
         print !system($cmd) ? <<SUCCESS : <<FAIL;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
