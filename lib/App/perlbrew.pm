@@ -207,7 +207,7 @@ HELP
         my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
 
         my @d_options = @{ $self->{D} };
-        my $as = $self->{as} || $dist_git_describe ? "perl-$dist_git_describe" : $dist;
+        my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $usedevel;
         print "Installing $dist into $ROOT/perls/$as\n";
