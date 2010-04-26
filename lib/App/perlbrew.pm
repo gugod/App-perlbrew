@@ -26,11 +26,11 @@ Usage:
 
     perlbrew init
 
-    perlbrew install perl-5.11.5
-    perlbrew install perl-5.12.0-RC0
+    perlbrew install perl-5.12.0
+    perlbrew install perl-5.13.0
     perlbrew installed
 
-    perlbrew switch perl-5.12.0-RC0
+    perlbrew switch perl-5.12.0
     perlbrew switch /usr/bin/perl
 
     perlbrew off
