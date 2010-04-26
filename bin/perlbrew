@@ -36,6 +36,10 @@ perlbrew - Perl Environment manager.
     perlbrew install perl-5.10.1
     perlbrew install perl-5.11.5
 
+    # Install from a git checkout
+    cd /path/to/src/perl
+    perlbrew install .
+
     # See what were installed
     perlbrew installed
 
@@ -46,10 +50,10 @@ perlbrew - Perl Environment manager.
     perlbrew switch perl-5.10.1
     perl -v
 
-    # Turn it off.
+    # Turn it off. Disable it.
     perlbrew off
 
-    # Turn it back on
+    # Turn it back on. Re-enable it.
     perlbrew switch perl-5.10.1
 
 =head1 OPTIONS
