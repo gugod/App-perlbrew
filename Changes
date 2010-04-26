@@ -1,5 +1,7 @@
 0.05:
 - Now it brews from git. jasonmay++
+- Fix the uses of mkpath on various versions of perls.
+- Support the building of 5.13, and future developement versions
 
 0.04:
 - Use File::Path::mkpath instead of make_path to make in runnable with older versions of Perl
