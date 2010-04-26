@@ -889,24 +889,36 @@ HELP
     }
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
-    if ($dist_name eq 'perl') {
-        require HTTP::Lite;
+    my $dist_git_describe;
 
-        my ($dist_path, $dist_tarball, $dist_commit);
-        if ($dist_version eq 'git') {
-            if (-d "${ROOT}/dists/perl-git/.git") {
-                system qq[ cd ${ROOT}/dists/perl-git && git pull ];
+    if (-d $dist && !$dist_name || !$dist_version) {
+        if (-d "$dist/.git") {
+            if (`git describe` =~ /v((5\.\d+\.\d+)(-\d+-\w+)?)$/) {
+                $dist_name = "perl";
+                $dist_git_describe = "v$1";
+                $dist_version = $2;
             }
-            else {
-                system qw[git clone git://perl5.git.perl.org/perl.git]
-                    => "${ROOT}/dists/perl-git";
-
-            }
-
-            chomp($dist_commit = `cd ${ROOT}/dists/perl-git && git describe`);
-            $dist_version = $dist_commit;
         }
         else {
+            print <<HELP;
+
+The given directory $dist is not a git checkout of perl repository. To
+brew a perl from git, clone it first:
+
+    git clone git://github.com/mirrors/perl.git
+    perlbrew install perl
+
+HELP
+                return;
+        }
+    }
+
+    if ($dist_name eq 'perl') {
+        my ($dist_path, $dist_tarball, $dist_commit);
+
+        unless ($dist_git_describe) {
+            require HTTP::Lite;
+
             my $http_get = sub {
                 my ($url, $cb) = @_;
                 my $ua = HTTP::Lite->new;
@@ -934,26 +946,30 @@ HELP
             ($dist_path, $dist_tarball) =
                 $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
 
-            print "Fetching $dist as ${ROOT}/dists/${dist_tarball}\n";
+            my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+            if (-f $dist_tarball_path) {
+                print "Use the previously fetched ${dist_tarball}\n";
+            }
+            else {
+                print "Fetching $dist as $dist_tarball_path\n";
 
-            $http_get->(
-                "http://search.cpan.org${dist_path}",
-                sub {
-                    my ($body) = @_;
-                    open my $BALL, "> ${ROOT}/dists/${dist_tarball}";
-                    print $BALL $body;
-                    close $BALL;
-                }
-            );
+                $http_get->(
+                    "http://search.cpan.org${dist_path}",
+                    sub {
+                        my ($body) = @_;
+                        open my $BALL, "> $dist_tarball_path";
+                        print $BALL $body;
+                        close $BALL;
+                    }
+                );
+            }
 
         }
 
         my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
 
-
-        $dist = "perl-git-$dist_commit" if $dist_commit;
         my @d_options = @{ $self->{D} };
-        my $as = $self->{as} || $dist;
+        my $as = $self->{as} || $dist_git_describe ? "perl-$dist_git_describe" : $dist;
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $usedevel;
         print "Installing $dist into $ROOT/perls/$as\n";
@@ -964,24 +980,24 @@ This would take a while. You can run the following command on another shell to t
 
 INSTALL
 
+        my ($extract_command, $configure_flags) = ("", "-des");
 
-        my ($extract_command, $configure_flags);
-        if ($dist_commit) { # installing perl-git
-            $dist = "perl-git-$dist_commit";
-            $extract_command = "ln -sf ../dists/perl-git $dist";
-            $configure_flags = '-des'
-        }
-        else {
+        my $dist_extracted_dir;
+        if ($dist_git_describe) {
+            $extract_command = "echo 'Building perl in the git checkout dir'";
+            $dist_extracted_dir = File::Spec->rel2abs( $dist );
+        } else {
+            $dist_extracted_dir = "$ROOT/build/${dist}";
+
             my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
-            $extract_command = "$tarx $ROOT/dists/${dist_tarball}";
-            $configure_flags = '-de'
+            $extract_command = "cd $ROOT/build; $tarx $ROOT/dists/${dist_tarball}";
+            $configure_flags = '-de';
         }
 
         my $cmd = join ";",
         (
-            "cd $ROOT/build",
             $extract_command,
-            "cd $dist",
+            "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
             "sh Configure $configure_flags " . join( ' ', map { "-D$_" } @d_options ),
             "make",
@@ -992,7 +1008,10 @@ INSTALL
             )
         );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
-        if ( $self->{quiet} && !$self->{verbose} );
+            if ( $self->{quiet} && !$self->{verbose} );
+
+
+        print $cmd, "\n";
 
         print !system($cmd) ? <<SUCCESS : <<FAIL;
 Installed $dist as $as successfully. Run the following command to switch to it.
