@@ -440,7 +440,7 @@ The MIT License
 
 Patches and code improvements were contributed by:
 
-Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero
+Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May
 
 =head1 DISCLAIMER OF WARRANTY
 

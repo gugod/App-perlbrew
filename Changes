@@ -1,3 +1,6 @@
+0.05:
+- Now it brews from git. jasonmay++
+
 0.04:
 - Use File::Path::mkpath instead of make_path to make in runnable with older versions of Perl
 - a few document typo fixes.
