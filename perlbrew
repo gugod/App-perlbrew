@@ -763,7 +763,7 @@ $INC{'HTTP/Lite.pm'} = __FILE__;
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.04";
+our $VERSION = "0.05";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
@@ -788,11 +788,11 @@ Usage:
 
     perlbrew init
 
-    perlbrew install perl-5.11.5
-    perlbrew install perl-5.12.0-RC0
+    perlbrew install perl-5.12.0
+    perlbrew install perl-5.13.0
     perlbrew installed
 
-    perlbrew switch perl-5.12.0-RC0
+    perlbrew switch perl-5.12.0
     perlbrew switch /usr/bin/perl
 
     perlbrew off
@@ -1113,24 +1113,49 @@ perlbrew - Perl Environment manager.
     perlbrew init
 
     # Install some Perls
-    perlbrew install perl-5.10.1
-    perlbrew install perl-5.11.5
+    perlbrew install perl-5.12.0
+    perlbrew install perl-5.13.0
+
+    # Install from a git checkout
+    cd /path/to/src/perl
+    perlbrew install .
 
     # See what were installed
     perlbrew installed
 
     # Switch perl in the $PATH
-    perlbrew switch perl-5.11.5
+    perlbrew switch perl-5.13.0
     perl -v
 
-    perlbrew switch perl-5.10.1
-    perl -v
-
-    # Turn it off.
+    # Turn it off. Disable it.
     perlbrew off
 
-    # Turn it back on
-    perlbrew switch perl-5.10.1
+    # Turn it back on. Re-enable it.
+    perlbrew switch perl-5.13.0
+
+=head1 COMMANDS
+
+=over 4
+
+=item install perl-<version>
+
+Build and install the given version of perl.
+
+=item install /path/to/perl/git/checkout/dir
+
+Build and install from the given git checkout dir.
+
+=item installed
+
+List the installed versions of perl.
+
+=item switch perl-<version>
+
+Switch to the given version. You may need to run 'rehash' after this command.
+
+=item off
+
+Disable perlbrew. Use C<switch> command to re-enable it.
 
 =head1 OPTIONS
 
