@@ -1,3 +1,6 @@
+0.06:
+- Fix -as option. Thanks to doy++ and jasonmay++
+
 0.05:
 - Now it brews from git. jasonmay++
 - Fix the uses of mkpath on various versions of perls.

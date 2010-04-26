@@ -1,7 +1,7 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.05";
+our $VERSION = "0.06";
 
 my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CURRENT_PERL = "$ROOT/perls/current";
@@ -440,7 +440,7 @@ The MIT License
 
 Patches and code improvements were contributed by:
 
-Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May
+Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May, Jesse Luehrs
 
 =head1 DISCLAIMER OF WARRANTY
 
