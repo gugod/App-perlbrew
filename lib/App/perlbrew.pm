@@ -251,6 +251,8 @@ INSTALL
 
         print $cmd, "\n";
 
+        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);    
+
         print !system($cmd) ? <<SUCCESS : <<FAIL;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
