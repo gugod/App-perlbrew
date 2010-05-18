@@ -11,7 +11,7 @@ sub run_command {
     $opt->{log_file} = "$ROOT/build.log";
     my $self = bless $opt, __PACKAGE__;
     $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?";
+    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?";
     $self->$s(@args);
 }
 
@@ -79,7 +79,7 @@ For further instructions, simply run:
 
     perlbrew
 
-The default help messages will popup an tell you what to do!
+The default help messages will popup and tell you what to do!
 
 Enjoy perlbrew at \$HOME!!
 INSTRUCTION
@@ -117,7 +117,7 @@ The perlbrew is installed as:
 
 You may trash the downloaded $executable from now on.
 
-Next, if this is the first time you run perlbrew installation, run:
+Next, if this is the first time you've run perlbrew installation, run:
 
     $target init
 
@@ -212,7 +212,7 @@ HELP
         push @d_options, "usedevel" if $usedevel;
         print "Installing $dist into $ROOT/perls/$as\n";
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
-This would take a while. You can run the following command on another shell to track the status:
+This could take a while. You can run the following command on another shell to track the status:
 
   tail -f $self->{log_file}
 
