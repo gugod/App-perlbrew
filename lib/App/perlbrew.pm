@@ -286,6 +286,16 @@ sub run_command_installed {
 
 sub run_command_switch {
     my ( $self, $dist ) = @_;
+
+    unless ( $dist ) {
+        # If no args were given to switch, show the current perl.
+        my $current = readlink ( -d "$ROOT/perls/current"
+                                 ? "$ROOT/perls/current"
+                                 : "$ROOT/bin/perl" );
+        print "Currently switched to $current\n";
+        return;
+    }
+
     if (-x $dist) {
         unlink "$ROOT/perls/current";
         system "ln -fs $dist $ROOT/bin/perl";
