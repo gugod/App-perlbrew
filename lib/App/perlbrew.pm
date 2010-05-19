@@ -292,7 +292,8 @@ sub run_command_switch {
         my $current = readlink ( -d "$ROOT/perls/current"
                                  ? "$ROOT/perls/current"
                                  : "$ROOT/bin/perl" );
-        print "Currently switched to $current\n";
+        printf "Currently switched %s\n",
+            ( $current ? "to $current" : 'off' );
         return;
     }
 
