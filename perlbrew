@@ -773,7 +773,7 @@ sub run_command {
     $opt->{log_file} = "$ROOT/build.log";
     my $self = bless $opt, __PACKAGE__;
     $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknow command: `$x`. Typo?";
+    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?";
     $self->$s(@args);
 }
 
@@ -841,7 +841,7 @@ For further instructions, simply run:
 
     perlbrew
 
-The default help messages will popup an tell you what to do!
+The default help messages will popup and tell you what to do!
 
 Enjoy perlbrew at \$HOME!!
 INSTRUCTION
@@ -879,7 +879,7 @@ The perlbrew is installed as:
 
 You may trash the downloaded $executable from now on.
 
-Next, if this is the first time you run perlbrew installation, run:
+Next, if this is the first time you've run perlbrew installation, run:
 
     $target init
 
@@ -934,6 +934,7 @@ HELP
                     }
                     $loc or last;
                     $status = $ua->request($loc) or die "Fail to get $loc";
+                    die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
                 }
                 if ($cb) {
                     return $cb->($ua->body);
@@ -974,7 +975,7 @@ HELP
         push @d_options, "usedevel" if $usedevel;
         print "Installing $dist into $ROOT/perls/$as\n";
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
-This would take a while. You can run the following command on another shell to track the status:
+This could take a while. You can run the following command on another shell to track the status:
 
   tail -f $self->{log_file}
 
@@ -1013,6 +1014,8 @@ INSTALL
 
         print $cmd, "\n";
 
+        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);    
+
         print !system($cmd) ? <<SUCCESS : <<FAIL;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
@@ -1046,6 +1049,17 @@ sub run_command_installed {
 
 sub run_command_switch {
     my ( $self, $dist ) = @_;
+
+    unless ( $dist ) {
+        # If no args were given to switch, show the current perl.
+        my $current = readlink ( -d "$ROOT/perls/current"
+                                 ? "$ROOT/perls/current"
+                                 : "$ROOT/bin/perl" );
+        printf "Currently switched %s\n",
+            ( $current ? "to $current" : 'off' );
+        return;
+    }
+
     if (-x $dist) {
         unlink "$ROOT/perls/current";
         system "ln -fs $dist $ROOT/bin/perl";

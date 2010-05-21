@@ -1,3 +1,9 @@
+0.07:
+- Handle an edge case whn the tarball is not found on the http server. Thanks to sekimura++
+- Improves 'switch' and 'off' command message. Thanks to Justin Davis.
+- PERL5OPT PERL5LIB are removed while configuring and testing a new perl. Thanks to Andrew Rodland.
+- fix a expression precedence bug. Thanks to Jesse Luehrs.
+
 0.06:
 - Fix -as option. Thanks to doy++ and jasonmay++
 
