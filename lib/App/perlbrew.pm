@@ -172,6 +172,7 @@ HELP
                     }
                     $loc or last;
                     $status = $ua->request($loc) or die "Fail to get $loc";
+                    die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
                 }
                 if ($cb) {
                     return $cb->($ua->body);
