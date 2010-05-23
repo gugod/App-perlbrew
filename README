@@ -71,6 +71,22 @@ INSTALLATION
     This installs 'perlbrew' into your current PATH and it is always
     executed with your current perl.
 
+    NOTICE. When you install or upgrade perlbrew with cpan / cpanp / cpanm,
+    make sure you are not using one of the perls brewed with perlbrew. If
+    so, the `perlbrew` executable you just installed will not be available
+    after you swith to other perls. You might not be able to invoke further
+    "perlbrew" commands after so because the executable "perlbrew" is not in
+    your "PATH" anymore. Installing it again with cpan can temporarily
+    solved this problem.
+
+    It should be relatively safe to install "App::perlbrew" with system cpan
+    (like "/usr/bin/cpan") because then it will be installed under a system
+    PATH like "/usr/bin", which is not effected by "perlbrew switch"
+    command.
+
+    Again, it is recommended to let "perlbrew" install itself. It's easier,
+    and it works better.
+
 USAGE
     Please read the program usage by running
 

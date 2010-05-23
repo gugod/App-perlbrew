@@ -405,6 +405,22 @@ You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
 This installs 'perlbrew' into your current PATH and it is always
 executed with your current perl.
 
+NOTICE. When you install or upgrade perlbrew with cpan / cpanp /
+cpanm, make sure you are not using one of the perls brewed with
+perlbrew. If so, the `perlbrew` executable you just installed will not
+be available after you swith to other perls. You might not be able to
+invoke further C<perlbrew> commands after so because the executable
+C<perlbrew> is not in your C<PATH> anymore. Installing it again with cpan
+can temporarily solved this problem.
+
+It should be relatively safe to install C<App::perlbrew> with system
+cpan (like C</usr/bin/cpan>) because then it will be installed under a
+system PATH like C</usr/bin>, which is not effected by C<perlbrew switch>
+command.
+
+Again, it is recommended to let C<perlbrew> install itself. It's
+easier, and it works better.
+
 =head1 USAGE
 
 Please read the program usage by running

@@ -788,11 +788,11 @@ Usage:
 
     perlbrew init
 
-    perlbrew install perl-5.12.0
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.13.0
     perlbrew installed
 
-    perlbrew switch perl-5.12.0
+    perlbrew switch perl-5.12.1
     perlbrew switch /usr/bin/perl
 
     perlbrew off
@@ -834,7 +834,7 @@ of your ~/.${yourshrc}
 After that, exit this shell, start a new one, and install some fresh
 perls:
 
-    perlbrew install perl-5.12.0-RC0
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.10.1
 
 For further instructions, simply run:
