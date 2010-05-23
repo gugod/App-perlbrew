@@ -385,6 +385,15 @@ After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
 and you should follow the instruction on screen to setup your
 C<.bashrc> or C<.cshrc> to put it in your PATH.
 
+The directory C<~/perl5/perlbrew> will contain all install perl
+executables, libraries, documentations, lib, site_libs. If you need to
+install C<perlbrew>, and the perls it brews, into somewhere else
+because, say, your HOME has limited quota, you can do that by setting
+a C<PERLBREW_ROOT> environment variable before you run C<./perlbrew install>.
+
+    export PERLBREW_ROOT=/mnt/perlbrew
+    ./perlbrew install
+
 The downloaded perlbrew is a self-contained standalone program that
 embed all non-core modules it uses. It should be runnable with perl
 5.8 or high versions of perls.
