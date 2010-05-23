@@ -26,11 +26,11 @@ Usage:
 
     perlbrew init
 
-    perlbrew install perl-5.12.0
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.13.0
     perlbrew installed
 
-    perlbrew switch perl-5.12.0
+    perlbrew switch perl-5.12.1
     perlbrew switch /usr/bin/perl
 
     perlbrew off
@@ -72,7 +72,7 @@ of your ~/.${yourshrc}
 After that, exit this shell, start a new one, and install some fresh
 perls:
 
-    perlbrew install perl-5.12.0-RC0
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.10.1
 
 For further instructions, simply run:
@@ -338,6 +338,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew init
 
     # Install some Perls
+    perlbrew install perl-5.12.1
     perlbrew install perl-5.8.1
     perlbrew install perl-5.11.5
 
@@ -345,7 +346,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew installed
 
     # Switch perl in the $PATH
-    perlbrew switch perl-5.11.5
+    perlbrew switch perl-5.12.1
     perl -v
 
     # Switch to another version
@@ -359,7 +360,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew off
 
     # Use 'switch' command to turn it back on.
-    perlbrew switch perl-5.11.5
+    perlbrew switch perl-5.12.1
 
 =head1 DESCRIPTION
 
@@ -454,7 +455,9 @@ The MIT License
 
 Patches and code improvements were contributed by:
 
-Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May, Jesse Luehrs
+Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
+Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura
+
 
 =head1 DISCLAIMER OF WARRANTY
 

@@ -6,6 +6,7 @@ SYNOPSIS
         perlbrew init
 
         # Install some Perls
+        perlbrew install perl-5.12.1
         perlbrew install perl-5.8.1
         perlbrew install perl-5.11.5
 
@@ -13,7 +14,7 @@ SYNOPSIS
         perlbrew installed
 
         # Switch perl in the $PATH
-        perlbrew switch perl-5.11.5
+        perlbrew switch perl-5.12.1
         perl -v
 
         # Switch to another version
@@ -27,7 +28,7 @@ SYNOPSIS
         perlbrew off
 
         # Use 'switch' command to turn it back on.
-        perlbrew switch perl-5.11.5
+        perlbrew switch perl-5.12.1
 
 DESCRIPTION
     perlbrew is a program to automate the building and installation of perl
@@ -109,7 +110,8 @@ LICENCE
 CONTRIBUTORS
     Patches and code improvements were contributed by:
 
-    Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May
+    Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
+    Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura
 
 DISCLAIMER OF WARRANTY
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
