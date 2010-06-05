@@ -162,7 +162,7 @@ HELP
                 my $ua = HTTP::Lite->new;
 
                 my $loc = $url;
-                my $status = $ua->request($loc) or die "Fail to get $loc";
+                my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
 
                 my $redir_count = 0;
                 while ($status == 302 || $status == 301) {
