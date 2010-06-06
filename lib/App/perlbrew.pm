@@ -1,9 +1,13 @@
 package App::perlbrew;
 use strict;
 use 5.8.0;
-our $VERSION = "0.07";
+use File::Spec::Functions qw( catfile );
 
-my $ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+our $VERSION = "0.08";
+our $CONF;
+
+my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = "$ROOT/perls/current";
 
 sub run_command {
@@ -155,32 +159,9 @@ HELP
         my ($dist_path, $dist_tarball, $dist_commit);
 
         unless ($dist_git_describe) {
-            require HTTP::Lite;
-
-            my $http_get = sub {
-                my ($url, $cb) = @_;
-                my $ua = HTTP::Lite->new;
-
-                my $loc = $url;
-                my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
-
-                my $redir_count = 0;
-                while ($status == 302 || $status == 301) {
-                    last if $redir_count++ > 5;
-                    for ($ua->headers_array) {
-                        /Location: (\S+)/ and $loc = $1, last;
-                    }
-                    $loc or last;
-                    $status = $ua->request($loc) or die "Fail to get $loc";
-                    die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
-                }
-                if ($cb) {
-                    return $cb->($ua->body);
-                }
-                return $ua->body;
-            };
-
-            my $html = $http_get->("http://search.cpan.org/dist/$dist");
+            my $mirror = $self->conf->{mirror};
+            my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+            my $html = $self->_http_get("http://search.cpan.org/dist/$dist", undef, $header);
 
             ($dist_path, $dist_tarball) =
                 $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
@@ -192,14 +173,15 @@ HELP
             else {
                 print "Fetching $dist as $dist_tarball_path\n";
 
-                $http_get->(
+                $self->_http_get(
                     "http://search.cpan.org${dist_path}",
                     sub {
                         my ($body) = @_;
                         open my $BALL, "> $dist_tarball_path";
                         print $BALL $body;
                         close $BALL;
-                    }
+                    },
+                    $header
                 );
             }
 
@@ -324,6 +306,119 @@ sub run_command_off {
     }
 }
 
+sub run_command_mirror {
+    my($self) = @_;
+    print "Fetching mirror list\n";
+    my $raw = $self->_http_get("http://search.cpan.org/mirror");
+    my $found;
+    my @mirrors;
+    foreach my $line ( split m{\n}, $raw ) {
+        $found = 1 if $line =~ m{<select name="mirror">};
+        next if ! $found;
+        last if $line =~ m{</select>};
+        if ( $line =~ m{<option value="(.+?)">(.+?)</option>} ) {
+            my $url  = $1;
+            (my $name = $2) =~ s/&#(\d+);/chr $1/seg;
+            push @mirrors, { url => $url, name => $name };
+        }
+    }
+
+    my $select;
+    require ExtUtils::MakeMaker;
+    MIRROR: foreach my $id ( 0..$#mirrors ) {
+        my $mirror = $mirrors[$id];
+        printf "[% 3d] %s\n", $id + 1, $mirror->{name};
+        if ( $id > 0 ) {
+            my $test = $id / 19;
+            if ( $test == int $test ) {
+                my $remaining = $#mirrors - $id;
+                my $ask = "Select a mirror by number or press enter to see the rest "
+                        . "($remaining more) [q to quit]";
+                my $val = ExtUtils::MakeMaker::prompt( $ask );
+                next MIRROR if ! $val;
+                last MIRROR if $val eq 'q';
+                $select = $val + 0;
+                if ( ! $select || $select - 1 > $#mirrors ) {
+                    die "Bogus mirror ID: $select";
+                }
+                $select = $mirrors[$select];
+                die "Mirror ID is invalid" if ! $select;
+                last MIRROR;
+            }
+        }
+    }
+    die "You didn't select a mirror!\n" if ! $select;
+    print "Selected $select->{name} ($select->{url}) as the mirror\n";
+    my $conf = $self->conf;
+    $conf->{mirror} = $select;
+    $self->_save_conf;
+    return;
+}
+
+sub _http_get {
+    my ($self, $url, $cb, $header) = @_;
+    require HTTP::Lite;
+    my $ua = HTTP::Lite->new;
+
+    if ( $header && ref $header eq 'HASH') {
+        foreach my $name ( keys %{ $header} ) {
+            $ua->add_req_header( $name, $header->{ $name } );
+        }
+    }
+
+    my $loc = $url;
+    my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
+
+    my $redir_count = 0;
+    while ($status == 302 || $status == 301) {
+        last if $redir_count++ > 5;
+        for ($ua->headers_array) {
+            /Location: (\S+)/ and $loc = $1, last;
+        }
+        last if ! $loc;
+        $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
+        die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
+    }
+    return $cb ? $cb->($ua->body) : $ua->body;
+}
+
+sub conf {
+    my($self) = @_;
+    $self->_get_conf if ! $CONF;
+    return $CONF;
+}
+
+sub _save_conf {
+    my($self) = @_;
+    require Data::Dumper;
+    open my $FH, '>', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!";
+    my $d = Data::Dumper->new([$CONF],['App::perlbrew::CONF']);
+    print $FH $d->Dump;
+    close $FH;
+}
+
+sub _get_conf {
+    my($self) = @_;
+    print "Attempting to load conf from $CONF_FILE\n";
+    if ( ! -e $CONF_FILE ) {
+        local $CONF = {} if ! $CONF;
+        $self->_save_conf;
+    }
+
+    open my $FH, '<', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!";
+    my $raw = do { local $/; my $rv = <$FH>; $rv };
+    close $FH;
+
+    my $rv = eval $raw;
+    if ( $@ ) {
+        warn "Error loading conf: $@";
+        $CONF = {};
+        return;
+    }
+    $CONF = {} if ! $CONF;
+    return;
+}
+
 1;
 
 __END__
@@ -336,6 +431,9 @@ App::perlbrew - Manage perl installations in your $HOME
 
     # Initialize
     perlbrew init
+
+    # set CPAN mirror
+    perlbrew mirror
 
     # Install some Perls
     perlbrew install perl-5.12.1
