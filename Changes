@@ -1,3 +1,6 @@
+0.08:
+- Conf file + CPAN mirror support
+
 0.07:
 - Document about PERLBREW_ROOT and the issue installing it with CPAN.
 - Handle an edge case whn the tarball is not found on the http server. Thanks to sekimura++
