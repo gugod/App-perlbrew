@@ -1,3 +1,5 @@
+- Add rudimentary pure-perl introspection (jrockway)
+
 0.08:
 - Conf file + CPAN mirror support
 - Strip invalid dependency lines out of the makefile in older perl versions, to make them work with newer gcc versions
@@ -20,7 +22,7 @@
 0.04:
 - Use File::Path::mkpath instead of make_path to make in runnable with older versions of Perl
 - a few document typo fixes.
-       
+
 0.03:
 - Fixed a bug that switch fail after 'off'
 
