@@ -10,6 +10,10 @@ my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = "$ROOT/perls/current";
 
+sub get_current_perl {
+    return $CURRENT_PERL;
+}
+
 sub run_command {
     my ( undef, $opt, $x, @args ) = @_;
     $opt->{log_file} = "$ROOT/build.log";
