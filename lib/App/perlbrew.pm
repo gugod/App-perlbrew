@@ -471,8 +471,8 @@ perl in the users HOME. At the moment, it installs everything to
 C<~/perl5/perlbrew>, and requires you to tweak your PATH by including a
 bashrc/cshrc file it provides. You then can benefit from not having
 to run 'sudo' commands to install cpan modules because those are
-installed inside your HOME too. It's almost like an isolated perl
-environments.
+installed inside your HOME too. It's a completely separate perl
+environment.
 
 =head1 INSTALLATION
 
@@ -498,7 +498,7 @@ a C<PERLBREW_ROOT> environment variable before you run C<./perlbrew install>.
 
 The downloaded perlbrew is a self-contained standalone program that
 embed all non-core modules it uses. It should be runnable with perl
-5.8 or high versions of perls.
+5.8 or later versions of perl.
 
 You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
 
@@ -512,8 +512,10 @@ cpanm, make sure you are not using one of the perls brewed with
 perlbrew. If so, the `perlbrew` executable you just installed will not
 be available after you swith to other perls. You might not be able to
 invoke further C<perlbrew> commands after so because the executable
-C<perlbrew> is not in your C<PATH> anymore. Installing it again with cpan
-can temporarily solved this problem.
+C<perlbrew> is not in your C<PATH> anymore. Installing it again with
+cpan can temporarily solve this problem. To ensure you are not using
+a perlbrewed perl, run C<perlbrew off> before upgrading.
+
 
 It should be relatively safe to install C<App::perlbrew> with system
 cpan (like C</usr/bin/cpan>) because then it will be installed under a
@@ -537,7 +539,7 @@ Alternatively, this should also do:
 
     perldoc perlbrew
 
-If you messed up to much or get confused by having to many perls
+If you messed up too much or get confused by having to many perls
 installed, you can do:
 
     perlbrew switch /usr/bin/perl
