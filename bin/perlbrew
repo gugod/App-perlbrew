@@ -40,11 +40,13 @@ perlbrew - Perl Environment manager.
     cd /path/to/src/perl
     perlbrew install .
 
-    # See what were installed
+    # List which perls are installed
     perlbrew installed
 
     # Switch perl in the $PATH
+    # hash -r clears the PATH cache
     perlbrew switch perl-5.13.0
+    hash -r 
     perl -v
 
     # Turn it off. Disable it.
@@ -53,9 +55,20 @@ perlbrew - Perl Environment manager.
     # Turn it back on. Re-enable it.
     perlbrew switch perl-5.13.0
 
+=head1 CONFIGURATION
+
+By default perlbrew builds and installs copies of perl into
+C<$ENV{HOME}/perl5/perlbrew>. To use a different directory, set the
+C<PERLBREW_ROOT> shell variable before running perlbrew.
+
 =head1 COMMANDS
 
 =over 4
+
+=item init
+
+Run this once to setup the C<perlbrew> directory ready for installing
+perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
 =item install perl-<version>
 
@@ -71,11 +84,13 @@ List the installed versions of perl.
 
 =item switch perl-<version>
 
-Switch to the given version. You may need to run 'rehash' after this command.
+Switch to the given version. You may need to run 'rehash' (or 'hash
+-r') after this command.
 
 =item off
 
-Disable perlbrew. Use C<switch> command to re-enable it.
+Disable perlbrew. Use C<switch> command to re-enable it. Use 'rehash'
+or 'hash -r' again to clear the cache.
 
 =head1 OPTIONS
 
@@ -83,19 +98,19 @@ Disable perlbrew. Use C<switch> command to re-enable it.
 
 =item B<-?|help>
 
-prints this help
+prints this help.
 
 =item B<-f|force>
 
-Force installation of a perl
+Force installation of a perl.
 
 =item B<-q|quiet>
 
-Log output to a log file rather than STDOUT. This is the default.
+Log output to a log file rather than STDOUT. This is the default. The log file is saved in F<$ROOT/build.log>
 
 =item B<-v|verbose>
 
-Log output to STDOUT rather than a logfile
+Log output to STDOUT rather than a logfile.
 
 =item B<-as>
 
@@ -105,7 +120,7 @@ Install a given perl under an alias.
 
 =item B<-D>
 
-pass through switches to the perl Configure script
+pass through switches to the perl Configure script.
 
     perlbrew install perl-5.10.1 -D=usemymalloc
 
@@ -113,7 +128,6 @@ pass through switches to the perl Configure script
 
 =head1 DESCRIPTION
 
-B<This program> will read the given input file(s) and do something
-useful with the contents thereof.
+Read L<App::perlbrew> for more complete documentation.
 
 =cut
