@@ -3,12 +3,16 @@ use strict;
 use 5.8.0;
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.08";
+our $VERSION = "0.08_01";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = "$ROOT/perls/current";
+
+sub get_current_perl {
+    return $CURRENT_PERL;
+}
 
 sub run_command {
     my ( undef, $opt, $x, @args ) = @_;
@@ -238,7 +242,7 @@ INSTALL
 
         print $cmd, "\n";
 
-        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);    
+        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
         print !system($cmd) ? <<SUCCESS : <<FAIL;
 Installed $dist as $as successfully. Run the following command to switch to it.
@@ -255,19 +259,37 @@ FAIL
     }
 }
 
-sub run_command_installed {
+sub calc_installed {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
+
+    my @result;
 
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        print $name, ( $name eq $current ? '(*)' : '' ), "\n";
+        push @result, { name => $name, is_current => ($name eq $current ? 1 : 0)  };
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl");
     for ( grep { -x $_ && !-l $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
-        print $_, ($current_perl_executable eq $_ ? "(*)" : ""), "\n";
+        push @result, {
+            name       => $_,
+            is_current => ($_ eq $current_perl_executable ? 1 : 0),
+        };
+    }
+
+    return @result;
+}
+
+sub run_command_installed {
+    my $self = shift;
+    my @installed = $self->calc_installed(@_);
+
+    for my $installed (@installed) {
+        my $name = $installed->{name};
+        my $cur  = $installed->{is_current};
+        print $name, ($cur ? '(*)' : ''), "\n";
     }
 }
 
