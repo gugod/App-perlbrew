@@ -32,6 +32,9 @@ perlbrew - Perl Environment manager.
     # Initialize
     perlbrew init
 
+    # Pick a prefered CPAN mirror
+    perlbrew mirror 
+
     # Install some Perls
     perlbrew install perl-5.12.0
     perlbrew install perl-5.13.0
@@ -69,6 +72,12 @@ C<PERLBREW_ROOT> shell variable before running perlbrew.
 
 Run this once to setup the C<perlbrew> directory ready for installing
 perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
+
+=item mirror
+
+Run this if you want to choose a specific CPAN mirror to install the
+perls from. It will display a list of mirrors for you to pick
+from. Hit 'q' to cancel the selection.
 
 =item install perl-<version>
 
