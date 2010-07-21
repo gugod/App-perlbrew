@@ -3,7 +3,7 @@ use strict;
 use 5.8.0;
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.08_01";
+our $VERSION = "0.08";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
