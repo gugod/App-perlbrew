@@ -1,8 +1,8 @@
-- Add rudimentary pure-perl introspection (jrockway)
-
 0.08:
 - Conf file + CPAN mirror support
 - Strip invalid dependency lines out of the makefile in older perl versions, to make them work with newer gcc versions
+- Add rudimentary pure-perl introspection, jrockway++
+- Documentation, castaway++
 
 0.07:
 - Document about PERLBREW_ROOT and the issue installing it with CPAN.
