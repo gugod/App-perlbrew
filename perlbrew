@@ -981,6 +981,9 @@ INSTALL
             $configure_flags = '-de';
         }
 
+        my @install = $self->{notest} ? "make install" : ("make test", "make install");
+        @install    = join " && ", @install unless($self->{force});
+
         my $cmd = join ";",
         (
             $extract_command,
@@ -991,12 +994,7 @@ INSTALL
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                     : (),
-            "make",
-            (
-                $self->{force}
-                ? ( 'make test', 'make install' )
-                : "make test && make install"
-            )
+            "make", @install
         );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
             if ( $self->{quiet} && !$self->{verbose} );
@@ -1226,6 +1224,7 @@ my $opt = {
 };
 GetOptions(
     'f|force!'  => \$opt->{force},
+    'n|notest!' => \$opt->{notest},
     'q|quiet!'  => \$opt->{quiet},
     'v|verbose' => \$opt->{verbose},
     'as=s'      => \$opt->{as},
@@ -1327,6 +1326,10 @@ prints this help.
 =item B<-f|force>
 
 Force installation of a perl.
+
+=item B<-n|notest>
+
+Skip the test suite
 
 =item B<-q|quiet>
 

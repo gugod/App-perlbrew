@@ -11,6 +11,7 @@ my $opt = {
 };
 GetOptions(
     'f|force!'  => \$opt->{force},
+    'n|notest!' => \$opt->{notest},
     'q|quiet!'  => \$opt->{quiet},
     'v|verbose' => \$opt->{verbose},
     'as=s'      => \$opt->{as},
@@ -112,6 +113,10 @@ prints this help.
 =item B<-f|force>
 
 Force installation of a perl.
+
+=item B<-n|notest>
+
+Skip the test suite
 
 =item B<-q|quiet>
 
