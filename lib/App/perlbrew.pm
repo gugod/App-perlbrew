@@ -218,6 +218,9 @@ INSTALL
             $configure_flags = '-de';
         }
 
+        my @install = $self->{notest} ? "make install" : ("make test", "make install");
+        @install    = join " && ", @install unless($self->{force});
+
         my $cmd = join ";",
         (
             $extract_command,
@@ -232,12 +235,7 @@ INSTALL
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                     : (),
-            "make",
-            (
-                $self->{force}
-                ? ( 'make test', 'make install' )
-                : "make test && make install"
-            )
+            "make", @install
         );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
             if ( $self->{quiet} && !$self->{verbose} );
