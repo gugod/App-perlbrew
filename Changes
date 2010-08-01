@@ -1,3 +1,6 @@
+master:
+- Use the proxy set in $ENV{http_proxy} if available.
+
 0.08:
 - Conf file + CPAN mirror support
 - Strip invalid dependency lines out of the makefile in older perl versions, to make them work with newer gcc versions

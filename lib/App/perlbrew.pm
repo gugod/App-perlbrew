@@ -392,6 +392,8 @@ sub _http_get {
         }
     }
 
+    $ua->proxy($ENV{http_proxy}) if $ENV{http_proxy};
+
     my $loc = $url;
     my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
 
