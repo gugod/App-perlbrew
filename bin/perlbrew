@@ -8,6 +8,7 @@ my $opt = {
     force => undef,
     quiet => 1,
     D     => [],
+    U     => [],
 };
 GetOptions(
     'f|force!'  => \$opt->{force},
@@ -15,6 +16,7 @@ GetOptions(
     'v|verbose' => \$opt->{verbose},
     'as=s'      => \$opt->{as},
     'D|D=s@'    => $opt->{D},
+    'U|U=s@'    => $opt->{U},
     'help|?'    => sub { pod2usage(1) },
 ) or pod2usage(2);
 App::perlbrew->run_command( $opt, @ARGV );
@@ -33,7 +35,7 @@ perlbrew - Perl Environment manager.
     perlbrew init
 
     # Pick a prefered CPAN mirror
-    perlbrew mirror 
+    perlbrew mirror
 
     # Install some Perls
     perlbrew install perl-5.12.0
@@ -49,7 +51,7 @@ perlbrew - Perl Environment manager.
     # Switch perl in the $PATH
     # hash -r clears the PATH cache
     perlbrew switch perl-5.13.0
-    hash -r 
+    hash -r
     perl -v
 
     # Turn it off. Disable it.
@@ -123,15 +125,15 @@ Log output to STDOUT rather than a logfile.
 
 =item B<-as>
 
-Install a given perl under an alias. 
+Install a given perl under an alias.
 
     perlbrew install perl-5.6.2 -as legacy-perl
 
-=item B<-D>
+=item B<-D>, B<-U>
 
 pass through switches to the perl Configure script.
 
-    perlbrew install perl-5.10.1 -D=usemymalloc
+    perlbrew install perl-5.10.1 -D=usemymalloc -U=uselargefiles
 
 =back
 

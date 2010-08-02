@@ -765,7 +765,7 @@ use strict;
 use 5.8.0;
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.08";
+our $VERSION = "0.09_01";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -1153,6 +1153,8 @@ sub _http_get {
             $ua->add_req_header( $name, $header->{ $name } );
         }
     }
+
+    $ua->proxy($ENV{http_proxy}) if $ENV{http_proxy};
 
     my $loc = $url;
     my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";

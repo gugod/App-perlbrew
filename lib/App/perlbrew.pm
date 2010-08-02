@@ -194,6 +194,7 @@ HELP
         my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
 
         my @d_options = @{ $self->{D} };
+        my @u_options = @{ $self->{U} };
         my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $usedevel;
@@ -224,7 +225,9 @@ INSTALL
             $extract_command,
             "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
-            "sh Configure $configure_flags " . join( ' ', map { "-D$_" } @d_options ),
+            "sh Configure $configure_flags "
+            . join( ' ', map { "-D$_" } @d_options )
+            . join( ' ', map { "-U$_" } @u_options ),
             $dist_version =~ /^5\.(\d+)\.(\d+)/
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
@@ -609,7 +612,7 @@ The MIT License
 Patches and code improvements were contributed by:
 
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
-Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura
+Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura, chromatic
 
 
 =head1 DISCLAIMER OF WARRANTY
