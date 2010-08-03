@@ -1,5 +1,6 @@
 master:
 - Use the proxy set in $ENV{http_proxy} if available.
+- Bypasses '-U' option to to configure. Thanks to chromatic++
 
 0.08:
 - Conf file + CPAN mirror support
