@@ -35,7 +35,7 @@ Usage:
     perlbrew init
 
     perlbrew install perl-5.12.1
-    perlbrew install perl-5.13.0
+    perlbrew install perl-5.13.3
     perlbrew installed
 
     perlbrew switch perl-5.12.1
@@ -606,11 +606,11 @@ The MIT License
 
 =head1 CONTRIBUTORS
 
-Patches and code improvements were contributed by:
+Patches and code improvements has been contributed by:
 
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
-Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura, chromatic
-
+Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
+castaway, jrockway, and chromatic.
 
 =head1 DISCLAIMER OF WARRANTY
 
