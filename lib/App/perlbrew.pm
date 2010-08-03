@@ -191,13 +191,11 @@ HELP
 
         }
 
-        my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
-
         my @d_options = @{ $self->{D} };
         my @u_options = @{ $self->{U} };
         my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
-        push @d_options, "usedevel" if $usedevel;
+        push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
         print "Installing $dist into $ROOT/perls/$as\n";
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
@@ -226,8 +224,7 @@ INSTALL
             "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
             "sh Configure $configure_flags "
-            . join( ' ', map { "-D$_" } @d_options )
-            . join( ' ', map { "-U$_" } @u_options ),
+            . join(' ', map { "-D$_" } @d_options, map { "-U$_" } @u_options),
             $dist_version =~ /^5\.(\d+)\.(\d+)/
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
