@@ -132,7 +132,7 @@ Install a given perl under an alias.
 
 pass through switches to the perl Configure script.
 
-    perlbrew install perl-5.10.1 -Dusemymalloc -Uuselargefiles
+    perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles
 
 =back
 
