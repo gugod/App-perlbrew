@@ -1319,6 +1319,8 @@ Switch to the given version. You may need to run 'rehash' (or 'hash
 Disable perlbrew. Use C<switch> command to re-enable it. Use 'rehash'
 or 'hash -r' again to clear the cache.
 
+=back
+
 =head1 OPTIONS
 
 =over 4
