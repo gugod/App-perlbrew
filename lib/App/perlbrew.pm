@@ -223,8 +223,11 @@ INSTALL
             $extract_command,
             "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
-            "sh Configure $configure_flags "
-            . join(' ', map { "-D$_" } @d_options, map { "-U$_" } @u_options),
+            "sh Configure $configure_flags " .
+                join( ' ',
+                    ( map { "-D$_" } @d_options ),
+                    ( map { "-U$_" } @u_options ),
+                ),
             $dist_version =~ /^5\.(\d+)\.(\d+)/
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
