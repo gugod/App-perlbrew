@@ -1,3 +1,7 @@
+0.09:
+- Use the proxy set in $ENV{http_proxy} if available.
+- Bypasses '-U' option to to configure. Thanks to chromatic++
+
 0.08:
 - Conf file + CPAN mirror support
 - Strip invalid dependency lines out of the makefile in older perl versions, to make them work with newer gcc versions

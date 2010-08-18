@@ -3,7 +3,7 @@ use strict;
 use 5.8.0;
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.08";
+our $VERSION = "0.09";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -35,7 +35,7 @@ Usage:
     perlbrew init
 
     perlbrew install perl-5.12.1
-    perlbrew install perl-5.13.0
+    perlbrew install perl-5.13.3
     perlbrew installed
 
     perlbrew switch perl-5.12.1
@@ -191,12 +191,11 @@ HELP
 
         }
 
-        my $usedevel = $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
-
         my @d_options = @{ $self->{D} };
+        my @u_options = @{ $self->{U} };
         my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
-        push @d_options, "usedevel" if $usedevel;
+        push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
         print "Installing $dist into $ROOT/perls/$as\n";
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
@@ -227,7 +226,8 @@ INSTALL
             $extract_command,
             "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
-            "sh Configure $configure_flags " . join( ' ', map { "-D$_" } @d_options ),
+            "sh Configure $configure_flags "
+            . join(' ', map { "-D$_" } @d_options, map { "-U$_" } @u_options),
             $dist_version =~ /^5\.(\d+)\.(\d+)/
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
@@ -389,6 +389,8 @@ sub _http_get {
             $ua->add_req_header( $name, $header->{ $name } );
         }
     }
+
+    $ua->proxy($ENV{http_proxy}) if $ENV{http_proxy};
 
     my $loc = $url;
     my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
@@ -602,11 +604,11 @@ The MIT License
 
 =head1 CONTRIBUTORS
 
-Patches and code improvements were contributed by:
+Patches and code improvements has been contributed by:
 
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
-Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura
-
+Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
+castaway, jrockway, and chromatic.
 
 =head1 DISCLAIMER OF WARRANTY
 

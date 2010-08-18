@@ -1,7 +1,7 @@
 my $author = ((grep{ $_ eq '--author' } @ARGV) or -d '.git' && `git remote -v` =~ /git\@github/);
 print STDERR "Running as an author mode!\n" if $author;
 
-sub slurp { 
+sub slurp {
     my $file = shift;
     open CODE, '<', $file;
     local $/ = undef;
