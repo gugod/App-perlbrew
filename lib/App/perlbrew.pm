@@ -1,6 +1,8 @@
 package App::perlbrew;
 use strict;
+use warnings;
 use 5.8.0;
+use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
 our $VERSION = "0.09";
@@ -10,40 +12,95 @@ my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = "$ROOT/perls/current";
 
+my @GETOPT_CONFIG = (
+    'pass_through',
+    'no_ignore_case',
+    'bundling',
+);
+my @GETOPT_SPEC = (
+    'force|f!',
+    'notest|n!',
+    'quiet|q!',
+    'verbose|v',
+    'as=s',
+
+    'help|?',
+    'version',
+
+    # options passed directly to Configure
+    'D=s@',
+    'U=s@',
+    'A=s@',
+);
+
+
+sub new {
+    my($class, @argv) = @_;
+
+    my %opt = (
+        force => 0,
+        quiet => 1,
+
+        D => [],
+        U => [],
+        A => [],
+    );
+
+    Getopt::Long::Configure(@GETOPT_CONFIG);
+    Getopt::Long::GetOptionsFromArray(\@argv, \%opt, @GETOPT_SPEC)
+        or run_command_help(1);
+
+    # fix up the effect of 'bundling'
+    foreach my $flags (@opt{qw(D U A)}) {
+        foreach my $value(@{$flags}) {
+            $value =~ s/^=//;
+        }
+    }
+
+    $opt{args} = \@argv;
+    return bless \%opt, $class;
+}
+
+sub run {
+    my($self) = @_;
+    $self->run_command($self->get_args);
+}
+
 sub get_current_perl {
     return $CURRENT_PERL;
 }
 
+sub get_args {
+    my ( $self ) = @_;
+    return @{ $self->{args} };
+}
+
 sub run_command {
-    my ( undef, $opt, $x, @args ) = @_;
-    $opt->{log_file} = "$ROOT/build.log";
-    my $self = bless $opt, __PACKAGE__;
-    $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?";
+    my ( $self, $x, @args ) = @_;
+    $self->{log_file} ||= "$ROOT/build.log";
+    if($self->{version}) {
+        $x = 'version';
+    }
+    elsif(!$x || $self->{help}) {
+        $x = 'help';
+    }
+    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?\n";
     $self->$s(@args);
 }
 
+sub run_command_version {
+    my ( $self ) = @_;
+    my $package = ref $self;
+    my $version = $self->VERSION;
+    print <<"VERSION";
+$0  - $package/$version
+VERSION
+}
+
 sub run_command_help {
-    print <<HELP;
-perlbrew - $VERSION
-
-Usage:
-
-    # Read more help
-    perlbrew -h
-
-    perlbrew init
-
-    perlbrew install perl-5.12.1
-    perlbrew install perl-5.13.3
-    perlbrew installed
-
-    perlbrew switch perl-5.12.1
-    perlbrew switch /usr/bin/perl
-
-    perlbrew off
-
-HELP
+    my ( $self, $status ) = @_;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(defined $status ? $status : 1);
 }
 
 sub run_command_init {
@@ -131,6 +188,7 @@ Next, if this is the first time you've run perlbrew installation, run:
 
 And follow the instruction on screen.
 HELP
+        # ' <- for poor editors
         return;
     }
 

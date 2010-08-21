@@ -1,26 +1,9 @@
 #!perl
 use strict;
-use Getopt::Long qw(:config pass_through);
-use Pod::Usage;
-require App::perlbrew;
+use App::perlbrew;
 
-my $opt = {
-    force => undef,
-    quiet => 1,
-    D     => [],
-    U     => [],
-};
-GetOptions(
-    'f|force!'  => \$opt->{force},
-    'n|notest!' => \$opt->{notest},
-    'q|quiet!'  => \$opt->{quiet},
-    'v|verbose' => \$opt->{verbose},
-    'as=s'      => \$opt->{as},
-    'D|D=s@'    => $opt->{D},
-    'U|U=s@'    => $opt->{U},
-    'help|?'    => sub { pod2usage(1) },
-) or pod2usage(2);
-App::perlbrew->run_command( $opt, @ARGV );
+my $app = App::perlbrew->new(@ARGV);
+$app->run();
 
 __END__
 
@@ -107,33 +90,37 @@ or 'hash -r' again to clear the cache.
 
 =over 4
 
-=item B<-?|help>
+=item B<-?| --help>
 
 prints this help.
 
-=item B<-f|force>
+=item B<-?| --help>
+
+prints the version of App::perlbrew.
+
+=item B<-f| --force>
 
 Force installation of a perl.
 
-=item B<-n|notest>
+=item B<-n| --notest>
 
 Skip the test suite
 
-=item B<-q|quiet>
+=item B<-q| --quiet>
 
 Log output to a log file rather than STDOUT. This is the default. The log file is saved in F<$ROOT/build.log>
 
-=item B<-v|verbose>
+=item B<-v| --verbose>
 
 Log output to STDOUT rather than a logfile.
 
-=item B<-as>
+=item B<--as>
 
 Install a given perl under an alias.
 
     perlbrew install perl-5.6.2 -as legacy-perl
 
-=item B<-D>, B<-U>
+=item B<-D>, B<-U>, B<-A>
 
 pass through switches to the perl Configure script.
 
