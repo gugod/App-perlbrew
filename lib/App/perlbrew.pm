@@ -422,11 +422,11 @@ sub run_command_mirror {
                 my $val = ExtUtils::MakeMaker::prompt( $ask );
                 next MIRROR if ! $val;
                 last MIRROR if $val eq 'q';
-                $select = $val + 0;
+                $select = $val;
                 if ( ! $select || $select - 1 > $#mirrors ) {
                     die "Bogus mirror ID: $select";
                 }
-                $select = $mirrors[$select];
+                $select = $mirrors[$select - 1];
                 die "Mirror ID is invalid" if ! $select;
                 last MIRROR;
             }
