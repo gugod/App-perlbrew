@@ -669,7 +669,7 @@ Patches and code improvements has been contributed by:
 
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
-castaway, jrockway, and chromatic.
+castaway, jrockway, chromatic, Goro Fuji, Sawyer X, and Danijel Tasov.
 
 =head1 DISCLAIMER OF WARRANTY
 

@@ -1,3 +1,10 @@
+0.10:
+- yanick++ and castaway++ fixes docmentation
+- gfx++ made it accept -Dopt style flags as Perl Configurate does.
+- (Danijel Tasov)++ added '-n' option -- no test!
+- xsawyerx++ fixes RT #57672, #60123, and GH #9
+- Fixes #59729
+
 0.09:
 - Use the proxy set in $ENV{http_proxy} if available.
 - Bypasses '-U' option to to configure. Thanks to chromatic++
