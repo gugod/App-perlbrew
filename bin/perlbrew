@@ -1,6 +1,6 @@
 #!perl
 use strict;
-use App::perlbrew;
+require App::perlbrew;
 
 my $app = App::perlbrew->new(@ARGV);
 $app->run();

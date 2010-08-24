@@ -104,8 +104,8 @@ sub run_command_help {
 }
 
 sub run_command_init {
-    require File::Path;
-    File::Path::mkpath($_) for (
+    require File::Path::Tiny;
+    File::Path::Tiny::mk($_) for (
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
@@ -156,7 +156,7 @@ sub run_command_install {
 
     unless ($dist) {
         require File::Spec;
-        require File::Path;
+        require File::Path::Tiny;
         require File::Copy;
 
         my $executable = $0;
@@ -171,7 +171,7 @@ sub run_command_install {
             exit;
         }
 
-        File::Path::mkpath("$ROOT/bin");
+        File::Path::Tiny::mk("$ROOT/bin");
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 

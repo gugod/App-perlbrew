@@ -1,4 +1,5 @@
 0.10:
+- Use File::Path::Tiny to avoid the api incompatibility of File::Path.
 - yanick++ and castaway++ fixes docmentation
 - gfx++ made it accept -Dopt style flags as Perl Configurate does.
 - (Danijel Tasov)++ added '-n' option -- no test!
