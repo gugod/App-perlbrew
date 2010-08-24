@@ -1430,11 +1430,11 @@ prints the version of App::perlbrew.
 
 Force installation of a perl.
 
-=item B<-n| --notest>
+=item B<-n|notest>
 
 Skip the test suite
 
-=item B<-q| --quiet>
+=item B<-q|quiet>
 
 Log output to a log file rather than STDOUT. This is the default. The log file is saved in F<$ROOT/build.log>
 
