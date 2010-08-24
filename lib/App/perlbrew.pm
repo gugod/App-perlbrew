@@ -331,7 +331,7 @@ sub calc_installed {
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl");
-    for ( grep { -x $_ && !-l $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+    for ( grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
         push @result, {
             name       => $_,
             is_current => ($_ eq $current_perl_executable ? 1 : 0),
