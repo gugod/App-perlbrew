@@ -762,7 +762,9 @@ $INC{'HTTP/Lite.pm'} = __FILE__;
 
 package App::perlbrew;
 use strict;
+use warnings;
 use 5.8.0;
+use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
 our $VERSION = "0.09";
@@ -772,40 +774,95 @@ my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = "$ROOT/perls/current";
 
+my @GETOPT_CONFIG = (
+    'pass_through',
+    'no_ignore_case',
+    'bundling',
+);
+my @GETOPT_SPEC = (
+    'force|f!',
+    'notest|n!',
+    'quiet|q!',
+    'verbose|v',
+    'as=s',
+
+    'help|?',
+    'version',
+
+    # options passed directly to Configure
+    'D=s@',
+    'U=s@',
+    'A=s@',
+);
+
+
+sub new {
+    my($class, @argv) = @_;
+
+    my %opt = (
+        force => 0,
+        quiet => 1,
+
+        D => [],
+        U => [],
+        A => [],
+    );
+
+    Getopt::Long::Configure(@GETOPT_CONFIG);
+    Getopt::Long::GetOptionsFromArray(\@argv, \%opt, @GETOPT_SPEC)
+        or run_command_help(1);
+
+    # fix up the effect of 'bundling'
+    foreach my $flags (@opt{qw(D U A)}) {
+        foreach my $value(@{$flags}) {
+            $value =~ s/^=//;
+        }
+    }
+
+    $opt{args} = \@argv;
+    return bless \%opt, $class;
+}
+
+sub run {
+    my($self) = @_;
+    $self->run_command($self->get_args);
+}
+
 sub get_current_perl {
     return $CURRENT_PERL;
 }
 
+sub get_args {
+    my ( $self ) = @_;
+    return @{ $self->{args} };
+}
+
 sub run_command {
-    my ( undef, $opt, $x, @args ) = @_;
-    $opt->{log_file} = "$ROOT/build.log";
-    my $self = bless $opt, __PACKAGE__;
-    $x ||= "help";
-    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?";
+    my ( $self, $x, @args ) = @_;
+    $self->{log_file} ||= "$ROOT/build.log";
+    if($self->{version}) {
+        $x = 'version';
+    }
+    elsif(!$x || $self->{help}) {
+        $x = 'help';
+    }
+    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?\n";
     $self->$s(@args);
 }
 
+sub run_command_version {
+    my ( $self ) = @_;
+    my $package = ref $self;
+    my $version = $self->VERSION;
+    print <<"VERSION";
+$0  - $package/$version
+VERSION
+}
+
 sub run_command_help {
-    print <<HELP;
-perlbrew - $VERSION
-
-Usage:
-
-    # Read more help
-    perlbrew -h
-
-    perlbrew init
-
-    perlbrew install perl-5.12.1
-    perlbrew install perl-5.13.3
-    perlbrew installed
-
-    perlbrew switch perl-5.12.1
-    perlbrew switch /usr/bin/perl
-
-    perlbrew off
-
-HELP
+    my ( $self, $status ) = @_;
+    require Pod::Usage;
+    Pod::Usage::pod2usage(defined $status ? $status : 1);
 }
 
 sub run_command_init {
@@ -893,6 +950,7 @@ Next, if this is the first time you've run perlbrew installation, run:
 
 And follow the instruction on screen.
 HELP
+        # ' <- for poor editors
         return;
     }
 
@@ -1126,11 +1184,11 @@ sub run_command_mirror {
                 my $val = ExtUtils::MakeMaker::prompt( $ask );
                 next MIRROR if ! $val;
                 last MIRROR if $val eq 'q';
-                $select = $val + 0;
+                $select = $val;
                 if ( ! $select || $select - 1 > $#mirrors ) {
                     die "Bogus mirror ID: $select";
                 }
-                $select = $mirrors[$select];
+                $select = $mirrors[$select - 1];
                 die "Mirror ID is invalid" if ! $select;
                 last MIRROR;
             }
@@ -1218,27 +1276,10 @@ $INC{'App/perlbrew.pm'} = __FILE__;
 package main;
 #!perl
 use strict;
-use Getopt::Long qw(:config pass_through);
-use Pod::Usage;
-require App::perlbrew;
+use App::perlbrew;
 
-my $opt = {
-    force => undef,
-    quiet => 1,
-    D     => [],
-    U     => [],
-};
-GetOptions(
-    'f|force!'  => \$opt->{force},
-    'n|notest!' => \$opt->{notest},
-    'q|quiet!'  => \$opt->{quiet},
-    'v|verbose' => \$opt->{verbose},
-    'as=s'      => \$opt->{as},
-    'D|D=s@'    => $opt->{D},
-    'U|U=s@'    => $opt->{U},
-    'help|?'    => sub { pod2usage(1) },
-) or pod2usage(2);
-App::perlbrew->run_command( $opt, @ARGV );
+my $app = App::perlbrew->new(@ARGV);
+$app->run();
 
 __END__
 
@@ -1321,39 +1362,41 @@ Switch to the given version. You may need to run 'rehash' (or 'hash
 Disable perlbrew. Use C<switch> command to re-enable it. Use 'rehash'
 or 'hash -r' again to clear the cache.
 
-=back
-
 =head1 OPTIONS
 
 =over 4
 
-=item B<-?|help>
+=item B<-?| --help>
 
 prints this help.
 
-=item B<-f|force>
+=item B<-?| --help>
+
+prints the version of App::perlbrew.
+
+=item B<-f| --force>
 
 Force installation of a perl.
 
-=item B<-n|notest>
+=item B<-n| --notest>
 
 Skip the test suite
 
-=item B<-q|quiet>
+=item B<-q| --quiet>
 
 Log output to a log file rather than STDOUT. This is the default. The log file is saved in F<$ROOT/build.log>
 
-=item B<-v|verbose>
+=item B<-v| --verbose>
 
 Log output to STDOUT rather than a logfile.
 
-=item B<-as>
+=item B<--as>
 
 Install a given perl under an alias.
 
     perlbrew install perl-5.6.2 -as legacy-perl
 
-=item B<-D>, B<-U>
+=item B<-D>, B<-U>, B<-A>
 
 pass through switches to the perl Configure script.
 
