@@ -860,9 +860,12 @@ sub new {
         A => [],
     );
 
+    # build a local @ARGV to allow us to use an older
+    # Getopt::Long API in case we are building on an older system
+    local (@ARGV) = @argv;
     Getopt::Long::Configure(@GETOPT_CONFIG);
-    Getopt::Long::GetOptionsFromArray(\@argv, \%opt, @GETOPT_SPEC)
-        or run_command_help(1);
+    Getopt::Long::GetOptions( \%opt, @GETOPT_SPEC )
+      or run_command_help(1);
 
     # fix up the effect of 'bundling'
     foreach my $flags (@opt{qw(D U A)}) {
@@ -871,7 +874,7 @@ sub new {
         }
     }
 
-    $opt{args} = \@argv;
+    $opt{args} = \@ARGV;
     return bless \%opt, $class;
 }
 
