@@ -1449,7 +1449,7 @@ Log output to STDOUT rather than a logfile.
 
 Install a given perl under an alias.
 
-    perlbrew install perl-5.6.2 -as legacy-perl
+    perlbrew install perl-5.6.2 --as legacy-perl
 
 =item B<-D>, B<-U>, B<-A>
 
