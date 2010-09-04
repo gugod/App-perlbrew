@@ -43,45 +43,39 @@ perlbrew - Perl Environment manager.
     # Turn it back on. Re-enable it.
     perlbrew switch perl-5.13.3
 
-=head1 CONFIGURATION
-
-By default perlbrew builds and installs copies of perl into
-C<$ENV{HOME}/perl5/perlbrew>. To use a different directory, set the
-C<PERLBREW_ROOT> shell variable before running perlbrew.
-
 =head1 COMMANDS
 
 =over 4
 
-=item init
+=item B<init>
 
 Run this once to setup the C<perlbrew> directory ready for installing
 perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
-=item mirror
+=item B<mirror>
 
 Run this if you want to choose a specific CPAN mirror to install the
 perls from. It will display a list of mirrors for you to pick
 from. Hit 'q' to cancel the selection.
 
-=item install perl-<version>
+=item B<install> perl-<version>
 
 Build and install the given version of perl.
 
-=item install /path/to/perl/git/checkout/dir
+=item B<install> /path/to/perl/git/checkout/dir
 
 Build and install from the given git checkout dir.
 
-=item installed
+=item B<installed>
 
 List the installed versions of perl.
 
-=item switch perl-<version>
+=item B<switch> perl-<version>
 
 Switch to the given version. You may need to run 'rehash' (or 'hash
 -r') after this command.
 
-=item off
+=item B<off>
 
 Disable perlbrew. Use C<switch> command to re-enable it. Use 'rehash'
 or 'hash -r' again to clear the cache.
@@ -92,13 +86,9 @@ or 'hash -r' again to clear the cache.
 
 =over 4
 
-=item B<-?| --help>
+=item B<-h| --help>
 
 prints this help.
-
-=item B<-?| --help>
-
-prints the version of App::perlbrew.
 
 =item B<-f| --force>
 
@@ -133,5 +123,11 @@ pass through switches to the perl Configure script.
 =head1 DESCRIPTION
 
 Read L<App::perlbrew> for more complete documentation.
+
+=head1 CONFIGURATION
+
+By default perlbrew builds and installs copies of perl into
+C<$ENV{HOME}/perl5/perlbrew>. To use a different directory, set the
+C<PERLBREW_ROOT> shell variable before running perlbrew.
 
 =cut

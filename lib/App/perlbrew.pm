@@ -24,7 +24,7 @@ my @GETOPT_SPEC = (
     'verbose|v',
     'as=s',
 
-    'help|?',
+    'help|h',
     'version',
 
     # options passed directly to Configure
@@ -61,6 +61,7 @@ sub new {
     }
 
     $opt{args} = \@ARGV;
+
     return bless \%opt, $class;
 }
 
@@ -84,8 +85,9 @@ sub run_command {
     if($self->{version}) {
         $x = 'version';
     }
-    elsif(!$x || $self->{help}) {
+    elsif(!$x) {
         $x = 'help';
+        @args = (0, ($self->{help} ? 2 : 0));
     }
     my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?\n";
     $self->$s(@args);
@@ -101,9 +103,9 @@ VERSION
 }
 
 sub run_command_help {
-    my ( $self, $status ) = @_;
+    my ($self, $status, $verbose) = @_;
     require Pod::Usage;
-    Pod::Usage::pod2usage(defined $status ? $status : 1);
+    Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
 }
 
 sub run_command_init {
