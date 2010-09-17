@@ -256,6 +256,7 @@ HELP
 
         my @d_options = @{ $self->{D} };
         my @u_options = @{ $self->{U} };
+        my @a_options = @{ $self->{A} };
         my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
@@ -291,8 +292,9 @@ INSTALL
             "rm -f config.sh Policy.sh",
             "sh Configure $configure_flags " .
                 join( ' ',
-                    ( map { "-D$_" } @d_options ),
-                    ( map { "-U$_" } @u_options ),
+                    ( map { qq{'-D$_'} } @d_options ),
+                    ( map { qq{'-U$_'} } @u_options ),
+                    ( map { qq{'-A$_'} } @a_options ),
                 ),
             $dist_version =~ /^5\.(\d+)\.(\d+)/
                 && ($1 < 8 || $1 == 8 && $2 < 9)
