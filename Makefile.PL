@@ -54,6 +54,8 @@ repository 'git://github.com/gugod/App-perlbrew.git';
 requires 'HTTP::Lite'   => 2.2,
          'File::Path::Tiny'   => 0.1;
 
+test_requires 'Test::Simple' => 0.81;
+
 # requires 'local::lib' => 1.004009;
 
 install_script 'bin/perlbrew';
