@@ -1,7 +1,7 @@
 package App::perlbrew;
 use strict;
 use warnings;
-use 5.8.0;
+use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
