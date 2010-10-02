@@ -6,7 +6,9 @@ use App::perlbrew;
 
 my $app = App::perlbrew->new('install', '-n', 'perl-5.12.1',
     '-Dusethreads', '-DDEBUGGING', '-Uusemymalloc', '-Accflags');
-note explain($app);
+
+note explain($app)
+    if (main->can('note') && main->can('explain'));
 
 is join(' ', $app->get_args), join(' ', qw(install perl-5.12.1));
 
@@ -20,7 +22,9 @@ ok $app->{notest}, 'notest';
 
 $app = App::perlbrew->new('install', '--no-quiet', 'perl-5.12.1',
     '-D', 'usethreads', '-D=DEBUGGING', '-U', 'usemymalloc', '-A', 'ccflags');
-note explain($app);
+
+note explain($app)
+    if (main->can('note') && main->can('explain'));
 
 is join(' ', $app->get_args), join(' ', qw(install perl-5.12.1));
 
@@ -30,4 +34,3 @@ is_deeply $app->{A}, [qw(ccflags)],              '-A';
 
 ok !$app->{quiet},  'quiet';
 ok !$app->{notest}, 'notest';
-
