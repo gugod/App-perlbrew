@@ -587,7 +587,7 @@ a C<PERLBREW_ROOT> environment variable before you run C<./perlbrew install>.
     export PERLBREW_ROOT=/mnt/perlbrew
     ./perlbrew install
 
-The downloaded perlbrew is a self-contained standalone program that
+The downloade ll non-core modules it usesperlbrew is a self-contained standalone program that
 embed all non-core modules it uses. It should be runnable with perl
 5.8 or later versions of perl.
 
@@ -601,7 +601,7 @@ executed with your current perl.
 NOTICE. When you install or upgrade perlbrew with cpan / cpanp /
 cpanm, make sure you are not using one of the perls brewed with
 perlbrew. If so, the `perlbrew` executable you just installed will not
-be available after you swith to other perls. You might not be able to
+be available after you switch to other perls. You might not be able to
 invoke further C<perlbrew> commands after so because the executable
 C<perlbrew> is not in your C<PATH> anymore. Installing it again with
 cpan can temporarily solve this problem. To ensure you are not using
@@ -610,7 +610,7 @@ a perlbrewed perl, run C<perlbrew off> before upgrading.
 
 It should be relatively safe to install C<App::perlbrew> with system
 cpan (like C</usr/bin/cpan>) because then it will be installed under a
-system PATH like C</usr/bin>, which is not effected by C<perlbrew switch>
+system PATH like C</usr/bin>, which is not affected by C<perlbrew switch>
 command.
 
 Again, it is recommended to let C<perlbrew> install itself. It's
@@ -622,7 +622,7 @@ Please read the program usage by running
 
     perlbrew
 
-(No arguments.) To read a more detail one:
+(No arguments.) To read a more detailed one:
 
     perlbrew -h
 
@@ -639,7 +639,7 @@ It will make sure that your current perl in the PATH is pointing
 to C</usr/bin/perl>.
 
 As a matter of fact the C<switch> command checks whether the given
-argument is an executale or not, and create a symlink named 'perl' to
+argument is an executable or not, and create a symlink named 'perl' to
 it if it is. If you really want to you are able to do:
 
     perlbrew switch /usr/bin/perl6
