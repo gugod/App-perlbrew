@@ -587,8 +587,8 @@ a C<PERLBREW_ROOT> environment variable before you run C<./perlbrew install>.
     export PERLBREW_ROOT=/mnt/perlbrew
     ./perlbrew install
 
-The downloade ll non-core modules it usesperlbrew is a self-contained standalone program that
-embed all non-core modules it uses. It should be runnable with perl
+The downloaded perlbrew is a self-contained standalone program that
+embeds all non-core modules it uses. It should be runnable with perl
 5.8 or later versions of perl.
 
 You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
