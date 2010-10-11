@@ -426,15 +426,20 @@ sub run_command_mirror {
             if ( $test == int $test ) {
                 my $remaining = $#mirrors - $id;
                 my $ask = "Select a mirror by number or press enter to see the rest "
-                        . "($remaining more) [q to quit]";
+                        . "($remaining more) [q to quit, m for manual entry]";
                 my $val = ExtUtils::MakeMaker::prompt( $ask );
                 next MIRROR if ! $val;
                 last MIRROR if $val eq 'q';
                 $select = $val;
-                if ( ! $select || $select - 1 > $#mirrors ) {
+		if($select eq 'm') {
+                    my $url  = ExtUtils::MakeMaker::prompt("Enter the URL of your CPAN mirror:");
+		    my $name = ExtUtils::MakeMaker::prompt("Enter a Name: [default: My CPAN Mirror]") || "My CPAN Mirror";
+		    $select = { name => $name, url => $url };
+		}
+                elsif ( ! $select || $select - 1 > $#mirrors ) {
                     die "Bogus mirror ID: $select";
                 }
-                $select = $mirrors[$select - 1];
+                $select = $mirrors[$select - 1] unless ($select eq 'm');
                 die "Mirror ID is invalid" if ! $select;
                 last MIRROR;
             }
