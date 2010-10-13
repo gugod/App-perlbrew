@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+cd /tmp
+
+echo
+echo "## Downolad the latest perlbrew"
+curl -O http://github.com/gugod/App-perlbrew/raw/master/perlbrew >/dev/null 2>&1
+
+echo
+echo "## Installing"
+chmod +x perlbrew
+./perlbrew install
+
+echo
+echo "## Done. (automatically removes downloaded /tmp/perlbrew)"
+rm ./perlbrew
+
