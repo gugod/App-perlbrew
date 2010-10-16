@@ -10,7 +10,7 @@ our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
-my $CURRENT_PERL = "$ROOT/perls/current";
+my $CURRENT_PERL = $ENV{PERLBREW_PERL};
 
 my @GETOPT_CONFIG = (
     'pass_through',
@@ -367,7 +367,7 @@ sub calc_installed {
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        push @result, { name => $name, is_current => $current && ($name eq $current)  };
+        push @result, { name => $name, is_current => ($CURRENT_PERL && ($name eq $CURRENT_PERL)) };
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl");
