@@ -453,6 +453,26 @@ sub run_command_mirror {
     return;
 }
 
+sub run_command_env {
+    my($self) = @_;
+    my %env = (
+        VERSION => $VERSION,
+        ROOT => $ROOT,
+        PATH => "$ROOT/perls/current/bin"
+    );
+
+    if ($ENV{SHELL} =~ /(ba|z)sh$/) {
+        while (my ($k, $v) = each(%env)) {
+            print "export PERLBREW_$k=$v\n";
+        }
+    }
+    else {
+        while (my ($k, $v) = each(%env)) {
+            print "setenv PERLBREW_$k $v\n";
+        }
+    }
+}
+
 sub _http_get {
     my ($self, $url, $cb, $header) = @_;
     require HTTP::Lite;
