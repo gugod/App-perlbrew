@@ -594,15 +594,15 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew mirror
 
     # Install some Perls
-    perlbrew install perl-5.12.1
+    perlbrew install perl-5.12.2
     perlbrew install perl-5.8.1
-    perlbrew install perl-5.11.5
+    perlbrew install perl-5.13.5
 
     # See what were installed
     perlbrew installed
 
     # Switch perl in the $PATH
-    perlbrew switch perl-5.12.1
+    perlbrew switch perl-5.12.2
     perl -v
 
     # Switch to another version
@@ -616,7 +616,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew off
 
     # Use 'switch' command to turn it back on.
-    perlbrew switch perl-5.12.1
+    perlbrew switch perl-5.12.2
 
 =head1 DESCRIPTION
 
