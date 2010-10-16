@@ -456,13 +456,11 @@ sub run_command_mirror {
 sub run_command_env {
     my($self, $perl) = @_;
 
-    my %env = (
-        VERSION => $VERSION,
-        ROOT => $ROOT,
-        PATH => "$ROOT/bin"
-    );
+    my %env = (PATH => "$ROOT/bin");
 
-    if ($perl && -x "$ROOT/perls/$perl/bin/perl") {
+    $env{ROOT} = $ROOT unless $ENV{PERLBREW_ROOT};
+
+    if ($perl && -d "$ROOT/perls/$perl/bin") {
         $env{PERL} = $perl;
         $env{PATH} .= ":$ROOT/perls/$perl/bin";
     }
