@@ -454,12 +454,18 @@ sub run_command_mirror {
 }
 
 sub run_command_env {
-    my($self) = @_;
+    my($self, $perl) = @_;
+
     my %env = (
         VERSION => $VERSION,
         ROOT => $ROOT,
-        PATH => "$ROOT/perls/current/bin"
+        PATH => "$ROOT/bin"
     );
+
+    if ($perl && -x "$ROOT/perls/$perl/bin/perl") {
+        $env{PERL} = $perl;
+        $env{PATH} .= ":$ROOT/perls/$perl/bin";
+    }
 
     if ($ENV{SHELL} =~ /(ba|z)sh$/) {
         while (my ($k, $v) = each(%env)) {
