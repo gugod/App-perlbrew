@@ -146,6 +146,7 @@ perlbrew () {
             command perlbrew $*
             ;;
     esac
+    hash -r
 }
 RC
 
