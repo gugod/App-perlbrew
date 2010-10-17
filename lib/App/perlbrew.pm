@@ -89,7 +89,14 @@ sub run_command {
         $x = 'help';
         @args = (0, ($self->{help} ? 2 : 0));
     }
-    my $s = $self->can("run_command_$x") or die "Unknown command: `$x`. Typo?\n";
+
+    my $s = $self->can("run_command_$x");
+    unless ($s) {
+        $x =~ s/-/_/;
+        $s = $self->can("run_command_$x");
+    }
+
+    die "Unknown command: `$x`. Typo?\n" unless $s;
     $self->$s(@args);
 }
 
@@ -350,6 +357,8 @@ INSTALL
                 $self->run_command_symlink_executables($as);
             }
 
+            $self->run_command_install_cpanm($as);
+
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
@@ -533,6 +542,17 @@ sub run_command_symlink_executables {
         my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
         system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
     }
+}
+
+sub run_command_install_cpanm {
+    my ($self, $perl) = @_;
+    my $body = $self->_http_get('http://github.com/miyagawa/cpanminus/raw/master/cpanm');
+
+    open my $CPANM, "> $ROOT/bin/cpanm";
+    print $CPANM $body;
+    close $CPANM;
+    chmod 0755, "$ROOT/bin/cpanm";
+    print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
 sub _http_get {
