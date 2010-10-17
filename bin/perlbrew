@@ -80,6 +80,26 @@ Switch to the given version. You may need to run 'rehash' (or 'hash
 Disable perlbrew. Use C<switch> command to re-enable it. Use 'rehash'
 or 'hash -r' again to clear the cache.
 
+=item B<symlink_executables> <perl-version>
+
+Low-level command. Use this command to create the C<perl> executable
+symbolic link to C<perl5.13.5>.
+
+You don't need to do this unless you were using old perlbrew to
+install perls. The installation layout is changed since version 0.11.
+
+If you just upgraded perlbrew and found C<perlbrew switch> failed to work
+after you switch to a development release of perl, say, perl-5.13.5, run this command:
+
+    perlbrew symlink_executables perl-5.13.5
+
+This essentially creates this symlink:
+
+   ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl
+   -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.5
+
+You should not need to do this if you are using perlbrew 0.11 or newer, to intsall
+
 =back
 
 =head1 OPTIONS
