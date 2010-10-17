@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.10";
+our $VERSION = "0.11";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -490,7 +490,10 @@ sub run_command_mirror {
 sub run_command_env {
     my($self, $perl) = @_;
 
-    my %env = (PATH => "$ROOT/bin");
+    my %env = (
+        VERSION => $VERSION,
+        PATH => "$ROOT/bin"
+    );
 
     $env{ROOT} = $ROOT unless $ENV{PERLBREW_ROOT};
 
