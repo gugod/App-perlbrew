@@ -149,6 +149,7 @@ perlbrew () {
     hash -r
 }
 RC
+    close BASHRC;
 
     system <<RC;
 echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
@@ -344,18 +345,30 @@ INSTALL
 
         delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
-        print !system($cmd) ? <<SUCCESS : <<FAIL;
+        if (!system($cmd)) {
+            if ($dist_version =~ /5\.1[13579]|git/) {
+                for my $executable (<$ROOT/perls/$as/bin/*>) {
+                    my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
+                    system("ln -fs $executable $ROOT/perls/$as/bin/$name") if $version;
+                }
+            }
+
+            print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
   perlbrew switch $as
 
 SUCCESS
+        }
+        else {
+            print <<FAIL;
 Installing $dist failed. See $self->{log_file} to see why.
 If you want to force install the distribution, try:
 
   perlbrew --force install $dist_name
 
 FAIL
+        }
     }
 }
 
