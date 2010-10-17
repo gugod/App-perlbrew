@@ -347,10 +347,7 @@ INSTALL
 
         if (!system($cmd)) {
             if ($dist_version =~ /5\.1[13579]|git/) {
-                for my $executable (<$ROOT/perls/$as/bin/*>) {
-                    my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-                    system("ln -fs $executable $ROOT/perls/$as/bin/$name") if $version;
-                }
+                $self->run_command_symlink_executables($as);
             }
 
             print <<SUCCESS;
@@ -524,6 +521,17 @@ sub run_command_env {
         while (my ($k, $v) = each(%env)) {
             print "setenv PERLBREW_$k $v\n";
         }
+    }
+}
+
+sub run_command_symlink_executables {
+    my($self, $perl) = @_;
+
+    return "" unless $perl;
+
+    for my $executable (<$ROOT/perls/$perl/bin/*>) {
+        my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
+        system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
     }
 }
 
