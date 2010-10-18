@@ -80,6 +80,17 @@ Switch to the given version. You may need to run 'rehash' (or 'hash
 Disable perlbrew. Use C<switch> command to re-enable it. Use 'rehash'
 or 'hash -r' again to clear the cache.
 
+=item B<env>
+
+Low-level command. Use this command to see the list of environment
+variables that are set by C<perlbrew> itself for bash integration.
+
+The output is something similar to this:
+
+    export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
+    export PERLBREW_VERSION=0.11
+    export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin
+
 =item B<symlink_executables> <perl-version>
 
 Low-level command. Use this command to create the C<perl> executable
