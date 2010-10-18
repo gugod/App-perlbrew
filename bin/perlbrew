@@ -75,6 +75,10 @@ List the installed versions of perl.
 Switch to the given version. You may need to run 'rehash' (or 'hash
 -r') after this command.
 
+=item B<version>
+
+Show the version of perbrew.
+
 =item B<off>
 
 Disable perlbrew. Use C<switch> command to re-enable it. Use 'rehash'
