@@ -754,6 +754,14 @@ it if it is. If you really want to you are able to do:
 But maybe not. After running this you might not be able to run
 perlbrew anymore. So be careful not making mistakes there.
 
+=head1 PROJECT DEVELOPMENT
+
+perlbrew project uses PivotalTracker for task tracking:
+L<http://www.pivotaltracker.com/projects/129997>. You may also report
+bugs to github L<http://github.com/gugod/App-perlbrew/issues> or RT
+<https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew>. They will
+be definitely reviewed and handled.
+
 =head1 AUTHOR
 
 Kang-min Liu  C<< <gugod@gugod.org> >>
