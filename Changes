@@ -1,3 +1,6 @@
+0.12:
+- Fix: missing init file generation.
+
 0.11:
 - Avoid warning messages. Thanks Anno Siegel for the bug report and patch.
 - `-A` arguments are passed thru, thanks to gfx++.

@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.11";
+our $VERSION = "0.12";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -122,6 +122,7 @@ sub run_command_help {
 sub run_command_init {
     require File::Path::Tiny;
     File::Path::Tiny::mk($_) for (
+        "$ENV{HOME}/.perlbrew",
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
@@ -198,6 +199,9 @@ RC
     else {
         $shrc = $yourshrc = 'bashrc';
     }
+
+
+    system("$0 env > $ENV{HOME}/.perlbrew/init");
 
     print <<INSTRUCTION;
 Perlbrew environment initiated, required directories are created under
