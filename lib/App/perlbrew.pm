@@ -413,10 +413,10 @@ sub run_command_list {
     }
 }
 
-{
-    no strict;
-    no warnings;
-    *run_command_installed = \&run_command_list;
+sub run_command_installed {
+    print STDERR "\nDEPRECATION WARNING: `perlbrew installed` will be deprecated soon. Please run `perlbrew list` instead.\n\n";
+    sleep 1;
+    &run_command_list;
 }
 
 sub run_command_switch {
