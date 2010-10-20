@@ -71,7 +71,7 @@ List the installed versions of perl.
 
 =item B<use> perl-<version>
 
-Notice: this only works in BASH and ZSH.
+Notice: this only works in bash and zsh.
 
 Switch to the given version of perl only in the current shell. This
 will not effect newly opened shells.
