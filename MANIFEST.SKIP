@@ -21,4 +21,4 @@
 ^\.gitignore$
 ^README\.pod$
 ^perlbrew$
-
+^perlbrew-install$
