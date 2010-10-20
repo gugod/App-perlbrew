@@ -402,15 +402,21 @@ sub calc_installed {
     return @result;
 }
 
-sub run_command_installed {
+sub run_command_list {
     my $self = shift;
     my @installed = $self->calc_installed(@_);
 
     for my $installed (@installed) {
         my $name = $installed->{name};
         my $cur  = $installed->{is_current};
-        print $name, ($cur ? '(*)' : ''), "\n";
+        print $cur ? '* ': '  ', $name, "\n";
     }
+}
+
+{
+    no strict;
+    no warnings;
+    *run_command_installed = \&run_command_list;
 }
 
 sub run_command_switch {
