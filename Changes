@@ -2,6 +2,7 @@
 - Avoid warning messages. Thanks Anno Siegel for the bug report and patch.
 - `-A` arguments are passed thru, thanks to gfx++.
 - Unbreak tests for older perls with older Test::Simple. Thanks to zaphod42++
+- Better BASH Integration.
 
 0.10:
 - Use File::Path::Tiny to avoid the api incompatibility of File::Path.
