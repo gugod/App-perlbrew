@@ -33,6 +33,10 @@ my @GETOPT_SPEC = (
     'A=s@',
 );
 
+sub uniq(@) {
+    my %a;
+    grep { $a{$_}++ == 1 } @_;
+}
 
 sub new {
     my($class, @argv) = @_;
@@ -378,11 +382,6 @@ FAIL
     }
 }
 
-sub uniq(@) {
-    my %a;
-    grep { $a{$_}++ == 1 } @_;
-}
-
 sub get_installed_perls {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
@@ -522,10 +521,9 @@ sub run_command_env {
 
     my %env = (
         VERSION => $VERSION,
-        PATH => "$ROOT/bin"
+        PATH => "$ROOT/bin",
+        ROOT => $ROOT
     );
-
-    $env{ROOT} = $ROOT unless $ENV{PERLBREW_ROOT};
 
     if ($perl && -d "$ROOT/perls/$perl/bin") {
         $env{PERL} = $perl;
