@@ -383,7 +383,7 @@ sub uniq(@) {
     grep { $a{$_}++ == 1 } @_;
 }
 
-sub calc_installed {
+sub get_installed_perls {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
 
@@ -409,7 +409,7 @@ sub calc_installed {
 
 sub run_command_list {
     my $self = shift;
-    my @installed = $self->calc_installed(@_);
+    my @installed = $self->get_installed_perls(@_);
 
     for my $installed (@installed) {
         my $name = $installed->{name};
