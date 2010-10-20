@@ -378,6 +378,11 @@ FAIL
     }
 }
 
+sub uniq(@) {
+    my %a;
+    grep { $a{$_}++ == 1 } @_;
+}
+
 sub calc_installed {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
@@ -392,11 +397,11 @@ sub calc_installed {
 
     my $current_perl_executable = readlink("$ROOT/bin/perl");
 
-    for ( grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+    for ( uniq grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
         push @result, {
             name       => $_,
             is_current => $current_perl_executable && ($_ eq $current_perl_executable)
-        };
+        } unless index($_, $ROOT) == 0;
     }
 
     return @result;
