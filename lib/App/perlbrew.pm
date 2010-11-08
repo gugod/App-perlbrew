@@ -685,7 +685,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew install perl-5.13.5
 
     # See what were installed
-    perlbrew installed
+    perlbrew list
 
     # Switch perl in the $PATH
     perlbrew switch perl-5.12.2
