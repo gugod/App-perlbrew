@@ -584,7 +584,7 @@ sub run_command_symlink_executables {
 
 sub run_command_install_cpanm {
     my ($self, $perl) = @_;
-    my $body = $self->_curl_http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
+    my $body = $self->_http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
 
     open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
     print $CPANM $body;
@@ -593,42 +593,35 @@ sub run_command_install_cpanm {
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
-sub _http_get {
-    my ($self, $url, $cb, $header) = @_;
-    require HTTP::Lite;
-    my $ua = HTTP::Lite->new;
+{
+    my @command;
+    sub _http_get {
+        my ($self, $url, $cb, $header) = @_;
 
-    if ( $header && ref $header eq 'HASH') {
-        foreach my $name ( keys %{ $header} ) {
-            $ua->add_req_header( $name, $header->{ $name } );
+        if (! @command) {
+            my @commands = (
+                [qw( curl --silent --location )],
+                [qw( wget --no-check-certificate --quiet -O - )],
+            );
+            for my $command (@commands) {
+                my $program = $command->[0];
+                if (! system("$program --version >/dev/null 2>&1")) {
+                    @command = @$command;
+                    last;
+                }
+            }
+            die "You have to install either curl or wget\n"
+                unless @command;
         }
+
+        open my $fh, '-|', @command, $url
+            or die "open() for '@command $url': $!";
+        local $/;
+        my $body = <$fh>;
+        close $fh;
+
+        return $cb ? $cb->($body) : $body;
     }
-
-    $ua->proxy($ENV{http_proxy}) if $ENV{http_proxy};
-
-    my $loc = $url;
-    my $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
-
-    my $redir_count = 0;
-    while ($status == 302 || $status == 301) {
-        last if $redir_count++ > 5;
-        for ($ua->headers_array) {
-            /Location: (\S+)/ and $loc = $1, last;
-        }
-        last if ! $loc;
-        $status = $ua->request($loc) or die "Fail to get $loc (error: $!)";
-        die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
-    }
-    return $cb ? $cb->($ua->body) : $ua->body;
-}
-
-sub _curl_http_get {
-    my ($self, $url, $cb, $header) = @_;
-    open CURL, "curl $url 2>/dev/null |";
-    local $/;
-    my $body = <CURL>;
-    close CURL;
-    return $cb ? $cb->($body) : $body;
 }
 
 sub conf {
