@@ -1402,7 +1402,7 @@ sub run_command_symlink_executables {
 
 sub run_command_install_cpanm {
     my ($self, $perl) = @_;
-    my $body = $self->_http_get('http://github.com/miyagawa/cpanminus/raw/master/cpanm');
+    my $body = $self->_curl_http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
 
     open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
     print $CPANM $body;
@@ -1438,6 +1438,15 @@ sub _http_get {
         die "Failed to get $loc (404 not found). Please try again latter." if $status == 404;
     }
     return $cb ? $cb->($ua->body) : $ua->body;
+}
+
+sub _curl_http_get {
+    my ($self, $url, $cb, $header) = @_;
+    open CURL, "curl $url 2>/dev/null |";
+    local $/;
+    my $body = <CURL>;
+    close CURL;
+    return $cb ? $cb->($body) : $body;
 }
 
 sub conf {
