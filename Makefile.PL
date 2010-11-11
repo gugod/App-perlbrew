@@ -28,7 +28,6 @@ sub embed {
 if ($author) {
     unshift @INC, "lib";
     require App::perlbrew;
-    require HTTP::Lite;
     require File::Path::Tiny;
 
     my $script = slurp 'bin/perlbrew';
@@ -37,7 +36,6 @@ if ($author) {
     local $, = "\n";
     print OUT "#!/usr/bin/env perl",
         '# DO NOT EDIT -- this is an auto generated file',
-        embed('HTTP::Lite'),
         embed('File::Path::Tiny'),
         embed('App::perlbrew'),
         'package main;',
@@ -51,8 +49,7 @@ all_from 'lib/App/perlbrew.pm';
 
 repository 'git://github.com/gugod/App-perlbrew.git';
 
-requires 'HTTP::Lite'   => 2.2,
-         'File::Path::Tiny'   => 0.1;
+requires 'File::Path::Tiny'   => 0.1;
 
 test_requires 'Test::Simple';
 

@@ -30,7 +30,7 @@ perlbrew - Perl Environment manager.
     perlbrew install .
 
     # List which perls are installed
-    perlbrew installed
+    perlbrew list
 
     # Switch perl in the $PATH
     perlbrew switch perl-5.13.3
