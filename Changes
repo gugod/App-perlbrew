@@ -1,3 +1,6 @@
+0.13:
+- Requires curl or wget from now -- to fetch https URLs. ploettix++
+
 0.12:
 - Fix: missing init file generation.
 
