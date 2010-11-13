@@ -1,4 +1,5 @@
 0.13:
+- 'installed' command is renamed to 'list', and will be deprecated soon.
 - Requires curl or wget from now -- to fetch https URLs. ploettix++
 
 0.12:
