@@ -13,7 +13,7 @@ perlbrew - Perl Environment manager.
 
 =head1 SYNOPSIS
 
-    perlbrew [options] [init|install|installed|switch]
+    perlbrew [options] [init|install|list|switch]
 
     # Initialize
     perlbrew init
@@ -22,8 +22,8 @@ perlbrew - Perl Environment manager.
     perlbrew mirror
 
     # Install some Perls
-    perlbrew install perl-5.12.1
-    perlbrew install perl-5.13.3
+    perlbrew install perl-5.12.2
+    perlbrew install perl-5.13.6
 
     # Install from a git checkout
     cd /path/to/src/perl
@@ -33,14 +33,14 @@ perlbrew - Perl Environment manager.
     perlbrew list
 
     # Switch perl in the $PATH
-    perlbrew switch perl-5.13.3
+    perlbrew switch perl-5.13.6
     perl -v
 
     # Turn it off. Disable it.
     perlbrew off
 
     # Turn it back on. Re-enable it.
-    perlbrew switch perl-5.13.3
+    perlbrew switch perl-5.13.6
 
 =head1 COMMANDS
 
@@ -65,7 +65,7 @@ Build and install the given version of perl.
 
 Build and install from the given git checkout dir.
 
-=item B<installed>
+=item B<list>
 
 List the installed versions of perl.
 
@@ -103,7 +103,7 @@ The output is something similar to this:
 =item B<symlink_executables> <perl-version>
 
 Low-level command. Use this command to create the C<perl> executable
-symbolic link to C<perl5.13.5>.
+symbolic link to C<perl5.13.6>.
 
 You don't need to do this unless you were using old perlbrew to
 install perls. The installation layout is changed since version 0.11.
@@ -111,12 +111,12 @@ install perls. The installation layout is changed since version 0.11.
 If you just upgraded perlbrew and found C<perlbrew switch> failed to work
 after you switch to a development release of perl, say, perl-5.13.5, run this command:
 
-    perlbrew symlink_executables perl-5.13.5
+    perlbrew symlink_executables perl-5.13.6
 
 This essentially creates this symlink:
 
-   ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl
-   -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.5
+   ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl
+   -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.6
 
 You should not need to do this if you are using perlbrew 0.11 or newer, to intsall
 

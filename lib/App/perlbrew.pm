@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.12";
+our $VERSION = "0.13";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -684,7 +684,7 @@ App::perlbrew - Manage perl installations in your $HOME
     # Install some Perls
     perlbrew install perl-5.12.2
     perlbrew install perl-5.8.1
-    perlbrew install perl-5.13.5
+    perlbrew install perl-5.13.6
 
     # See what were installed
     perlbrew list
@@ -717,6 +717,10 @@ installed inside your HOME too. It's a completely separate perl
 environment.
 
 =head1 INSTALLATION
+
+To use C<perlbrew>, it is required to install C<curl> or C<wget>
+first. C<perlbrew> depends on one of this two external commmands to be
+there in order to fetch files from the internet.
 
 The recommended way to install perlbrew is to run these statements in
 your shell:
@@ -777,27 +781,6 @@ Please read the program usage by running
 
     perlbrew -h
 
-Alternatively, this should also do:
-
-    perldoc perlbrew
-
-If you messed up too much or get confused by having to many perls
-installed, you can do:
-
-    perlbrew switch /usr/bin/perl
-
-It will make sure that your current perl in the PATH is pointing
-to C</usr/bin/perl>.
-
-As a matter of fact the C<switch> command checks whether the given
-argument is an executable or not, and create a symlink named 'perl' to
-it if it is. If you really want to you are able to do:
-
-    perlbrew switch /usr/bin/perl6
-
-But maybe not. After running this you might not be able to run
-perlbrew anymore. So be careful not making mistakes there.
-
 =head1 PROJECT DEVELOPMENT
 
 perlbrew project uses PivotalTracker for task tracking:
@@ -815,16 +798,6 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 Copyright (c) 2010, Kang-min Liu C<< <gugod@gugod.org> >>.
 
 The standalone executable contains the following modules embedded.
-
-=over 4
-
-=item L<HTTP::Lite>
-
-Copyright (c) 2000-2002 Roy Hopper, 2009 Adam Kennedy.
-
-Licensed under the same term as Perl itself.
-
-=back
 
 =head1 LICENCE
 
