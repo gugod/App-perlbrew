@@ -729,6 +729,10 @@ your shell:
     chmod +x perlbrew
     ./perlbrew install
 
+or more simply:
+
+    curl -L http://xrl.us/perlbrewinstall | bash
+
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
 and you should follow the instruction on screen to setup your
 C<.bashrc> or C<.cshrc> to put it in your PATH.

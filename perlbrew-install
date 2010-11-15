@@ -3,8 +3,8 @@
 cd /tmp
 
 echo
-echo "## Downolad the latest perlbrew"
-curl -O http://github.com/gugod/App-perlbrew/raw/master/perlbrew >/dev/null 2>&1
+echo "## Download the latest perlbrew"
+curl -O https://github.com/gugod/App-perlbrew/raw/master/perlbrew >/dev/null 2>&1
 
 echo
 echo "## Installing"
