@@ -804,15 +804,13 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 Copyright (c) 2010, Kang-min Liu C<< <gugod@gugod.org> >>.
 
-The standalone executable contains the following modules embedded.
-
 =head1 LICENCE
 
 The MIT License
 
 =head1 CONTRIBUTORS
 
-Patches and code improvements has been contributed by:
+Patches and code improvements have been contributed by:
 
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
