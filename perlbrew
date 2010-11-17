@@ -446,12 +446,6 @@ INSTALL
                 $self->run_command_symlink_executables($as);
             }
 
-            eval {
-                $self->run_command_install_cpanm($as)
-                    unless -e "$ROOT/bin/cpanm";
-                1;
-            } or warn "WARNING: cpanm installation failed: $@";
-
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
@@ -471,6 +465,16 @@ FAIL
     }
 }
 
+sub format_perl_version {
+    my $self    = shift;
+    my $version = shift;
+    return sprintf "%d.%d.%d",
+      substr( $version, 0, 1 ),
+      substr( $version, 2, 3 ),
+      substr( $version, 5 );
+
+}
+
 sub get_installed_perls {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
@@ -486,9 +490,12 @@ sub get_installed_perls {
     my $current_perl_executable = readlink("$ROOT/bin/perl") || `which perl`;
     $current_perl_executable =~ s/\n$//;
 
+    my $current_perl_executable_version;
     for ( uniq grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+        $current_perl_executable_version =
+          $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
-            name       => $_,
+            name => $_ . " (" . $current_perl_executable_version . ")",
             is_current => $current_perl_executable && ($_ eq $current_perl_executable)
         } unless index($_, $ROOT) == 0;
     }
@@ -827,7 +834,7 @@ variables that are set by C<perlbrew> itself for bash integration.
 The output is something similar to this:
 
     export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
-    export PERLBREW_VERSION=0.11
+    export PERLBREW_VERSION=0.13
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin
 
 =item B<symlink_executables> <perl-version>
@@ -849,6 +856,10 @@ This essentially creates this symlink:
    -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.6
 
 You should not need to do this if you are using perlbrew 0.11 or newer, to intsall
+
+=item B<install-cpanm>
+
+Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 =back
 
