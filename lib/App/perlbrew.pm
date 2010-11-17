@@ -417,6 +417,16 @@ FAIL
     }
 }
 
+sub format_perl_version {
+    my $self    = shift;
+    my $version = shift;
+    return sprintf "%d.%d.%d",
+      substr( $version, 0, 1 ),
+      substr( $version, 2, 3 ),
+      substr( $version, 5 );
+
+}
+
 sub get_installed_perls {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
@@ -432,9 +442,12 @@ sub get_installed_perls {
     my $current_perl_executable = readlink("$ROOT/bin/perl") || `which perl`;
     $current_perl_executable =~ s/\n$//;
 
+    my $current_perl_executable_version;
     for ( uniq grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+        $current_perl_executable_version =
+          $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
-            name       => $_,
+            name => $_ . " (" . $current_perl_executable_version . ")",
             is_current => $current_perl_executable && ($_ eq $current_perl_executable)
         } unless index($_, $ROOT) == 0;
     }
