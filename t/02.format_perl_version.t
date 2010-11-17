@@ -23,7 +23,7 @@ my @test_cases = (
 );
 
 {
-    my $app = App::perlbrew->new('a');
+    my $app = App::perlbrew->new();
   TEST:
     foreach my $test (@test_cases) {
         is( $app->format_perl_version( $test->{raw} ),
