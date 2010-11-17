@@ -97,7 +97,7 @@ variables that are set by C<perlbrew> itself for bash integration.
 The output is something similar to this:
 
     export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
-    export PERLBREW_VERSION=0.11
+    export PERLBREW_VERSION=0.13
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin
 
 =item B<symlink_executables> <perl-version>
@@ -119,6 +119,10 @@ This essentially creates this symlink:
    -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.6
 
 You should not need to do this if you are using perlbrew 0.11 or newer, to intsall
+
+=item B<install-cpanm>
+
+Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 =back
 
