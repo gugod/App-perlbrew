@@ -392,12 +392,6 @@ INSTALL
                 $self->run_command_symlink_executables($as);
             }
 
-            eval {
-                $self->run_command_install_cpanm($as)
-                    unless -e "$ROOT/bin/cpanm";
-                1;
-            } or warn "WARNING: cpanm installation failed: $@";
-
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
