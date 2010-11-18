@@ -1,3 +1,8 @@
+0.14:
+- Show versions of non-perlbrew perls in the output of `perlbrew list`. Thanks to trcjr++
+- bashrc fixes from yibe++
+- Let help, -h and --help do the same thing -- showing full pod.
+
 0.13:
 - 'installed' command is renamed to 'list', and will be deprecated soon.
 - Requires curl or wget from now -- to fetch https URLs. ploettix++
