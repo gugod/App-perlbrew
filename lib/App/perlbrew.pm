@@ -12,6 +12,8 @@ my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = $ENV{PERLBREW_PERL};
 
+sub current_perl { $ENV{CURRENT_PERL} || '' }
+
 my @GETOPT_CONFIG = (
     'pass_through',
     'no_ignore_case',
@@ -433,7 +435,7 @@ sub get_installed_perls {
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        push @result, { name => $name, is_current => ($CURRENT_PERL && ($name eq $CURRENT_PERL)) };
+        push @result, { name => $name, is_current => (current_perl eq $name) };
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl") || `which perl`;
