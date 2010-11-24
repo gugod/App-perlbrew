@@ -688,7 +688,7 @@ App::perlbrew - Manage perl installations in your $HOME
     # Initialize
     perlbrew init
 
-    # pick a prefered CPAN mirror
+    # Pick a preferred CPAN mirror
     perlbrew mirror
 
     # Install some Perls

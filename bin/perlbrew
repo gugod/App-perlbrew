@@ -18,7 +18,7 @@ perlbrew - Perl Environment manager.
     # Initialize
     perlbrew init
 
-    # Pick a prefered CPAN mirror
+    # Pick a preferred CPAN mirror
     perlbrew mirror
 
     # Install some Perls
@@ -109,16 +109,14 @@ You don't need to do this unless you were using old perlbrew to
 install perls. The installation layout is changed since version 0.11.
 
 If you just upgraded perlbrew and found C<perlbrew switch> failed to work
-after you switch to a development release of perl, say, perl-5.13.5, run this command:
+after you switch to a development release of perl, say, perl-5.13.6, run this command:
 
     perlbrew symlink_executables perl-5.13.6
 
 This essentially creates this symlink:
 
    ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl
-   -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.6
-
-You should not need to do this if you are using perlbrew 0.11 or newer, to intsall
+   -> ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl5.13.6
 
 =item B<install-cpanm>
 
