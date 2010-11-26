@@ -147,6 +147,18 @@ perlbrew () {
             if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                 eval $(command perlbrew env $2)
                 __perlbrew_set_path
+            elif [[ "$2" = "system" ]]; then
+                unset PERLBREW_PERL
+                eval $(command perlbrew env)
+                __perlbrew_set_path
+            elif [[ "$2" = "default" ]]; then
+                unset PERLBREW_PERL
+                if [[ -f $HOME/.perlbrew/init ]]; then
+                    source $HOME/.perlbrew/init
+                else
+                    eval $(command perlbrew env)
+                fi
+                __perlbrew_set_path
             else
                 echo "$2 is not installed" >&2
                 exit_status=1
@@ -163,6 +175,12 @@ perlbrew () {
                 command perlbrew env $2 >> $HOME/.perlbrew/init
                 source $HOME/.perlbrew/init
                 __perlbrew_set_path
+            elif [[ "$2" = "system" ]]; then
+                perlbrew off
+                return $?
+            elif [[ "$2" = "default" ]]; then
+                perlbrew use $2
+                return $?
             else
                 echo "$2 is not installed" >&2
                 exit_status=1
