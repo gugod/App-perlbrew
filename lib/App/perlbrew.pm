@@ -76,10 +76,6 @@ sub run {
     $self->run_command($self->get_args);
 }
 
-sub get_current_perl {
-    return $CURRENT_PERL;
-}
-
 sub get_args {
     my ( $self ) = @_;
     return @{ $self->{args} };
