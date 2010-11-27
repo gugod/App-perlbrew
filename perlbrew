@@ -66,6 +66,8 @@ my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = $ENV{PERLBREW_PERL};
 
+sub current_perl { $ENV{CURRENT_PERL} || '' }
+
 my @GETOPT_CONFIG = (
     'pass_through',
     'no_ignore_case',
@@ -487,7 +489,7 @@ sub get_installed_perls {
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        push @result, { name => $name, is_current => ($CURRENT_PERL && ($name eq $CURRENT_PERL)) };
+        push @result, { name => $name, is_current => (current_perl eq $name) };
     }
 
     my $current_perl_executable = readlink("$ROOT/bin/perl") || `which perl`;
@@ -753,34 +755,27 @@ perlbrew - Perl Environment manager.
 
 =head1 SYNOPSIS
 
-    perlbrew [options] [init|install|list|switch]
+    perlbrew <command> [options] [arguments]
 
-    # Initialize
-    perlbrew init
+    Commonly used commands:
+        init           Initialize perlbrew environment.
+        install        Install perl
+        switch         List installed perls
+        use            Use the specified perl in current shell
+        switch         Permanently use the specified perl as default
+        mirror         Pick a preffered mirror site
+        off            Permanently turn off perlbrew
+        version        Display version
+        help           Read more detail instructions
 
-    # Pick a prefered CPAN mirror
-    perlbrew mirror
+    Examples:
+        perlbrew install perl-5.12.2
+        perlbrew install perl-5.13.6
 
-    # Install some Perls
-    perlbrew install perl-5.12.2
-    perlbrew install perl-5.13.6
+        perlbrew list
 
-    # Install from a git checkout
-    cd /path/to/src/perl
-    perlbrew install .
-
-    # List which perls are installed
-    perlbrew list
-
-    # Switch perl in the $PATH
-    perlbrew switch perl-5.13.6
-    perl -v
-
-    # Turn it off. Disable it.
-    perlbrew off
-
-    # Turn it back on. Re-enable it.
-    perlbrew switch perl-5.13.6
+        perlbrew use perl-5.13.6
+        perlbrew switch perl-5.12.2
 
 =head1 COMMANDS
 
@@ -904,14 +899,21 @@ pass through switches to the perl Configure script.
 
 =back
 
-=head1 DESCRIPTION
-
-Read L<App::perlbrew> for more complete documentation.
-
 =head1 CONFIGURATION
 
-By default perlbrew builds and installs copies of perl into
-C<$ENV{HOME}/perl5/perlbrew>. To use a different directory, set the
-C<PERLBREW_ROOT> shell variable before running perlbrew.
+=over 4
+
+=item PERLBREW_ROOT
+
+By default, perlbrew builds and installs perls into
+C<$ENV{HOME}/perl5/perlbrew> directory. To use a different directory,
+set this environment variable in your C<bashrc> to the directory
+before running perlbrew.
+
+=back
+
+=head1 SEE ALSO
+
+L<App::perlbrew>, L<App::cpanminus>
 
 =cut
