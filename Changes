@@ -6,7 +6,7 @@
 
 0.13:
 - 'installed' command is renamed to 'list', and will be deprecated soon.
-- Requires curl or wget from now -- to fetch https URLs. ploettix++
+- Requires curl or wget from now -- to fetch https URLs. polettix++
 
 0.12:
 - Fix: missing init file generation.

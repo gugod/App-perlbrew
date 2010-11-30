@@ -135,19 +135,26 @@ if [[ -f $HOME/.perlbrew/init ]]; then
 fi
 
 __perlbrew_set_path () {
+    [[ -z "$PERLBREW_ROOT" ]] && return 1
     export PATH_WITHOUT_PERLBREW=$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')
     export PATH=$PERLBREW_PATH:$PATH_WITHOUT_PERLBREW
 }
 __perlbrew_set_path
 
 perlbrew () {
+    local exit_status
     case $1 in
         (use)
             if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                 eval $(command perlbrew env $2)
                 __perlbrew_set_path
+            elif [[ "$2" = "system" ]]; then
+                unset PERLBREW_PERL
+                eval $(command perlbrew env)
+                __perlbrew_set_path
             else
-                echo "$2 is not installed";
+                echo "$2 is not installed" >&2
+                exit_status=1
             fi
             ;;
 
@@ -161,8 +168,12 @@ perlbrew () {
                 command perlbrew env $2 >> $HOME/.perlbrew/init
                 source $HOME/.perlbrew/init
                 __perlbrew_set_path
+            elif [[ "$2" = "system" ]]; then
+                perlbrew off
+                return $?
             else
-                echo "$2 is not installed";
+                echo "$2 is not installed" >&2
+                exit_status=1
             fi
             ;;
 
@@ -182,9 +193,11 @@ perlbrew () {
 
         (*)
             command perlbrew $*
+            exit_status=$?
             ;;
     esac
     hash -r
+    return ${exit_status:-0}
 }
 
 
@@ -689,7 +702,7 @@ App::perlbrew - Manage perl installations in your $HOME
     # Initialize
     perlbrew init
 
-    # pick a prefered CPAN mirror
+    # Pick a preferred CPAN mirror
     perlbrew mirror
 
     # Install some Perls
