@@ -59,7 +59,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.14_99";
+our $VERSION = "0.14";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -189,26 +189,19 @@ if [[ -f $HOME/.perlbrew/init ]]; then
 fi
 
 __perlbrew_set_path () {
-    [[ -z "$PERLBREW_ROOT" ]] && return 1
     export PATH_WITHOUT_PERLBREW=$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')
     export PATH=$PERLBREW_PATH:$PATH_WITHOUT_PERLBREW
 }
 __perlbrew_set_path
 
 perlbrew () {
-    local exit_status
     case $1 in
         (use)
             if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                 eval $(command perlbrew env $2)
                 __perlbrew_set_path
-            elif [[ "$2" = "system" ]]; then
-                unset PERLBREW_PERL
-                eval $(command perlbrew env)
-                __perlbrew_set_path
             else
-                echo "$2 is not installed" >&2
-                exit_status=1
+                echo "$2 is not installed";
             fi
             ;;
 
@@ -222,12 +215,8 @@ perlbrew () {
                 command perlbrew env $2 >> $HOME/.perlbrew/init
                 source $HOME/.perlbrew/init
                 __perlbrew_set_path
-            elif [[ "$2" = "system" ]]; then
-                perlbrew off
-                return $?
             else
-                echo "$2 is not installed" >&2
-                exit_status=1
+                echo "$2 is not installed";
             fi
             ;;
 
@@ -247,11 +236,9 @@ perlbrew () {
 
         (*)
             command perlbrew $*
-            exit_status=$?
             ;;
     esac
     hash -r
-    return ${exit_status:-0}
 }
 
 
@@ -528,6 +515,12 @@ sub run_command_list {
     }
 }
 
+sub run_command_installed {
+    print STDERR "\nDEPRECATION WARNING: `perlbrew installed` will be deprecated soon. Please run `perlbrew list` instead.\n\n";
+    sleep 1;
+    &run_command_list;
+}
+
 sub run_command_switch {
     my ( $self, $dist ) = @_;
 
@@ -763,7 +756,7 @@ perlbrew - Perl Environment manager.
     Commonly used commands:
         init           Initialize perlbrew environment.
         install        Install perl
-        list           List installed perls
+        switch         List installed perls
         use            Use the specified perl in current shell
         switch         Permanently use the specified perl as default
         mirror         Pick a preffered mirror site
@@ -847,14 +840,16 @@ You don't need to do this unless you were using old perlbrew to
 install perls. The installation layout is changed since version 0.11.
 
 If you just upgraded perlbrew and found C<perlbrew switch> failed to work
-after you switch to a development release of perl, say, perl-5.13.6, run this command:
+after you switch to a development release of perl, say, perl-5.13.5, run this command:
 
     perlbrew symlink_executables perl-5.13.6
 
 This essentially creates this symlink:
 
    ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl
-   -> ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl5.13.6
+   -> ${PERLBREW_ROOT}/perls/perl-5.13.5/bin/perl5.13.6
+
+You should not need to do this if you are using perlbrew 0.11 or newer, to intsall
 
 =item B<install-cpanm>
 
