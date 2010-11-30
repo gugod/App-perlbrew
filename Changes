@@ -1,3 +1,6 @@
+0.15:
+- DEPRECATE + REMOVED 'perlbrew installed' command.
+
 0.14:
 - DEPRECATE `get_current_perl` function. Use `current_perl` instead
 - Show versions of non-perlbrew perls in the output of `perlbrew list`. Thanks to trcjr++

@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.14";
+our $VERSION = "0.14_99";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -472,12 +472,6 @@ sub run_command_list {
         my $cur  = $installed->{is_current};
         print $cur ? '* ': '  ', $name, "\n";
     }
-}
-
-sub run_command_installed {
-    print STDERR "\nDEPRECATION WARNING: `perlbrew installed` will be deprecated soon. Please run `perlbrew list` instead.\n\n";
-    sleep 1;
-    &run_command_list;
 }
 
 sub run_command_switch {

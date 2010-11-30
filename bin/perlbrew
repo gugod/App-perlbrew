@@ -18,7 +18,7 @@ perlbrew - Perl Environment manager.
     Commonly used commands:
         init           Initialize perlbrew environment.
         install        Install perl
-        switch         List installed perls
+        list           List installed perls
         use            Use the specified perl in current shell
         switch         Permanently use the specified perl as default
         mirror         Pick a preffered mirror site
