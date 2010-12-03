@@ -28,7 +28,6 @@ sub embed {
 if ($author) {
     unshift @INC, "lib";
     require App::perlbrew;
-    require File::Path::Tiny;
 
     my $script = slurp 'bin/perlbrew';
 
@@ -36,7 +35,6 @@ if ($author) {
     local $, = "\n";
     print OUT "#!/usr/bin/env perl",
         '# DO NOT EDIT -- this is an auto generated file',
-        embed('File::Path::Tiny'),
         embed('App::perlbrew'),
         'package main;',
         slurp('bin/perlbrew');
