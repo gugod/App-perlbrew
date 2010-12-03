@@ -42,12 +42,11 @@ if ($author) {
 
 use inc::Module::Install;
 
-license 'perl';
+license 'mit';
+
 all_from 'lib/App/perlbrew.pm';
 
 repository 'git://github.com/gugod/App-perlbrew.git';
-
-requires 'File::Path::Tiny'   => 0.1;
 
 test_requires 'Test::Simple';
 
