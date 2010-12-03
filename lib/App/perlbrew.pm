@@ -92,27 +92,6 @@ RC
 }
 
 
-my @GETOPT_CONFIG = (
-    'pass_through',
-    'no_ignore_case',
-    'bundling',
-);
-my @GETOPT_SPEC = (
-    'force|f!',
-    'notest|n!',
-    'quiet|q!',
-    'verbose|v',
-    'as=s',
-
-    'help|h',
-    'version',
-
-    # options passed directly to Configure
-    'D=s@',
-    'U=s@',
-    'A=s@',
-);
-
 sub uniq(@) {
     my %a;
     grep { ++$a{$_} == 1 } @_;
@@ -124,7 +103,6 @@ sub new {
     my %opt = (
         force => 0,
         quiet => 1,
-
         D => [],
         U => [],
         A => [],
@@ -133,8 +111,28 @@ sub new {
     # build a local @ARGV to allow us to use an older
     # Getopt::Long API in case we are building on an older system
     local (@ARGV) = @argv;
-    Getopt::Long::Configure(@GETOPT_CONFIG);
-    Getopt::Long::GetOptions( \%opt, @GETOPT_SPEC )
+
+    Getopt::Long::Configure(
+        'pass_through',
+        'no_ignore_case',
+        'bundling',
+    );
+
+    Getopt::Long::GetOptions(
+        \%opt,
+
+        'force|f!',
+        'notest|n!',
+        'quiet|q!',
+        'verbose|v',
+        'as=s',
+        'help|h',
+        'version',
+        # options passed directly to Configure
+        'D=s@',
+        'U=s@',
+        'A=s@',
+    )
       or run_command_help(1);
 
     # fix up the effect of 'bundling'
