@@ -91,6 +91,30 @@ RC
 
 }
 
+# File::Path::Tiny::mk
+sub mkpath {
+    my ($path,$mask) = @_;
+    return 2 if -d $path;
+    if (-e $path) { $! = 20;return; }
+    $mask ||= '0777'; # Perl::Critic == Integer with leading zeros at ...
+    $mask = oct($mask) if substr($mask,0,1) eq '0';
+    require File::Spec;
+    my ($progressive, @parts) = File::Spec->splitdir($path);
+    if (!$progressive) {
+        $progressive = File::Spec->catdir($progressive, shift(@parts));
+    }
+    if(!-d $progressive) {
+        mkdir($progressive, $mask) or return;
+    }
+    for my $part (@parts) {
+        $progressive = File::Spec->catdir($progressive,$part);
+        if (!-d $progressive) {
+            mkdir($progressive, $mask) or return;
+        }
+    }
+    return 1 if -d $path;
+    return;
+}
 
 sub uniq(@) {
     my %a;
@@ -197,8 +221,7 @@ sub run_command_help {
 }
 
 sub run_command_init {
-    require File::Path::Tiny;
-    File::Path::Tiny::mk($_) for (
+    mkpath($_) for (
         "$ENV{HOME}/.perlbrew",
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
@@ -255,7 +278,6 @@ sub run_command_install {
 
     unless ($dist) {
         require File::Spec;
-        require File::Path::Tiny;
         require File::Copy;
 
         my $executable = $0;
@@ -270,7 +292,7 @@ sub run_command_install {
             exit;
         }
 
-        File::Path::Tiny::mk("$ROOT/bin");
+        mkpath("$ROOT/bin");
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 
