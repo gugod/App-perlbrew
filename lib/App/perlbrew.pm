@@ -532,6 +532,24 @@ sub installed_perls {
     return @result;
 }
 
+# Return a hash of PERLBREW_* variables
+sub perlbrew_env {
+    my ($self, $perl) = @_;
+
+    my %env = (
+        PERLBREW_VERSION => $VERSION,
+        PERLBREW_PATH => "$ROOT/bin",
+        PERLBREW_ROOT => $ROOT
+    );
+
+    if ($perl && -d "$ROOT/perls/$perl/bin") {
+        $env{PERLBREW_PERL} = $perl;
+        $env{PERLBREW_PATH} .= ":$ROOT/perls/$perl/bin";
+    }
+
+    return %env;
+}
+
 sub run_command_list {
     my $self = shift;
 
@@ -636,25 +654,16 @@ sub run_command_mirror {
 sub run_command_env {
     my($self, $perl) = @_;
 
-    my %env = (
-        VERSION => $VERSION,
-        PATH => "$ROOT/bin",
-        ROOT => $ROOT
-    );
-
-    if ($perl && -d "$ROOT/perls/$perl/bin") {
-        $env{PERL} = $perl;
-        $env{PATH} .= ":$ROOT/perls/$perl/bin";
-    }
+    my %env = $self->perlbrew_env($perl);
 
     if ($self->env('SHELL') =~ /(ba|z)sh$/) {
         while (my ($k, $v) = each(%env)) {
-            print "export PERLBREW_$k=$v\n";
+            print "export $k=$v\n";
         }
     }
     else {
         while (my ($k, $v) = each(%env)) {
-            print "setenv PERLBREW_$k $v\n";
+            print "setenv $k $v\n";
         }
     }
 }
@@ -679,6 +688,27 @@ sub run_command_install_cpanm {
     close $CPANM;
     chmod 0755, "$ROOT/bin/cpanm";
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
+}
+
+sub run_command_exec {
+    my ($self, @args) = @_;
+
+    for my $i ( $self->installed_perls ) {
+        my %env = $self->perlbrew_env($i->{name});
+        my $command = "";
+
+        while ( my($name, $value) = each %env) {
+            $command .= "$name=$value ";
+        }
+
+        $command .= ' PATH=${PERLBREW_PATH}:${PATH} ';
+        $command .= "; " . join " ", map { quotemeta($_) } @args;
+
+        print "$i->{name}\n==========\n";
+        system "$command\n";
+        print "\n\n";
+        # print "\n<===\n\n\n";
+    }
 }
 
 
