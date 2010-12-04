@@ -460,7 +460,7 @@ sub format_perl_version {
 
 }
 
-sub get_installed_perls {
+sub installed_perls {
     my $self    = shift;
     my $current = readlink("$ROOT/perls/current");
 
@@ -490,12 +490,9 @@ sub get_installed_perls {
 
 sub run_command_list {
     my $self = shift;
-    my @installed = $self->get_installed_perls(@_);
 
-    for my $installed (@installed) {
-        my $name = $installed->{name};
-        my $cur  = $installed->{is_current};
-        print $cur ? '* ': '  ', $name, "\n";
+    for my $i ( $self->installed_perls ) {
+        print $i->{is_current} ? '* ': '  ', $i->{name}, "\n";
     }
 }
 
