@@ -124,7 +124,12 @@ sub uniq(@) {
 {
     my @command;
     sub http_get {
-        my ($url, $cb, $header) = @_;
+        my ($url, $header, $cb) = @_;
+
+        if (ref($header) eq 'CODE') {
+            $cb = $header;
+            $header = undef;
+        }
 
         if (! @command) {
             my @commands = (
@@ -384,7 +389,7 @@ HELP
         unless ($dist_git_describe) {
             my $mirror = $self->conf->{mirror};
             my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-            my $html = http_get("http://search.cpan.org/dist/$dist", undef, $header);
+            my $html = http_get("http://search.cpan.org/dist/$dist", $header);
 
             ($dist_path, $dist_tarball) =
                 $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
@@ -398,13 +403,13 @@ HELP
 
                 http_get(
                     "http://search.cpan.org${dist_path}",
+                    $header,
                     sub {
                         my ($body) = @_;
                         open my $BALL, "> $dist_tarball_path";
                         print $BALL $body;
                         close $BALL;
-                    },
-                    $header
+                    }
                 );
             }
 
