@@ -12,7 +12,7 @@ my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = $ENV{PERLBREW_PERL};
 
-sub current_perl { $ENV{CURRENT_PERL} || '' }
+sub current_perl { $CURRENT_PERL || '' }
 
 sub BASHRC_CONTENT() {
     return <<'RC';
