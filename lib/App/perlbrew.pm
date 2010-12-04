@@ -322,7 +322,6 @@ sub run_command_install {
     my ( $self, $dist, $opts ) = @_;
 
     unless ($dist) {
-        require File::Spec;
         require File::Copy;
 
         my $executable = $0;
@@ -331,7 +330,7 @@ sub run_command_install {
             $executable = File::Spec->rel2abs($executable);
         }
 
-        my $target = File::Spec->catfile($ROOT, "bin", "perlbrew");
+        my $target = catfile($ROOT, "bin", "perlbrew");
         if ($executable eq $target) {
             print "You are already running the installed perlbrew:\n\n    $executable\n";
             exit;
