@@ -121,6 +121,37 @@ sub uniq(@) {
     grep { ++$a{$_} == 1 } @_;
 }
 
+{
+    my @command;
+    sub http_get {
+        my ($url, $cb, $header) = @_;
+
+        if (! @command) {
+            my @commands = (
+                [qw( curl --silent --location )],
+                [qw( wget --no-check-certificate --quiet -O - )],
+            );
+            for my $command (@commands) {
+                my $program = $command->[0];
+                if (! system("$program --version >/dev/null 2>&1")) {
+                    @command = @$command;
+                    last;
+                }
+            }
+            die "You have to install either curl or wget\n"
+                unless @command;
+        }
+
+        open my $fh, '-|', @command, $url
+            or die "open() for '@command $url': $!";
+        local $/;
+        my $body = <$fh>;
+        close $fh;
+
+        return $cb ? $cb->($body) : $body;
+    }
+}
+
 sub new {
     my($class, @argv) = @_;
 
@@ -353,7 +384,7 @@ HELP
         unless ($dist_git_describe) {
             my $mirror = $self->conf->{mirror};
             my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-            my $html = $self->_http_get("http://search.cpan.org/dist/$dist", undef, $header);
+            my $html = http_get("http://search.cpan.org/dist/$dist", undef, $header);
 
             ($dist_path, $dist_tarball) =
                 $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
@@ -365,7 +396,7 @@ HELP
             else {
                 print "Fetching $dist as $dist_tarball_path\n";
 
-                $self->_http_get(
+                http_get(
                     "http://search.cpan.org${dist_path}",
                     sub {
                         my ($body) = @_;
@@ -547,7 +578,7 @@ sub run_command_off {
 sub run_command_mirror {
     my($self) = @_;
     print "Fetching mirror list\n";
-    my $raw = $self->_http_get("http://search.cpan.org/mirror");
+    my $raw = http_get("http://search.cpan.org/mirror");
     my $found;
     my @mirrors;
     foreach my $line ( split m{\n}, $raw ) {
@@ -637,7 +668,7 @@ sub run_command_symlink_executables {
 
 sub run_command_install_cpanm {
     my ($self, $perl) = @_;
-    my $body = $self->_http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
+    my $body = http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
 
     open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
     print $CPANM $body;
@@ -646,36 +677,6 @@ sub run_command_install_cpanm {
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
-{
-    my @command;
-    sub _http_get {
-        my ($self, $url, $cb, $header) = @_;
-
-        if (! @command) {
-            my @commands = (
-                [qw( curl --silent --location )],
-                [qw( wget --no-check-certificate --quiet -O - )],
-            );
-            for my $command (@commands) {
-                my $program = $command->[0];
-                if (! system("$program --version >/dev/null 2>&1")) {
-                    @command = @$command;
-                    last;
-                }
-            }
-            die "You have to install either curl or wget\n"
-                unless @command;
-        }
-
-        open my $fh, '-|', @command, $url
-            or die "open() for '@command $url': $!";
-        local $/;
-        my $body = <$fh>;
-        close $fh;
-
-        return $cb ? $cb->($body) : $body;
-    }
-}
 
 sub conf {
     my($self) = @_;
