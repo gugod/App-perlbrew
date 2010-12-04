@@ -303,13 +303,13 @@ The perlbrew is installed as:
 
 You may trash the downloaded $executable from now on.
 
-Next, if this is the first time you've run perlbrew installation, run:
+Next, if this is the first time you install perlbrew, run:
 
     $target init
 
 And follow the instruction on screen.
 HELP
-        # ' <- for poor editors
+
         return;
     }
 
