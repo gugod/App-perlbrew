@@ -171,6 +171,12 @@ sub new {
     return bless \%opt, $class;
 }
 
+sub env {
+    my ($self, $name) = @_;
+    return $ENV{$name} if $name;
+    return \%ENV;
+}
+
 sub run {
     my($self) = @_;
     $self->run_command($self->get_args);
@@ -221,8 +227,11 @@ sub run_command_help {
 }
 
 sub run_command_init {
+    my $self = shift;
+    my $HOME = $self->env('HOME');
+
     mkpath($_) for (
-        "$ENV{HOME}/.perlbrew",
+        "$HOME/.perlbrew",
         "$ROOT/perls", "$ROOT/dists", "$ROOT/build", "$ROOT/etc",
         "$ROOT/bin"
     );
@@ -235,7 +244,7 @@ echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
 RC
 
     my ( $shrc, $yourshrc );
-    if ( $ENV{SHELL} =~ /(t?csh)/ ) {
+    if ( $self->env('SHELL') =~ /(t?csh)/ ) {
         $shrc     = 'cshrc';
         $yourshrc = $1 . "rc";
     }
@@ -244,7 +253,7 @@ RC
     }
 
 
-    system("$0 env > $ENV{HOME}/.perlbrew/init");
+    system("$0 env > ${HOME}/.perlbrew/init");
 
     print <<INSTRUCTION;
 Perlbrew environment initiated, required directories are created under
@@ -476,7 +485,7 @@ sub installed_perls {
     $current_perl_executable =~ s/\n$//;
 
     my $current_perl_executable_version;
-    for ( uniq grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $ENV{PATH}) ) {
+    for ( uniq grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $self->env('PATH')) ) {
         $current_perl_executable_version =
           $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
@@ -603,7 +612,7 @@ sub run_command_env {
         $env{PATH} .= ":$ROOT/perls/$perl/bin";
     }
 
-    if ($ENV{SHELL} =~ /(ba|z)sh$/) {
+    if ($self->env('SHELL') =~ /(ba|z)sh$/) {
         while (my ($k, $v) = each(%env)) {
             print "export PERLBREW_$k=$v\n";
         }
