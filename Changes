@@ -1,5 +1,7 @@
 0.15:
-- DEPRECATE + REMOVED 'perlbrew installed' command.
+- DEPRECATE and REMOVE 'perlbrew installed' command.
+- Intrudoce a 'perlbrew exec' command
+- 'perlbrew use system' can be used to locally turn off perlbrew. yibe++
 
 0.14:
 - DEPRECATE `get_current_perl` function. Use `current_perl` instead
