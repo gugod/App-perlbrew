@@ -443,7 +443,16 @@ INSTALL
             $configure_flags = '-de';
         }
 
-        my @install = $self->{notest} ? "make install" : ("make test", "make install");
+        # Test via "make test_harness" if available so we'll get
+        # automatic parallel testing via $HARNESS_OPTIONS. The
+        # "test_harness" target was added in 5.7.3, which was the last
+        # development release before 5.8.0.
+        my $test_target = "test";
+        if ($dist_version =~ /^5\.(\d+)\.(\d+)/
+            && ($1 >= 8 || $1 == 7 && $2 == 3)) {
+            $test_target = "test_harness";
+        }
+        my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
         @install    = join " && ", @install unless($self->{force});
 
         my $cmd = join ";",
