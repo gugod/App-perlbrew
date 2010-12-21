@@ -768,6 +768,8 @@ sub _get_conf {
 
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 App::perlbrew - Manage perl installations in your $HOME
