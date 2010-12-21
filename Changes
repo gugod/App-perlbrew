@@ -1,3 +1,6 @@
+0.16:
+- Use 'test_harness' for perl >= 5.7.3. avar++
+
 0.15:
 - DEPRECATE and REMOVE 'perlbrew installed' command.
 - Intrudoce a 'perlbrew exec' command

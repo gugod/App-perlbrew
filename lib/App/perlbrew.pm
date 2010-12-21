@@ -906,7 +906,7 @@ Patches and code improvements have been contributed by:
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
 castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
-polettix, and tokuhirom.
+polettix, tokuhirom, Ævar Arnfjörð Bjarmason.
 
 =head1 DISCLAIMER OF WARRANTY
 
