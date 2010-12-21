@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.15";
+our $VERSION = "0.15_99";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -193,6 +193,8 @@ sub new {
         'D=s@',
         'U=s@',
         'A=s@',
+
+        'j=i'
     )
       or run_command_help(1);
 
@@ -452,6 +454,8 @@ INSTALL
             && ($1 >= 8 || $1 == 7 && $2 == 3)) {
             $test_target = "test_harness";
         }
+
+        my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
         my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
         @install    = join " && ", @install unless($self->{force});
 
@@ -470,7 +474,8 @@ INSTALL
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                     : (),
-            "make", @install
+            $make,
+            @install
         );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
             if ( $self->{quiet} && !$self->{verbose} );
