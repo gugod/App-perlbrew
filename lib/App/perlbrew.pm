@@ -671,7 +671,7 @@ sub run_command_env {
 
     my %env = $self->perlbrew_env($perl);
 
-    if ($self->env('SHELL') =~ /(ba|z)sh$/) {
+    if ($self->env('SHELL') =~ /(ba|z|\/)sh$/) {
         while (my ($k, $v) = each(%env)) {
             print "export $k=$v\n";
         }
