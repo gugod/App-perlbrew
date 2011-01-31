@@ -6,6 +6,7 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
+use HTML::Entities;
 
 our $VERSION = "0.15";
 our $CONF;
@@ -263,6 +264,52 @@ sub run_command_help {
     my ($self, $status, $verbose) = @_;
     require Pod::Usage;
     Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
+}
+
+sub run_command_available {
+    my ( $self, $dist, $opts ) = @_;
+
+    my @available = $self->get_available_perls(@_);
+    my @installed = $self->installed_perls(@_);
+
+    my $is_installed;
+    for my $available (@available) {
+        $is_installed = 0;
+        for my $installed (@installed) {
+            my $name = $installed->{name};
+            my $cur  = $installed->{is_current};
+            if ( $available eq $installed ) {
+                $is_installed = 1;
+                last;
+            }
+        }
+        print $is_installed ? '* ' : '  ', $available, "\n";
+    }
+}
+
+sub get_available_perls {
+    my ( $self, $dist, $opts ) = @_;
+    my $mirror = $self->conf->{mirror};
+
+    my $url = "http://www.cpan.org/";
+    $url = $mirror->{url} if defined( $mirror->{url} );
+    my $path = "/src/README.html";
+    $url = $url . $path;
+    my $html = http_get( decode_entities($url), undef, undef );
+    use HTML::TableExtract;
+    my $te = HTML::TableExtract->new( headers => [qw(Release File Type Age)] );
+    $te->parse($html);
+    my @available_versions;
+
+    foreach my $ts ( $te->tables ) {
+        foreach my $row ( $ts->rows ) {
+            my @a = split( ',', @$row[1] );
+            my $p = $a[0];
+            $p =~ s/\.tar\.gz$//;
+            push @available_versions, $p;
+        }
+    }
+    return @available_versions;
 }
 
 sub run_command_init {
@@ -776,6 +823,7 @@ perlbrew - Perl Environment manager.
     perlbrew <command> [options] [arguments]
 
     Commonly used commands:
+        available      List available perls
         init           Initialize perlbrew environment.
         install        Install perl
         list           List installed perls
