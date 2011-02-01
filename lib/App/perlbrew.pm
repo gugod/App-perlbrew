@@ -896,11 +896,11 @@ Please read the program usage by running
 
 =head1 PROJECT DEVELOPMENT
 
-perlbrew project uses PivotalTracker for task tracking:
-L<http://www.pivotaltracker.com/projects/129997>. You may also report
-bugs to github L<http://github.com/gugod/App-perlbrew/issues> or RT
-<https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew>. They will
-be definitely reviewed and handled.
+perlbrew project uses github
+L<http://github.com/gugod/App-perlbrew/issues> and RT
+<https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
+tracking. Issues sent to these two systems will eventually be reviewed
+and handled.
 
 =head1 AUTHOR
 
