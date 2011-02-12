@@ -440,7 +440,9 @@ INSTALL
         } else {
             $dist_extracted_dir = "$ROOT/build/${dist}";
 
-            my $tarx = "tar " . ( $dist_tarball =~ /bz2/ ? "xjf" : "xzf" );
+            # Was broken on Solaris, where GNU tar is probably
+            # installed as 'gtar' - RT #61042
+            my $tarx = ($^O eq 'solaris' ? 'gtar ' : 'tar ') . ( $dist_tarball =~ /bz2/ ? 'xjf' : 'xzf' );
             $extract_command = "cd $ROOT/build; $tarx $ROOT/dists/${dist_tarball}";
             $configure_flags = '-de';
         }
