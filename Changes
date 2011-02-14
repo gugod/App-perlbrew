@@ -1,8 +1,6 @@
-0.17:
-- Use gtar on Solaris - RT #61042
-
 0.16:
 - Use 'test_harness' for perl >= 5.7.3. avar++
+- Use gtar on Solaris - RT #61042. doherty++
 
 0.15:
 - DEPRECATE and REMOVE 'perlbrew installed' command.
