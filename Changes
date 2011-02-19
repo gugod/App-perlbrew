@@ -1,6 +1,7 @@
 0.16:
 - Use 'test_harness' for perl >= 5.7.3. avar++
 - Use gtar on Solaris - RT #61042. doherty++
+- Fix "perlbrew -f switch" by dalinaum++
 
 0.15:
 - DEPRECATE and REMOVE 'perlbrew installed' command.
