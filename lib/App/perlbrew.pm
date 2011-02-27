@@ -718,15 +718,10 @@ sub run_command_install_cpanm {
 sub run_command_exec {
     my ($self, @args) = @_;
 
-    my $brew_only;
-    if ($args[0] eq '--brew-only'){
-        $brew_only = 1;
-        shift @args;
-    }
-    
     for my $i ( $self->installed_perls ) {
         my %env = $self->perlbrew_env($i->{name});
-        next if $brew_only && !$env{PERLBREW_PERL};
+        next if !$env{PERLBREW_PERL};
+
         my $command = "";
 
         while ( my($name, $value) = each %env) {
@@ -824,11 +819,8 @@ App::perlbrew - Manage perl installations in your $HOME
     # Use 'switch' command to turn it back on.
     perlbrew switch perl-5.12.2
 
-    # Exec something with all installed Perls
+    # Exec something with all perlbrew-ed perls
     perlbrew exec perl -E 'say $]'
-
-    # Or only with Perls installed with perlbrew
-    perlbew exec --brew-only perl -E 'say $]'
 
 =head1 DESCRIPTION
 
