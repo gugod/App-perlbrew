@@ -720,6 +720,8 @@ sub run_command_exec {
 
     for my $i ( $self->installed_perls ) {
         my %env = $self->perlbrew_env($i->{name});
+        next if !$env{PERLBREW_PERL};
+
         my $command = "";
 
         while ( my($name, $value) = each %env) {
@@ -816,6 +818,9 @@ App::perlbrew - Manage perl installations in your $HOME
 
     # Use 'switch' command to turn it back on.
     perlbrew switch perl-5.12.2
+
+    # Exec something with all perlbrew-ed perls
+    perlbrew exec perl -E 'say $]'
 
 =head1 DESCRIPTION
 
