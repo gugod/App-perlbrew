@@ -722,6 +722,8 @@ sub run_command_exec {
 
     for my $i ( $self->installed_perls ) {
         my %env = $self->perlbrew_env($i->{name});
+        next if !$env{PERLBREW_PERL};
+
         my $command = "";
 
         while ( my($name, $value) = each %env) {

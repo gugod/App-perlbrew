@@ -1,3 +1,6 @@
+NEXT:
+- 'perlbrew exec' now excludes those non-brewed perl by frankcuny++ according to the discussion here: https://github.com/gugod/App-perlbrew/pull/43
+
 0.16:
 - Use 'test_harness' for perl >= 5.7.3. avar++
 - Use gtar on Solaris - RT #61042. doherty++
