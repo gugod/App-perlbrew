@@ -807,19 +807,19 @@ perlbrew - Perl Environment manager.
         list           List installed perls
         use            Use the specified perl in current shell
         switch         Permanently use the specified perl as default
-        mirror         Pick a preffered mirror site
+        mirror         Pick a preferred mirror site
         off            Permanently turn off perlbrew
         version        Display version
-        help           Read more detail instructions
+        help           Read more detailed instructions
 
     Examples:
-        perlbrew install perl-5.12.2
+        perlbrew install perl-5.12.3
         perlbrew install perl-5.13.6
 
         perlbrew list
 
         perlbrew use perl-5.13.6
-        perlbrew switch perl-5.12.2
+        perlbrew switch perl-5.12.3
 
 =head1 COMMANDS
 
