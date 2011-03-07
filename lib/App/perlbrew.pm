@@ -50,12 +50,9 @@ perlbrew () {
 
     case $1 in
         (use)
-            if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
-                eval $(command perlbrew $short_option env $2)
-                __perlbrew_set_path
-            elif [[ "$2" = "system" ]]; then
+            if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" || "$2" = "system" ]]; then
                 unset PERLBREW_PERL
-                eval $(command perlbrew $short_option env)
+                eval $(command perlbrew $short_option env $2)
                 __perlbrew_set_path
             else
                 echo "$2 is not installed" >&2
