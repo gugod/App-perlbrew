@@ -491,10 +491,6 @@ INSTALL
         delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
         if (!system($cmd)) {
-            if ($dist_version =~ /5\.1[13579]|git/) {
-                $self->run_command_symlink_executables($as);
-            }
-
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
@@ -607,12 +603,6 @@ sub run_command_switch {
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
     unlink "$ROOT/perls/current";
     system "cd $ROOT/perls; ln -s $dist current";
-    for my $executable (<$ROOT/perls/current/bin/*>) {
-        my ($name) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-        my $target = "$ROOT/bin/${name}";
-        next unless -l $target || !-e $target;
-        system("ln -fs $executable $target");
-    }
 }
 
 sub run_command_off {
