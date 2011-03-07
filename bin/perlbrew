@@ -11,6 +11,7 @@ __END__
 
 perlbrew - Perl Environment manager.
 
+
 =head1 SYNOPSIS
 
     perlbrew <command> [options] [arguments]
@@ -35,6 +36,12 @@ perlbrew - Perl Environment manager.
         perlbrew use perl-5.13.6
         perlbrew switch perl-5.12.2
 
+        perlbrew switch /path/to/special/perl
+        perlbrew switch /path/to/special/perl special-perl
+        # later
+        perlbrew switch special-perl
+
+
 =head1 COMMANDS
 
 =over 4
@@ -44,60 +51,82 @@ perlbrew - Perl Environment manager.
 Run this once to setup the C<perlbrew> directory ready for installing
 perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
+
 =item B<mirror>
 
 Run this if you want to choose a specific CPAN mirror to install the
 perls from. It will display a list of mirrors for you to pick
 from. Hit 'q' to cancel the selection.
 
+
 =item B<install> perl-<version>
 
 Build and install the given version of perl.
+
 
 =item B<install> /path/to/perl/git/checkout/dir
 
 Build and install from the given git checkout dir.
 
+
 =item B<list>
 
 List the installed versions of perl.
 
-=item B<use> perl-<version>
+
+=item B<use> [perl-<version>]
 
 Notice: this only works in bash and zsh.
 
 Switch to the given version of perl only in the current shell. This
 will not effect newly opened shells.
 
-=item B<switch> perl-<version>
+You can use as C<perl-version> the special keyword C<system> to stop
+using any perlbrew-based perl.
 
-Switch to the given version. You may need to run 'rehash' (or 'hash
--r') after this command.
+Without a parameter, shows the version of perl currently in use.
 
-=item B<version>
 
-Show the version of perbrew.
+=item B<switch> [perl-<version>]
+
+Switch to the given version, and makes it the default for this and all
+future terminal sessions.
+
+Without a parameter, shows the version of perl currently selected.
+
 
 =item B<off>
 
 Disable perlbrew. Use C<switch> command to re-enable it.
 
-=item B<env>
+
+=item B<env> [perl-version]
 
 Low-level command. Use this command to see the list of environment
-variables that are set by C<perlbrew> itself for bash integration.
+variables that are set by C<perlbrew> itself for shell integration.
 
-The output is something similar to this:
+The output is something similar to this (if your shell is bash):
 
     export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
     export PERLBREW_VERSION=0.13
-    export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin
+    export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
+    export PERLBREW_PERL=perl-5.12.3
+
+You can also ask for the proper variables for a specific perl version.
+
 
 =item B<install-cpanm>
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
+
+=item B<version>
+
+Show the version of perbrew.
+
+
 =back
+
 
 =head1 OPTIONS
 
@@ -137,6 +166,7 @@ pass through switches to the perl Configure script.
 
 =back
 
+
 =head1 CONFIGURATION
 
 =over 4
@@ -149,6 +179,18 @@ set this environment variable in your C<bashrc> to the directory
 before running perlbrew.
 
 =back
+
+
+=head1 UPGRADE NOTES
+
+If you upgraded C<perlbrew> from version 0.16 or older, you should do
+this cleanup your setup. Failure to do so might make the C<use>
+command to fail.
+
+Note the version of perl currently selected with C<perlbrew switch>.
+Then turn C<perlbrew off>, and switched back again with C<perlbrew
+switch previous-perl-version>.
+
 
 =head1 SEE ALSO
 
