@@ -596,14 +596,15 @@ sub run_command_switch {
 
     if (-x $dist) {
         unlink "$ROOT/perls/current";
-        system "ln -fs $dist $ROOT/bin/perl";
+        symlink $dist, "$ROOT/bin/perl";
         print "Switched to $dist\n";
         return;
     }
 
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
-    unlink "$ROOT/perls/current";
-    system "cd $ROOT/perls; ln -s $dist current";
+    chdir "$ROOT/perls";
+    unlink "current";
+    symlink $dist, "current";
 }
 
 sub run_command_off {
