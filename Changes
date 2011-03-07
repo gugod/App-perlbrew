@@ -4,6 +4,7 @@ NEXT:
 - Fix "perlbrew use" to work even if we are switched to a specific version
 - Fix "perlbrew env" to use current version, sets PERLBREW_PERL and proper PATH
 - Feature: "perlbrew use" shows current version in use
+- Feature: "perlbrew switch /path/to/special/perl name-of-special-perl" names for adhoc perl's
 
 0.16:
 - Use 'test_harness' for perl >= 5.7.3. avar++

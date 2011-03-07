@@ -582,7 +582,7 @@ sub run_command_list {
 }
 
 sub run_command_switch {
-    my ( $self, $dist ) = @_;
+    my ( $self, $dist, $alias ) = @_;
 
     unless ( $dist ) {
         # If no args were given to switch, show the current perl.
@@ -594,15 +594,19 @@ sub run_command_switch {
         return;
     }
 
+    die "Cannot use for alias something that starts with 'perl-'\n"
+      if $alias && $alias =~ /^perl-/;
+
     my $vers = $dist;
     if (-x $dist) {
-        my $bin_dir = "$ROOT/perls/custom/bin";
+        $alias = 'custom' unless $alias;
+        my $bin_dir = "$ROOT/perls/$alias/bin";
         my $perl = catfile($bin_dir, 'perl');
         mkpath($bin_dir);
         unlink $perl;
         symlink $dist, $perl;
-        $dist = 'custom';
-        $vers = "$vers as $dist";
+        $dist = $alias;
+        $vers = "$vers as $alias";
     }
 
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
