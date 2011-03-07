@@ -69,7 +69,10 @@ perlbrew () {
         (switch)
               command perlbrew $short_option $*
               exit_status=$?
-              __perlbrew_reinit
+
+              if [[ -n "$2" ]] ; then
+                  __perlbrew_reinit
+              fi
               ;;
 
         (off)
