@@ -553,9 +553,15 @@ sub perlbrew_env {
         PERLBREW_ROOT => $ROOT
     );
 
-    if ($perl && -d "$ROOT/perls/$perl/bin") {
-        $env{PERLBREW_PERL} = $perl;
-        $env{PERLBREW_PATH} .= ":$ROOT/perls/$perl/bin";
+    if ($perl) {
+        if(-d "$ROOT/perls/$perl/bin") {
+            $env{PERLBREW_PERL} = $perl;
+            $env{PERLBREW_PATH} .= ":$ROOT/perls/$perl/bin";
+        }
+    }
+    elsif (-d "$ROOT/perls/current/bin") {
+        $env{PERLBREW_PERL} = readlink("$ROOT/perls/current");
+        $env{PERLBREW_PATH} .= ":$ROOT/perls/current/bin";
     }
 
     return %env;

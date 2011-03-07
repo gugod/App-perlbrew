@@ -1,3 +1,6 @@
+NEXT:
+- Fix "perlbrew env" to use current version, sets PERLBREW_PERL and proper PATH
+
 0.16:
 - Use 'test_harness' for perl >= 5.7.3. avar++
 - Use gtar on Solaris - RT #61042. doherty++
