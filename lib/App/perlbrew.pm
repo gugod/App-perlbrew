@@ -61,17 +61,10 @@ perlbrew () {
             ;;
 
         (switch)
-            if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
-                __perlbrew_reinit $2
-
-            elif [[ "$2" = "system" ]]; then
-                perlbrew off
-                return $?
-            else
-                echo "$2 is not installed" >&2
-                exit_status=1
-            fi
-            ;;
+              command perlbrew $short_option $*
+              exit_status=$?
+              __perlbrew_reinit
+              ;;
 
         (off)
             unset PERLBREW_PERL
