@@ -594,17 +594,22 @@ sub run_command_switch {
         return;
     }
 
+    my $vers = $dist;
     if (-x $dist) {
-        unlink "$ROOT/perls/current";
-        symlink $dist, "$ROOT/bin/perl";
-        print "Switched to $dist\n";
-        return;
+        my $bin_dir = "$ROOT/perls/custom/bin";
+        my $perl = catfile($bin_dir, 'perl');
+        mkpath($bin_dir);
+        unlink $perl;
+        symlink $dist, $perl;
+        $dist = 'custom';
+        $vers = "$vers as $dist";
     }
 
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
     chdir "$ROOT/perls";
     unlink "current";
     symlink $dist, "current";
+    print "Switched to $vers\n";
 }
 
 sub run_command_off {
