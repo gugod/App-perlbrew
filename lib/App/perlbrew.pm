@@ -50,7 +50,13 @@ perlbrew () {
 
     case $1 in
         (use)
-            if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" || "$2" = "system" ]]; then
+            if [[ -z "$2" ]] ; then
+                if [[ -z "$PERLBREW_PERL" ]] ; then
+                    echo "No version in use; defaulting to system"
+                else
+                    echo "Using $PERLBREW_PERL version"
+                fi
+            elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" || "$2" = "system" ]]; then
                 unset PERLBREW_PERL
                 eval $(command perlbrew $short_option env $2)
                 __perlbrew_set_path

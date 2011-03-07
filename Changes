@@ -1,5 +1,6 @@
 NEXT:
 - Fix "perlbrew env" to use current version, sets PERLBREW_PERL and proper PATH
+- Feature: "perlbrew use" shows current version in use
 
 0.16:
 - Use 'test_harness' for perl >= 5.7.3. avar++
