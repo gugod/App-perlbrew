@@ -220,6 +220,12 @@ sub env {
     return \%ENV;
 }
 
+sub is_shell_csh {
+    my ($self) = @_;
+    return 1 if $self->env('SHELL') =~ /(t?csh)/;
+    return 0;
+}
+
 sub run {
     my($self) = @_;
     $self->run_command($self->get_args);
@@ -287,7 +293,7 @@ echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
 RC
 
     my ( $shrc, $yourshrc );
-    if ( $self->env('SHELL') =~ /(t?csh)/ ) {
+    if ( $self->is_shell_csh) {
         $shrc     = 'cshrc';
         $yourshrc = $1 . "rc";
     }
