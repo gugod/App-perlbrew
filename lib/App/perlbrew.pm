@@ -587,6 +587,25 @@ sub run_command_list {
     }
 }
 
+sub run_command_use {
+    my $self = shift;
+
+    if ($self->is_shell_csh) {
+        my $shell = $self->env('SHELL');
+        print "You shell '$shell' does not support the 'use' command at this time\n";
+        exit(1);
+    }
+
+    print <<WARNING;
+Your perlbrew setup is not complete!
+
+Please make sure you run `perlbrew init` first and follow the
+instructions, specially the bits about changing your .bashrc
+and exiting the current terminal and starting a new one.
+
+WARNING
+}
+
 sub run_command_switch {
     my ( $self, $dist, $alias ) = @_;
 
