@@ -5,7 +5,6 @@ NEXT:
 - Feature: "perlbrew use" shows current version in use
 - Feature: "perlbrew switch /path/to/special/perl name-of-special-perl" names for adhoc perl's
 - 'perlbrew exec' now excludes those non-brewed perl by frankcuny++ according to the discussion here: https://github.com/gugod/App-perlbrew/pull/43
->>>>>>> origin/develop
 
 0.16:
 - Use 'test_harness' for perl >= 5.7.3. avar++
