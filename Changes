@@ -1,4 +1,4 @@
-NEXT:
+0.17:
 - UPDATE NOTES: you need to init, off and switch back to the version you want;
 - Fix "perlbrew use" to work even if we are switched to a specific version
 - Fix "perlbrew env" to use current version, sets PERLBREW_PERL and proper PATH
