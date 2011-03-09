@@ -43,6 +43,7 @@ __perlbrew_set_path
 
 perlbrew () {
     local exit_status
+    export SHELL
 
     if [[ `echo $1 | awk 'BEGIN{FS=""}{print $1}'` = '-' ]]; then
         short_option=$1
