@@ -1,4 +1,6 @@
 NEXT:
+- Spotted and fixed by chad.a.davis++, an issue when bash set "noclobber" option,
+  which breaks the creation of ~/.perlbrew/init. See https://rt.cpan.org/Ticket/Display.html?id=66518
 - A simple `perlbrew clean` command to clean build dir.
 
 0.17:
