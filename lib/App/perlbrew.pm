@@ -122,6 +122,28 @@ sub mkpath {
     return;
 }
 
+# File::Path::Tiny::rm
+sub rmpath {
+    my ($path) = @_;
+    if (-e $path && !-d $path) { $! = 20;return; }
+    return 2 if !-d $path;
+    opendir(DIR, $path) or return;
+    my @contents = grep { $_ ne '.' && $_ ne '..' } readdir(DIR);
+    closedir DIR;
+    require File::Spec if @contents;
+    for my $thing (@contents) {
+        my $long = File::Spec->catdir($path, $thing);
+        if (!-l $long && -d $long) {
+            rmpath($long) or return;
+        }
+        else {
+            unlink $long or return;
+        }
+    }
+    rmdir($path) or return;
+    return 1;
+}
+
 sub uniq(@) {
     my %a;
     grep { ++$a{$_} == 1 } @_;
@@ -759,6 +781,17 @@ sub run_command_exec {
     }
 }
 
+sub run_command_clean {
+    my ($self) = @_;
+    my @build_dirs = <$ROOT/build/*>;
+
+    for my $dir (@build_dirs) {
+        print "Remove $dir\n";
+        rmpath($dir);
+    }
+
+    print "\nDone\n";
+}
 
 sub conf {
     my($self) = @_;
