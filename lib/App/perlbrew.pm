@@ -982,7 +982,7 @@ Patches and code improvements have been contributed by:
 Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
 castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
-polettix, tokuhirom, Ævar Arnfjörð Bjarmason, Chad A Davis.
+polettix, tokuhirom, Ævar Arnfjörð Bjarmason, Pedro Melo, Chad A Davis.
 
 =head1 DISCLAIMER OF WARRANTY
 
