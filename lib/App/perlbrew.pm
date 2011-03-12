@@ -489,6 +489,8 @@ INSTALL
             && ($1 >= 8 || $1 == 7 && $2 == 3)) {
             $test_target = "test_harness";
         }
+        local $ENV{TEST_JOBS}=$self->{j}
+          if $test_target eq "test_harness" && $self->{j} > 1;
 
         my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
         my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");

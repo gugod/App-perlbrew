@@ -140,6 +140,12 @@ prints this help.
 
 Force installation of a perl.
 
+=item B<-j>
+
+Enable parallel make and test (if supported by the target perl)
+
+  perlbrew install -j 5 perl-5.12.3
+
 =item B<-n| --notest>
 
 Skip the test suite
