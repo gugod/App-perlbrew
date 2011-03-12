@@ -2,6 +2,7 @@ NEXT:
 - Spotted and fixed by chad.a.davis++, an issue when bash set "noclobber" option,
   which breaks the creation of ~/.perlbrew/init. See https://rt.cpan.org/Ticket/Display.html?id=66518
 - A simple `perlbrew clean` command to clean build dir.
+- delegate `-j` arg value to `make test_harness`. by dagolden++
 
 0.17:
 - UPDATE NOTES: you need to init, off and switch back to the version you want;
