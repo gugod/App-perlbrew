@@ -491,6 +491,8 @@ INSTALL
             && ($1 >= 8 || $1 == 7 && $2 == 3)) {
             $test_target = "test_harness";
         }
+        local $ENV{TEST_JOBS}=$self->{j}
+          if $test_target eq "test_harness" && $self->{j} > 1;
 
         my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
         my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
@@ -979,6 +981,12 @@ prints this help.
 =item B<-f| --force>
 
 Force installation of a perl.
+
+=item B<-j>
+
+Enable parallel make and test (if supported by the target perl)
+
+  perlbrew install -j 5 perl-5.12.3
 
 =item B<-n| --notest>
 
