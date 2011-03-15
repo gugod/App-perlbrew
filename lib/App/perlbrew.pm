@@ -470,7 +470,7 @@ HELP
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
 
-  tail -f $self->{log_file}
+  tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
 
 INSTALL
 
