@@ -500,7 +500,7 @@ INSTALL
             $test_target = "test_harness";
         }
         local $ENV{TEST_JOBS}=$self->{j}
-          if $test_target eq "test_harness" && $self->{j} > 1;
+          if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
         my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
         my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
