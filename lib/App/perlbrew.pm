@@ -243,6 +243,13 @@ sub env {
     return \%ENV;
 }
 
+sub path_with_tilde {
+    my ($self, $dir) = @_;
+    my $home = $self->env('HOME');
+    $dir =~ s/^$home/~/ if $home;
+    return $dir;
+}
+
 sub is_shell_csh {
     my ($self) = @_;
     return 1 if $self->env('SHELL') =~ /(t?csh)/;
@@ -324,18 +331,19 @@ RC
         $shrc = $yourshrc = 'bashrc';
     }
 
-
     system("$0 env > ${HOME}/.perlbrew/init");
+
+    my $root_dir = $self->path_with_tilde($ROOT);
 
     print <<INSTRUCTION;
 Perlbrew environment initiated, required directories are created under
 
-    $ROOT
+    $root_dir
 
 Well-done! Congratulations! Please add the following line to the end
 of your ~/.${yourshrc}
 
-    source $ROOT/etc/${shrc}
+    source $root_dir/etc/${shrc}
 
 After that, exit this shell, start a new one, and install some fresh
 perls:
@@ -376,16 +384,18 @@ sub run_command_install {
         File::Copy::copy($executable, $target);
         chmod(0755, $target);
 
+        my $path = $self->path_with_tilde($target);
+
         print <<HELP;
 The perlbrew is installed as:
 
-    $target
+    $path
 
 You may trash the downloaded $executable from now on.
 
 Next, if this is the first time you install perlbrew, run:
 
-    $target init
+    $path init
 
 And follow the instruction on screen.
 HELP
@@ -456,7 +466,7 @@ HELP
         my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
         unshift @d_options, qq(prefix=$ROOT/perls/$as);
         push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
-        print "Installing $dist into $ROOT/perls/$as\n";
+        print "Installing $dist into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
         print <<INSTALL if $self->{quiet} && !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
 
