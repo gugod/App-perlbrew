@@ -511,6 +511,7 @@ INSTALL
             $extract_command,
             "cd $dist_extracted_dir",
             "rm -f config.sh Policy.sh",
+            "patchperl",
             "sh Configure $configure_flags " .
                 join( ' ',
                     ( map { qq{'-D$_'} } @d_options ),
