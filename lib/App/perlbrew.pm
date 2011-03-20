@@ -379,22 +379,12 @@ Perlbrew environment initiated, required directories are created under
 
     $root_dir
 
-Well-done! Congratulations! Please add the following line to the end
-of your ~/.${yourshrc}
+Paste the following line to the end of your ~/.${yourshrc} and start a
+new shell, perlbrew should be up and fully functional from there:
 
     source $root_dir/etc/${shrc}
 
-After that, exit this shell, start a new one, and install some fresh
-perls:
-
-    perlbrew install perl-5.12.1
-    perlbrew install perl-5.10.1
-
-For further instructions, simply run:
-
-    perlbrew
-
-The default help messages will popup and tell you what to do!
+For further instructions, simply run `perlbrew` to see de help message.
 
 Enjoy perlbrew at \$HOME!!
 INSTRUCTION
@@ -432,13 +422,9 @@ The perlbrew is installed as:
 
 You may trash the downloaded $executable from now on.
 
-Next, if this is the first time you install perlbrew, run:
-
-    $path init
-
-And follow the instruction on screen.
 HELP
 
+        $self->run_command_init();
         return;
     }
 
