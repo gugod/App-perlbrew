@@ -70,11 +70,11 @@ perlbrew () {
             ;;
 
         (switch)
-              command perlbrew $short_option $*
-              exit_status=$?
-
               if [[ -n "$2" ]] ; then
-                  __perlbrew_reinit
+                  if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
+                      perlbrew $short_option use $2
+                      __perlbrew_reinit $2
+                  fi
               fi
               ;;
 
