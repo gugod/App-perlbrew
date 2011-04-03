@@ -20,6 +20,20 @@ if [[ -f $HOME/.perlbrew/init ]]; then
     source $HOME/.perlbrew/init
 fi
 
+cd() {
+    builtin cd "$@"
+    local result=$?
+    __perlbrew_project_perlbrew
+    return $result
+}
+
+__perlbrew_project_perlbrew() {
+    local project_dir=$PWD
+    if [[ -f "$project_dir/.perlbrewrc" ]] ; then
+        source $project_dir/.perlbrewrc
+    fi
+}
+
 short_option=""
 
 __perlbrew_reinit () {
@@ -887,6 +901,11 @@ App::perlbrew - Manage perl installations in your $HOME
 
     # Exec something with all perlbrew-ed perls
     perlbrew exec perl -E 'say $]'
+
+    # To switch to a specific version for a given project whenever you
+    # enter the directory
+    cd ~/code/App-Perlbrew
+    echo "perlbrew switch perl-5.12.3" > .perlbrewrc
 
 =head1 DESCRIPTION
 
