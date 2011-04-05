@@ -1,16 +1,8 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
-use English qw( -no_match_vars );
 use Test::More;
-use Test::MockObject::Extends;
-use Data::Dumper;
-
 use App::perlbrew;
-
-my $app = App::perlbrew->new();
-$app = Test::MockObject::Extends->new($app);
 
 my $html = <<END_HTML;
 <table border="1">
@@ -26,32 +18,17 @@ my $html = <<END_HTML;
 </tbody></table>
 END_HTML
 
-sub _mock_conf {
-    my ($self) = shift;
-    return {
-        'mirror' => {
-            'name' => 'North America, United States,Virginia, Dulles ' 
-              . '(cpan-du.viaverio.com)',
-            'url' => '&#104;&#116;&#116;&#112;://&#99;&#112;&#97;&#110;' 
-              . '-&#100;&#117;.&#118;&#105;&#97;&#118;&#101;&#114;&#105;' 
-              . '&#111;.&#99;&#111;&#109;/'
-        }
-    };
-}
+my $app = App::perlbrew->new();
 
 is scalar $app->get_available_perls(), 8, "Correct number of releases found";
 
 my @known_perl_versions = (
-    'perl-5.13.8', 'perl-5.12.2',  'perl-5.10.1',  'perl-5.8.9',
-    'perl-5.6.2',  'perl5.005_04', 'perl5.004_05', 'perl5.003_07'
+    'perl-5.13.11', 'perl-5.12.3',  'perl-5.10.1',  'perl-5.8.9',
+    'perl-5.6.2',   'perl5.005_04', 'perl5.004_05', 'perl5.003_07'
 );
 
 for my $perl_version ( $app->get_available_perls() ) {
     ok grep( $_ eq $perl_version, @known_perl_versions ), "$perl_version found";
 }
-
-$app->mock( 'conf', \&_mock_conf );
-
-is scalar $app->get_available_perls(), 8, "Correct number of releases found";
 
 done_testing();

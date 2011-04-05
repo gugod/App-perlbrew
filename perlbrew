@@ -6,9 +6,8 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
-use HTML::Entities;
 
-our $VERSION = "0.15";
+our $VERSION = "0.15_99";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -196,6 +195,8 @@ sub new {
         'D=s@',
         'U=s@',
         'A=s@',
+
+        'j=i'
     )
       or run_command_help(1);
 
@@ -278,7 +279,7 @@ sub run_command_available {
         for my $installed (@installed) {
             my $name = $installed->{name};
             my $cur  = $installed->{is_current};
-            if ( $available eq $installed ) {
+            if ( $available eq $installed->{name} ) {
                 $is_installed = 1;
                 last;
             }
@@ -289,26 +290,18 @@ sub run_command_available {
 
 sub get_available_perls {
     my ( $self, $dist, $opts ) = @_;
-    my $mirror = $self->conf->{mirror};
 
-    my $url = "http://www.cpan.org/";
-    $url = $mirror->{url} if defined( $mirror->{url} );
-    my $path = "/src/README.html";
-    $url = $url . $path;
-    my $html = http_get( decode_entities($url), undef, undef );
-    use HTML::TableExtract;
-    my $te = HTML::TableExtract->new( headers => [qw(Release File Type Age)] );
-    $te->parse($html);
+    my $url = "http://www.cpan.org/src/README.html";
+    my $html = http_get( $url, undef, undef );
+
     my @available_versions;
 
-    foreach my $ts ( $te->tables ) {
-        foreach my $row ( $ts->rows ) {
-            my @a = split( ',', @$row[1] );
-            my $p = $a[0];
-            $p =~ s/\.tar\.gz$//;
-            push @available_versions, $p;
-        }
+    for ( split "\n", $html ) {
+        push @available_versions, $3
+          if m|<tr><td>(.*)</td><td>(.*)</td><td><a href="(.*?)">|;
     }
+    s/\.tar\.gz// for @available_versions;
+
     return @available_versions;
 }
 
@@ -492,7 +485,18 @@ INSTALL
             $configure_flags = '-de';
         }
 
-        my @install = $self->{notest} ? "make install" : ("make test", "make install");
+        # Test via "make test_harness" if available so we'll get
+        # automatic parallel testing via $HARNESS_OPTIONS. The
+        # "test_harness" target was added in 5.7.3, which was the last
+        # development release before 5.8.0.
+        my $test_target = "test";
+        if ($dist_version =~ /^5\.(\d+)\.(\d+)/
+            && ($1 >= 8 || $1 == 7 && $2 == 3)) {
+            $test_target = "test_harness";
+        }
+
+        my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
+        my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
         @install    = join " && ", @install unless($self->{force});
 
         my $cmd = join ";",
@@ -510,7 +514,8 @@ INSTALL
                 && ($1 < 8 || $1 == 8 && $2 < 9)
                     ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                     : (),
-            "make", @install
+            $make,
+            @install
         );
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
             if ( $self->{quiet} && !$self->{verbose} );
@@ -706,7 +711,7 @@ sub run_command_env {
 
     my %env = $self->perlbrew_env($perl);
 
-    if ($self->env('SHELL') =~ /(ba|z)sh$/) {
+    if ($self->env('SHELL') =~ /(ba|z|\/)sh$/) {
         while (my ($k, $v) = each(%env)) {
             print "export $k=$v\n";
         }
@@ -823,8 +828,8 @@ perlbrew - Perl Environment manager.
     perlbrew <command> [options] [arguments]
 
     Commonly used commands:
-        available      List available perls
         init           Initialize perlbrew environment.
+        available      List availalbe perls
         install        Install perl
         list           List installed perls
         use            Use the specified perl in current shell

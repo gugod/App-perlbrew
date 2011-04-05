@@ -4,7 +4,6 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
-use HTML::Entities;
 
 our $VERSION = "0.15_99";
 our $CONF;
@@ -278,7 +277,7 @@ sub run_command_available {
         for my $installed (@installed) {
             my $name = $installed->{name};
             my $cur  = $installed->{is_current};
-            if ( $available eq $installed ) {
+            if ( $available eq $installed->{name} ) {
                 $is_installed = 1;
                 last;
             }
@@ -289,26 +288,18 @@ sub run_command_available {
 
 sub get_available_perls {
     my ( $self, $dist, $opts ) = @_;
-    my $mirror = $self->conf->{mirror};
 
-    my $url = "http://www.cpan.org/";
-    $url = $mirror->{url} if defined( $mirror->{url} );
-    my $path = "/src/README.html";
-    $url = $url . $path;
-    my $html = http_get( decode_entities($url), undef, undef );
-    use HTML::TableExtract;
-    my $te = HTML::TableExtract->new( headers => [qw(Release File Type Age)] );
-    $te->parse($html);
+    my $url = "http://www.cpan.org/src/README.html";
+    my $html = http_get( $url, undef, undef );
+
     my @available_versions;
 
-    foreach my $ts ( $te->tables ) {
-        foreach my $row ( $ts->rows ) {
-            my @a = split( ',', @$row[1] );
-            my $p = $a[0];
-            $p =~ s/\.tar\.gz$//;
-            push @available_versions, $p;
-        }
+    for ( split "\n", $html ) {
+        push @available_versions, $3
+          if m|<tr><td>(.*)</td><td>(.*)</td><td><a href="(.*?)">|;
     }
+    s/\.tar\.gz// for @available_versions;
+
     return @available_versions;
 }
 
@@ -828,6 +819,9 @@ App::perlbrew - Manage perl installations in your $HOME
 
     # Pick a preferred CPAN mirror
     perlbrew mirror
+
+    # See what is available
+    perlbrew available
 
     # Install some Perls
     perlbrew install perl-5.12.2
