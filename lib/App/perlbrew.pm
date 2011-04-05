@@ -299,7 +299,6 @@ sub get_available_perls {
     return @available_versions;
 }
 
-
 sub get_args {
     my ( $self ) = @_;
     return @{ $self->{args} };
@@ -1038,7 +1037,6 @@ Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
 castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
 polettix, tokuhirom, Ævar Arnfjörð Bjarmason, Pedro Melo,
 Chad A Davis, dagolden, Theodore Robert Campbell Jr.
-
 
 =head1 DISCLAIMER OF WARRANTY
 
