@@ -308,6 +308,44 @@ sub run_command_help {
     Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
 }
 
+sub run_command_available {
+    my ( $self, $dist, $opts ) = @_;
+
+    my @available = $self->get_available_perls(@_);
+    my @installed = $self->installed_perls(@_);
+
+    my $is_installed;
+    for my $available (@available) {
+        $is_installed = 0;
+        for my $installed (@installed) {
+            my $name = $installed->{name};
+            my $cur  = $installed->{is_current};
+            if ( $available eq $installed->{name} ) {
+                $is_installed = 1;
+                last;
+            }
+        }
+        print $is_installed ? '* ' : '  ', $available, "\n";
+    }
+}
+
+sub get_available_perls {
+    my ( $self, $dist, $opts ) = @_;
+
+    my $url = "http://www.cpan.org/src/README.html";
+    my $html = http_get( $url, undef, undef );
+
+    my @available_versions;
+
+    for ( split "\n", $html ) {
+        push @available_versions, $3
+          if m|<tr><td>(.*)</td><td>(.*)</td><td><a href="(.*?)">|;
+    }
+    s/\.tar\.gz// for @available_versions;
+
+    return @available_versions;
+}
+
 sub run_command_init {
     my $self = shift;
     my $HOME = $self->env('HOME');
