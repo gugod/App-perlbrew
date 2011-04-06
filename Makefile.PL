@@ -51,6 +51,8 @@ repository 'git://github.com/gugod/App-perlbrew.git';
 requires 'Devel::PatchPerl' => '0.26';
 
 test_requires 'Test::Simple';
+test_requires 'Test::More';
+test_requires 'Test::Output';
 
 install_script 'bin/perlbrew';
 
