@@ -12,7 +12,7 @@ stdout_is(
     sub {
         $app->run_command('version');
     },
-    "t/05.get_current_perl.t  - App::perlbrew/0.15_99\n",
+    "t/05.get_current_perl.t  - App::perlbrew/0.18\n",
     'Test version'
 );
 
