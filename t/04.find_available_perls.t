@@ -3,8 +3,9 @@ use strict;
 use warnings;
 use Test::More;
 use Data::Dumper;
-
 use App::perlbrew;
+
+plan tests => 52;
 
 my $html = <<HERE;
 <!-- LATEST_RELEASES --> 
@@ -126,5 +127,4 @@ for my $i ( 0 .. scalar @releases - 1 - 1 ) {
     is $releases[$i]->{type} => $expected_releases[$i]->{type}, "type " . $releases[$i]->{type} . " found";
     is $releases[$i]->{age} => $expected_releases[$i]->{age}, "age " . $releases[$i]->{age} . " found";
 }
-done_testing();
 
