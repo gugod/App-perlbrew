@@ -17,6 +17,8 @@ use App::perlbrew;
     }
 }
 
+plan tests => 9;
+
 my $app = App::perlbrew->new();
 
 is scalar $app->get_available_perls(), 8, "Correct number of releases found";
@@ -29,8 +31,6 @@ my @known_perl_versions = (
 for my $perl_version ( $app->get_available_perls() ) {
     ok grep( $_ eq $perl_version, @known_perl_versions ), "$perl_version found";
 }
-
-done_testing();
 
 __DATA__
 <!DOCTYPE html>
