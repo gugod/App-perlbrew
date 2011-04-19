@@ -336,8 +336,8 @@ sub get_available_perls {
     my @available_versions;
 
     for ( split "\n", $html ) {
-        push @available_versions, $3
-          if m|<tr><td>(.*)</td><td>(.*)</td><td><a href="(.*?)">|;
+        push @available_versions, $1
+          if m|<td><a href="http://www.cpan.org/src/.+?">(.+?)</a></td>|;
     }
     s/\.tar\.gz// for @available_versions;
 
