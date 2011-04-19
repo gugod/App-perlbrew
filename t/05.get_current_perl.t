@@ -16,4 +16,3 @@ stdout_is(
     'Test version'
 );
 
-done_testing();
