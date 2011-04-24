@@ -372,7 +372,7 @@ RC
         $shrc = $yourshrc = 'bashrc';
     }
 
-    system("$0 env > ${HOME}/.perlbrew/init");
+    system("$0 env @{[ $self->current_perl ]}> ${HOME}/.perlbrew/init");
 
     my $root_dir = $self->path_with_tilde($ROOT);
 
@@ -381,8 +381,8 @@ Perlbrew environment initiated, required directories are created under
 
     $root_dir
 
-Paste these lines to the end of your ~/.${yourshrc} and start a new shell,
-perlbrew should be up and fully functional from there:
+Paste the following line to the end of your ~/.${yourshrc} and start a
+new shell, perlbrew should be up and fully functional from there:
 
     source $root_dir/etc/${shrc}
 

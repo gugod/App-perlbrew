@@ -370,7 +370,7 @@ RC
         $shrc = $yourshrc = 'bashrc';
     }
 
-    system("$0 env > ${HOME}/.perlbrew/init");
+    system("$0 env @{[ $self->current_perl ]}> ${HOME}/.perlbrew/init");
 
     my $root_dir = $self->path_with_tilde($ROOT);
 
