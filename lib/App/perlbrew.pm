@@ -573,6 +573,10 @@ INSTALL
         delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
         if (!system($cmd)) {
+            unless (-e "$ROOT/perls/$as/bin/perl") {
+                $self->run_command_symlink_executables($as);
+            }
+
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
@@ -796,7 +800,14 @@ sub run_command_env {
 }
 
 sub run_command_symlink_executables {
-    ## Ignore it silently for now
+    my($self, $perl) = @_;
+
+    return "" unless $perl;
+
+    for my $executable (<$ROOT/perls/$perl/bin/*>) {
+        my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
+        system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
+    }
 }
 
 sub run_command_install_cpanm {

@@ -575,6 +575,10 @@ INSTALL
         delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
         if (!system($cmd)) {
+            unless (-e "$ROOT/perls/$as/bin/perl") {
+                $self->run_command_symlink_executables($as);
+            }
+
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
@@ -798,7 +802,14 @@ sub run_command_env {
 }
 
 sub run_command_symlink_executables {
-    ## Ignore it silently for now
+    my($self, $perl) = @_;
+
+    return "" unless $perl;
+
+    for my $executable (<$ROOT/perls/$perl/bin/*>) {
+        my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
+        system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
+    }
 }
 
 sub run_command_install_cpanm {
@@ -1006,6 +1017,24 @@ The output is something similar to this (if your shell is bash):
 
 You can also ask for the proper variables for a specific perl version.
 
+
+=item B<symlink_executables> <perl-version>
+
+Low-level command. Use this command to create the C<perl> executable
+symbolic link to C<perl5.13.6>.
+
+You don't need to do this unless you were using old perlbrew to
+install perls. The installation layout is changed since version 0.11.
+
+If you just upgraded perlbrew and found C<perlbrew switch> failed to work
+after you switch to a development release of perl, say, perl-5.13.6, run this command:
+
+    perlbrew symlink_executables perl-5.13.6
+
+This essentially creates this symlink:
+
+   ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl
+   -> ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl5.13.6
 
 =item B<install-cpanm>
 
