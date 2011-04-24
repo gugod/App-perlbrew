@@ -796,7 +796,14 @@ sub run_command_env {
 }
 
 sub run_command_symlink_executables {
-    ## Ignore it silently for now
+    my($self, $perl) = @_;
+
+    return "" unless $perl;
+
+    for my $executable (<$ROOT/perls/$perl/bin/*>) {
+        my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
+        system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
+    }
 }
 
 sub run_command_install_cpanm {
