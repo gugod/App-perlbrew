@@ -573,6 +573,10 @@ INSTALL
         delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
         if (!system($cmd)) {
+            unless (-e "$ROOT/perls/$as/bin/perl") {
+                $self->run_command_symlink_executables($as);
+            }
+
             print <<SUCCESS;
 Installed $dist as $as successfully. Run the following command to switch to it.
 
