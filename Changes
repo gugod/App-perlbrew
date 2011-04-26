@@ -1,3 +1,6 @@
+- Automatically apply patches necessary to make older perls build again on
+  modern platforms with the help of Devel::PatchPerl.
+
 0.18:
 - Spotted and fixed by chad.a.davis++, an issue when bash set "noclobber" option,
   which breaks the creation of ~/.perlbrew/init. See https://rt.cpan.org/Ticket/Display.html?id=66518
