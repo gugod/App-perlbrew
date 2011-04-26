@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.18";
+our $VERSION = "0.18_1";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -259,6 +259,44 @@ sub is_shell_csh {
 sub run {
     my($self) = @_;
     $self->run_command($self->get_args);
+}
+
+sub run_command_available {
+    my ( $self, $dist, $opts ) = @_;
+
+    my @available = $self->get_available_perls(@_);
+    my @installed = $self->installed_perls(@_);
+
+    my $is_installed;
+    for my $available (@available) {
+        $is_installed = 0;
+        for my $installed (@installed) {
+            my $name = $installed->{name};
+            my $cur  = $installed->{is_current};
+            if ( $available eq $installed->{name} ) {
+                $is_installed = 1;
+                last;
+            }
+        }
+        print $is_installed ? '* ' : '  ', $available, "\n";
+    }
+}
+
+sub get_available_perls {
+    my ( $self, $dist, $opts ) = @_;
+
+    my $url = "http://www.cpan.org/src/README.html";
+    my $html = http_get( $url, undef, undef );
+
+    my @available_versions;
+
+    for ( split "\n", $html ) {
+        push @available_versions, $3
+          if m|<tr><td>(.*)</td><td>(.*)</td><td><a href="(.*?)">|;
+    }
+    s/\.tar\.gz// for @available_versions;
+
+    return @available_versions;
 }
 
 sub get_args {
@@ -860,6 +898,9 @@ App::perlbrew - Manage perl installations in your $HOME
     # Pick a preferred CPAN mirror
     perlbrew mirror
 
+    # See what is available to install
+    perlbrew available
+
     # Install some Perls
     perlbrew install perl-5.12.2
     perlbrew install perl-5.8.1
@@ -995,7 +1036,7 @@ Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
 castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
 polettix, tokuhirom, Ævar Arnfjörð Bjarmason, Pedro Melo,
-Chad A Davis, dagolden.
+Chad A Davis, dagolden, Theodore Robert Campbell Jr.
 
 =head1 DISCLAIMER OF WARRANTY
 
