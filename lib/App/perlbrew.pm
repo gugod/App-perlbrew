@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.18";
+our $VERSION = "0.19";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -323,7 +323,7 @@ sub run_command_available {
                 last;
             }
         }
-        print $is_installed ? '* ' : '  ', $available, "\n";
+        print $is_installed ? 'i ' : '  ', $available, "\n";
     }
 }
 
@@ -1021,7 +1021,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010, Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010, 2011 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 
@@ -1035,7 +1035,7 @@ Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
 Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
 castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
 polettix, tokuhirom, Ævar Arnfjörð Bjarmason, Pedro Melo,
-Chad A Davis, dagolden.
+Chad A Davis, dagolden, trcjr, rafl.
 
 =head1 DISCLAIMER OF WARRANTY
 
