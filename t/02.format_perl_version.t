@@ -22,12 +22,12 @@ my @test_cases = (
     },
 );
 
+plan tests => scalar @test_cases;
 {
     my $app = App::perlbrew->new();
-  TEST:
+ TEST:
     foreach my $test (@test_cases) {
         is( $app->format_perl_version( $test->{raw} ),
             $test->{parsed}, "$test->{raw} -> $test->{parsed}" );
     }
-    done_testing();
 }

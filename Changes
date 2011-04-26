@@ -1,3 +1,10 @@
+0.19:
+- Auto run 'perlbrew init' after an install (or upgrade)
+- Symlink dev versions of executables. For example,'perl5.13.11' to 'perl', 'prove5.13.11' to 'prove'.
+- Automatically apply patches necessary to make older perls build again on
+  modern platforms with the help of Devel::PatchPerl.
+- A command "perlbrew available" to list recently available perls to build by trcjr
+
 0.18:
 - Spotted and fixed by chad.a.davis++, an issue when bash set "noclobber" option,
   which breaks the creation of ~/.perlbrew/init. See https://rt.cpan.org/Ticket/Display.html?id=66518

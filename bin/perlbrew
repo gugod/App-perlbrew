@@ -115,6 +115,24 @@ The output is something similar to this (if your shell is bash):
 You can also ask for the proper variables for a specific perl version.
 
 
+=item B<symlink_executables> <perl-version>
+
+Low-level command. Use this command to create the C<perl> executable
+symbolic link to C<perl5.13.6>.
+
+You don't need to do this unless you were using old perlbrew to
+install perls. The installation layout is changed since version 0.11.
+
+If you just upgraded perlbrew and found C<perlbrew switch> failed to work
+after you switch to a development release of perl, say, perl-5.13.6, run this command:
+
+    perlbrew symlink_executables perl-5.13.6
+
+This essentially creates this symlink:
+
+   ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl
+   -> ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl5.13.6
+
 =item B<install-cpanm>
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
