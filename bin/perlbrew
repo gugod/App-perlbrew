@@ -63,6 +63,10 @@ from. Hit 'q' to cancel the selection.
 
 Build and install the given version of perl.
 
+Versions of perl are specified as "perl-5.xx.x" for normal releases,
+"perl-5.xx.x-RCx" for release candidates, and "perl-blead" or just "blead" for
+the latest version from the git integration branch.
+
 
 =item B<install> /path/to/perl/git/checkout/dir
 
