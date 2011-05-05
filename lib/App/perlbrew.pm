@@ -384,7 +384,7 @@ new shell, perlbrew should be up and fully functional from there:
 
     source $root_dir/etc/${shrc}
 
-For further instructions, simply run `perlbrew` to see de help message.
+For further instructions, simply run `perlbrew` to see the help message.
 
 Enjoy perlbrew at \$HOME!!
 INSTRUCTION
