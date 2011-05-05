@@ -1,3 +1,6 @@
+- doherty++ FIX: stop when user specified an invalid perl version that cannot be found on cpan.
+- doherty++ specialized version installation: perlbrew install perl-blead
+
 0.19:
 - Auto run 'perlbrew init' after an install (or upgrade)
 - Symlink dev versions of executables. For example,'perl5.13.11' to 'perl', 'prove5.13.11' to 'prove'.
