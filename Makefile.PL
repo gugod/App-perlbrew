@@ -49,6 +49,7 @@ all_from 'lib/App/perlbrew.pm';
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires 'Devel::PatchPerl' => '0.26';
+requires 'Cwd' => '3.26';
 
 test_requires 'Test::Simple';
 test_requires 'Test::More';
