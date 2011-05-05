@@ -386,7 +386,7 @@ new shell, perlbrew should be up and fully functional from there:
 
     source $root_dir/etc/${shrc}
 
-For further instructions, simply run `perlbrew` to see de help message.
+For further instructions, simply run `perlbrew` to see the help message.
 
 Enjoy perlbrew at \$HOME!!
 INSTRUCTION
@@ -465,6 +465,8 @@ HELP
 
             ($dist_path, $dist_tarball) =
                 $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+            die "ERROR: Cannot find the tarball for $dist.\n"
+                if !$dist_path and !$dist_tarball;
 
             my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
             if (-f $dist_tarball_path) {

@@ -463,7 +463,7 @@ HELP
 
             ($dist_path, $dist_tarball) =
                 $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
-            die "Is $dist a valid release? I couldn't find a tarball for it."
+            die "ERROR: Cannot find the tarball for $dist.\n"
                 if !$dist_path and !$dist_tarball;
 
             my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
