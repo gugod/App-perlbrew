@@ -435,11 +435,15 @@ HELP
 
     if (-d $dist && !$dist_name || !$dist_version) {
         if (-d "$dist/.git") {
-            if (`git describe` =~ /v((5\.\d+\.\d+)(-\d+-\w+)?)$/) {
+            require Cwd;
+            my $cwd = Cwd::cwd();
+            chdir $dist;
+            if (`git describe` =~ /v((5\.\d+\.\d+(?:-RC\d)?)(-\d+-\w+)?)$/) {
                 $dist_name = "perl";
                 $dist_git_describe = "v$1";
                 $dist_version = $2;
             }
+            chdir $cwd;
         }
         else {
             print <<HELP;
