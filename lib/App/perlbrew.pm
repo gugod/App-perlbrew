@@ -433,7 +433,7 @@ HELP
 
     if (-d $dist && !$dist_name || !$dist_version) {
         if (-d "$dist/.git") {
-            require Cwd; 
+            require Cwd;
             my $cwd = Cwd::cwd();
             chdir $dist;
             if (`git describe` =~ /v((5\.\d+\.\d+(?:-RC\d)?)(-\d+-\w+)?)$/) {
