@@ -452,6 +452,11 @@ HELP
             # need the period to account for the file extension
             ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
         }
+        elsif ($dist =~ m/(?:perl-)?blead$/) {
+            $dist_name          = 'perl';
+            $dist_git_describe  = 'blead';
+            $dist_version       = 'blead';
+        }
         else {
             print <<HELP;
 
@@ -511,6 +516,23 @@ HELP
             }
 
         }
+        elsif ($dist_git_describe eq 'blead') {
+            # We always blindly overwrite anything that's already there,
+            # because blead is a moving target.
+            $dist_tarball = 'blead.tar.gz';
+            my $dist_tarball_path = "$ROOT/dists/$dist_tarball";
+            print "Fetching $dist_git_describe as $dist_tarball_path\n";
+            http_get(
+                'http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz',
+                undef,
+                sub {
+                    my ($body) = @_;
+                    open my $BALL, "> $dist_tarball_path";
+                    print $BALL $body;
+                    close $BALL;
+                }
+            );
+        }
 
         my @d_options = @{ $self->{D} };
         my @u_options = @{ $self->{U} };
@@ -529,11 +551,28 @@ INSTALL
         my ($extract_command, $configure_flags) = ("", "-des");
 
         my $dist_extracted_dir;
-        if ($dist_git_describe) {
+        if ($dist_git_describe and $dist_git_describe ne 'blead') {
             $extract_command = "echo 'Building perl in the git checkout dir'";
             $dist_extracted_dir = File::Spec->rel2abs( $dist );
         } else {
-            $dist_extracted_dir = "$ROOT/build/${dist}";
+            if ($dist_git_describe eq 'blead') {
+                local *DIRH;
+                opendir DIRH, "$ROOT/build" or die "Couldn't open $ROOT/build: $!";
+                my @contents = readdir DIRH;
+                closedir DIRH or warn "Couldn't close $ROOT/build: $!";
+                my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
+                # Use a Schwartzian Transform in case there are lots of dirs that
+                # look like "perl-$SHA1", which is what's inside blead.tar.gz,
+                # so we stat each one only once.
+                @candidates =   map  { $_->[0] }
+                                sort { $b->[1] <=> $a->[1] } # descending
+                                map  { [ $_, (stat("$ROOT/build/$_"))[9] ] }
+                                    @candidates;
+                $dist_extracted_dir = "$ROOT/build/$candidates[0]"; # take the newest one
+            }
+            else {
+                $dist_extracted_dir = "$ROOT/build/${dist}";
+            }
 
             # Was broken on Solaris, where GNU tar is probably
             # installed as 'gtar' - RT #61042
