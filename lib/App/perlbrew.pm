@@ -439,6 +439,11 @@ HELP
                 $dist_version = $2;
             }
         }
+        elsif ($dist =~ m/^(?:https?|ftp)/) { # more protocols needed?
+            $dist_name = 'perl';
+            # need the period to account for the file extension
+            ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
+        }
         else {
             print <<HELP;
 
@@ -457,14 +462,28 @@ HELP
         my ($dist_path, $dist_tarball, $dist_commit);
 
         unless ($dist_git_describe) {
-            my $mirror = $self->conf->{mirror};
-            my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-            my $html = http_get("http://search.cpan.org/dist/$dist", $header);
+            my $dist_tarball_path;
+            my $dist_tarball_url;
+            my $header;
+            if ($dist =~ m/^(?:https?|ftp)/) {
+                ($dist_tarball) = $dist =~ m{/([^/]*)$};
 
-            ($dist_path, $dist_tarball) =
-                $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+                $dist_tarball_path = "$ROOT/dists/$dist_tarball";
+                $dist_tarball_url  = $dist;
+                $dist = "$dist_name-$dist_version"; # we install it as this name later
+            }
+            else {
+                my $mirror = $self->conf->{mirror};
+                $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+                my $html = http_get("http://search.cpan.org/dist/$dist", $header);
 
-            my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+                ($dist_path, $dist_tarball) =
+                    $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+
+                $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+                $dist_tarball_url  = "http://search.cpan.org${dist_path}"
+            }
+
             if (-f $dist_tarball_path) {
                 print "Use the previously fetched ${dist_tarball}\n";
             }
@@ -472,7 +491,7 @@ HELP
                 print "Fetching $dist as $dist_tarball_path\n";
 
                 http_get(
-                    "http://search.cpan.org${dist_path}",
+                    $dist_tarball_url,
                     $header,
                     sub {
                         my ($body) = @_;
