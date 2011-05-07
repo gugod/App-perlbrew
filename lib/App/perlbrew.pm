@@ -162,7 +162,8 @@ sub uniq(@) {
 
         if (! @command) {
             my @commands = (
-                [qw( curl --silent --location )],
+                # curl's --fail option makes the exit code meaningful
+                [qw( curl --silent --location --fail )],
                 [qw( wget --no-check-certificate --quiet -O - )],
             );
             for my $command (@commands) {
@@ -178,9 +179,16 @@ sub uniq(@) {
 
         open my $fh, '-|', @command, $url
             or die "open() for '@command $url': $!";
+
         local $/;
         my $body = <$fh>;
         close $fh;
+        die 'Page not retrieved; HTTP error code 400 or above.'
+            if $command[0] eq 'curl' # Exit code is 22 on 404s etc
+            and $? >> 8 == 22; # exit code is packed into $?; see perlvar
+        die 'Server issued an error response.'
+            if $command[0] eq 'wget' # Exit code is 8 on 404s etc
+            and $? >> 8 == 8;
 
         return $cb ? $cb->($body) : $body;
     }
@@ -439,6 +447,11 @@ HELP
                 $dist_version = $2;
             }
         }
+        elsif ($dist =~ m/^(?:https?|ftp)/) { # more protocols needed?
+            $dist_name = 'perl';
+            # need the period to account for the file extension
+            ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
+        }
         else {
             print <<HELP;
 
@@ -457,14 +470,28 @@ HELP
         my ($dist_path, $dist_tarball, $dist_commit);
 
         unless ($dist_git_describe) {
-            my $mirror = $self->conf->{mirror};
-            my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-            my $html = http_get("http://search.cpan.org/dist/$dist", $header);
+            my $dist_tarball_path;
+            my $dist_tarball_url;
+            my $header;
+            if ($dist =~ m/^(?:https?|ftp)/) {
+                ($dist_tarball) = $dist =~ m{/([^/]*)$};
 
-            ($dist_path, $dist_tarball) =
-                $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+                $dist_tarball_path = "$ROOT/dists/$dist_tarball";
+                $dist_tarball_url  = $dist;
+                $dist = "$dist_name-$dist_version"; # we install it as this name later
+            }
+            else {
+                my $mirror = $self->conf->{mirror};
+                $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+                my $html = http_get("http://search.cpan.org/dist/$dist", $header);
 
-            my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+                ($dist_path, $dist_tarball) =
+                    $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+
+                $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+                $dist_tarball_url  = "http://search.cpan.org${dist_path}"
+            }
+
             if (-f $dist_tarball_path) {
                 print "Use the previously fetched ${dist_tarball}\n";
             }
@@ -472,7 +499,7 @@ HELP
                 print "Fetching $dist as $dist_tarball_path\n";
 
                 http_get(
-                    "http://search.cpan.org${dist_path}",
+                    $dist_tarball_url,
                     $header,
                     sub {
                         my ($body) = @_;

@@ -63,6 +63,8 @@ from. Hit 'q' to cancel the selection.
 
 Build and install the given version of perl.
 
+You can give a URL to a tarball of a Perl release to install that.
+
 
 =item B<install> /path/to/perl/git/checkout/dir
 
