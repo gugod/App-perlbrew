@@ -399,31 +399,29 @@ INSTRUCTION
 
 }
 
-sub run_command_install {
-    my ( $self, $dist, $opts ) = @_;
+sub run_command_install_perlbrew {
+    my $self = shift;
+    require File::Copy;
 
-    unless ($dist) {
-        require File::Copy;
+    my $executable = $0;
 
-        my $executable = $0;
+    unless (File::Spec->file_name_is_absolute($executable)) {
+        $executable = File::Spec->rel2abs($executable);
+    }
 
-        unless (File::Spec->file_name_is_absolute($executable)) {
-            $executable = File::Spec->rel2abs($executable);
-        }
+    my $target = catfile($ROOT, "bin", "perlbrew");
+    if ($executable eq $target) {
+        print "You are already running the installed perlbrew:\n\n    $executable\n";
+        exit;
+    }
 
-        my $target = catfile($ROOT, "bin", "perlbrew");
-        if ($executable eq $target) {
-            print "You are already running the installed perlbrew:\n\n    $executable\n";
-            exit;
-        }
+    mkpath("$ROOT/bin");
+    File::Copy::copy($executable, $target);
+    chmod(0755, $target);
 
-        mkpath("$ROOT/bin");
-        File::Copy::copy($executable, $target);
-        chmod(0755, $target);
+    my $path = $self->path_with_tilde($target);
 
-        my $path = $self->path_with_tilde($target);
-
-        print <<HELP;
+    print <<HELP;
 The perlbrew is installed as:
 
     $path
@@ -432,220 +430,271 @@ You may trash the downloaded $executable from now on.
 
 HELP
 
-        $self->run_command_init();
-        return;
+    $self->run_command_init();
+    return;    
+}
+
+sub do_install_git {
+    my $self = shift;
+    my $dist = shift;
+
+    my $dist_name;
+    my $dist_git_describe;
+    my $dist_version;
+    require Cwd;
+    my $cwd = Cwd::cwd();
+    chdir $dist;
+    if (`git describe` =~ /v((5\.\d+\.\d+(?:-RC\d)?)(-\d+-\w+)?)$/) {
+        $dist_name = 'perl';
+        $dist_git_describe = "v$1";
+        $dist_version = $2;
     }
+    chdir $cwd;
+    my $dist_extracted_dir = File::Spec->rel2abs( $dist );
+    $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
+    return;
+}
+
+sub do_install_url {
+    my $self = shift;
+    my $dist = shift;
+
+    my $dist_name = 'perl';
+    # need the period to account for the file extension
+    my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
+    my ($dist_tarball) = $dist =~ m{/([^/]*)$};
+
+    my $dist_tarball_path = "$ROOT/dists/$dist_tarball";
+    my $dist_tarball_url  = $dist;
+    $dist = "$dist_name-$dist_version"; # we install it as this name later
+
+    print "Fetching $dist as $dist_tarball_path\n";
+    http_get(
+        $dist_tarball_url,
+        undef,
+        sub {
+            my ($body) = @_;
+            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
+            print $BALL $body;
+            close $BALL;
+        }
+    );
+    my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
+    $self->do_install_this($dist_extracted_path, $dist);
+    return;
+}
+
+sub do_extract_tarball {
+    my $self = shift;
+    my $dist_tarball = shift;
+
+    # Was broken on Solaris, where GNU tar is probably
+    # installed as 'gtar' - RT #61042
+    my $tarx =
+        ($^O eq 'solaris' ? 'gtar ' : 'tar ') .
+        ( $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
+    my $extract_command = "cd $ROOT/build; $tarx $dist_tarball";
+    die "Failed to extract $dist_tarball" if system($extract_command);
+    $dist_tarball =~ s{.*/([^/]+)\.tar\.(?:gz|bz2)$}{$1};
+    return "$ROOT/build/$dist_tarball"; # Note that this is incorrect for blead
+}
+
+sub do_install_blead {
+    my $self = shift;
+    my $dist = shift;
+
+    my $dist_name           = 'perl';
+    my $dist_git_describe   = 'blead';
+    my $dist_version        = 'blead';
+
+    # We always blindly overwrite anything that's already there,
+    # because blead is a moving target.
+    my $dist_tarball = 'blead.tar.gz';
+    my $dist_tarball_path = "$ROOT/dists/$dist_tarball";
+    print "Fetching $dist_git_describe as $dist_tarball_path\n";
+    http_get(
+        "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball",
+        undef,
+        sub {
+            my ($body) = @_;
+            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
+            print $BALL $body;
+            close $BALL;
+        }
+    );
+
+    # Returns the wrong extracted dir for blead
+    $self->do_extract_tarball($dist_tarball_path);
+
+    local *DIRH;
+    opendir DIRH, "$ROOT/build" or die "Couldn't open $ROOT/build: $!";
+    my @contents = readdir DIRH;
+    closedir DIRH or warn "Couldn't close $ROOT/build: $!";
+    my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
+    # Use a Schwartzian Transform in case there are lots of dirs that
+    # look like "perl-$SHA1", which is what's inside blead.tar.gz,
+    # so we stat each one only once.
+    @candidates =   map  { $_->[0] }
+                    sort { $b->[1] <=> $a->[1] } # descending
+                    map  { [ $_, (stat("$ROOT/build/$_"))[9] ] }
+                        @candidates;
+    my $dist_extracted_dir = "$ROOT/build/$candidates[0]"; # take the newest one
+    $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
+    return;
+}
+
+sub do_install_release {
+    my $self = shift;
+    my $dist = shift;
+
+    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
+    my $mirror = $self->conf->{mirror};
+    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+    my $html = http_get("http://search.cpan.org/dist/$dist", $header);
+
+    my ($dist_path, $dist_tarball) =
+        $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+    die "ERROR: Cannot find the tarball for $dist\n"
+        if !$dist_path and !$dist_tarball;
+
+    my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+    my $dist_tarball_url  = "http://search.cpan.org${dist_path}";
+
+    if (-f $dist_tarball_path) {
+        print "Use the previously fetched ${dist_tarball}\n";
+    }
+    else {
+        print "Fetching $dist as $dist_tarball_path\n";
+        http_get(
+            $dist_tarball_url,
+            $header,
+            sub {
+                my ($body) = @_;
+                open my $BALL, "> $dist_tarball_path";
+                print $BALL $body;
+                close $BALL;
+            }
+        );
+    }
+    my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
+    $self->do_install_this($dist_extracted_path,$dist_version, $dist);
+    return;
+}
+
+sub run_command_install {
+    my ( $self, $dist, $opts ) = @_;
+    $self->{dist_name} = $dist;
+
+    $self->run_command_install_perlbrew() and return unless $dist;
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
-    my $dist_git_describe;
-
-    if (-d $dist && !$dist_name || !$dist_version) {
+    if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
-            if (`git describe` =~ /v((5\.\d+\.\d+)(-\d+-\w+)?)$/) {
-                $dist_name = "perl";
-                $dist_git_describe = "v$1";
-                $dist_version = $2;
-            }
+            $self->do_install_git($dist);
         }
         elsif ($dist =~ m/^(?:https?|ftp)/) { # more protocols needed?
-            $dist_name = 'perl';
-            # need the period to account for the file extension
-            ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
+            $self->do_install_url($dist);
         }
         elsif ($dist =~ m/(?:perl-)?blead$/) {
-            $dist_name          = 'perl';
-            $dist_git_describe  = 'blead';
-            $dist_version       = 'blead';
+            $self->do_install_blead($dist);
         }
         else {
-            print <<HELP;
-
-The given directory $dist is not a git checkout of perl repository. To
-brew a perl from git, clone it first:
-
-    git clone git://github.com/mirrors/perl.git
-    perlbrew install perl
-
-HELP
-                return;
+            die 'wtf?';
         }
     }
+    elsif ($dist_name eq 'perl') {
+        $self->do_install_release($dist);
+    }
+    else {
+        die 'what happened?!';
+    }
+    die;
+    return;
+}
 
-    if ($dist_name eq 'perl') {
-        my ($dist_path, $dist_tarball, $dist_commit);
+sub do_install_this {
+    my ($self, $dist_extracted_dir, $dist_version, $as) = @_;
 
-        unless ($dist_git_describe) {
-            my $dist_tarball_path;
-            my $dist_tarball_url;
-            my $header;
-            if ($dist =~ m/^(?:https?|ftp)/) {
-                ($dist_tarball) = $dist =~ m{/([^/]*)$};
-
-                $dist_tarball_path = "$ROOT/dists/$dist_tarball";
-                $dist_tarball_url  = $dist;
-                $dist = "$dist_name-$dist_version"; # we install it as this name later
-            }
-            else {
-                my $mirror = $self->conf->{mirror};
-                $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-                my $html = http_get("http://search.cpan.org/dist/$dist", $header);
-
-                ($dist_path, $dist_tarball) =
-                    $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
-
-                $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
-                $dist_tarball_url  = "http://search.cpan.org${dist_path}"
-            }
-
-            if (-f $dist_tarball_path) {
-                print "Use the previously fetched ${dist_tarball}\n";
-            }
-            else {
-                print "Fetching $dist as $dist_tarball_path\n";
-
-                http_get(
-                    $dist_tarball_url,
-                    $header,
-                    sub {
-                        my ($body) = @_;
-                        open my $BALL, "> $dist_tarball_path";
-                        print $BALL $body;
-                        close $BALL;
-                    }
-                );
-            }
-
-        }
-        elsif ($dist_git_describe eq 'blead') {
-            # We always blindly overwrite anything that's already there,
-            # because blead is a moving target.
-            $dist_tarball = 'blead.tar.gz';
-            my $dist_tarball_path = "$ROOT/dists/$dist_tarball";
-            print "Fetching $dist_git_describe as $dist_tarball_path\n";
-            http_get(
-                'http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz',
-                undef,
-                sub {
-                    my ($body) = @_;
-                    open my $BALL, "> $dist_tarball_path";
-                    print $BALL $body;
-                    close $BALL;
-                }
-            );
-        }
-
-        my @d_options = @{ $self->{D} };
-        my @u_options = @{ $self->{U} };
-        my @a_options = @{ $self->{A} };
-        my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
-        unshift @d_options, qq(prefix=$ROOT/perls/$as);
-        push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
-        print "Installing $dist into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
-        print <<INSTALL if $self->{quiet} && !$self->{verbose};
+    my @d_options = @{ $self->{D} };
+    my @u_options = @{ $self->{U} };
+    my @a_options = @{ $self->{A} };
+    $as ||= $self->{as};
+    unshift @d_options, qq(prefix=$ROOT/perls/$as);
+    push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/;
+    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
+    print <<INSTALL if $self->{quiet} && !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
 
   tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
 
 INSTALL
 
-        my ($extract_command, $configure_flags) = ("", "-des");
+    my $configure_flags = '-des';
+    $configure_flags = '-de';
+    # Test via "make test_harness" if available so we'll get
+    # automatic parallel testing via $HARNESS_OPTIONS. The
+    # "test_harness" target was added in 5.7.3, which was the last
+    # development release before 5.8.0.
+    my $test_target = "test";
+    if ($dist_version =~ /^5\.(\d+)\.(\d+)/
+        && ($1 >= 8 || $1 == 7 && $2 == 3)) {
+        $test_target = "test_harness";
+    }
+    local $ENV{TEST_JOBS}=$self->{j}
+      if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-        my $dist_extracted_dir;
-        if ($dist_git_describe and $dist_git_describe ne 'blead') {
-            $extract_command = "echo 'Building perl in the git checkout dir'";
-            $dist_extracted_dir = File::Spec->rel2abs( $dist );
-        } else {
-            if ($dist_git_describe eq 'blead') {
-                local *DIRH;
-                opendir DIRH, "$ROOT/build" or die "Couldn't open $ROOT/build: $!";
-                my @contents = readdir DIRH;
-                closedir DIRH or warn "Couldn't close $ROOT/build: $!";
-                my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
-                # Use a Schwartzian Transform in case there are lots of dirs that
-                # look like "perl-$SHA1", which is what's inside blead.tar.gz,
-                # so we stat each one only once.
-                @candidates =   map  { $_->[0] }
-                                sort { $b->[1] <=> $a->[1] } # descending
-                                map  { [ $_, (stat("$ROOT/build/$_"))[9] ] }
-                                    @candidates;
-                $dist_extracted_dir = "$ROOT/build/$candidates[0]"; # take the newest one
-            }
-            else {
-                $dist_extracted_dir = "$ROOT/build/${dist}";
-            }
+    my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
+    my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
+    @install    = join " && ", @install unless($self->{force});
 
-            # Was broken on Solaris, where GNU tar is probably
-            # installed as 'gtar' - RT #61042
-            my $tarx = ($^O eq 'solaris' ? 'gtar ' : 'tar ') . ( $dist_tarball =~ /bz2/ ? 'xjf' : 'xzf' );
-            $extract_command = "cd $ROOT/build; $tarx $ROOT/dists/${dist_tarball}";
-            $configure_flags = '-de';
+    my $cmd = join ";",
+    (
+        "cd $dist_extracted_dir",
+        "rm -f config.sh Policy.sh",
+        "patchperl",
+        "sh Configure $configure_flags " .
+            join( ' ',
+                ( map { qq{'-D$_'} } @d_options ),
+                ( map { qq{'-U$_'} } @u_options ),
+                ( map { qq{'-A$_'} } @a_options ),
+            ),
+        $dist_version =~ /^5\.(\d+)\.(\d+)/
+            && ($1 < 8 || $1 == 8 && $2 < 9)
+                ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
+                : (),
+        $make,
+        @install
+    );
+    $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
+        if ( $self->{quiet} && !$self->{verbose} );
+
+
+    print $cmd, "\n";
+
+    delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
+
+    if (!system($cmd)) {
+        unless (-e "$ROOT/perls/$as/bin/perl") {
+            $self->run_command_symlink_executables($as);
         }
 
-        # Test via "make test_harness" if available so we'll get
-        # automatic parallel testing via $HARNESS_OPTIONS. The
-        # "test_harness" target was added in 5.7.3, which was the last
-        # development release before 5.8.0.
-        my $test_target = "test";
-        if ($dist_version =~ /^5\.(\d+)\.(\d+)/
-            && ($1 >= 8 || $1 == 7 && $2 == 3)) {
-            $test_target = "test_harness";
-        }
-        local $ENV{TEST_JOBS}=$self->{j}
-          if $test_target eq "test_harness" && ($self->{j}||1) > 1;
-
-        my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
-        my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
-        @install    = join " && ", @install unless($self->{force});
-
-        my $cmd = join ";",
-        (
-            $extract_command,
-            "cd $dist_extracted_dir",
-            "rm -f config.sh Policy.sh",
-            "patchperl",
-            "sh Configure $configure_flags " .
-                join( ' ',
-                    ( map { qq{'-D$_'} } @d_options ),
-                    ( map { qq{'-U$_'} } @u_options ),
-                    ( map { qq{'-A$_'} } @a_options ),
-                ),
-            $dist_version =~ /^5\.(\d+)\.(\d+)/
-                && ($1 < 8 || $1 == 8 && $2 < 9)
-                    ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
-                    : (),
-            $make,
-            @install
-        );
-        $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
-            if ( $self->{quiet} && !$self->{verbose} );
-
-
-        print $cmd, "\n";
-
-        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
-
-        if (!system($cmd)) {
-            unless (-e "$ROOT/perls/$as/bin/perl") {
-                $self->run_command_symlink_executables($as);
-            }
-
-            print <<SUCCESS;
-Installed $dist as $as successfully. Run the following command to switch to it.
+        print <<SUCCESS;
+Installed $dist_extracted_dir as $as successfully. Run the following command to switch to it.
 
   perlbrew switch $as
 
 SUCCESS
-        }
-        else {
-            print <<FAIL;
-Installing $dist failed. See $self->{log_file} to see why.
+    }
+    else {
+        print <<FAIL;
+Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
 If you want to force install the distribution, try:
 
-  perlbrew --force install $dist_name
+  perlbrew --force install $self->{dist_name}
 
 FAIL
-        }
     }
+    return;
 }
 
 sub format_perl_version {
