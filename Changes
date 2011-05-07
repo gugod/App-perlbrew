@@ -1,5 +1,5 @@
 - doherty++ FIX: stop when user specified an invalid perl version that cannot be found on cpan.
-- doherty++ specialized version installation: perlbrew install perl-blead
+- doherty++ specialized version installation: perlbrew install perl-blead / <URL>
 - am0c++ FIX: `perlbrew intsall /path/to/git/src/dir`
 
 0.19:
