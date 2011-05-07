@@ -1,0 +1,210 @@
+=head1 NAME
+
+File::Path::Tiny - recursive versions of mkdir() and rmdir() without as much overhead as File::Path
+
+=head1 VERSION
+
+This document describes File::Path::Tiny version 0.1
+
+=head1 SYNOPSIS
+
+    use File::Path::Tiny;
+
+    if(!File::Path::Tiny:mk($path)) {
+        die "Could not make path '$path': $!";
+    }
+    
+    if(!File::Path::Tiny:rm($path)) {
+        die "Could not remove path '$path': $!";
+    }
+
+=head1 DESCRIPTION
+
+The goal here is simply to provide recursive versions of L<mkdir>() and L<rmdir>() with as little code and overhead as possible.
+
+This module is in no way meant to derogate L<File::Path> and is in no way an endorsement to go out and replace all use of L<File::Path> with L<File::Path::Tiny>.
+
+L<File::Path> is very good at what it does but there's simply a lot happening that we can do without much of the time.
+
+Here are some things L<File::Path> has/does that this module attempts to do without:
+
+=over 4
+
+=item * multiple interfaces
+
+Backwards compatibility brings in a lot of code and logic that we don't need from here on out.
+
+=item * chdir's
+
+It does a ton of chdir's which could leave you somewhere you're not planning on being and requires much more overhead to do.
+
+=item * can croak not allowing you to detect and handle failure
+
+Just let me handle errors how I want. Don't make my entire app die or have to wrap it in an eval
+
+=item * A well intentioned output system
+
+Just let me do the output how I want. (Nothing, As HTML, print to a filehandle, etc...)
+
+=item * A well intentioned and experimental (IE subject to change) error handling system.
+
+Just keep it simple and detect failure via a boolean check and do what I want with the error. See L</"How can I make/remove multiple paths?">
+
+=item * According to its POD, removing a tree is apparently not safe unless you tell it to be with the 'safe' or 'keep_root' attributes.
+
+Seems like that should just happen, I don't want to worry about accidentally removing / when I pass it /tmp
+
+=back
+
+=head1 INTERFACE 
+
+Nothing in exported or exportable, that helps keep it '::Tiny'.
+
+=head2 File::Path::Tiny::mk()
+
+Takes a single path (like L<mkdir>()) to recursively create and, optionally, a mask (like L<mkdir>()) for all subsequent L<mkdir>() calls.
+
+Mask defaults to 0700 (also like L<mkdir>())
+
+Returns false if it could not be made, true otherwise (returns '2' if it is -d already)
+
+It is recursive in the sense that given foo/bar/baz as the path to create all 3 will be created if necessary.
+
+=head2 File::Path::Tiny::rm()
+
+Takes a single path (like L<rmdir>()) to recursively empty and remove.
+
+Returns false if it could not be emptied or removed, true otherwise. (returns '2' if it is !-d already)
+
+It is recursive in the sense that given /foo/bar/baz as the path to remove it will recursively empty 'baz' and then remove it from /foo/bar.
+
+Its parents, /, /foo, and /foo/bar are *not* touched.
+
+=head1 DIAGNOSTICS
+
+Throws no warnings or errors of its own
+
+If the functions ever return false, $! will have been set either explicitly or by the L<mkdir>(), L<rmdir>(), L<unlink>(), or L<opendir>() that ultimately returned false.
+
+=head1 MISC
+
+=head2 How can I make/remove multiple paths?
+
+For simplicity sake && ::Tiny status this module must be very very very simple.
+
+That said it is also very simple to do muliple paths:
+
+    for my $path (@paths) {
+        File::Path::Tiny::::mk($path) or _my_handle_failed_mk($path, $!);    
+    }
+    
+    for my $path (@paths) {
+        File::Path::Tiny::::rm($path) or _my_handle_failed_rm($path, $!);    
+    }
+
+That also lets you keep going or short circuit it or handle errors however you like:
+
+     PATH:
+     for my $path qw(foo/bar bar/rat) {
+         if (!File::Path::Tiny::mk($path)) {
+             print "problem unlinking '$path': $!\n";
+             last PATH;
+         }
+         else {
+             print "No error encountered with '$path'\n" 
+         }
+     }
+
+=head2 About the '::Tiny' status
+
+See L<Acme::Tiny> for information on the ::Tiny suffix.
+
+  #3 is almost there (< 1/5th +/-), a bit more trimming and I think we'll have it!
+  #8 is N/A since part of the "sub set" is to do single paths like their non-recursive core counterparts and there are so many ways to invoke it with different consequences 
+
+   [ -- RSS Memory -- ]
+    Baseline perl 1168
+    File::Path 1808 (+640)
+    File::Path::Tiny 1288 (+120)
+
+Even though "time" isn't really a ::Tiny factor, it does improve loading a bit:
+
+   [ -- time -- ]
+    Baseline perl
+      real	0m0.007s
+      user	0m0.002s
+      sys	0m0.004s
+    
+    File::Path
+      real	0m0.017s
+      user	0m0.011s
+      sys	0m0.005s
+
+    File::Path::Tiny
+      real	0m0.007s
+      user	0m0.003s
+      sys	0m0.004s
+
+As time allows and more tests are added I'll try to include more comprehensive benchmark results.
+
+=head2 How do I make sure the path is safe to create or remove?
+
+Of course the answer depends on what you mean by "safe". 
+
+This module makes no assumptions on interpreting the "safeness" of a path, just like L<mkdir>() and L<rmdir>().
+
+Also like  L<mkdir>() and L<rmdir>() typically you'll find that filesystem permissions are a pretty reliable tool (of course if the code will be run as root you would want to setuid first...)
+
+You might use Cwd::abs_path() to sanitize a path before sending it to be made or removed.
+
+Even after that it might not be "safe" so you'll need to discern what your particular definition of "safe" is and take appropriate action.
+
+=head1 DEPENDENCIES
+
+L<File::Spec> of course but its only loaded if needed
+
+=head1 INCOMPATIBILITIES
+
+None reported.
+
+=head1 BUGS AND LIMITATIONS
+
+No bugs have been reported.
+
+Please report any bugs or feature requests to
+C<bug-file-path-tiny@rt.cpan.org>, or through the web interface at
+L<http://rt.cpan.org>.
+
+=head1 AUTHOR
+
+Daniel Muey  C<< <http://drmuey.com/cpan_contact.pl> >>
+
+=head1 LICENCE AND COPYRIGHT
+
+Copyright (c) 2008, Daniel Muey C<< <http://drmuey.com/cpan_contact.pl> >>. All rights reserved.
+
+This module is free software; you can redistribute it and/or
+modify it under the same terms as Perl itself. See L<perlartistic>.
+
+=head1 DISCLAIMER OF WARRANTY
+
+BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
+FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
+OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
+PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
+EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
+ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
+YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
+NECESSARY SERVICING, REPAIR, OR CORRECTION.
+
+IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
+WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
+REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
+LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
+OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
+THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
+RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
+FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
+SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGES.
