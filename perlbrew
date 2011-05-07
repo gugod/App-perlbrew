@@ -164,7 +164,8 @@ sub uniq(@) {
 
         if (! @command) {
             my @commands = (
-                [qw( curl --silent --location )],
+                # curl's --fail option makes the exit code meaningful
+                [qw( curl --silent --location --fail )],
                 [qw( wget --no-check-certificate --quiet -O - )],
             );
             for my $command (@commands) {
@@ -180,9 +181,16 @@ sub uniq(@) {
 
         open my $fh, '-|', @command, $url
             or die "open() for '@command $url': $!";
+
         local $/;
         my $body = <$fh>;
         close $fh;
+        die 'Page not retrieved; HTTP error code 400 or above.'
+            if $command[0] eq 'curl' # Exit code is 22 on 404s etc
+            and $? >> 8 == 22; # exit code is packed into $?; see perlvar
+        die 'Server issued an error response.'
+            if $command[0] eq 'wget' # Exit code is 8 on 404s etc
+            and $? >> 8 == 8;
 
         return $cb ? $cb->($body) : $body;
     }
