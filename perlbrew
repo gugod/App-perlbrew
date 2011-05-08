@@ -72,12 +72,10 @@ perlbrew () {
             ;;
 
         (switch)
-              # command perlbrew $short_option $*
-              # exit_status=$?
               if [[ -n "$2" ]] ; then
                   if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                       perlbrew $short_option use $2
-                      __perlbrew_reinit
+                      __perlbrew_reinit $2
                   fi
               fi
               ;;
@@ -384,6 +382,8 @@ RC
 
     system("$0 env @{[ $self->current_perl ]}> ${HOME}/.perlbrew/init");
 
+    $self->run_command_symlink_executables;
+
     my $root_dir = $self->path_with_tilde($ROOT);
 
     print <<INSTRUCTION;
@@ -435,7 +435,7 @@ You may trash the downloaded $executable from now on.
 HELP
 
     $self->run_command_init();
-    return;    
+    return;
 }
 
 sub do_install_git {
@@ -589,7 +589,10 @@ sub run_command_install {
     my ( $self, $dist, $opts ) = @_;
     $self->{dist_name} = $dist;
 
-    $self->run_command_install_perlbrew() and return unless $dist;
+    unless ($dist) {
+        $self->run_command_install_perlbrew();
+        return
+    }
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
@@ -909,13 +912,17 @@ sub run_command_env {
 }
 
 sub run_command_symlink_executables {
-    my($self, $perl) = @_;
+    my($self, @perls) = @_;
 
-    return "" unless $perl;
+    unless (@perls) {
+        @perls = map { m{/([^/]+)$} } grep { -d $_ && ! -l $_ } <$ROOT/perls/*>;
+    }
 
-    for my $executable (<$ROOT/perls/$perl/bin/*>) {
-        my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-        system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
+    for my $perl (@perls) {
+        for my $executable (<$ROOT/perls/$perl/bin/*>) {
+            my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
+            system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
+        }
     }
 }
 
