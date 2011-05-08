@@ -74,6 +74,9 @@ perlbrew () {
                   if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                       perlbrew $short_option use $2
                       __perlbrew_reinit $2
+                  else
+                      echo "$2 is not installed" >&2
+                      exit_status=1
                   fi
               fi
               ;;
@@ -96,6 +99,17 @@ perlbrew () {
 
 RC
 
+}
+
+sub CSHRC_CONTENT {
+    return <<'CSHRC';
+if ( -f $HOME/.perlbrew/init ) then
+    source $HOME/.perlbrew/init
+endif
+
+setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
+setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+CSHRC
 }
 
 # File::Path::Tiny::mk
@@ -364,10 +378,11 @@ sub run_command_init {
 
     open BASHRC, "> $ROOT/etc/bashrc";
     print BASHRC BASHRC_CONTENT;
+    close BASHRC;
 
-    system <<RC;
-echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
-RC
+    open CSHRC, "> $ROOT/etc/cshrc";
+    print CSHRC CSHRC_CONTENT;
+    close CSHRC;
 
     my ( $shrc, $yourshrc );
     if ( $self->is_shell_csh) {
