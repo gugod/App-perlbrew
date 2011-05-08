@@ -21,6 +21,7 @@ perlbrew - Perl Environment manager.
         install        Install perl
         list           List installed perls
         use            Use the specified perl in current shell
+        available      List perls available to install
         switch         Permanently use the specified perl as default
         mirror         Pick a preferred mirror site
         off            Permanently turn off perlbrew
