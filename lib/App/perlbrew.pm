@@ -841,7 +841,9 @@ sub run_command_mirror {
         last if $line =~ m{</select>};
         if ( $line =~ m{<option value="(.+?)">(.+?)</option>} ) {
             my $url  = $1;
-            (my $name = $2) =~ s/&#(\d+);/chr $1/seg;
+            my $name = $2;
+            $name =~ s/&#(\d+);/chr $1/seg;
+            $url =~ s/&#(\d+);/chr $1/seg;
             push @mirrors, { url => $url, name => $name };
         }
     }
@@ -851,7 +853,9 @@ sub run_command_mirror {
     my $max = @mirrors;
     my $id  = 0;
     while ( @mirrors ) {
-        printf "[% 3d] %s\n", ++$id, $_->{name} for splice(@mirrors,0,20);
+        my @page = splice(@mirrors,0,20);
+        my $base = $id;
+        printf "[% 3d] %s\n", ++$id, $_->{name} for @page;
         my $remaining = $max - $id;
         my $ask = "Select a mirror by number or press enter to see the rest "
                 . "($remaining more) [q to quit, m for manual entry]";
@@ -868,7 +872,7 @@ sub run_command_mirror {
             die "Invalid answer: must be 'q', 'm' or a number\n";
         }
         elsif (1 <= $val and $val <= $max) {
-            $select = $mirrors[ $val - 1 ];
+            $select = $page[ $val - 1 - $base ];
             last;
         }
         else {
