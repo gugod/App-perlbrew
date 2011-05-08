@@ -387,6 +387,7 @@ sub run_command_init {
     my ( $shrc, $yourshrc );
     if ( $self->is_shell_csh) {
         $shrc     = 'cshrc';
+        $self->env("SHELL") =~ m/(t?csh)/;
         $yourshrc = $1 . "rc";
     }
     else {
@@ -810,10 +811,7 @@ sub run_command_switch {
     my ( $self, $dist, $alias ) = @_;
 
     unless ( $dist ) {
-        # If no args were given to switch, show the current perl.
-        my $current = readlink ( -d "$ROOT/perls/current"
-                                 ? "$ROOT/perls/current"
-                                 : "$ROOT/bin/perl" );
+        my $current = $self->current_perl;
         printf "Currently switched %s\n",
             ( $current ? "to $current" : 'off' );
         return;
@@ -835,10 +833,13 @@ sub run_command_switch {
     }
 
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
-    chdir "$ROOT/perls";
-    unlink "current";
-    symlink $dist, "current";
-    print "Switched to $vers\n";
+
+    local $ENV{PERLBREW_PERL} = $dist;
+    my $HOME = $self->env('HOME');
+
+    system("$0 env $dist > ${HOME}/.perlbrew/init");
+
+    print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
 sub run_command_off {
