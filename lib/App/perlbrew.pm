@@ -103,8 +103,10 @@ RC
 
 sub CSHRC_CONTENT {
     return <<'CSHRC';
-if ( -f $HOME/.perlbrew/init ) then
-    source $HOME/.perlbrew/init
+if ( $?PERLBREW_SKIP_INIT == 0 ) then
+    if ( -f $HOME/.perlbrew/init ) then
+        source $HOME/.perlbrew/init
+    endif
 endif
 
 setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
@@ -790,21 +792,19 @@ sub run_command_list {
 
 sub run_command_use {
     my $self = shift;
+    my $perl = shift;
 
-    if ($self->is_shell_csh) {
-        my $shell = $self->env('SHELL');
-        print "You shell '$shell' does not support the 'use' command at this time\n";
-        exit(1);
+    my $shell = $self->env('SHELL');
+    my %env = ($self->perlbrew_env($perl), PERLBREW_SKIP_INIT => 1);
+
+    my $command = "env ";
+    while (my ($k, $v) = each(%env)) {
+        $command .= "$k=$v ";
     }
+    $command .= " $shell";
 
-    print <<WARNING;
-Your perlbrew setup is not complete!
-
-Please make sure you run `perlbrew init` first and follow the
-instructions, specially the bits about changing your .bashrc
-and exiting the current terminal and starting a new one.
-
-WARNING
+    print "\nA sub-shell is launched with $perl as the activated perl. Run 'exit' to finish it.\n\n";
+    exec($command);
 }
 
 sub run_command_switch {
