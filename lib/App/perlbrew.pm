@@ -978,19 +978,19 @@ sub _save_conf {
 
 sub _get_conf {
     my($self) = @_;
-    print "Attempting to load conf from $CONF_FILE\n";
+
     if ( ! -e $CONF_FILE ) {
         local $CONF = {} if ! $CONF;
         $self->_save_conf;
     }
 
-    open my $FH, '<', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!";
+    open my $FH, '<', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!\n";
     my $raw = do { local $/; my $rv = <$FH>; $rv };
     close $FH;
 
     my $rv = eval $raw;
     if ( $@ ) {
-        warn "Error loading conf: $@";
+        warn "Error loading conf: $@\n";
         $CONF = {};
         return;
     }
