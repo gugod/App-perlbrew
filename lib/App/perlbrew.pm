@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.19";
+our $VERSION = "0.20";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
