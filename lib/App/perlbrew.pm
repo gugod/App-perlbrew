@@ -848,11 +848,11 @@ sub run_command_switch {
 }
 
 sub run_command_off {
-    local $_ = "$ROOT/perls/current";
-    unlink if -l;
-    for my $executable (<$ROOT/bin/*>) {
-        unlink($executable) if -l $executable;
-    }
+    my $self = shift;
+    my $HOME = $self->env("HOME");
+    system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
+
+    print "\nperlbrew is turned off.\n";
 }
 
 sub run_command_mirror {
