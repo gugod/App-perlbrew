@@ -534,7 +534,7 @@ INSTALL
             $extract_command = "echo 'Building perl in the git checkout dir'";
             $dist_extracted_dir = File::Spec->rel2abs( $dist );
         } else {
-            if ($dist_git_describe eq 'blead') {
+            if ($dist_git_describe and $dist_git_describe eq 'blead') {
                 local *DIRH;
                 opendir DIRH, "$ROOT/build" or die "Couldn't open $ROOT/build: $!";
                 my @contents = readdir DIRH;
