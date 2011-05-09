@@ -1,3 +1,9 @@
+0.20:
+- For more detail release note, see https://github.com/gugod/App-perlbrew/wiki/Relesae-0.20
+- doherty++ FIX: stop when user specified an invalid perl version that cannot be found on cpan.
+- doherty++ specialized version installation: perlbrew install perl-blead / <URL>
+- am0c++ FIX: `perlbrew intsall /path/to/git/src/dir`
+
 0.19:
 - Auto run 'perlbrew init' after an install (or upgrade)
 - Symlink dev versions of executables. For example,'perl5.13.11' to 'perl', 'prove5.13.11' to 'prove'.

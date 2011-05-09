@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.19";
+our $VERSION = "0.20";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -70,11 +70,20 @@ perlbrew () {
             ;;
 
         (switch)
-              command perlbrew $short_option $*
-              exit_status=$?
-
               if [[ -n "$2" ]] ; then
-                  __perlbrew_reinit
+                  if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
+                      perlbrew $short_option use $2
+                      __perlbrew_reinit $2
+                  else
+                      echo "$2 is not installed" >&2
+                      exit_status=1
+                  fi
+              else
+                if [[ -z "$PERLBREW_PERL" ]] ; then
+                    echo "No version in use; defaulting to system"
+                else
+                    echo "Using $PERLBREW_PERL version"
+                fi
               fi
               ;;
 
@@ -96,6 +105,19 @@ perlbrew () {
 
 RC
 
+}
+
+sub CSHRC_CONTENT {
+    return <<'CSHRC';
+if ( $?PERLBREW_SKIP_INIT == 0 ) then
+    if ( -f $HOME/.perlbrew/init ) then
+        source $HOME/.perlbrew/init
+    endif
+endif
+
+setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
+setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+CSHRC
 }
 
 # File::Path::Tiny::mk
@@ -162,7 +184,8 @@ sub uniq(@) {
 
         if (! @command) {
             my @commands = (
-                [qw( curl --silent --location )],
+                # curl's --fail option makes the exit code meaningful
+                [qw( curl --silent --location --fail )],
                 [qw( wget --no-check-certificate --quiet -O - )],
             );
             for my $command (@commands) {
@@ -178,9 +201,16 @@ sub uniq(@) {
 
         open my $fh, '-|', @command, $url
             or die "open() for '@command $url': $!";
+
         local $/;
         my $body = <$fh>;
         close $fh;
+        die 'Page not retrieved; HTTP error code 400 or above.'
+            if $command[0] eq 'curl' # Exit code is 22 on 404s etc
+            and $? >> 8 == 22; # exit code is packed into $?; see perlvar
+        die 'Server issued an error response.'
+            if $command[0] eq 'wget' # Exit code is 8 on 404s etc
+            and $? >> 8 == 8;
 
         return $cb ? $cb->($body) : $body;
     }
@@ -356,14 +386,16 @@ sub run_command_init {
 
     open BASHRC, "> $ROOT/etc/bashrc";
     print BASHRC BASHRC_CONTENT;
+    close BASHRC;
 
-    system <<RC;
-echo 'setenv PATH $ROOT/bin:$ROOT/perls/current/bin:\$PATH' > $ROOT/etc/cshrc
-RC
+    open CSHRC, "> $ROOT/etc/cshrc";
+    print CSHRC CSHRC_CONTENT;
+    close CSHRC;
 
     my ( $shrc, $yourshrc );
     if ( $self->is_shell_csh) {
         $shrc     = 'cshrc';
+        $self->env("SHELL") =~ m/(t?csh)/;
         $yourshrc = $1 . "rc";
     }
     else {
@@ -371,6 +403,8 @@ RC
     }
 
     system("$0 env @{[ $self->current_perl ]}> ${HOME}/.perlbrew/init");
+
+    $self->run_command_symlink_executables;
 
     my $root_dir = $self->path_with_tilde($ROOT);
 
@@ -384,38 +418,36 @@ new shell, perlbrew should be up and fully functional from there:
 
     source $root_dir/etc/${shrc}
 
-For further instructions, simply run `perlbrew` to see de help message.
+For further instructions, simply run `perlbrew` to see the help message.
 
 Enjoy perlbrew at \$HOME!!
 INSTRUCTION
 
 }
 
-sub run_command_install {
-    my ( $self, $dist, $opts ) = @_;
+sub run_command_install_perlbrew {
+    my $self = shift;
+    require File::Copy;
 
-    unless ($dist) {
-        require File::Copy;
+    my $executable = $0;
 
-        my $executable = $0;
+    unless (File::Spec->file_name_is_absolute($executable)) {
+        $executable = File::Spec->rel2abs($executable);
+    }
 
-        unless (File::Spec->file_name_is_absolute($executable)) {
-            $executable = File::Spec->rel2abs($executable);
-        }
+    my $target = catfile($ROOT, "bin", "perlbrew");
+    if ($executable eq $target) {
+        print "You are already running the installed perlbrew:\n\n    $executable\n";
+        exit;
+    }
 
-        my $target = catfile($ROOT, "bin", "perlbrew");
-        if ($executable eq $target) {
-            print "You are already running the installed perlbrew:\n\n    $executable\n";
-            exit;
-        }
+    mkpath("$ROOT/bin");
+    File::Copy::copy($executable, $target);
+    chmod(0755, $target);
 
-        mkpath("$ROOT/bin");
-        File::Copy::copy($executable, $target);
-        chmod(0755, $target);
+    my $path = $self->path_with_tilde($target);
 
-        my $path = $self->path_with_tilde($target);
-
-        print <<HELP;
+    print <<HELP;
 The perlbrew is installed as:
 
     $path
@@ -424,162 +456,276 @@ You may trash the downloaded $executable from now on.
 
 HELP
 
-        $self->run_command_init();
-        return;
+    $self->run_command_init();
+    return;
+}
+
+sub do_install_git {
+    my $self = shift;
+    my $dist = shift;
+
+    my $dist_name;
+    my $dist_git_describe;
+    my $dist_version;
+    require Cwd;
+    my $cwd = Cwd::cwd();
+    chdir $dist;
+    if (`git describe` =~ /v((5\.\d+\.\d+(?:-RC\d)?)(-\d+-\w+)?)$/) {
+        $dist_name = 'perl';
+        $dist_git_describe = "v$1";
+        $dist_version = $2;
     }
+    chdir $cwd;
+    my $dist_extracted_dir = File::Spec->rel2abs( $dist );
+    $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
+    return;
+}
+
+sub do_install_url {
+    my $self = shift;
+    my $dist = shift;
+
+    my $dist_name = 'perl';
+    # need the period to account for the file extension
+    my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
+    my ($dist_tarball) = $dist =~ m{/([^/]*)$};
+
+    my $dist_tarball_path = "$ROOT/dists/$dist_tarball";
+    my $dist_tarball_url  = $dist;
+    $dist = "$dist_name-$dist_version"; # we install it as this name later
+
+    print "Fetching $dist as $dist_tarball_path\n";
+    http_get(
+        $dist_tarball_url,
+        undef,
+        sub {
+            my ($body) = @_;
+            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
+            print $BALL $body;
+            close $BALL;
+        }
+    );
+    my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
+    $self->do_install_this($dist_extracted_path, $dist);
+    return;
+}
+
+sub do_extract_tarball {
+    my $self = shift;
+    my $dist_tarball = shift;
+
+    # Was broken on Solaris, where GNU tar is probably
+    # installed as 'gtar' - RT #61042
+    my $tarx =
+        ($^O eq 'solaris' ? 'gtar ' : 'tar ') .
+        ( $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
+    my $extract_command = "cd $ROOT/build; $tarx $dist_tarball";
+    die "Failed to extract $dist_tarball" if system($extract_command);
+    $dist_tarball =~ s{.*/([^/]+)\.tar\.(?:gz|bz2)$}{$1};
+    return "$ROOT/build/$dist_tarball"; # Note that this is incorrect for blead
+}
+
+sub do_install_blead {
+    my $self = shift;
+    my $dist = shift;
+
+    my $dist_name           = 'perl';
+    my $dist_git_describe   = 'blead';
+    my $dist_version        = 'blead';
+
+    # We always blindly overwrite anything that's already there,
+    # because blead is a moving target.
+    my $dist_tarball = 'blead.tar.gz';
+    my $dist_tarball_path = "$ROOT/dists/$dist_tarball";
+    print "Fetching $dist_git_describe as $dist_tarball_path\n";
+    http_get(
+        "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball",
+        undef,
+        sub {
+            my ($body) = @_;
+            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
+            print $BALL $body;
+            close $BALL;
+        }
+    );
+
+    # Returns the wrong extracted dir for blead
+    $self->do_extract_tarball($dist_tarball_path);
+
+    local *DIRH;
+    opendir DIRH, "$ROOT/build" or die "Couldn't open $ROOT/build: $!";
+    my @contents = readdir DIRH;
+    closedir DIRH or warn "Couldn't close $ROOT/build: $!";
+    my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
+    # Use a Schwartzian Transform in case there are lots of dirs that
+    # look like "perl-$SHA1", which is what's inside blead.tar.gz,
+    # so we stat each one only once.
+    @candidates =   map  { $_->[0] }
+                    sort { $b->[1] <=> $a->[1] } # descending
+                    map  { [ $_, (stat("$ROOT/build/$_"))[9] ] }
+                        @candidates;
+    my $dist_extracted_dir = "$ROOT/build/$candidates[0]"; # take the newest one
+    $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
+    return;
+}
+
+sub do_install_release {
+    my $self = shift;
+    my $dist = shift;
+
+    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
+    my $mirror = $self->conf->{mirror};
+    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+    my $html = http_get("http://search.cpan.org/dist/$dist", $header);
+
+    my ($dist_path, $dist_tarball) =
+        $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
+    die "ERROR: Cannot find the tarball for $dist\n"
+        if !$dist_path and !$dist_tarball;
+
+    my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
+    my $dist_tarball_url  = "http://search.cpan.org${dist_path}";
+
+    if (-f $dist_tarball_path) {
+        print "Use the previously fetched ${dist_tarball}\n";
+    }
+    else {
+        print "Fetching $dist as $dist_tarball_path\n";
+        http_get(
+            $dist_tarball_url,
+            $header,
+            sub {
+                my ($body) = @_;
+                open my $BALL, "> $dist_tarball_path";
+                print $BALL $body;
+                close $BALL;
+            }
+        );
+    }
+    my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
+    $self->do_install_this($dist_extracted_path,$dist_version, $dist);
+    return;
+}
+
+sub run_command_install {
+    my ( $self, $dist, $opts ) = @_;
+    $self->{dist_name} = $dist;
+
+    unless ($dist) {
+        $self->run_command_install_perlbrew();
+        return
+    }
+
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the insturction of install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
-    my $dist_git_describe;
-
-    if (-d $dist && !$dist_name || !$dist_version) {
+    if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
-            if (`git describe` =~ /v((5\.\d+\.\d+)(-\d+-\w+)?)$/) {
-                $dist_name = "perl";
-                $dist_git_describe = "v$1";
-                $dist_version = $2;
-            }
+            $self->do_install_git($dist);
+        }
+        elsif ($dist =~ m/^(?:https?|ftp)/) { # more protocols needed?
+            $self->do_install_url($dist);
+        }
+        elsif ($dist =~ m/(?:perl-)?blead$/) {
+            $self->do_install_blead($dist);
         }
         else {
-            print <<HELP;
-
-The given directory $dist is not a git checkout of perl repository. To
-brew a perl from git, clone it first:
-
-    git clone git://github.com/mirrors/perl.git
-    perlbrew install perl
-
-HELP
-                return;
+            print $help_message;
         }
     }
+    elsif ($dist_name eq 'perl') {
+        $self->do_install_release($dist);
+    }
+    else {
+        print $help_message;
+    }
 
-    if ($dist_name eq 'perl') {
-        my ($dist_path, $dist_tarball, $dist_commit);
+    return;
+}
 
-        unless ($dist_git_describe) {
-            my $mirror = $self->conf->{mirror};
-            my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-            my $html = http_get("http://search.cpan.org/dist/$dist", $header);
+sub do_install_this {
+    my ($self, $dist_extracted_dir, $dist_version, $as) = @_;
 
-            ($dist_path, $dist_tarball) =
-                $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
-
-            my $dist_tarball_path = "${ROOT}/dists/${dist_tarball}";
-            if (-f $dist_tarball_path) {
-                print "Use the previously fetched ${dist_tarball}\n";
-            }
-            else {
-                print "Fetching $dist as $dist_tarball_path\n";
-
-                http_get(
-                    "http://search.cpan.org${dist_path}",
-                    $header,
-                    sub {
-                        my ($body) = @_;
-                        open my $BALL, "> $dist_tarball_path";
-                        print $BALL $body;
-                        close $BALL;
-                    }
-                );
-            }
-
-        }
-
-        my @d_options = @{ $self->{D} };
-        my @u_options = @{ $self->{U} };
-        my @a_options = @{ $self->{A} };
-        my $as = $self->{as} || ($dist_git_describe ? "perl-$dist_git_describe" : $dist);
-        unshift @d_options, qq(prefix=$ROOT/perls/$as);
-        push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/ ? "-Dusedevel" : "";
-        print "Installing $dist into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
-        print <<INSTALL if $self->{quiet} && !$self->{verbose};
+    my @d_options = @{ $self->{D} };
+    my @u_options = @{ $self->{U} };
+    my @a_options = @{ $self->{A} };
+    $as ||= $self->{as};
+    unshift @d_options, qq(prefix=$ROOT/perls/$as);
+    push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/;
+    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
+    print <<INSTALL if $self->{quiet} && !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
 
   tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
 
 INSTALL
 
-        my ($extract_command, $configure_flags) = ("", "-des");
+    my $configure_flags = '-des';
+    $configure_flags = '-de';
+    # Test via "make test_harness" if available so we'll get
+    # automatic parallel testing via $HARNESS_OPTIONS. The
+    # "test_harness" target was added in 5.7.3, which was the last
+    # development release before 5.8.0.
+    my $test_target = "test";
+    if ($dist_version =~ /^5\.(\d+)\.(\d+)/
+        && ($1 >= 8 || $1 == 7 && $2 == 3)) {
+        $test_target = "test_harness";
+    }
+    local $ENV{TEST_JOBS}=$self->{j}
+      if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-        my $dist_extracted_dir;
-        if ($dist_git_describe) {
-            $extract_command = "echo 'Building perl in the git checkout dir'";
-            $dist_extracted_dir = File::Spec->rel2abs( $dist );
-        } else {
-            $dist_extracted_dir = "$ROOT/build/${dist}";
+    my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
+    my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
+    @install    = join " && ", @install unless($self->{force});
 
-            # Was broken on Solaris, where GNU tar is probably
-            # installed as 'gtar' - RT #61042
-            my $tarx = ($^O eq 'solaris' ? 'gtar ' : 'tar ') . ( $dist_tarball =~ /bz2/ ? 'xjf' : 'xzf' );
-            $extract_command = "cd $ROOT/build; $tarx $ROOT/dists/${dist_tarball}";
-            $configure_flags = '-de';
+    my $cmd = join ";",
+    (
+        "cd $dist_extracted_dir",
+        "rm -f config.sh Policy.sh",
+        "patchperl",
+        "sh Configure $configure_flags " .
+            join( ' ',
+                ( map { qq{'-D$_'} } @d_options ),
+                ( map { qq{'-U$_'} } @u_options ),
+                ( map { qq{'-A$_'} } @a_options ),
+            ),
+        $dist_version =~ /^5\.(\d+)\.(\d+)/
+            && ($1 < 8 || $1 == 8 && $2 < 9)
+                ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
+                : (),
+        $make,
+        @install
+    );
+    $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
+        if ( $self->{quiet} && !$self->{verbose} );
+
+
+    print $cmd, "\n";
+
+    delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
+
+    if (!system($cmd)) {
+        unless (-e "$ROOT/perls/$as/bin/perl") {
+            $self->run_command_symlink_executables($as);
         }
 
-        # Test via "make test_harness" if available so we'll get
-        # automatic parallel testing via $HARNESS_OPTIONS. The
-        # "test_harness" target was added in 5.7.3, which was the last
-        # development release before 5.8.0.
-        my $test_target = "test";
-        if ($dist_version =~ /^5\.(\d+)\.(\d+)/
-            && ($1 >= 8 || $1 == 7 && $2 == 3)) {
-            $test_target = "test_harness";
-        }
-        local $ENV{TEST_JOBS}=$self->{j}
-          if $test_target eq "test_harness" && ($self->{j}||1) > 1;
-
-        my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
-        my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
-        @install    = join " && ", @install unless($self->{force});
-
-        my $cmd = join ";",
-        (
-            $extract_command,
-            "cd $dist_extracted_dir",
-            "rm -f config.sh Policy.sh",
-            "patchperl",
-            "sh Configure $configure_flags " .
-                join( ' ',
-                    ( map { qq{'-D$_'} } @d_options ),
-                    ( map { qq{'-U$_'} } @u_options ),
-                    ( map { qq{'-A$_'} } @a_options ),
-                ),
-            $dist_version =~ /^5\.(\d+)\.(\d+)/
-                && ($1 < 8 || $1 == 8 && $2 < 9)
-                    ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
-                    : (),
-            $make,
-            @install
-        );
-        $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
-            if ( $self->{quiet} && !$self->{verbose} );
-
-
-        print $cmd, "\n";
-
-        delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
-
-        if (!system($cmd)) {
-            unless (-e "$ROOT/perls/$as/bin/perl") {
-                $self->run_command_symlink_executables($as);
-            }
-
-            print <<SUCCESS;
-Installed $dist as $as successfully. Run the following command to switch to it.
+        print <<SUCCESS;
+Installed $dist_extracted_dir as $as successfully. Run the following command to switch to it.
 
   perlbrew switch $as
 
 SUCCESS
-        }
-        else {
-            print <<FAIL;
-Installing $dist failed. See $self->{log_file} to see why.
+    }
+    else {
+        print <<FAIL;
+Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
 If you want to force install the distribution, try:
 
-  perlbrew --force install $dist_name
+  perlbrew --force install $self->{dist_name}
 
 FAIL
-        }
     }
+    return;
 }
 
 sub format_perl_version {
@@ -594,7 +740,6 @@ sub format_perl_version {
 
 sub installed_perls {
     my $self    = shift;
-    my $current = readlink("$ROOT/perls/current");
 
     my @result;
 
@@ -604,7 +749,7 @@ sub installed_perls {
         push @result, { name => $name, is_current => (current_perl eq $name) };
     }
 
-    my $current_perl_executable = readlink("$ROOT/bin/perl") || `which perl`;
+    my $current_perl_executable = `which perl`;
     $current_perl_executable =~ s/\n$//;
 
     my $current_perl_executable_version;
@@ -636,9 +781,9 @@ sub perlbrew_env {
             $env{PERLBREW_PATH} .= ":$ROOT/perls/$perl/bin";
         }
     }
-    elsif (-d "$ROOT/perls/current/bin") {
-        $env{PERLBREW_PERL} = readlink("$ROOT/perls/current");
-        $env{PERLBREW_PATH} .= ":$ROOT/perls/current/bin";
+    elsif ( $self->env("PERLBREW_PERL") ) {
+        $env{PERLBREW_PERL} = $self->env("PERLBREW_PERL");
+        $env{PERLBREW_PATH} .= ":$ROOT/perls/$env{PERLBREW_PERL}/bin";
     }
 
     return %env;
@@ -654,31 +799,26 @@ sub run_command_list {
 
 sub run_command_use {
     my $self = shift;
+    my $perl = shift;
 
-    if ($self->is_shell_csh) {
-        my $shell = $self->env('SHELL');
-        print "You shell '$shell' does not support the 'use' command at this time\n";
-        exit(1);
+    my $shell = $self->env('SHELL');
+    my %env = ($self->perlbrew_env($perl), PERLBREW_SKIP_INIT => 1);
+
+    my $command = "env ";
+    while (my ($k, $v) = each(%env)) {
+        $command .= "$k=$v ";
     }
+    $command .= " $shell";
 
-    print <<WARNING;
-Your perlbrew setup is not complete!
-
-Please make sure you run `perlbrew init` first and follow the
-instructions, specially the bits about changing your .bashrc
-and exiting the current terminal and starting a new one.
-
-WARNING
+    print "\nA sub-shell is launched with $perl as the activated perl. Run 'exit' to finish it.\n\n";
+    exec($command);
 }
 
 sub run_command_switch {
     my ( $self, $dist, $alias ) = @_;
 
     unless ( $dist ) {
-        # If no args were given to switch, show the current perl.
-        my $current = readlink ( -d "$ROOT/perls/current"
-                                 ? "$ROOT/perls/current"
-                                 : "$ROOT/bin/perl" );
+        my $current = $self->current_perl;
         printf "Currently switched %s\n",
             ( $current ? "to $current" : 'off' );
         return;
@@ -700,18 +840,22 @@ sub run_command_switch {
     }
 
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
-    chdir "$ROOT/perls";
-    unlink "current";
-    symlink $dist, "current";
-    print "Switched to $vers\n";
+
+    local $ENV{PERLBREW_PERL} = $dist;
+    my $HOME = $self->env('HOME');
+
+    system("$0 env $dist > ${HOME}/.perlbrew/init");
+
+    print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
 sub run_command_off {
-    local $_ = "$ROOT/perls/current";
-    unlink if -l;
-    for my $executable (<$ROOT/bin/*>) {
-        unlink($executable) if -l $executable;
-    }
+    my $self = shift;
+    my $HOME = $self->env("HOME");
+    system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
+
+    print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
+    print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
 sub run_command_mirror {
@@ -726,38 +870,42 @@ sub run_command_mirror {
         last if $line =~ m{</select>};
         if ( $line =~ m{<option value="(.+?)">(.+?)</option>} ) {
             my $url  = $1;
-            (my $name = $2) =~ s/&#(\d+);/chr $1/seg;
+            my $name = $2;
+            $name =~ s/&#(\d+);/chr $1/seg;
+            $url =~ s/&#(\d+);/chr $1/seg;
             push @mirrors, { url => $url, name => $name };
         }
     }
 
-    my $select;
     require ExtUtils::MakeMaker;
-    MIRROR: foreach my $id ( 0..$#mirrors ) {
-        my $mirror = $mirrors[$id];
-        printf "[% 3d] %s\n", $id + 1, $mirror->{name};
-        if ( $id > 0 ) {
-            my $test = $id / 19;
-            if ( $test == int $test ) {
-                my $remaining = $#mirrors - $id;
-                my $ask = "Select a mirror by number or press enter to see the rest "
-                        . "($remaining more) [q to quit, m for manual entry]";
-                my $val = ExtUtils::MakeMaker::prompt( $ask );
-                next MIRROR if ! $val;
-                last MIRROR if $val eq 'q';
-                $select = $val;
-		if($select eq 'm') {
-                    my $url  = ExtUtils::MakeMaker::prompt("Enter the URL of your CPAN mirror:");
-		    my $name = ExtUtils::MakeMaker::prompt("Enter a Name: [default: My CPAN Mirror]") || "My CPAN Mirror";
-		    $select = { name => $name, url => $url };
-		}
-                elsif ( ! $select || $select - 1 > $#mirrors ) {
-                    die "Bogus mirror ID: $select";
-                }
-                $select = $mirrors[$select - 1] unless ($select eq 'm');
-                die "Mirror ID is invalid" if ! $select;
-                last MIRROR;
-            }
+    my $select;
+    my $max = @mirrors;
+    my $id  = 0;
+    while ( @mirrors ) {
+        my @page = splice(@mirrors,0,20);
+        my $base = $id;
+        printf "[% 3d] %s\n", ++$id, $_->{name} for @page;
+        my $remaining = $max - $id;
+        my $ask = "Select a mirror by number or press enter to see the rest "
+                . "($remaining more) [q to quit, m for manual entry]";
+        my $val = ExtUtils::MakeMaker::prompt( $ask );
+        if ( ! length $val )  { next }
+        elsif ( $val eq 'q' ) { last }
+        elsif ( $val eq 'm' ) {
+            my $url  = ExtUtils::MakeMaker::prompt("Enter the URL of your CPAN mirror:");
+            my $name = ExtUtils::MakeMaker::prompt("Enter a Name: [default: My CPAN Mirror]") || "My CPAN Mirror";
+            $select = { name => $name, url => $url };
+            last;
+        }
+        elsif ( not $val =~ /\s*(\d+)\s*/ ) {
+            die "Invalid answer: must be 'q', 'm' or a number\n";
+        }
+        elsif (1 <= $val and $val <= $max) {
+            $select = $page[ $val - 1 - $base ];
+            last;
+        }
+        else {
+            die "Invalid ID: must be between 1 and $max\n";
         }
     }
     die "You didn't select a mirror!\n" if ! $select;
@@ -786,13 +934,17 @@ sub run_command_env {
 }
 
 sub run_command_symlink_executables {
-    my($self, $perl) = @_;
+    my($self, @perls) = @_;
 
-    return "" unless $perl;
+    unless (@perls) {
+        @perls = map { m{/([^/]+)$} } grep { -d $_ && ! -l $_ } <$ROOT/perls/*>;
+    }
 
-    for my $executable (<$ROOT/perls/$perl/bin/*>) {
-        my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-        system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
+    for my $perl (@perls) {
+        for my $executable (<$ROOT/perls/$perl/bin/*>) {
+            my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
+            system("ln -fs $executable $ROOT/perls/$perl/bin/$name") if $version;
+        }
     }
 }
 
@@ -859,19 +1011,19 @@ sub _save_conf {
 
 sub _get_conf {
     my($self) = @_;
-    print "Attempting to load conf from $CONF_FILE\n";
+
     if ( ! -e $CONF_FILE ) {
         local $CONF = {} if ! $CONF;
         $self->_save_conf;
     }
 
-    open my $FH, '<', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!";
+    open my $FH, '<', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!\n";
     my $raw = do { local $/; my $rv = <$FH>; $rv };
     close $FH;
 
     my $rv = eval $raw;
     if ( $@ ) {
-        warn "Error loading conf: $@";
+        warn "Error loading conf: $@\n";
         $CONF = {};
         return;
     }

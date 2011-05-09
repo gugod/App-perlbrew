@@ -21,6 +21,7 @@ perlbrew - Perl Environment manager.
         install        Install perl
         list           List installed perls
         use            Use the specified perl in current shell
+        available      List perls available to install
         switch         Permanently use the specified perl as default
         mirror         Pick a preferred mirror site
         off            Permanently turn off perlbrew
@@ -52,21 +53,44 @@ Run this once to setup the C<perlbrew> directory ready for installing
 perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
 
-=item B<mirror>
-
-Run this if you want to choose a specific CPAN mirror to install the
-perls from. It will display a list of mirrors for you to pick
-from. Hit 'q' to cancel the selection.
-
-
-=item B<install> perl-<version>
+=item B<install> perl-<version-number>
 
 Build and install the given version of perl.
+
+Version numbers are usually looks like "5.x.xx", or
+"perl-5.xx.x-RCx" for release candidates.
+
+The specified perl is downloaded from the cpan webisite, unless mirror
+setting presents.
+
+
+=item B<install> perl-blead
+
+=item B<install> blead
+
+A special way to install the blead version of perl.
+
+The blead version is downloaded from:
+
+    http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
+
+This command does not consult mirror setting.
 
 
 =item B<install> /path/to/perl/git/checkout/dir
 
 Build and install from the given git checkout dir.
+
+
+=item B<install> http://example.com/mirror/perl-5.12.3.tar.gz
+
+Build and install from the given URL.
+
+=item B<mirror>
+
+Run this if you want to choose a specific CPAN mirror to install the
+perls from. It will display a list of mirrors for you to pick
+from. Hit 'q' to cancel the selection.
 
 
 =item B<list>
@@ -75,8 +99,6 @@ List the installed versions of perl.
 
 
 =item B<use> [perl-<version>]
-
-Notice: this only works in bash and zsh.
 
 Switch to the given version of perl only in the current shell. This
 will not effect newly opened shells.
