@@ -732,7 +732,6 @@ sub format_perl_version {
 
 sub installed_perls {
     my $self    = shift;
-    my $current = readlink("$ROOT/perls/current");
 
     my @result;
 
@@ -742,7 +741,7 @@ sub installed_perls {
         push @result, { name => $name, is_current => (current_perl eq $name) };
     }
 
-    my $current_perl_executable = readlink("$ROOT/bin/perl") || `which perl`;
+    my $current_perl_executable = `which perl`;
     $current_perl_executable =~ s/\n$//;
 
     my $current_perl_executable_version;
@@ -774,9 +773,9 @@ sub perlbrew_env {
             $env{PERLBREW_PATH} .= ":$ROOT/perls/$perl/bin";
         }
     }
-    elsif (-d "$ROOT/perls/current/bin") {
-        $env{PERLBREW_PERL} = readlink("$ROOT/perls/current");
-        $env{PERLBREW_PATH} .= ":$ROOT/perls/current/bin";
+    elsif ( $self->env("PERLBREW_PERL") ) {
+        $env{PERLBREW_PERL} = $self->env("PERLBREW_PERL");
+        $env{PERLBREW_PATH} .= ":$ROOT/perls/$env{PERLBREW_PERL}/bin";
     }
 
     return %env;
