@@ -78,6 +78,12 @@ perlbrew () {
                       echo "$2 is not installed" >&2
                       exit_status=1
                   fi
+              else
+                if [[ -z "$PERLBREW_PERL" ]] ; then
+                    echo "No version in use; defaulting to system"
+                else
+                    echo "Using $PERLBREW_PERL version"
+                fi
               fi
               ;;
 

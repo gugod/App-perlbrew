@@ -74,6 +74,9 @@ the latest version from the git integration branch.
 
 Build and install from the given git checkout dir.
 
+=item B<install> http://example.com/mirror/perl-5.12.3.tar.gz
+
+Build and install from the given URL.
 
 =item B<list>
 
@@ -81,8 +84,6 @@ List the installed versions of perl.
 
 
 =item B<use> [perl-<version>]
-
-Notice: this only works in bash and zsh.
 
 Switch to the given version of perl only in the current shell. This
 will not effect newly opened shells.
@@ -92,14 +93,12 @@ using any perlbrew-based perl.
 
 Without a parameter, shows the version of perl currently in use.
 
-
 =item B<switch> [perl-<version>]
 
 Switch to the given version, and makes it the default for this and all
 future terminal sessions.
 
 Without a parameter, shows the version of perl currently selected.
-
 
 =item B<off>
 
