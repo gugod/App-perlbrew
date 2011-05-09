@@ -7,7 +7,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.19";
+our $VERSION = "0.20";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -80,6 +80,12 @@ perlbrew () {
                       echo "$2 is not installed" >&2
                       exit_status=1
                   fi
+              else
+                if [[ -z "$PERLBREW_PERL" ]] ; then
+                    echo "No version in use; defaulting to system"
+                else
+                    echo "Using $PERLBREW_PERL version"
+                fi
               fi
               ;;
 
@@ -612,6 +618,8 @@ sub run_command_install {
         return
     }
 
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the insturction of install command.\n\n";
+
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
@@ -624,16 +632,16 @@ sub run_command_install {
             $self->do_install_blead($dist);
         }
         else {
-            die 'wtf?';
+            print $help_message;
         }
     }
     elsif ($dist_name eq 'perl') {
         $self->do_install_release($dist);
     }
     else {
-        die 'what happened?!';
+        print $help_message;
     }
-    die;
+
     return;
 }
 
@@ -844,11 +852,12 @@ sub run_command_switch {
 }
 
 sub run_command_off {
-    local $_ = "$ROOT/perls/current";
-    unlink if -l;
-    for my $executable (<$ROOT/bin/*>) {
-        unlink($executable) if -l $executable;
-    }
+    my $self = shift;
+    my $HOME = $self->env("HOME");
+    system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
+
+    print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
+    print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
 sub run_command_mirror {
@@ -1085,26 +1094,44 @@ Run this once to setup the C<perlbrew> directory ready for installing
 perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
 
+=item B<install> perl-<version-number>
+
+Build and install the given version of perl.
+
+Version numbers are usually looks like "5.x.xx", or
+"perl-5.xx.x-RCx" for release candidates.
+
+The specified perl is downloaded from the cpan webisite, unless mirror
+setting presents.
+
+
+=item B<install> perl-blead
+
+=item B<install> blead
+
+A special way to install the blead version of perl.
+
+The blead version is downloaded from:
+
+    http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
+
+This command does not consult mirror setting.
+
+
+=item B<install> /path/to/perl/git/checkout/dir
+
+Build and install from the given git checkout dir.
+
+
+=item B<install> http://example.com/mirror/perl-5.12.3.tar.gz
+
+Build and install from the given URL.
+
 =item B<mirror>
 
 Run this if you want to choose a specific CPAN mirror to install the
 perls from. It will display a list of mirrors for you to pick
 from. Hit 'q' to cancel the selection.
-
-
-=item B<install> perl-<version>
-
-Build and install the given version of perl.
-
-You can give a URL to a tarball of a Perl release to install that.
-
-Versions of perl are specified as "perl-5.xx.x" for normal releases,
-"perl-5.xx.x-RCx" for release candidates, and "perl-blead" or just "blead" for
-the latest version from the git integration branch.
-
-=item B<install> /path/to/perl/git/checkout/dir
-
-Build and install from the given git checkout dir.
 
 
 =item B<list>
@@ -1113,8 +1140,6 @@ List the installed versions of perl.
 
 
 =item B<use> [perl-<version>]
-
-Notice: this only works in bash and zsh.
 
 Switch to the given version of perl only in the current shell. This
 will not effect newly opened shells.

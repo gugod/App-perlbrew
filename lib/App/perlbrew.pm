@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.19";
+our $VERSION = "0.20";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -78,6 +78,12 @@ perlbrew () {
                       echo "$2 is not installed" >&2
                       exit_status=1
                   fi
+              else
+                if [[ -z "$PERLBREW_PERL" ]] ; then
+                    echo "No version in use; defaulting to system"
+                else
+                    echo "Using $PERLBREW_PERL version"
+                fi
               fi
               ;;
 
@@ -610,6 +616,8 @@ sub run_command_install {
         return
     }
 
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the insturction of install command.\n\n";
+
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
@@ -622,16 +630,16 @@ sub run_command_install {
             $self->do_install_blead($dist);
         }
         else {
-            die 'wtf?';
+            print $help_message;
         }
     }
     elsif ($dist_name eq 'perl') {
         $self->do_install_release($dist);
     }
     else {
-        die 'what happened?!';
+        print $help_message;
     }
-    die;
+
     return;
 }
 
@@ -842,11 +850,12 @@ sub run_command_switch {
 }
 
 sub run_command_off {
-    local $_ = "$ROOT/perls/current";
-    unlink if -l;
-    for my $executable (<$ROOT/bin/*>) {
-        unlink($executable) if -l $executable;
-    }
+    my $self = shift;
+    my $HOME = $self->env("HOME");
+    system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
+
+    print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
+    print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
 sub run_command_mirror {
