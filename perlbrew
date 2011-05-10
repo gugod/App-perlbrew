@@ -508,7 +508,7 @@ sub do_install_url {
         }
     );
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
-    $self->do_install_this($dist_extracted_path, $dist);
+    $self->do_install_this($dist_extracted_path, $dist_version, $dist);
     return;
 }
 
