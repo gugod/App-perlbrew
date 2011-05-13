@@ -759,7 +759,13 @@ sub installed_perls {
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        push @result, { name => $name, is_current => (current_perl eq $name) };
+        my $executable = catfile($_, 'bin', 'perl');
+
+        push @result, {
+            name => $name,
+            version => $self->format_perl_version(`$executable -e 'print \$]'`),
+            is_current => (current_perl eq $name)
+        };
     }
 
     my $current_perl_executable = `which perl`;
@@ -770,7 +776,8 @@ sub installed_perls {
         $current_perl_executable_version =
           $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
-            name => $_ . " (" . $current_perl_executable_version . ")",
+            name => $_,
+            version => $current_perl_executable_version,
             is_current => $current_perl_executable && ($_ eq $current_perl_executable)
         } unless index($_, $ROOT) == 0;
     }
@@ -806,7 +813,10 @@ sub run_command_list {
     my $self = shift;
 
     for my $i ( $self->installed_perls ) {
-        print $i->{is_current} ? '* ': '  ', $i->{name}, "\n";
+        print $i->{is_current} ? '* ': '  ',
+            $i->{name},
+            (index($i->{name}, $i->{version}) < $[) ? " ($i->{version})" : "",
+            "\n";
     }
 }
 
