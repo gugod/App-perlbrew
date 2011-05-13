@@ -320,6 +320,17 @@ sub run_command {
     }
 
     die "Unknown command: `$x`. Typo?\n" unless $s;
+
+    # Assume 5.12.3 means perl-5.12.3, for example.
+    if ($x =~ /\A(?:switch|use|install)\Z/ and my $dist = shift @args) {
+        if ($dist =~ /\A(?:\d+\.)*\d+\Z/) {
+            unshift @args, "perl-$dist";
+        }
+        else {
+            unshift @args, $dist;
+        }
+    }
+
     $self->$s(@args);
 }
 
@@ -618,7 +629,7 @@ sub run_command_install {
         return
     }
 
-    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the insturction of install command.\n\n";
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction of install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
