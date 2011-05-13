@@ -1,3 +1,6 @@
+Future
+- oylenshpeegul++ Let version numbers alone mean installation names. For example, 5.12.3 means perl-5.12.3
+
 0.20:
 - For more detail release note, see https://github.com/gugod/App-perlbrew/wiki/Relesae-0.20
 - doherty++ FIX: stop when user specified an invalid perl version that cannot be found on cpan.
