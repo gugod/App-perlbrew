@@ -320,7 +320,7 @@ sub run_command {
     die "Unknown command: `$x`. Typo?\n" unless $s;
 
     # Assume 5.12.3 means perl-5.12.3, for example.
-    if ($x =~ /\A(?:switch|use|install)\Z/ and my $dist = shift @args) {
+    if ($x =~ /\A(?:switch|use|install|env)\Z/ and my $dist = shift @args) {
         if ($dist =~ /\A(?:\d+\.)*\d+\Z/) {
             unshift @args, "perl-$dist";
         }
