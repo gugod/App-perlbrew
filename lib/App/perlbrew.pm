@@ -99,16 +99,6 @@ perlbrew () {
             __perlbrew_reinit
             ;;
 
-        (install)
-            local perl_version="$2"
-            if [[ "${perl_version:0:2}" == "5." ]]; then
-                perl_version="perl-$2";
-            fi
-            shift; shift; # 'install' and 'perl_version'
-            command perlbrew $short_option "install" $perl_version $*
-            exit_status=$?
-            ;;
-
         (*)
             command perlbrew $short_option $*
             exit_status=$?
