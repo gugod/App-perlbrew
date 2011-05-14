@@ -65,6 +65,9 @@ perlbrew () {
                 unset PERLBREW_PERL
                 eval $(command perlbrew $short_option env $2)
                 __perlbrew_set_path
+            elif [[ "${2:0:2}" == "5." && -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                eval $(command perlbrew $short_option env "perl-$2")
+                __perlbrew_set_path
             else
                 echo "$2 is not installed" >&2
                 exit_status=1
@@ -76,6 +79,8 @@ perlbrew () {
                   if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                       perlbrew $short_option use $2
                       __perlbrew_reinit $2
+                  elif [[ "${2:0:2}" == "5." && -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                      __perlbrew_reinit "perl-$2"
                   else
                       echo "$2 is not installed" >&2
                       exit_status=1
@@ -94,6 +99,16 @@ perlbrew () {
             command perlbrew $short_option off
 
             __perlbrew_reinit
+            ;;
+
+        (install)
+            local perl_version="$2"
+            if [[ "${perl_version:0:2}" == "5." ]]; then
+                perl_version="perl-$2";
+            fi
+            shift; shift; # 'install' and 'perl_version'
+            command perlbrew $short_option "install" $perl_version $*
+            exit_status=$?
             ;;
 
         (*)
@@ -320,6 +335,17 @@ sub run_command {
     }
 
     die "Unknown command: `$x`. Typo?\n" unless $s;
+
+    # Assume 5.12.3 means perl-5.12.3, for example.
+    if ($x =~ /\A(?:switch|use|install|env)\Z/ and my $dist = shift @args) {
+        if ($dist =~ /\A(?:\d+\.)*\d+\Z/) {
+            unshift @args, "perl-$dist";
+        }
+        else {
+            unshift @args, $dist;
+        }
+    }
+
     $self->$s(@args);
 }
 
@@ -508,7 +534,7 @@ sub do_install_url {
         }
     );
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
-    $self->do_install_this($dist_extracted_path, $dist);
+    $self->do_install_this($dist_extracted_path, $dist_version, $dist);
     return;
 }
 
@@ -618,7 +644,7 @@ sub run_command_install {
         return
     }
 
-    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the insturction of install command.\n\n";
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction of install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
@@ -748,7 +774,13 @@ sub installed_perls {
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        push @result, { name => $name, is_current => (current_perl eq $name) };
+        my $executable = catfile($_, 'bin', 'perl');
+
+        push @result, {
+            name => $name,
+            version => $self->format_perl_version(`$executable -e 'print \$]'`),
+            is_current => (current_perl eq $name)
+        };
     }
 
     my $current_perl_executable = `which perl`;
@@ -759,7 +791,8 @@ sub installed_perls {
         $current_perl_executable_version =
           $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
-            name => $_ . " (" . $current_perl_executable_version . ")",
+            name => $_,
+            version => $current_perl_executable_version,
             is_current => $current_perl_executable && ($_ eq $current_perl_executable)
         } unless index($_, $ROOT) == 0;
     }
@@ -795,7 +828,10 @@ sub run_command_list {
     my $self = shift;
 
     for my $i ( $self->installed_perls ) {
-        print $i->{is_current} ? '* ': '  ', $i->{name}, "\n";
+        print $i->{is_current} ? '* ': '  ',
+            $i->{name},
+            (index($i->{name}, $i->{version}) < $[) ? " ($i->{version})" : "",
+            "\n";
     }
 }
 
