@@ -30,7 +30,7 @@ perlbrew - Perl Environment manager.
 
     Examples:
         perlbrew install perl-5.12.3
-        perlbrew install perl-5.13.6
+        perlbrew install 5.14.0-RC3
 
         perlbrew list
 
@@ -55,13 +55,15 @@ perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
 =item B<install> perl-<version-number>
 
+=item B<install> <version-number>
+
 Build and install the given version of perl.
 
-Version numbers are usually looks like "5.x.xx", or
+Version numbers usually look like "5.x.xx", or
 "perl-5.xx.x-RCx" for release candidates.
 
 The specified perl is downloaded from the cpan webisite, unless mirror
-setting presents.
+setting are present.
 
 
 =item B<install> perl-blead
@@ -74,7 +76,7 @@ The blead version is downloaded from:
 
     http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
 
-This command does not consult mirror setting.
+This command does not consult mirror settings.
 
 
 =item B<install> /path/to/perl/git/checkout/dir
@@ -100,6 +102,8 @@ List the installed versions of perl.
 
 =item B<use> [perl-<version>]
 
+=item B<use> [<version>]
+
 Switch to the given version of perl only in the current shell. This
 will not effect newly opened shells.
 
@@ -110,6 +114,8 @@ Without a parameter, shows the version of perl currently in use.
 
 
 =item B<switch> [perl-<version>]
+
+=item B<switch> [<version>]
 
 Switch to the given version, and makes it the default for this and all
 future terminal sessions.

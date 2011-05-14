@@ -63,6 +63,9 @@ perlbrew () {
                 unset PERLBREW_PERL
                 eval $(command perlbrew $short_option env $2)
                 __perlbrew_set_path
+            elif [[ "${2:0:2}" == "5." && -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                eval $(command perlbrew $short_option env "perl-$2")
+                __perlbrew_set_path
             else
                 echo "$2 is not installed" >&2
                 exit_status=1
@@ -74,6 +77,8 @@ perlbrew () {
                   if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                       perlbrew $short_option use $2
                       __perlbrew_reinit $2
+                  elif [[ "${2:0:2}" == "5." && -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                      __perlbrew_reinit "perl-$2"
                   else
                       echo "$2 is not installed" >&2
                       exit_status=1
@@ -92,6 +97,16 @@ perlbrew () {
             command perlbrew $short_option off
 
             __perlbrew_reinit
+            ;;
+
+        (install)
+            local perl_version="$2"
+            if [[ "${perl_version:0:2}" == "5." ]]; then
+                perl_version="perl-$2";
+            fi
+            shift; shift; # 'install' and 'perl_version'
+            command perlbrew $short_option "install" $perl_version $*
+            exit_status=$?
             ;;
 
         (*)
@@ -1074,7 +1089,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew available
 
     # Install some Perls
-    perlbrew install perl-5.12.2
+    perlbrew install perl-5.12.2   # "install 5.12.2" works too!
     perlbrew install perl-5.8.1
     perlbrew install perl-5.13.6
 
