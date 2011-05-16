@@ -870,6 +870,7 @@ sub run_command_switch {
     local $ENV{PERLBREW_PERL} = $dist;
     my $HOME = $self->env('HOME');
 
+    mkpath("${HOME}/.perlbrew");
     system("$0 env $dist > ${HOME}/.perlbrew/init");
 
     print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
@@ -878,6 +879,8 @@ sub run_command_switch {
 sub run_command_off {
     my $self = shift;
     my $HOME = $self->env("HOME");
+
+    mkpath("${HOME}/.perlbrew");
     system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
 
     print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";

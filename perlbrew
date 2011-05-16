@@ -101,16 +101,6 @@ perlbrew () {
             __perlbrew_reinit
             ;;
 
-        (install)
-            local perl_version="$2"
-            if [[ "${perl_version:0:2}" == "5." ]]; then
-                perl_version="perl-$2";
-            fi
-            shift; shift; # 'install' and 'perl_version'
-            command perlbrew $short_option "install" $perl_version $*
-            exit_status=$?
-            ;;
-
         (*)
             command perlbrew $short_option $*
             exit_status=$?
@@ -644,7 +634,7 @@ sub run_command_install {
         return
     }
 
-    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction of install command.\n\n";
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
@@ -882,6 +872,7 @@ sub run_command_switch {
     local $ENV{PERLBREW_PERL} = $dist;
     my $HOME = $self->env('HOME');
 
+    mkpath("${HOME}/.perlbrew");
     system("$0 env $dist > ${HOME}/.perlbrew/init");
 
     print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
@@ -890,6 +881,8 @@ sub run_command_switch {
 sub run_command_off {
     my $self = shift;
     my $HOME = $self->env("HOME");
+
+    mkpath("${HOME}/.perlbrew");
     system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
 
     print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
@@ -1107,7 +1100,7 @@ perlbrew - Perl Environment manager.
 
     Examples:
         perlbrew install perl-5.12.3
-        perlbrew install perl-5.13.6
+        perlbrew install 5.14.0-RC3
 
         perlbrew list
 
@@ -1132,13 +1125,15 @@ perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
 =item B<install> perl-<version-number>
 
+=item B<install> <version-number>
+
 Build and install the given version of perl.
 
-Version numbers are usually looks like "5.x.xx", or
+Version numbers usually look like "5.x.xx", or
 "perl-5.xx.x-RCx" for release candidates.
 
 The specified perl is downloaded from the cpan webisite, unless mirror
-setting presents.
+setting are present.
 
 
 =item B<install> perl-blead
@@ -1151,7 +1146,7 @@ The blead version is downloaded from:
 
     http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
 
-This command does not consult mirror setting.
+This command does not consult mirror settings.
 
 
 =item B<install> /path/to/perl/git/checkout/dir
@@ -1177,6 +1172,8 @@ List the installed versions of perl.
 
 =item B<use> [perl-<version>]
 
+=item B<use> [<version>]
+
 Switch to the given version of perl only in the current shell. This
 will not effect newly opened shells.
 
@@ -1187,6 +1184,8 @@ Without a parameter, shows the version of perl currently in use.
 
 
 =item B<switch> [perl-<version>]
+
+=item B<switch> [<version>]
 
 Switch to the given version, and makes it the default for this and all
 future terminal sessions.
