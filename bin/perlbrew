@@ -155,7 +155,7 @@ This essentially creates this symlink:
    ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl
    -> ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl5.13.6
 
-=item B<install-cpanm>
+=item B<install_cpanm>
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
