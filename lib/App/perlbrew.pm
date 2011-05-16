@@ -632,7 +632,7 @@ sub run_command_install {
         return
     }
 
-    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction of install command.\n\n";
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
