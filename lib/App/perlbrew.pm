@@ -1019,6 +1019,16 @@ sub run_command_install_cpanm {
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
+sub run_command_self_upgrade {
+    my ($self) = @_;
+
+    my $perlbrew_install = http_get('http://xrl.us/perlbrewinstall');
+    open my $fh, '>', '/tmp/perlbrewinstall';
+    print $fh $perlbrew_install;
+    close $fh;
+    exec 'bash', '/tmp/perlbrewinstall';
+}
+
 sub run_command_exec {
     my ($self, @args) = @_;
 
