@@ -64,7 +64,7 @@ perlbrew () {
             elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" || "$2" = "system" ]]; then
                 eval $(command perlbrew $short_option env $2)
                 __perlbrew_set_path
-            elif [[ && -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+            elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
                 eval $(command perlbrew $short_option env "perl-$2")
                 __perlbrew_set_path
             else
