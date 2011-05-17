@@ -647,6 +647,9 @@ sub run_command_install {
         if (-d "$dist/.git") {
             $self->do_install_git($dist);
         }
+        if (-f $dist) {
+            $self->do_install_archive($dist);
+        }
         elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
             $self->do_install_url($dist);
         }
@@ -664,6 +667,26 @@ sub run_command_install {
         print $help_message;
     }
 
+    return;
+}
+
+sub do_install_archive {
+    my $self = shift;
+    my $dist_tarball_path = shift;
+    my $dist_version;
+    my $installation_name;
+
+    if ($dist_tarball_path =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
+        $dist_version = $1;
+        $installation_name = "perl-${dist_version}";
+    }
+
+    unless ($dist_version && $installation_name) {
+        die "Unable to determin perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2\n";
+    }
+
+    my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
+    $self->do_install_this($dist_extracted_path, $dist_version, $installation_name);
     return;
 }
 
