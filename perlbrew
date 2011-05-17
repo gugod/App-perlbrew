@@ -747,11 +747,9 @@ INSTALL
         $make,
         @install
     );
-    $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
-        if ( $self->{quiet} && !$self->{verbose} );
+    $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
 
-
-    print $cmd, "\n";
+    print "$cmd\n" if $self->{verbose};
 
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
