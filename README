@@ -5,11 +5,14 @@ SYNOPSIS
         # Initialize
         perlbrew init
 
-        # pick a prefered CPAN mirror
+        # Pick a preferred CPAN mirror
         perlbrew mirror
 
+        # See what is available
+        perlbrew available
+
         # Install some Perls
-        perlbrew install perl-5.12.2
+        perlbrew install 5.14.0
         perlbrew install perl-5.8.1
         perlbrew install perl-5.13.6
 
@@ -20,8 +23,8 @@ SYNOPSIS
         perlbrew switch perl-5.12.2
         perl -v
 
-        # Switch to another version
-        perlbrew switch perl-5.8.1
+        # Temporarily use another version only in current shell.
+        perlbrew use perl-5.8.1
         perl -v
 
         # Switch to a certain perl executable not managed by perlbrew.
@@ -32,6 +35,9 @@ SYNOPSIS
 
         # Use 'switch' command to turn it back on.
         perlbrew switch perl-5.12.2
+
+        # Exec something with all perlbrew-ed perls
+        perlbrew exec perl -E 'say $]'
 
 DESCRIPTION
     perlbrew is a program to automate the building and installation of perl
@@ -49,55 +55,46 @@ INSTALLATION
     The recommended way to install perlbrew is to run these statements in
     your shell:
 
-        curl -LO http://xrl.us/perlbrew
-        chmod +x perlbrew
-        ./perlbrew install
-
-    or more simply:
-
         curl -L http://xrl.us/perlbrewinstall | bash
 
     After that, "perlbrew" installs itself to "~/perl5/perlbrew/bin", and
     you should follow the instruction on screen to setup your ".bashrc" or
     ".cshrc" to put it in your PATH.
 
-    The directory "~/perl5/perlbrew" will contain all install perl
-    executables, libraries, documentations, lib, site_libs. If you need to
-    install "perlbrew", and the perls it brews, into somewhere else because,
-    say, your HOME has limited quota, you can do that by setting a
-    "PERLBREW_ROOT" environment variable before you run "./perlbrew
-    install".
-
-        export PERLBREW_ROOT=/mnt/perlbrew
-        ./perlbrew install
-
     The downloaded perlbrew is a self-contained standalone program that
     embeds all non-core modules it uses. It should be runnable with perl 5.8
     or later versions of perl.
 
-    You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
+    This installer also installs a packed version of "patchperl" to
+    "~/perl5/perlbrew/bin", which is required to build old perls.
+
+    The directory "~/perl5/perlbrew" will contain all install perl
+    executables, libraries, documentations, lib, site_libs. If you need to
+    install "perlbrew", and the perls it brews, into somewhere else because,
+    say, your HOME has limited quota, you can do that by setting a
+    "PERLBREW_ROOT" environment variable before running the installer:
+
+        export PERLBREW_ROOT=/opt/perlbrew
+        curl -L http://xrl.us/perlbrewinstall | bash
+
+    You may also install perlbrew from CPAN:
 
         cpan App::perlbrew
 
-    This installs 'perlbrew' into your current PATH and it is always
-    executed with your current perl.
+    However, please make sure not to run this with one of the perls brewed
+    with perlbrew. It's the best to turn perlbrew off before you run that,
+    if you're upgrading.
 
-    NOTICE. When you install or upgrade perlbrew with cpan / cpanp / cpanm,
-    make sure you are not using one of the perls brewed with perlbrew. If
-    so, the `perlbrew` executable you just installed will not be available
-    after you switch to other perls. You might not be able to invoke further
-    "perlbrew" commands after so because the executable "perlbrew" is not in
-    your "PATH" anymore. Installing it again with cpan can temporarily solve
-    this problem. To ensure you are not using a perlbrewed perl, run
-    "perlbrew off" before upgrading.
+        perlbrew off
+        cpan App::perlbrew
 
-    It should be relatively safe to install "App::perlbrew" with system cpan
-    (like "/usr/bin/cpan") because then it will be installed under a system
-    PATH like "/usr/bin", which is not affected by "perlbrew switch"
+    You should always use system cpan (like /usr/bin/cpan) to install
+    "App::perlbrew" because then it will be installed under a system PATH
+    like "/usr/bin", which is not affected by perlbrew "switch" or "use"
     command.
 
-    Again, it is recommended to let "perlbrew" install itself. It's easier,
-    and it works better.
+    However, it is still recommended to let "perlbrew" install itself. It's
+    easier, and it works better.
 
 USAGE
     Please read the program usage by running
@@ -109,28 +106,23 @@ USAGE
         perlbrew -h
 
 PROJECT DEVELOPMENT
-    perlbrew project uses PivotalTracker for task tracking:
-    <http://www.pivotaltracker.com/projects/129997>. You may also report
-    bugs to github <http://github.com/gugod/App-perlbrew/issues> or RT
-    <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew>. They will be
-    definitely reviewed and handled.
+    perlbrew project uses github
+    <http://github.com/gugod/App-perlbrew/issues> and RT
+    <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
+    tracking. Issues sent to these two systems will eventually be reviewed
+    and handled.
 
 AUTHOR
     Kang-min Liu "<gugod@gugod.org>"
 
 COPYRIGHT
-    Copyright (c) 2010, Kang-min Liu "<gugod@gugod.org>".
+    Copyright (c) 2010, 2011 Kang-min Liu "<gugod@gugod.org>".
 
 LICENCE
     The MIT License
 
 CONTRIBUTORS
-    Patches and code improvements have been contributed by:
-
-    Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
-    Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
-    castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
-    polettix, and tokuhirom.
+    See <https://github.com/gugod/App-perlbrew/contributors>
 
 DISCLAIMER OF WARRANTY
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
