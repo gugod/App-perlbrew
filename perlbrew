@@ -7,7 +7,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.20";
+our $VERSION = "0.21";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -62,10 +62,9 @@ perlbrew () {
                     echo "Using $PERLBREW_PERL version"
                 fi
             elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" || "$2" = "system" ]]; then
-                unset PERLBREW_PERL
                 eval $(command perlbrew $short_option env $2)
                 __perlbrew_set_path
-            elif [[ "${2:0:2}" == "5." && -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+            elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
                 eval $(command perlbrew $short_option env "perl-$2")
                 __perlbrew_set_path
             else
@@ -79,7 +78,8 @@ perlbrew () {
                   if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                       perlbrew $short_option use $2
                       __perlbrew_reinit $2
-                  elif [[ "${2:0:2}" == "5." && -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                  elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                      perlbrew $short_option use "perl-$2"
                       __perlbrew_reinit "perl-$2"
                   else
                       echo "$2 is not installed" >&2
@@ -1130,13 +1130,13 @@ perlbrew - Perl Environment manager.
         help           Read more detailed instructions
 
     Examples:
-        perlbrew install perl-5.12.3
-        perlbrew install 5.14.0-RC3
+        perlbrew install perl-5.14.0
+        perlbrew install 5.12.3
 
         perlbrew list
 
-        perlbrew use perl-5.13.6
-        perlbrew switch perl-5.12.3
+        perlbrew use perl-5.12.3
+        perlbrew switch perl-5.14.0
 
         perlbrew switch /path/to/special/perl
         perlbrew switch /path/to/special/perl special-perl
@@ -1163,7 +1163,7 @@ Build and install the given version of perl.
 Version numbers usually look like "5.x.xx", or
 "perl-5.xx.x-RCx" for release candidates.
 
-The specified perl is downloaded from the cpan webisite, unless mirror
+The specified perl is downloaded from the CPAN website, unless mirror
 setting are present.
 
 
@@ -1184,6 +1184,9 @@ This command does not consult mirror settings.
 
 Build and install from the given git checkout dir.
 
+=item B<install> /path/to/perl-5.14.0.tar.gz
+
+Build and install from the given archive file.
 
 =item B<install> http://example.com/mirror/perl-5.12.3.tar.gz
 
@@ -1230,6 +1233,32 @@ Without a parameter, shows the version of perl currently selected.
 Disable perlbrew. Use C<switch> command to re-enable it.
 
 
+=item B<exec> command
+
+Execute command for all perls.
+
+For example, run a Hello program:
+
+    perlbrew exec perl -e 'print "Hello from $]\n"'
+
+Depending on your actual installations, the output might look like this:
+
+    perl-5.12.2
+    ==========
+    Hello word from perl-5.012002
+    
+    perl-5.12.3
+    ==========
+    Hello word from perl-5.012003
+    
+    perl-5.13.10
+    ==========
+    Hello word from perl-5.013010
+    
+    perl-5.14.0
+    ==========
+    Hello word from perl-5.014000
+
 =item B<env> [perl-version]
 
 Low-level command. Use this command to see the list of environment
@@ -1248,9 +1277,10 @@ You can also ask for the proper variables for a specific perl version.
 =item B<symlink_executables> <perl-version>
 
 Low-level command. Use this command to create the C<perl> executable
-symbolic link to C<perl5.13.6>.
+symbolic link to , say, C<perl5.13.6>. This is only useful
+for development version of perls.
 
-You don't need to do this unless you were using old perlbrew to
+You don't need to do this unless you have been using old perlbrew to
 install perls. The installation layout is changed since version 0.11.
 
 If you just upgraded perlbrew and found C<perlbrew switch> failed to work
@@ -1270,7 +1300,7 @@ Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 =item B<version>
 
-Show the version of perbrew.
+Show the version of perlbrew.
 
 
 =back
@@ -1304,7 +1334,7 @@ Log output to a log file rather than STDOUT. This is the default. The log file i
 
 =item B<-v| --verbose>
 
-Log output to STDOUT rather than a logfile.
+Log output to STDOUT rather than a log file.
 
 =item B<--as>
 
