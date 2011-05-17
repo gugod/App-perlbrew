@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.20";
+our $VERSION = "0.21";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -60,8 +60,10 @@ perlbrew () {
                     echo "Using $PERLBREW_PERL version"
                 fi
             elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" || "$2" = "system" ]]; then
-                unset PERLBREW_PERL
                 eval $(command perlbrew $short_option env $2)
+                __perlbrew_set_path
+            elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                eval $(command perlbrew $short_option env "perl-$2")
                 __perlbrew_set_path
             else
                 echo "$2 is not installed" >&2
@@ -74,6 +76,9 @@ perlbrew () {
                   if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                       perlbrew $short_option use $2
                       __perlbrew_reinit $2
+                  elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
+                      perlbrew $short_option use "perl-$2"
+                      __perlbrew_reinit "perl-$2"
                   else
                       echo "$2 is not installed" >&2
                       exit_status=1
@@ -318,6 +323,17 @@ sub run_command {
     }
 
     die "Unknown command: `$x`. Typo?\n" unless $s;
+
+    # Assume 5.12.3 means perl-5.12.3, for example.
+    if ($x =~ /\A(?:switch|use|install|env)\Z/ and my $dist = shift @args) {
+        if ($dist =~ /\A(?:\d+\.)*\d+\Z/) {
+            unshift @args, "perl-$dist";
+        }
+        else {
+            unshift @args, $dist;
+        }
+    }
+
     $self->$s(@args);
 }
 
@@ -494,19 +510,27 @@ sub do_install_url {
     my $dist_tarball_url  = $dist;
     $dist = "$dist_name-$dist_version"; # we install it as this name later
 
-    print "Fetching $dist as $dist_tarball_path\n";
-    http_get(
-        $dist_tarball_url,
-        undef,
-        sub {
-            my ($body) = @_;
-            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
-            print $BALL $body;
-            close $BALL;
-        }
-    );
+    if ($dist_tarball_url =~ m/^file/) {
+        print "Installing $dist from local archive $dist_tarball_url\n";
+        $dist_tarball_url =~ s/^file:\/+/\//;
+        $dist_tarball_path = $dist_tarball_url;
+    }
+    else {
+        print "Fetching $dist as $dist_tarball_path\n";
+        http_get(
+            $dist_tarball_url,
+            undef,
+            sub {
+                my ($body) = @_;
+                open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
+                print $BALL $body;
+                close $BALL;
+            }
+        );
+    }
+
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
-    $self->do_install_this($dist_extracted_path, $dist);
+    $self->do_install_this($dist_extracted_path, $dist_version, $dist);
     return;
 }
 
@@ -616,14 +640,17 @@ sub run_command_install {
         return
     }
 
-    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the insturction of install command.\n\n";
+    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
             $self->do_install_git($dist);
         }
-        elsif ($dist =~ m/^(?:https?|ftp)/) { # more protocols needed?
+        if (-f $dist) {
+            $self->do_install_archive($dist);
+        }
+        elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
             $self->do_install_url($dist);
         }
         elsif ($dist =~ m/(?:perl-)?blead$/) {
@@ -643,17 +670,39 @@ sub run_command_install {
     return;
 }
 
+sub do_install_archive {
+    my $self = shift;
+    my $dist_tarball_path = shift;
+    my $dist_version;
+    my $installation_name;
+
+    if ($dist_tarball_path =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
+        $dist_version = $1;
+        $installation_name = "perl-${dist_version}";
+    }
+
+    unless ($dist_version && $installation_name) {
+        die "Unable to determin perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2\n";
+    }
+
+    my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
+    $self->do_install_this($dist_extracted_path, $dist_version, $installation_name);
+    return;
+}
+
 sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $as) = @_;
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
-    $as ||= $self->{as};
+    $as = $self->{as} if $self->{as};
+
     unshift @d_options, qq(prefix=$ROOT/perls/$as);
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/;
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
     print <<INSTALL if $self->{quiet} && !$self->{verbose};
+
 This could take a while. You can run the following command on another shell to track the status:
 
   tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
@@ -696,11 +745,9 @@ INSTALL
         $make,
         @install
     );
-    $cmd = "($cmd) >> '$self->{log_file}' 2>&1 "
-        if ( $self->{quiet} && !$self->{verbose} );
+    $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
 
-
-    print $cmd, "\n";
+    print "$cmd\n" if $self->{verbose};
 
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
@@ -746,7 +793,13 @@ sub installed_perls {
     for (<$ROOT/perls/*>) {
         next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
-        push @result, { name => $name, is_current => (current_perl eq $name) };
+        my $executable = catfile($_, 'bin', 'perl');
+
+        push @result, {
+            name => $name,
+            version => $self->format_perl_version(`$executable -e 'print \$]'`),
+            is_current => (current_perl eq $name)
+        };
     }
 
     my $current_perl_executable = `which perl`;
@@ -757,7 +810,8 @@ sub installed_perls {
         $current_perl_executable_version =
           $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
-            name => $_ . " (" . $current_perl_executable_version . ")",
+            name => $_,
+            version => $current_perl_executable_version,
             is_current => $current_perl_executable && ($_ eq $current_perl_executable)
         } unless index($_, $ROOT) == 0;
     }
@@ -793,7 +847,10 @@ sub run_command_list {
     my $self = shift;
 
     for my $i ( $self->installed_perls ) {
-        print $i->{is_current} ? '* ': '  ', $i->{name}, "\n";
+        print $i->{is_current} ? '* ': '  ',
+            $i->{name},
+            (index($i->{name}, $i->{version}) < $[) ? " ($i->{version})" : "",
+            "\n";
     }
 }
 
@@ -844,6 +901,7 @@ sub run_command_switch {
     local $ENV{PERLBREW_PERL} = $dist;
     my $HOME = $self->env('HOME');
 
+    mkpath("${HOME}/.perlbrew");
     system("$0 env $dist > ${HOME}/.perlbrew/init");
 
     print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
@@ -852,6 +910,8 @@ sub run_command_switch {
 sub run_command_off {
     my $self = shift;
     my $HOME = $self->env("HOME");
+
+    mkpath("${HOME}/.perlbrew");
     system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
 
     print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
@@ -1053,7 +1113,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew available
 
     # Install some Perls
-    perlbrew install perl-5.12.2
+    perlbrew install 5.14.0
     perlbrew install perl-5.8.1
     perlbrew install perl-5.13.6
 
@@ -1064,8 +1124,8 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew switch perl-5.12.2
     perl -v
 
-    # Switch to another version
-    perlbrew switch perl-5.8.1
+    # Temporarily use another version only in current shell.
+    perlbrew use perl-5.8.1
     perl -v
 
     # Switch to a certain perl executable not managed by perlbrew.
@@ -1099,54 +1159,45 @@ there in order to fetch files from the internet.
 The recommended way to install perlbrew is to run these statements in
 your shell:
 
-    curl -LO http://xrl.us/perlbrew
-    chmod +x perlbrew
-    ./perlbrew install
-
-or more simply:
-
     curl -L http://xrl.us/perlbrewinstall | bash
 
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
 and you should follow the instruction on screen to setup your
 C<.bashrc> or C<.cshrc> to put it in your PATH.
 
-The directory C<~/perl5/perlbrew> will contain all install perl
-executables, libraries, documentations, lib, site_libs. If you need to
-install C<perlbrew>, and the perls it brews, into somewhere else
-because, say, your HOME has limited quota, you can do that by setting
-a C<PERLBREW_ROOT> environment variable before you run C<./perlbrew install>.
-
-    export PERLBREW_ROOT=/mnt/perlbrew
-    ./perlbrew install
-
 The downloaded perlbrew is a self-contained standalone program that
 embeds all non-core modules it uses. It should be runnable with perl
 5.8 or later versions of perl.
 
-You may also install perlbrew from CPAN with cpan / cpanp / cpanm:
+This installer also installs a packed version of C<patchperl> to
+C<~/perl5/perlbrew/bin>, which is required to build old perls.
+
+The directory C<~/perl5/perlbrew> will contain all install perl
+executables, libraries, documentations, lib, site_libs. If you need to
+install C<perlbrew>, and the perls it brews, into somewhere else
+because, say, your HOME has limited quota, you can do that by setting
+a C<PERLBREW_ROOT> environment variable before running the installer:
+
+    export PERLBREW_ROOT=/opt/perlbrew
+    curl -L http://xrl.us/perlbrewinstall | bash
+
+You may also install perlbrew from CPAN:
 
     cpan App::perlbrew
 
-This installs 'perlbrew' into your current PATH and it is always
-executed with your current perl.
+However, please make sure not to run this with one of the perls brewed
+with perlbrew. It's the best to turn perlbrew off before you run that,
+if you're upgrading.
 
-NOTICE. When you install or upgrade perlbrew with cpan / cpanp /
-cpanm, make sure you are not using one of the perls brewed with
-perlbrew. If so, the `perlbrew` executable you just installed will not
-be available after you switch to other perls. You might not be able to
-invoke further C<perlbrew> commands after so because the executable
-C<perlbrew> is not in your C<PATH> anymore. Installing it again with
-cpan can temporarily solve this problem. To ensure you are not using
-a perlbrewed perl, run C<perlbrew off> before upgrading.
+    perlbrew off
+    cpan App::perlbrew
 
+You should always use system cpan (like /usr/bin/cpan) to install
+C<App::perlbrew> because then it will be installed under a system PATH
+like C</usr/bin>, which is not affected by perlbrew C<switch> or
+C<use> command.
 
-It should be relatively safe to install C<App::perlbrew> with system
-cpan (like C</usr/bin/cpan>) because then it will be installed under a
-system PATH like C</usr/bin>, which is not affected by C<perlbrew switch>
-command.
-
-Again, it is recommended to let C<perlbrew> install itself. It's
+However, it is still recommended to let C<perlbrew> install itself. It's
 easier, and it works better.
 
 =head1 USAGE
@@ -1181,13 +1232,7 @@ The MIT License
 
 =head1 CONTRIBUTORS
 
-Patches and code improvements have been contributed by:
-
-Tatsuhiko Miyagawa, Chris Prather, Yanick Champoux, aero, Jason May,
-Jesse Leuhrs, Andrew Rodland, Justin Davis, Masayoshi Sekimura,
-castaway, jrockway, chromatic, Goro Fuji, Sawyer X, Danijel Tasov,
-polettix, tokuhirom, Ævar Arnfjörð Bjarmason, Pedro Melo,
-Chad A Davis, dagolden, trcjr, rafl.
+See L<https://github.com/gugod/App-perlbrew/contributors>
 
 =head1 DISCLAIMER OF WARRANTY
 

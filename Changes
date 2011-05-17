@@ -1,3 +1,11 @@
+0.21:
+- oylenshpeegul++ Let version numbers alone mean installation names. For example, 5.12.3 means perl-5.12.3
+- audreyt++ fixed `perlbrew install <URL>` that might installs to a wrong path.
+- Fix RT #68241
+- Improve `perlbrew list` command output
+- Improve `perlbrew install` command. Now it takes a local .tar.gz filename
+- See more detail in http://perlbrew.pl/Release-0.21.html
+
 0.20:
 - For more detail release note, see https://github.com/gugod/App-perlbrew/wiki/Relesae-0.20
 - doherty++ FIX: stop when user specified an invalid perl version that cannot be found on cpan.
