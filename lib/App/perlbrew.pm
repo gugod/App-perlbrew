@@ -510,17 +510,25 @@ sub do_install_url {
     my $dist_tarball_url  = $dist;
     $dist = "$dist_name-$dist_version"; # we install it as this name later
 
-    print "Fetching $dist as $dist_tarball_path\n";
-    http_get(
-        $dist_tarball_url,
-        undef,
-        sub {
-            my ($body) = @_;
-            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
-            print $BALL $body;
-            close $BALL;
-        }
-    );
+    if ($dist_tarball_url =~ m/^file/) {
+        print "Installing $dist from local archive $dist_tarball_url\n";
+        $dist_tarball_url =~ s/^file:\/+/\//;
+        $dist_tarball_path = $dist_tarball_url;
+    }
+    else {
+        print "Fetching $dist as $dist_tarball_path\n";
+        http_get(
+            $dist_tarball_url,
+            undef,
+            sub {
+                my ($body) = @_;
+                open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
+                print $BALL $body;
+                close $BALL;
+            }
+        );
+    }
+
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
     $self->do_install_this($dist_extracted_path, $dist_version, $dist);
     return;
@@ -639,7 +647,7 @@ sub run_command_install {
         if (-d "$dist/.git") {
             $self->do_install_git($dist);
         }
-        elsif ($dist =~ m/^(?:https?|ftp)/) { # more protocols needed?
+        elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
             $self->do_install_url($dist);
         }
         elsif ($dist =~ m/(?:perl-)?blead$/) {

@@ -86,7 +86,8 @@ Build and install from the given git checkout dir.
 
 =item B<install> http://example.com/mirror/perl-5.12.3.tar.gz
 
-Build and install from the given URL.
+Build and install from the given URL. Supported URL schemes are C<http://>,
+C<https://>, C<ftp://> and C<file://>.
 
 =item B<mirror>
 
