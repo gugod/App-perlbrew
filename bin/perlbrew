@@ -196,6 +196,9 @@ This essentially creates this symlink:
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
+=item B<self-upgrade>
+
+This command upgrades Perlbrew to its latest version.
 
 =item B<version>
 
