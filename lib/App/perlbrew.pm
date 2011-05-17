@@ -702,6 +702,7 @@ sub do_install_this {
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/;
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
     print <<INSTALL if $self->{quiet} && !$self->{verbose};
+
 This could take a while. You can run the following command on another shell to track the status:
 
   tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
