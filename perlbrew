@@ -431,10 +431,14 @@ Perlbrew environment initiated, required directories are created under
 
     $root_dir
 
-Paste the following line to the end of your ~/.${yourshrc} and start a
-new shell, perlbrew should be up and fully functional from there:
+Paste either one of the following lines to the end of your ~/.${yourshrc}
+and start a new shell, perlbrew should be up and fully functional from there:
 
-    source $root_dir/etc/${shrc}
+    # for bash, pdksh, and zsh
+    . $root_dir/etc/bashrc
+
+    # for csh
+    source $root_dir/etc/cshrc
 
 For further instructions, simply run `perlbrew` to see the help message.
 
