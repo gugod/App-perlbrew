@@ -1021,6 +1021,33 @@ sub run_command_install_cpanm {
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
+sub run_command_self_upgrade {
+    my ($self) = @_;
+
+    my $perlbrew_install = http_get('http://xrl.us/perlbrewinstall');
+    open my $fh, '>', '/tmp/perlbrewinstall';
+    print $fh $perlbrew_install;
+    close $fh;
+    exec 'bash', '/tmp/perlbrewinstall';
+}
+
+sub run_command_uninstall {
+    my ( $self, $target ) = @_;
+
+    unless($target) {
+        die "You need to tell me what to uninstall!\n";
+    }
+
+    if($target eq 'current') {
+        die "Cannot uninstall the 'current' symlink!\n";
+    }
+    my $dir = "$ROOT/perls/$target";
+    unless(-d $dir) {
+        die "'$target' is not installed\n";
+    }
+    exec 'rm', '-rf', $dir;
+}
+
 sub run_command_exec {
     my ($self, @args) = @_;
 
@@ -1193,6 +1220,10 @@ Build and install from the given archive file.
 Build and install from the given URL. Supported URL schemes are C<http://>,
 C<https://>, C<ftp://> and C<file://>.
 
+=item B<uninstall> <target>
+
+Uninstalls the given version.
+
 =item B<mirror>
 
 Run this if you want to choose a specific CPAN mirror to install the
@@ -1297,6 +1328,9 @@ This essentially creates this symlink:
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
+=item B<self-upgrade>
+
+This command upgrades Perlbrew to its latest version.
 
 =item B<version>
 

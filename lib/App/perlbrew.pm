@@ -1019,6 +1019,33 @@ sub run_command_install_cpanm {
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
+sub run_command_self_upgrade {
+    my ($self) = @_;
+
+    my $perlbrew_install = http_get('http://xrl.us/perlbrewinstall');
+    open my $fh, '>', '/tmp/perlbrewinstall';
+    print $fh $perlbrew_install;
+    close $fh;
+    exec 'bash', '/tmp/perlbrewinstall';
+}
+
+sub run_command_uninstall {
+    my ( $self, $target ) = @_;
+
+    unless($target) {
+        die "You need to tell me what to uninstall!\n";
+    }
+
+    if($target eq 'current') {
+        die "Cannot uninstall the 'current' symlink!\n";
+    }
+    my $dir = "$ROOT/perls/$target";
+    unless(-d $dir) {
+        die "'$target' is not installed\n";
+    }
+    exec 'rm', '-rf', $dir;
+}
+
 sub run_command_exec {
     my ($self, @args) = @_;
 
