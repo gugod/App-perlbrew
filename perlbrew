@@ -410,16 +410,6 @@ sub run_command_init {
     print CSHRC CSHRC_CONTENT;
     close CSHRC;
 
-    my ( $shrc, $yourshrc );
-    if ( $self->is_shell_csh) {
-        $shrc     = 'cshrc';
-        $self->env("SHELL") =~ m/(t?csh)/;
-        $yourshrc = $1 . "rc";
-    }
-    else {
-        $shrc = $yourshrc = 'bashrc';
-    }
-
     system("$0 env @{[ $self->current_perl ]}> ${HOME}/.perlbrew/init");
 
     $self->run_command_symlink_executables;
@@ -431,13 +421,13 @@ Perlbrew environment initiated, required directories are created under
 
     $root_dir
 
-Paste either one of the following lines to the end of your ~/.${yourshrc}
+Paste either one of the following lines to the end of your shell's rc file
 and start a new shell, perlbrew should be up and fully functional from there:
 
-    # for bash, pdksh, and zsh
+    # for ~/.bashrc, ~/.kshrc, or ~/.zshrc
     . $root_dir/etc/bashrc
 
-    # for csh
+    # for ~/.cshrc
     source $root_dir/etc/cshrc
 
 For further instructions, simply run `perlbrew` to see the help message.
