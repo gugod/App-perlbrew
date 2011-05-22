@@ -19,6 +19,7 @@ perlbrew - Perl Environment manager.
     Commonly used commands:
         init           Initialize perlbrew environment.
         install        Install perl
+        uninstall      Uninstall the given installation
         list           List installed perls
         use            Use the specified perl in current shell
         available      List perls available to install
@@ -39,6 +40,7 @@ perlbrew - Perl Environment manager.
 
         perlbrew switch /path/to/special/perl
         perlbrew switch /path/to/special/perl special-perl
+
         # later
         perlbrew switch special-perl
 

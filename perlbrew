@@ -1035,12 +1035,19 @@ sub run_command_uninstall {
     my ( $self, $target ) = @_;
 
     unless($target) {
-        die "You need to tell me what to uninstall!\n";
+        die <<USAGE
+
+Usage: perlbrew uninstall <name>
+
+    The name is the installation name as in the output of `perlbrew list`
+
+USAGE
     }
 
     if($target eq 'current') {
         die "Cannot uninstall the 'current' symlink!\n";
     }
+
     my $dir = "$ROOT/perls/$target";
     unless(-d $dir) {
         die "'$target' is not installed\n";
@@ -1147,6 +1154,7 @@ perlbrew - Perl Environment manager.
     Commonly used commands:
         init           Initialize perlbrew environment.
         install        Install perl
+        uninstall      Uninstall the given installation
         list           List installed perls
         use            Use the specified perl in current shell
         available      List perls available to install
@@ -1167,6 +1175,7 @@ perlbrew - Perl Environment manager.
 
         perlbrew switch /path/to/special/perl
         perlbrew switch /path/to/special/perl special-perl
+
         # later
         perlbrew switch special-perl
 

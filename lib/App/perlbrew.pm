@@ -1033,12 +1033,19 @@ sub run_command_uninstall {
     my ( $self, $target ) = @_;
 
     unless($target) {
-        die "You need to tell me what to uninstall!\n";
+        die <<USAGE
+
+Usage: perlbrew uninstall <name>
+
+    The name is the installation name as in the output of `perlbrew list`
+
+USAGE
     }
 
     if($target eq 'current') {
         die "Cannot uninstall the 'current' symlink!\n";
     }
+
     my $dir = "$ROOT/perls/$target";
     unless(-d $dir) {
         die "'$target' is not installed\n";
