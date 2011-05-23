@@ -100,7 +100,7 @@ perlbrew () {
             ;;
 
         (*)
-            command perlbrew $short_option $*
+            command perlbrew $short_option "$@"
             exit_status=$?
             ;;
     esac
