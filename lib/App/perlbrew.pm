@@ -797,7 +797,8 @@ sub installed_perls {
         push @result, {
             name => $name,
             version => $self->format_perl_version(`$executable -e 'print \$]'`),
-            is_current => (current_perl eq $name)
+            is_current => (current_perl eq $name),
+            is_external => 0
         };
     }
 
@@ -811,7 +812,8 @@ sub installed_perls {
         push @result, {
             name => $_,
             version => $current_perl_executable_version,
-            is_current => $current_perl_executable && ($_ eq $current_perl_executable)
+            is_current => $current_perl_executable && ($_ eq $current_perl_executable),
+            is_external => 1
         } unless index($_, $ROOT) == 0;
     }
 
