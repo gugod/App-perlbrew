@@ -132,6 +132,17 @@ future terminal sessions.
 
 Without a parameter, shows the version of perl currently selected.
 
+=item B<alias> [-f] create <name> <alias>
+
+Create an alias for the installation named <name>.
+
+=item B<alias> [-f] rename <old_alias> <new_alias>
+
+Rename the alias to a new name.
+
+=item B<alias> delete <alias>
+
+Delete the given alias.
 
 =item B<off>
 
