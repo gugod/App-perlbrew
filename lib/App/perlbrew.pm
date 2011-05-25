@@ -1097,8 +1097,8 @@ sub run_command_alias {
 Usage: perlbrew alias [-f] <action> <name> [<alias>]
 
     perlbrew alias create <name> <alias>
-    perlbrew alias delete <name>
-    perlbrew alias rename <name> <alias>
+    perlbrew alias delete <alias>
+    perlbrew alias rename <old_alias> <new_alias>
 
 USAGE
         return;
@@ -1143,10 +1143,14 @@ USAGE
             die "\nABORT: The installation name `$name` is not an alias, cannot rename.\n\n";
         }
 
+        if (-l $path_alias && !$self->{force}) {
+            die "\nABORT: The alias `$alias` already exists, cannot rename to it.\n\n";
+        }
+
         rename($path_name, $path_alias);
     }
     else {
-        die "\nUnrecognized command `alias ${name}`.\n\n";
+        die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
     }
 }
 
