@@ -791,7 +791,6 @@ sub installed_perls {
     my @result;
 
     for (<$ROOT/perls/*>) {
-        next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         my $executable = catfile($_, 'bin', 'perl');
 
@@ -1042,11 +1041,12 @@ Usage: perlbrew uninstall <name>
 USAGE
     }
 
-    if($target eq 'current') {
-        die "Cannot uninstall the 'current' symlink!\n";
+    my $dir = "$ROOT/perls/$target";
+
+    if (-l $dir) {
+        die "\nThe given name `$target` is an alias, not a real installation. Cannot perform uninstall.\nTo delete the alias, run:\n\n    perlbrew alias delete $target\n\n";
     }
 
-    my $dir = "$ROOT/perls/$target";
     unless(-d $dir) {
         die "'$target' is not installed\n";
     }
@@ -1086,6 +1086,68 @@ sub run_command_clean {
     }
 
     print "\nDone\n";
+}
+
+sub run_command_alias {
+    my ($self, $cmd, $name, $alias) = @_;
+
+    if (!$cmd) {
+        print <<USAGE;
+
+Usage: perlbrew alias [-f] <action> <name> [<alias>]
+
+    perlbrew alias create <name> <alias>
+    perlbrew alias delete <name>
+    perlbrew alias rename <name> <alias>
+
+USAGE
+        return;
+    }
+
+    my @installed = $self->installed_perls;
+
+    my $installation_exists = sub {
+        my ($n) = @_;
+        scalar grep { $n eq $_->{name} } @installed;
+    };
+
+    unless ($installation_exists->($name)) {
+        die "\nABORT: The installation `${name}` does not exist.\n\n";
+    }
+
+    my $path_name  = catfile($ROOT, "perls", $name);
+    my $path_alias = catfile($ROOT, "perls", $alias) if $alias;
+
+    if ($alias && -e $path_alias && !-l $path_alias) {
+        die "\nABORT: The installation name `$alias` is not an alias, cannot override.\n\n";
+    }
+
+    if ($cmd eq 'create') {
+        if ($installation_exists->($alias) && !$self->{force}) {
+            die "\nABORT: The installation `${alias}` already exists. Cannot override.\n\n";
+        }
+
+
+        unlink($path_alias) if -e $path_alias;
+        symlink($path_name, $path_alias);
+    }
+    elsif($cmd eq 'delete') {
+        unless (-l $path_name) {
+            die "\nABORT: The installation name `$name` is not an alias, cannot remove.\n\n";
+        }
+
+        unlink($path_name);
+    }
+    elsif($cmd eq 'rename') {
+        unless (-l $path_name) {
+            die "\nABORT: The installation name `$name` is not an alias, cannot rename.\n\n";
+        }
+
+        rename($path_name, $path_alias);
+    }
+    else {
+        die "\nUnrecognized command `alias ${name}`.\n\n";
+    }
 }
 
 sub conf {
