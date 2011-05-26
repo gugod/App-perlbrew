@@ -1116,14 +1116,7 @@ USAGE
         return;
     }
 
-    my @installed = $self->installed_perls;
-
-    my $installation_exists = sub {
-        my ($n) = @_;
-        scalar grep { $n eq $_->{name} } @installed;
-    };
-
-    unless ($installation_exists->($name)) {
+    unless ( $self->is_installed($name) ) {
         die "\nABORT: The installation `${name}` does not exist.\n\n";
     }
 
@@ -1135,7 +1128,7 @@ USAGE
     }
 
     if ($cmd eq 'create') {
-        if ($installation_exists->($alias) && !$self->{force}) {
+        if ( $self->is_installed($alias) && !$self->{force} ) {
             die "\nABORT: The installation `${alias}` already exists. Cannot override.\n\n";
         }
 
