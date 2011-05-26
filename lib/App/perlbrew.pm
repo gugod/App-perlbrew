@@ -640,7 +640,7 @@ sub run_command_install {
         return
     }
 
-    if (grep { $dist eq $_->{name} } $self->installed_perls) {
+    if ($self->is_installed($dist)) {
         die "\nABORT: $dist is already installed.\n\n";
     }
 
@@ -822,6 +822,12 @@ sub installed_perls {
     }
 
     return @result;
+}
+
+sub is_installed {
+    my ($self, $name) = @_;
+    my @installed = grep { !$_->{is_external} } $self->installed_perls;
+    return grep { $name eq $_->{name} } @installed;
 }
 
 # Return a hash of PERLBREW_* variables

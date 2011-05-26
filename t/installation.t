@@ -59,4 +59,13 @@ note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
     } "should die when doing install with the same name.";
 }
 
+subtest "App::perlbrew#is_installed method." => sub {
+    plan tests => 3;
+
+    my $app = App::perlbrew->new;
+    ok $app->can("is_installed");
+    ok $app->is_installed("perl-5.14.0");
+    ok !$app->is_installed("perl-5.13.0");
+};
+
 done_testing;
