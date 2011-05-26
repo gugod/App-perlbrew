@@ -640,7 +640,7 @@ sub run_command_install {
         return
     }
 
-    if ($self->is_installed($dist)) {
+    if ($self->is_installed($self->{as} || $dist)) {
         die "\nABORT: $dist is already installed.\n\n";
     }
 

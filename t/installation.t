@@ -23,6 +23,8 @@ no warnings 'redefine';
 sub App::perlbrew::do_install_release {
     my ($self, $name) = @_;
 
+    $name = $self->{as} if $self->{as};
+
     my $root = dir($ENV{PERLBREW_ROOT});
     my $installation_dir = $root->subdir("perls", $name);
     App::perlbrew::mkpath($installation_dir);
@@ -56,16 +58,33 @@ note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
     dies_ok {
         my $app = App::perlbrew->new("install", "perl-5.14.0");
         $app->run;
-    } "should die when doing install with the same name.";
+    } "should die when doing install with existing distribution name.";
 }
 
 subtest "App::perlbrew#is_installed method." => sub {
-    plan tests => 3;
-
     my $app = App::perlbrew->new;
     ok $app->can("is_installed");
     ok $app->is_installed("perl-5.14.0");
     ok !$app->is_installed("perl-5.13.0");
+
+    done_testing;
+};
+
+subtest "do not clobber exitsing user-specified name." => sub {
+    my $app = App::perlbrew->new("install", "perl-5.14.0", "--as", "the-dude");
+    $app->run;
+
+    my @installed = grep { !$_->{is_external} } $app->installed_perls;
+    is 0+@installed, 2;
+
+    ok grep { $_->{name} eq 'the-dude' } $app->installed_perls;
+
+    dies_ok {
+        my $app = App::perlbrew->new("install", "perl-5.14.0", "--as", "the-dude");
+        $app->run;
+    } "should die when doing install with existing user-specified name.";
+
+    done_testing;
 };
 
 done_testing;
