@@ -19,6 +19,7 @@ perlbrew - Perl Environment manager.
     Commonly used commands:
         init           Initialize perlbrew environment.
         install        Install perl
+        uninstall      Uninstall the given installation
         list           List installed perls
         use            Use the specified perl in current shell
         available      List perls available to install
@@ -39,6 +40,7 @@ perlbrew - Perl Environment manager.
 
         perlbrew switch /path/to/special/perl
         perlbrew switch /path/to/special/perl special-perl
+
         # later
         perlbrew switch special-perl
 
@@ -92,6 +94,10 @@ Build and install from the given archive file.
 Build and install from the given URL. Supported URL schemes are C<http://>,
 C<https://>, C<ftp://> and C<file://>.
 
+=item B<uninstall> <target>
+
+Uninstalls the given version.
+
 =item B<mirror>
 
 Run this if you want to choose a specific CPAN mirror to install the
@@ -126,6 +132,17 @@ future terminal sessions.
 
 Without a parameter, shows the version of perl currently selected.
 
+=item B<alias> [-f] create <name> <alias>
+
+Create an alias for the installation named <name>.
+
+=item B<alias> [-f] rename <old_alias> <new_alias>
+
+Rename the alias to a new name.
+
+=item B<alias> delete <alias>
+
+Delete the given alias.
 
 =item B<off>
 
@@ -196,6 +213,9 @@ This essentially creates this symlink:
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
+=item B<self-upgrade>
+
+This command upgrades Perlbrew to its latest version.
 
 =item B<version>
 

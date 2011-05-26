@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.21";
+our $VERSION = "0.22";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -100,7 +100,7 @@ perlbrew () {
             ;;
 
         (*)
-            command perlbrew $short_option $*
+            command perlbrew $short_option "$@"
             exit_status=$?
             ;;
     esac
@@ -640,6 +640,11 @@ sub run_command_install {
         return
     }
 
+    my $installation_name = $self->{as} || $dist;
+    if ($self->is_installed( $installation_name )) {
+        die "\nABORT: $installation_name is already installed.\n\n";
+    }
+
     my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
@@ -791,14 +796,14 @@ sub installed_perls {
     my @result;
 
     for (<$ROOT/perls/*>) {
-        next if m/current/;
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         my $executable = catfile($_, 'bin', 'perl');
 
         push @result, {
             name => $name,
             version => $self->format_perl_version(`$executable -e 'print \$]'`),
-            is_current => (current_perl eq $name)
+            is_current => (current_perl eq $name),
+            is_external => 0
         };
     }
 
@@ -812,11 +817,18 @@ sub installed_perls {
         push @result, {
             name => $_,
             version => $current_perl_executable_version,
-            is_current => $current_perl_executable && ($_ eq $current_perl_executable)
+            is_current => $current_perl_executable && ($_ eq $current_perl_executable),
+            is_external => 1
         } unless index($_, $ROOT) == 0;
     }
 
     return @result;
+}
+
+sub is_installed {
+    my ($self, $name) = @_;
+    my @installed = grep { !$_->{is_external} } $self->installed_perls;
+    return grep { $name eq $_->{name} } @installed;
 }
 
 # Return a hash of PERLBREW_* variables
@@ -1019,6 +1031,41 @@ sub run_command_install_cpanm {
     print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
 }
 
+sub run_command_self_upgrade {
+    my ($self) = @_;
+
+    my $perlbrew_install = http_get('http://xrl.us/perlbrewinstall');
+    open my $fh, '>', '/tmp/perlbrewinstall';
+    print $fh $perlbrew_install;
+    close $fh;
+    exec 'bash', '/tmp/perlbrewinstall';
+}
+
+sub run_command_uninstall {
+    my ( $self, $target ) = @_;
+
+    unless($target) {
+        die <<USAGE
+
+Usage: perlbrew uninstall <name>
+
+    The name is the installation name as in the output of `perlbrew list`
+
+USAGE
+    }
+
+    my $dir = "$ROOT/perls/$target";
+
+    if (-l $dir) {
+        die "\nThe given name `$target` is an alias, not a real installation. Cannot perform uninstall.\nTo delete the alias, run:\n\n    perlbrew alias delete $target\n\n";
+    }
+
+    unless(-d $dir) {
+        die "'$target' is not installed\n";
+    }
+    exec 'rm', '-rf', $dir;
+}
+
 sub run_command_exec {
     my ($self, @args) = @_;
 
@@ -1052,6 +1099,65 @@ sub run_command_clean {
     }
 
     print "\nDone\n";
+}
+
+sub run_command_alias {
+    my ($self, $cmd, $name, $alias) = @_;
+
+    if (!$cmd) {
+        print <<USAGE;
+
+Usage: perlbrew alias [-f] <action> <name> [<alias>]
+
+    perlbrew alias create <name> <alias>
+    perlbrew alias delete <alias>
+    perlbrew alias rename <old_alias> <new_alias>
+
+USAGE
+        return;
+    }
+
+    unless ( $self->is_installed($name) ) {
+        die "\nABORT: The installation `${name}` does not exist.\n\n";
+    }
+
+    my $path_name  = catfile($ROOT, "perls", $name);
+    my $path_alias = catfile($ROOT, "perls", $alias) if $alias;
+
+    if ($alias && -e $path_alias && !-l $path_alias) {
+        die "\nABORT: The installation name `$alias` is not an alias, cannot override.\n\n";
+    }
+
+    if ($cmd eq 'create') {
+        if ( $self->is_installed($alias) && !$self->{force} ) {
+            die "\nABORT: The installation `${alias}` already exists. Cannot override.\n\n";
+        }
+
+
+        unlink($path_alias) if -e $path_alias;
+        symlink($path_name, $path_alias);
+    }
+    elsif($cmd eq 'delete') {
+        unless (-l $path_name) {
+            die "\nABORT: The installation name `$name` is not an alias, cannot remove.\n\n";
+        }
+
+        unlink($path_name);
+    }
+    elsif($cmd eq 'rename') {
+        unless (-l $path_name) {
+            die "\nABORT: The installation name `$name` is not an alias, cannot rename.\n\n";
+        }
+
+        if (-l $path_alias && !$self->{force}) {
+            die "\nABORT: The alias `$alias` already exists, cannot rename to it.\n\n";
+        }
+
+        rename($path_name, $path_alias);
+    }
+    else {
+        die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
+    }
 }
 
 sub conf {

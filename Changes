@@ -1,3 +1,9 @@
+0.22:
+- Fix ccache support on Linux with bash.. GH #87.
+- `install` command no longer clobbers existing installations.
+- New commands: uninstall, alias, self-upgrade
+- See more on http://perlbrew.pl/Release-0.22.html
+
 0.21:
 - oylenshpeegul++ Let version numbers alone mean installation names. For example, 5.12.3 means perl-5.12.3
 - audreyt++ fixed `perlbrew install <URL>` that might installs to a wrong path.

@@ -7,11 +7,12 @@ use App::perlbrew;
 use Test::Output;
 
 my $app = App::perlbrew->new();
+my $version = $App::perlbrew::VERSION;
 
 stdout_is(
     sub {
         $app->run_command('version');
     },
-    "t/05.get_current_perl.t  - App::perlbrew/0.21\n",
+    "t/05.get_current_perl.t  - App::perlbrew/$version\n",
     'Test version'
 );
