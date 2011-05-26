@@ -8,6 +8,7 @@ BEGIN {
 }
 
 use Test::More;
+use Test::Exception;
 use App::perlbrew;
 use Try::Tiny;
 
@@ -51,6 +52,11 @@ note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
     is 0+@installed, 1;
 
     is $installed[0]->{name}, "perl-5.14.0";
+
+    dies_ok {
+        my $app = App::perlbrew->new("install", "perl-5.14.0");
+        $app->run;
+    } "should die when doing install with the same name.";
 }
 
 done_testing;

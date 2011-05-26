@@ -640,6 +640,10 @@ sub run_command_install {
         return
     }
 
+    if (grep { $dist eq $_->{name} } $self->installed_perls) {
+        die "\nABORT: $dist is already installed.\n\n";
+    }
+
     my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
