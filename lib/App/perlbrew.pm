@@ -640,8 +640,9 @@ sub run_command_install {
         return
     }
 
-    if ($self->is_installed($self->{as} || $dist)) {
-        die "\nABORT: $dist is already installed.\n\n";
+    my $installation_name = $self->{as} || $dist;
+    if ($self->is_installed( $installation_name )) {
+        die "\nABORT: $installation_name is already installed.\n\n";
     }
 
     my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
