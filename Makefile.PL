@@ -57,6 +57,7 @@ test_requires 'Test::Output';
 test_requires 'Test::Exception';
 test_requires 'Path::Class';
 test_requires 'IO::All';
+test_requires 'Try::Tiny';
 
 install_script 'bin/perlbrew';
 
