@@ -1,3 +1,6 @@
+$NEXT
+- Fix auto-detection of curl
+
 0.22:
 - Fix ccache support on Linux with bash.. GH #87.
 - `install` command no longer clobbers existing installations.
