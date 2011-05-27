@@ -200,7 +200,8 @@ sub uniq(@) {
             );
             for my $command (@commands) {
                 my $program = $command->[0];
-                if (! system("$program --version >/dev/null 2>&1")) {
+                my $code = system("$program --version >/dev/null 2>&1") >> 8;
+                if ($code != 127) {
                     @command = @$command;
                     last;
                 }
