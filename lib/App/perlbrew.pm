@@ -231,6 +231,7 @@ sub new {
     my($class, @argv) = @_;
 
     my %opt = (
+        args  => \@argv,
         force => 0,
         quiet => 1,
         D => [],
@@ -273,8 +274,6 @@ sub new {
             $value =~ s/^=//;
         }
     }
-
-    $opt{args} = \@ARGV;
 
     return bless \%opt, $class;
 }
