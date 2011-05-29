@@ -1275,7 +1275,7 @@ To use C<perlbrew>, it is required to install C<curl> or C<wget>
 first. C<perlbrew> depends on one of this two external commmands to be
 there in order to fetch files from the internet.
 
-The recommended way to install perlbrew is to run these statements in
+The recommended way to install perlbrew is to run this statement in
 your shell:
 
     curl -L http://xrl.us/perlbrewinstall | bash
@@ -1303,9 +1303,9 @@ a C<PERLBREW_ROOT> environment variable before running the installer:
 By default, C<perlbrew> looks for the intialization file that exports
 C<PERLBREW_ROOT> in C<~/.perlbrew/init>.  In some cases (for instance,
 if your home directory is shared across multiple machines), you may
-wish to have several different perlbrew installations.  If so, you can
-use the C<PERLBREW_HOME> environment variable to tell perlbrew where
-to look for the initialization file.
+wish to have several different perlbrew setting per-machine. If so,
+you can use the C<PERLBREW_HOME> environment variable to tell perlbrew
+where to look for the initialization file.
 
  # on machine a
  $ PERLBREW_HOME=~/.perlbrew-a PERLBREW_ROOT=~/perl5/perlbrew-a ./perlbrew install
@@ -1313,19 +1313,19 @@ to look for the initialization file.
  # on machine b
  $ PERLBREW_HOME=~/.perlbrew-b PERLBREW_ROOT=~/perl5/perlbrew-b ./perlbrew install
 
-Note: If you're using a non-standard C<PERLBREW_HOME>, you will need
-to specify both C<PERLBREW_HOME> and C<PERLBREW_ROOT> when you first
-install perlbrew.  After that, you'll need to make sure
-C<PERLBREW_HOME> is exported when you log in, before you source
-C<$PERLBREW_ROOT/etc/bashrc> (or C<cshrc>). Example C<.bashrc>:
+If you specify C<PERLBREW_HOME>, you will also need to specify both
+C<PERLBREW_HOME> and C<PERLBREW_ROOT> when you first install perlbrew.
+After that, you'll need to make sure C<PERLBREW_HOME> is exported when
+you log in, before you source C<$PERLBREW_ROOT/etc/bashrc> (or
+C<cshrc>). Example C<.bashrc>:
 
- if [ "$(hostname)" == "machine-a" ]; then
-     export PERLBREW_HOME=~/.perlbrew-a
-     source ~/perl5/perlbrew-a/etc/bashrc
- elif [ "$(hostname)" == "machine-b" ]; then
-     export PERLBREW_HOME=~/.perlbrew-b
-     source ~/perl5/perlbrew-b/etc/bashrc
- fi
+    if [ "$(hostname)" == "machine-a" ]; then
+        export PERLBREW_HOME=~/.perlbrew-a
+        source ~/perl5/perlbrew-a/etc/bashrc
+    elif [ "$(hostname)" == "machine-b" ]; then
+        export PERLBREW_HOME=~/.perlbrew-b
+        source ~/perl5/perlbrew-b/etc/bashrc
+    fi
 
 You may also install perlbrew from CPAN:
 
