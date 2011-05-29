@@ -1080,7 +1080,9 @@ USAGE
 }
 
 sub run_command_exec {
-    my ($self, @args) = @_;
+    my $self = shift;
+    my @args = @{$self->{args}};
+    shift @args;
 
     for my $i ( $self->installed_perls ) {
         my %env = $self->perlbrew_env($i->{name});
