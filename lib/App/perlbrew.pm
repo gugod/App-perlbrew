@@ -231,7 +231,7 @@ sub new {
     my($class, @argv) = @_;
 
     my %opt = (
-        args  => \@argv,
+        original_argv  => \@argv,
         force => 0,
         quiet => 1,
         D => [],
@@ -267,6 +267,8 @@ sub new {
         'j=i'
     )
       or run_command_help(1);
+
+    $opt{args} = \@ARGV;
 
     # fix up the effect of 'bundling'
     foreach my $flags (@opt{qw(D U A)}) {
@@ -1081,7 +1083,7 @@ USAGE
 
 sub run_command_exec {
     my $self = shift;
-    my @args = @{$self->{args}};
+    my @args = @{$self->{original_argv}};
     shift @args;
 
     for my $i ( $self->installed_perls ) {
