@@ -1,5 +1,7 @@
 $NEXT
 - Fix auto-detection of curl
+- Support OpenBSD pdksh. The provided bashrc should be compatible with pdksh.
+- Small improvement of 'exec' command. `perlbrew exec perl -v` now works.
 
 0.22:
 - Fix ccache support on Linux with bash.. GH #87.
