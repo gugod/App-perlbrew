@@ -10,7 +10,6 @@ BEGIN {
 use Test::More;
 use Test::Exception;
 use App::perlbrew;
-use Try::Tiny;
 
 ## setup
 
