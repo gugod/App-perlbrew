@@ -11,10 +11,10 @@ sub App::perlbrew::http_get { "" }
 
 throws_ok(
     sub {
-        my $app = App::perlbrew->new("mirror");
+        my $app = App::perlbrew->new("available");
         $app->run;
     },
-    qr"ERROR: Failed to retrive the mirror list."
+    qr[ERROR: Unable to retrieve the list of perls.]
 );
 
 done_testing;
