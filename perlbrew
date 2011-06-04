@@ -1045,6 +1045,10 @@ sub run_command_install_cpanm {
     my ($self, $perl) = @_;
     my $body = http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
 
+    unless ($body) {
+        die "\nERROR: Failed to retrive cpanm executable.\n\n";
+    }
+
     open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
     print $CPANM $body;
     close $CPANM;
