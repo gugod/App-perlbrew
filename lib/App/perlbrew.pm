@@ -953,6 +953,11 @@ sub run_command_mirror {
     my($self) = @_;
     print "Fetching mirror list\n";
     my $raw = http_get("http://search.cpan.org/mirror");
+
+    unless ($raw) {
+        die "\nERROR: Failed to retrive the mirror list.\n\n";
+    }
+
     my $found;
     my @mirrors;
     foreach my $line ( split m{\n}, $raw ) {
