@@ -386,6 +386,10 @@ sub get_available_perls {
     my $url = "http://www.cpan.org/src/README.html";
     my $html = http_get( $url, undef, undef );
 
+    unless($html) {
+        die "\nERROR: Unable to retrieve the list of perls.\n\n";
+    }
+
     my @available_versions;
 
     for ( split "\n", $html ) {
