@@ -223,7 +223,8 @@ sub uniq(@) {
             if $command[0] eq 'wget' # Exit code is 8 on 404s etc
             and $? >> 8 == 8;
 
-        return $cb ? $cb->($body) : $body;
+        $cb ||= sub { return $_[0] };
+        return $cb->($body);
     }
 }
 
@@ -583,9 +584,13 @@ sub do_install_blead {
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
     http_get(
         "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball",
-        undef,
         sub {
             my ($body) = @_;
+
+            unless ($body) {
+                die "\nERROR: Failed to download perl-blead tarball.\n\n";
+            }
+
             open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
             print $BALL $body;
             close $BALL;
