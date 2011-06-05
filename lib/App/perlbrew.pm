@@ -621,6 +621,10 @@ sub do_install_release {
     my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
     my $html = http_get("http://search.cpan.org/dist/$dist", $header);
 
+    unless ($html) {
+        die "ERROR: Failed to download $dist tarball.";
+    }
+
     my ($dist_path, $dist_tarball) =
         $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
     die "ERROR: Cannot find the tarball for $dist\n"
