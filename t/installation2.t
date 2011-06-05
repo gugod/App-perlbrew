@@ -13,13 +13,36 @@ use App::perlbrew;
 
 ## setup
 
-App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
+
 
 ##
 
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 
 describe "App::perlbrew" => sub {
+    before each => sub {
+        App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
+        App::perlbrew::mkpath( $ENV{PERLBREW_ROOT} );
+    };
+
+    describe "->do_install_url method" => sub {
+        it "should accept an URL to perl tarball, and download the tarball." => sub {
+            my $app = App::perlbrew->new;
+
+            my @expectations;
+            push @expectations, App::perlbrew->expects("http_get")->returns("Not going to GET it!");
+            push @expectations, $app->expects("do_extract_tarball")->returns("");
+            push @expectations, $app->expects("do_install_this")->returns("");
+
+            $app->do_install_url("http://example.com/perl-5.14.0.tar.gz");
+
+            for(@expectations) {
+                ok $_->verify;
+            }
+            pass;
+        }
+    };
+
     describe "->do_install_archive method" => sub {
         it "accepts a path to perl tarball and perform installation process." => sub {
             my $app = App::perlbrew->new;
