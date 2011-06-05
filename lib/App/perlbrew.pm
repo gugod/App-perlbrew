@@ -223,8 +223,7 @@ sub uniq(@) {
             if $command[0] eq 'wget' # Exit code is 8 on 404s etc
             and $? >> 8 == 8;
 
-        $cb ||= sub { return $_[0] };
-        return $cb->($body);
+        return $cb ? $cb->($body) : $body;
     }
 }
 
@@ -839,7 +838,7 @@ sub installed_perls {
     $current_perl_executable =~ s/\n$//;
 
     my $current_perl_executable_version;
-    for ( uniq grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $self->env('PATH')) ) {
+    for ( grep { -f $_ && -x $_ } uniq map { s/\/+$//; "$_/perl" } split(":", $self->env('PATH')) ) {
         $current_perl_executable_version =
           $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
