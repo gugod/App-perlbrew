@@ -1,4 +1,4 @@
-NEXT:
+0.24:
 - Done GH #92 -- Show error messages on network errors.
 - Fix GH #82 -- deduplicate items in PATH for the `list` command.
 - Tests for various commands and methods.
