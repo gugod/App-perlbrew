@@ -4,10 +4,10 @@ cd /tmp
 
 echo
 echo "## Download the latest perlbrew"
-curl -O https://github.com/gugod/App-perlbrew/raw/master/perlbrew >/dev/null 2>&1
+curl -LO https://github.com/gugod/App-perlbrew/raw/master/perlbrew >/dev/null 2>&1
 
 echo "## Download the packed patchperl"
-curl -O https://gist.github.com/raw/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc/patchperl >/dev/null 2>&1
+curl -LO https://gist.github.com/raw/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc/patchperl >/dev/null 2>&1
 
 echo
 echo "## Installing perlbrew"
