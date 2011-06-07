@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 
-our $VERSION = "0.23";
+our $VERSION = "0.24";
 our $CONF;
 
 my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -386,6 +386,10 @@ sub get_available_perls {
     my $url = "http://www.cpan.org/src/README.html";
     my $html = http_get( $url, undef, undef );
 
+    unless($html) {
+        die "\nERROR: Unable to retrieve the list of perls.\n\n";
+    }
+
     my @available_versions;
 
     for ( split "\n", $html ) {
@@ -579,9 +583,13 @@ sub do_install_blead {
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
     http_get(
         "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball",
-        undef,
         sub {
             my ($body) = @_;
+
+            unless ($body) {
+                die "\nERROR: Failed to download perl-blead tarball.\n\n";
+            }
+
             open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
             print $BALL $body;
             close $BALL;
@@ -616,6 +624,10 @@ sub do_install_release {
     my $mirror = $self->conf->{mirror};
     my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
     my $html = http_get("http://search.cpan.org/dist/$dist", $header);
+
+    unless ($html) {
+        die "ERROR: Failed to download $dist tarball.";
+    }
 
     my ($dist_path, $dist_tarball) =
         $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
@@ -826,7 +838,7 @@ sub installed_perls {
     $current_perl_executable =~ s/\n$//;
 
     my $current_perl_executable_version;
-    for ( uniq grep { -f $_ && -x $_ } map { "$_/perl" } split(":", $self->env('PATH')) ) {
+    for ( grep { -f $_ && -x $_ } uniq map { s/\/+$//; "$_/perl" } split(":", $self->env('PATH')) ) {
         $current_perl_executable_version =
           $self->format_perl_version(`$_ -e 'print \$]'`);
         push @result, {
@@ -949,6 +961,11 @@ sub run_command_mirror {
     my($self) = @_;
     print "Fetching mirror list\n";
     my $raw = http_get("http://search.cpan.org/mirror");
+
+    unless ($raw) {
+        die "\nERROR: Failed to retrive the mirror list.\n\n";
+    }
+
     my $found;
     my @mirrors;
     foreach my $line ( split m{\n}, $raw ) {
@@ -1038,6 +1055,10 @@ sub run_command_symlink_executables {
 sub run_command_install_cpanm {
     my ($self, $perl) = @_;
     my $body = http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
+
+    unless ($body) {
+        die "\nERROR: Failed to retrive cpanm executable.\n\n";
+    }
 
     open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
     print $CPANM $body;
