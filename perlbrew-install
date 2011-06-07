@@ -4,10 +4,10 @@ cd /tmp
 
 echo
 echo "## Download the latest perlbrew"
-curl -LO https://github.com/gugod/App-perlbrew/raw/master/perlbrew >/dev/null 2>&1
+curl -Lo perlbrew https://raw.github.com/gugod/App-perlbrew/master/perlbrew >/dev/null 2>&1
 
 echo "## Download the packed patchperl"
-curl -LO https://gist.github.com/raw/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc/patchperl >/dev/null 2>&1
+curl -Lo patchperl https://raw.github.com/gist/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc >/dev/null 2>&1
 
 echo
 echo "## Installing perlbrew"
@@ -18,6 +18,8 @@ echo "## Installing patchperl"
 if [ "X${PERLBREW_ROOT}" == "X" ]; then
     PERLBREW_ROOT="${HOME}/perl5/perlbrew"
 fi
+mkdir -p "$PERLBREW_ROOT"
+
 chmod +x patchperl
 cp patchperl "${PERLBREW_ROOT}/bin"
 
