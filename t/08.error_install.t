@@ -11,6 +11,11 @@ BEGIN {
 }
 
 use App::perlbrew;
+
+App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
+App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("perls") );
+App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("build") );
+
 no warnings 'redefine';
 sub App::perlbrew::http_get { "" }
 
