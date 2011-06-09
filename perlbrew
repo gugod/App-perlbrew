@@ -6,6 +6,7 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
+use FindBin;
 
 our $VERSION = "0.24";
 our $CONF;
@@ -1086,6 +1087,10 @@ sub run_command_install_cpanm {
 
 sub run_command_self_upgrade {
     my ($self) = @_;
+
+    unless(-w $FindBin::Bin) {
+        die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
+    }
 
     http_get('https://raw.github.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
         my ( $body ) = @_;
