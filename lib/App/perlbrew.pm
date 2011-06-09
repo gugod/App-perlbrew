@@ -1094,6 +1094,17 @@ sub run_command_self_upgrade {
     });
 
     chmod 0755, '/tmp/perlbrew';
+    my $new_version = qx(/tmp/perlbrew version);
+    chomp $new_version;
+    if($new_version =~ /App::perlbrew\/(\d+\.\d+)$/) {
+        $new_version = $1;
+    } else {
+        die "Unable to detect version of new perlbrew!\n";
+    }
+    if($new_version <= $VERSION) {
+        print "Your perlbrew is up-to-date.\n";
+        return;
+    }
     system "/tmp/perlbrew", "install";
     unlink "/tmp/perlbrew";
 }
