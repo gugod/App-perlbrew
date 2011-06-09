@@ -480,6 +480,21 @@ sub run_command_install_perlbrew {
     File::Copy::copy($executable, $target);
     chmod(0755, $target);
 
+    http_get(
+        'https://raw.github.com/gist/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc',
+        undef,
+        sub {
+            my ( $body ) = @_;
+
+            my $patchperl_path = catfile($ROOT, 'bin', 'patchperl');
+
+            open my $fh, '>', $patchperl_path or die "Couldn't write patchperl: $!";
+            print $fh $body;
+            close $fh;
+            chmod 0755, $patchperl_path;
+        }
+    );
+
     my $path = $self->path_with_tilde($target);
 
     print <<HELP;
