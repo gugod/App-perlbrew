@@ -6,6 +6,7 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
+use FindBin;
 
 our $VERSION = "0.24";
 our $CONF;
@@ -481,6 +482,21 @@ sub run_command_install_perlbrew {
     mkpath("$ROOT/bin");
     File::Copy::copy($executable, $target);
     chmod(0755, $target);
+
+    http_get(
+        'https://raw.github.com/gist/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc',
+        undef,
+        sub {
+            my ( $body ) = @_;
+
+            my $patchperl_path = catfile($ROOT, 'bin', 'patchperl');
+
+            open my $fh, '>', $patchperl_path or die "Couldn't write patchperl: $!";
+            print $fh $body;
+            close $fh;
+            chmod 0755, $patchperl_path;
+        }
+    );
 
     my $path = $self->path_with_tilde($target);
 
@@ -1072,11 +1088,32 @@ sub run_command_install_cpanm {
 sub run_command_self_upgrade {
     my ($self) = @_;
 
-    my $perlbrew_install = http_get('http://xrl.us/perlbrewinstall');
-    open my $fh, '>', '/tmp/perlbrewinstall';
-    print $fh $perlbrew_install;
-    close $fh;
-    exec 'bash', '/tmp/perlbrewinstall';
+    unless(-w $FindBin::Bin) {
+        die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
+    }
+
+    http_get('https://raw.github.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
+        my ( $body ) = @_;
+
+        open my $fh, '>', '/tmp/perlbrew' or die "Unable to write perlbrew: $!";
+        print $fh $body;
+        close $fh;
+    });
+
+    chmod 0755, '/tmp/perlbrew';
+    my $new_version = qx(/tmp/perlbrew version);
+    chomp $new_version;
+    if($new_version =~ /App::perlbrew\/(\d+\.\d+)$/) {
+        $new_version = $1;
+    } else {
+        die "Unable to detect version of new perlbrew!\n";
+    }
+    if($new_version <= $VERSION) {
+        print "Your perlbrew is up-to-date.\n";
+        return;
+    }
+    system "/tmp/perlbrew", "install";
+    unlink "/tmp/perlbrew";
 }
 
 sub run_command_uninstall {

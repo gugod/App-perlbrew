@@ -1,29 +1,30 @@
-#!/usr/bin/env bash
+#!/usr/bin/env perl
 
-cd /tmp
+use strict;
+use warnings;
 
-echo
-echo "## Download the latest perlbrew"
-curl -Lo perlbrew https://raw.github.com/gugod/App-perlbrew/master/perlbrew >/dev/null 2>&1
+chdir '/tmp';
 
-echo "## Download the packed patchperl"
-curl -Lo patchperl https://raw.github.com/gist/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc >/dev/null 2>&1
+print "## Download the latest perlbrew\n";
 
-echo
-echo "## Installing perlbrew"
-chmod +x perlbrew
-./perlbrew install
+my $has_curl;
+my $has_wget;
 
-echo "## Installing patchperl"
-if [ "X${PERLBREW_ROOT}" == "X" ]; then
-    PERLBREW_ROOT="${HOME}/perl5/perlbrew"
-fi
-mkdir -p "$PERLBREW_ROOT"
+system 'which curl >/dev/null 2>/dev/null' or $has_curl = 1;
+system 'which wget >/dev/null 2>/dev/null' or $has_wget = 1;
 
-chmod +x patchperl
-cp patchperl "${PERLBREW_ROOT}/bin"
+if($has_curl) {
+    system 'curl --silent --location --fail -Lo perlbrew ' .
+        'https://raw.github.com/gugod/App-perlbrew/master/perlbrew';
+} elsif($has_wget) {
+    system 'wget --quiet --no-check-certificate -O perlbrew ' .
+        'https://raw.github.com/gugod/App-perlbrew/master/perlbrew';
+} else {
+    die "You have to install either curl or wget\n";
+}
 
-echo
-echo "## Done."
-rm ./perlbrew
-rm ./patchperl
+chmod 0755, 'perlbrew';
+print "\n## Installing perlbrew\n";
+system './perlbrew', 'install';
+print "\n## Done.\n";
+unlink 'perlbrew';
