@@ -1,3 +1,7 @@
+NEXT:
+- suggest when user types wrong commands. hoelzro++
+- Improvements about self-upgrade by hoelzro++
+
 0.24:
 - Done GH #92 -- Show error messages on network errors.
 - Fix GH #82 -- deduplicate items in PATH for the `list` command.
