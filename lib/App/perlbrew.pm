@@ -13,6 +13,12 @@ my $PB_HOME      = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
 my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL = $ENV{PERLBREW_PERL};
 
+local $SIG{__DIE__} = sub {
+    my $message = shift;
+    warn $message;
+    exit 1;
+};
+
 sub current_perl { $CURRENT_PERL || '' }
 
 sub BASHRC_CONTENT() {
@@ -689,14 +695,14 @@ sub run_command_install {
             $self->do_install_blead($dist);
         }
         else {
-            print $help_message;
+            die $help_message;
         }
     }
     elsif ($dist_name eq 'perl') {
         $self->do_install_release($dist);
     }
     else {
-        print $help_message;
+        die $help_message;
     }
 
     return;
@@ -796,7 +802,7 @@ Installed $dist_extracted_dir as $as successfully. Run the following command to 
 SUCCESS
     }
     else {
-        print <<FAIL;
+        die <<FAIL;
 Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
 If you want to force install the distribution, try:
 
