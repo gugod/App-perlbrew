@@ -40,7 +40,7 @@ __perlbrew_reinit () {
 
 __perlbrew_set_path () {
     [[ -z "$PERLBREW_ROOT" ]] && return 1
-    unalias perl 2>/dev/null
+    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
     export PATH_WITHOUT_PERLBREW=$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')
     export PATH=$PERLBREW_PATH:$PATH_WITHOUT_PERLBREW
 }
