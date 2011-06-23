@@ -6,7 +6,7 @@ use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 use FindBin;
 
-our $VERSION = "0.24";
+our $VERSION = "0.25";
 our $CONF;
 
 my $ROOT             = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
