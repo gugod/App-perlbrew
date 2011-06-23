@@ -4,14 +4,22 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
+use FindBin;
 
-our $VERSION = "0.24";
+our $VERSION = "0.25";
 our $CONF;
 
-my $ROOT         = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
-my $PB_HOME      = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
-my $CONF_FILE    = catfile( $ROOT, 'Conf.pm' );
-my $CURRENT_PERL = $ENV{PERLBREW_PERL};
+my $ROOT             = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+my $PB_HOME          = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
+my $CONF_FILE        = catfile( $ROOT, 'Conf.pm' );
+my $CURRENT_PERL     = $ENV{PERLBREW_PERL};
+my $SIMILAR_DISTANCE = 6;
+
+local $SIG{__DIE__} = sub {
+    my $message = shift;
+    warn $message;
+    exit 1;
+};
 
 sub current_perl { $CURRENT_PERL || '' }
 
@@ -38,7 +46,7 @@ __perlbrew_reinit () {
 
 __perlbrew_set_path () {
     [[ -z "$PERLBREW_ROOT" ]] && return 1
-    unalias perl 2>/dev/null
+    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
     export PATH_WITHOUT_PERLBREW=$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')
     export PATH=$PERLBREW_PATH:$PATH_WITHOUT_PERLBREW
 }
@@ -177,6 +185,51 @@ sub rmpath {
     return 1;
 }
 
+{
+
+no warnings;
+
+# Text::Levenshtein::_min
+sub _min
+{
+	return $_[0] < $_[1]
+		? $_[0] < $_[2] ? $_[0] : $_[2]
+		: $_[1] < $_[2] ? $_[1] : $_[2];
+}
+
+# Text::Levenshtein::fastdistance
+sub fastdistance
+{
+	my $word1 = shift;
+	my $word2 = shift;
+
+	return 0 if $word1 eq $word2;
+	my @d;
+
+	my $len1 = length $word1;
+	my $len2 = length $word2;
+
+	$d[0][0] = 0;
+	for (1 .. $len1) {
+		$d[$_][0] = $_;
+		return $_ if $_!=$len1 && substr($word1,$_) eq substr($word2,$_);
+	}
+	for (1 .. $len2) {
+		$d[0][$_] = $_;
+		return $_ if $_!=$len2 && substr($word1,$_) eq substr($word2,$_);
+	}
+
+	for my $i (1 .. $len1) {
+		my $w1 = substr($word1,$i-1,1);
+		for (1 .. $len2) {
+			$d[$i][$_] = _min($d[$i-1][$_]+1, $d[$i][$_-1]+1, $d[$i-1][$_-1]+($w1 eq substr($word2,$_-1,1) ? 0 : 1));
+		}
+	}
+	return $d[$len1][$len2];
+}
+
+}
+
 sub uniq(@) {
     my %a;
     grep { ++$a{$_} == 1 } @_;
@@ -195,7 +248,7 @@ sub uniq(@) {
         if (! @command) {
             my @commands = (
                 # curl's --fail option makes the exit code meaningful
-                [qw( curl --silent --location --fail )],
+                [qw( curl --silent --location --fail --insecure )],
                 [qw( wget --no-check-certificate --quiet -O - )],
             );
             for my $command (@commands) {
@@ -309,6 +362,54 @@ sub get_args {
     return @{ $self->{args} };
 }
 
+sub get_command_list {
+    my ( $self ) = @_;
+
+    my $package =  ref $self ? ref $self : $self;
+
+    my @commands;
+    my $symtable = do {
+        no strict 'refs';
+        \%{$package . '::'};
+    };
+
+    foreach my $sym (keys %$symtable) {
+        if($sym =~ /^run_command_/) {
+            my $glob = $symtable->{$sym};
+            if(defined *$glob{CODE}) {
+                $sym =~ s/^run_command_//;
+                push @commands, $sym;
+            }
+        }
+    }
+
+    return @commands;
+}
+
+sub find_similar_commands {
+    my ( $self, $command ) = @_;
+
+    my @commands = $self->get_command_list;
+
+    foreach my $cmd (@commands) {
+        my $dist = fastdistance($cmd, $command);
+        if($dist < $SIMILAR_DISTANCE) {
+            $cmd = [ $cmd, $dist ];
+        } else {
+            undef $cmd;
+        }
+    }
+    @commands = grep { defined } @commands;
+    @commands = sort { $a->[1] <=> $b->[1] } @commands;
+    if(@commands) {
+        my $best  = $commands[0][1];
+        @commands = grep { $_->[1] == $best } @commands;
+        @commands = map { $_->[0] } @commands;
+    }
+
+    return @commands;
+}
+
 sub run_command {
     my ( $self, $x, @args ) = @_;
     $self->{log_file} ||= "$ROOT/build.log";
@@ -329,7 +430,18 @@ sub run_command {
         $s = $self->can("run_command_$x");
     }
 
-    die "Unknown command: `$x`. Typo?\n" unless $s;
+    unless($s) {
+        my @commands = $self->find_similar_commands($x);
+
+        if(@commands > 1) {
+            @commands = map { '    ' . $_ } @commands;
+            die "Unknown command: `$x`. Did you mean one of the following?\n" . join("\n", @commands) . "\n";
+        } elsif(@commands == 1) {
+            die "Unknown command: `$x`. Did you mean `$commands[0]`?\n";
+        } else {
+            die "Unknown command: `$x`. Typo?\n";
+        }
+    }
 
     # Assume 5.12.3 means perl-5.12.3, for example.
     if ($x =~ /\A(?:switch|use|install|env)\Z/ and my $dist = shift @args) {
@@ -479,6 +591,21 @@ sub run_command_install_perlbrew {
     mkpath("$ROOT/bin");
     File::Copy::copy($executable, $target);
     chmod(0755, $target);
+
+    http_get(
+        'https://raw.github.com/gist/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc',
+        undef,
+        sub {
+            my ( $body ) = @_;
+
+            my $patchperl_path = catfile($ROOT, 'bin', 'patchperl');
+
+            open my $fh, '>', $patchperl_path or die "Couldn't write patchperl: $!";
+            print $fh $body;
+            close $fh;
+            chmod 0755, $patchperl_path;
+        }
+    );
 
     my $path = $self->path_with_tilde($target);
 
@@ -689,14 +816,14 @@ sub run_command_install {
             $self->do_install_blead($dist);
         }
         else {
-            print $help_message;
+            die $help_message;
         }
     }
     elsif ($dist_name eq 'perl') {
         $self->do_install_release($dist);
     }
     else {
-        print $help_message;
+        die $help_message;
     }
 
     return;
@@ -796,7 +923,7 @@ Installed $dist_extracted_dir as $as successfully. Run the following command to 
 SUCCESS
     }
     else {
-        print <<FAIL;
+        die <<FAIL;
 Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
 If you want to force install the distribution, try:
 
@@ -1070,11 +1197,32 @@ sub run_command_install_cpanm {
 sub run_command_self_upgrade {
     my ($self) = @_;
 
-    my $perlbrew_install = http_get('http://xrl.us/perlbrewinstall');
-    open my $fh, '>', '/tmp/perlbrewinstall';
-    print $fh $perlbrew_install;
-    close $fh;
-    exec 'bash', '/tmp/perlbrewinstall';
+    unless(-w $FindBin::Bin) {
+        die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
+    }
+
+    http_get('https://raw.github.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
+        my ( $body ) = @_;
+
+        open my $fh, '>', '/tmp/perlbrew' or die "Unable to write perlbrew: $!";
+        print $fh $body;
+        close $fh;
+    });
+
+    chmod 0755, '/tmp/perlbrew';
+    my $new_version = qx(/tmp/perlbrew version);
+    chomp $new_version;
+    if($new_version =~ /App::perlbrew\/(\d+\.\d+)$/) {
+        $new_version = $1;
+    } else {
+        die "Unable to detect version of new perlbrew!\n";
+    }
+    if($new_version <= $VERSION) {
+        print "Your perlbrew is up-to-date.\n";
+        return;
+    }
+    system "/tmp/perlbrew", "install";
+    unlink "/tmp/perlbrew";
 }
 
 sub run_command_uninstall {

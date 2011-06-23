@@ -1,3 +1,10 @@
+0.25:
+- suggest when user types wrong commands. hoelzro++
+- Improvements about self-upgrade by hoelzro++
+- exit with non-zero status code when there's some sort of error. by punytan++
+- Added verification of existing alias before attempting unalias. johncm++
+- Fix `install-cpanm` for due to a recenet github cert update. kanetann++
+
 0.24:
 - Done GH #92 -- Show error messages on network errors.
 - Fix GH #82 -- deduplicate items in PATH for the `list` command.
