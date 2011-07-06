@@ -28,6 +28,13 @@ my %exe = (
         args    => [ qw( exec brewed_app ) ],
         output  => join('', sort map { "$root/perls/$_/bin/brewed_app\n" } @perls),
     },
+    # test something outside the $perl/bin/ to ensure that the environment is setup correctly
+    # NOTE: this script may need to change if the usage of these perlbrew vars changes
+    test_env => {
+        content => '', # don't create a file for this one
+        args    => [ qw( exec sh -c ), 'echo "$PERLBREW_PERL--$PERLBREW_PATH" >> $1', '-' ],
+        output  => join('', sort map { "$_--$root/bin:$root/perls/$_/bin\n" } @perls),
+    },
 );
 
 # build a fake root with some fake perls (most of this was modified from stuff found in t/installation.t)

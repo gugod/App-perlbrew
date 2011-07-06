@@ -1258,19 +1258,12 @@ sub run_command_exec {
     for my $i ( $self->installed_perls ) {
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
-        my $perl_bin = (split(/:/, $env{PERLBREW_PATH}))[1];
 
-        my $command = "";
-
-        while ( my($name, $value) = each %env) {
-            $command .= "$name=$value ";
-        }
-
-        $command .= ' PATH=${PERLBREW_PATH}:${PATH} ';
-        $command .= " $perl_bin/" . join " ", map { quotemeta($_) } @args;
+        local @ENV{ keys %env } = values %env;
+        local $ENV{PATH} = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
 
         print "$i->{name}\n==========\n";
-        system "$command\n";
+        system @args;
         print "\n\n";
         # print "\n<===\n\n\n";
     }
