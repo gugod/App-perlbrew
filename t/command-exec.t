@@ -47,7 +47,7 @@ while ( my ($script, $data) = each %exe ) {
   # we need a file to which the subprocesses can append
   my $file = $root->file("test-exec-output.$script");
 
-  my $app = App::perlbrew->new(@{ $data->{args} }, $file);
+  my $app = App::perlbrew->new(@{ $data->{args} }, $file->stringify);
   $app->run;
 
   # $file should have output in it
