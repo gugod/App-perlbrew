@@ -16,8 +16,9 @@ my @perls = qw( yak needs shave );
 my %exe = (
     # this enables "perlbrew exec perl -e '...'"
     perl => {
-        content => qq[#!/bin/sh\nPERLBREW_TEST_PERL="\$0" exec perl "\$@";\n],
-        # printing $^X won't work because these exe's are shell scripts that call the same perl
+        # interpolate $^X to specify current perl and avoid infinite recursion
+        content => qq[#!/bin/sh\nPERLBREW_TEST_PERL="\$0" exec $^X "\$@";\n],
+        # printing $^X is not helpful because these exe's are shell scripts that call the same perl
         args    => [ qw( exec perl -e ), 'open FH, ">>", shift and print FH "=$ENV{PERLBREW_TEST_PERL}\n" and close FH' ],
         output  => join('', sort map { "=$root/perls/$_/bin/perl\n" } @perls),
     },
