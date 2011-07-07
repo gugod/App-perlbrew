@@ -10,6 +10,8 @@ BEGIN {
     $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
 }
 
+my $bin_perlbrew = file(__FILE__)->dir->parent->subdir("bin")->file("perlbrew");
+
 use App::perlbrew;
 
 throws_ok(
@@ -20,10 +22,10 @@ throws_ok(
     qr[unknown_command]
 );
 
-`perlbrew unknown-command 2>&1`;
+system("perl -Ilib ${bin_perlbrew} unknown-command 2>&1");
 ok($? != 0);
 
-`perlbrew version 2>&1`;
+system("perl -Ilib ${bin_perlbrew} version 2>&1");
 ok($? == 0);
 
 done_testing;
