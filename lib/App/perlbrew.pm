@@ -1344,6 +1344,20 @@ USAGE
     }
 }
 
+sub resolve_installation_name {
+    my ($self, $name) = @_;
+    die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
+
+    if ( $self->is_installed($name) ) {
+        return $name;
+    }
+    elsif ($self->is_installed("perl-$name")) {
+        return "perl-$name";
+    }
+
+    return undef;
+}
+
 sub conf {
     my($self) = @_;
     $self->_get_conf if ! $CONF;
