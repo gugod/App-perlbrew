@@ -454,7 +454,9 @@ sub run_command {
         }
     }
     elsif ($x eq 'install') {
-        $args[0] =~ s/\A((?:\d+\.)*\d+)\Z/perl-$1/;
+        # prepend "perl-" to version number, but only if there is an argument
+        $args[0] =~ s/\A((?:\d+\.)*\d+)\Z/perl-$1/
+            if @args;
     }
 
     $self->$s(@args);
