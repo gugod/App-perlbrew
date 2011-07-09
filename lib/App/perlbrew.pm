@@ -444,13 +444,17 @@ sub run_command {
     }
 
     # Assume 5.12.3 means perl-5.12.3, for example.
-    if ($x =~ /\A(?:switch|use|install|env)\Z/ and my $dist = shift @args) {
-        if ($dist =~ /\A(?:\d+\.)*\d+\Z/) {
-            unshift @args, "perl-$dist";
+    if ($x =~ /\A(?:switch|use|env)\Z/ and my $name = shift @args) {
+        my $fullname = $self->resolve_installation_name($name);
+        if ($fullname) {
+            unshift @args, $fullname;
         }
         else {
-            unshift @args, $dist;
+            die "Unknown installation name: $name\n";
         }
+    }
+    elsif ($x eq 'install') {
+        $args[0] =~ s/\A((?:\d+\.)*\d+)\Z/perl-$1/;
     }
 
     $self->$s(@args);
