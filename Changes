@@ -1,3 +1,10 @@
+0.26:
+- Fix GH #119 
+- Fix t/08.exit_status.t for cpantesters
+- Fix several bugs in `exec` command
+- Implement GH #103 - install -v shows build.log
+- Add -Dusedevel when installing blead perl
+
 0.25:
 - suggest when user types wrong commands. hoelzro++
 - Improvements about self-upgrade by hoelzro++

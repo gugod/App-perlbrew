@@ -6,7 +6,7 @@ use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 use FindBin;
 
-our $VERSION = "0.25";
+our $VERSION = "0.26";
 our $CONF;
 
 my $ROOT             = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -444,13 +444,17 @@ sub run_command {
     }
 
     # Assume 5.12.3 means perl-5.12.3, for example.
-    if ($x =~ /\A(?:switch|use|install|env)\Z/ and my $dist = shift @args) {
-        if ($dist =~ /\A(?:\d+\.)*\d+\Z/) {
-            unshift @args, "perl-$dist";
+    if ($x =~ /\A(?:switch|use|env)\Z/ and my $name = shift @args) {
+        my $fullname = $self->resolve_installation_name($name);
+        if ($fullname) {
+            unshift @args, $fullname;
         }
         else {
-            unshift @args, $dist;
+            die "Unknown installation name: $name\n";
         }
+    }
+    elsif ($x eq 'install') {
+        $args[0] =~ s/\A((?:\d+\.)*\d+)\Z/perl-$1/;
     }
 
     $self->$s(@args);
@@ -858,7 +862,7 @@ sub do_install_this {
     $as = $self->{as} if $self->{as};
 
     unshift @d_options, qq(prefix=$ROOT/perls/$as);
-    push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git/;
+    push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
     print <<INSTALL if $self->{quiet} && !$self->{verbose};
 
@@ -904,9 +908,13 @@ INSTALL
         $make,
         @install
     );
-    $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
+    if($self->{verbose}) {
+        $cmd = "($cmd) 2>&1 | tee $self->{log_file}";
+        print "$cmd\n" if $self->{verbose};
+    } else {
+        $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
+    }
 
-    print "$cmd\n" if $self->{verbose};
 
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
@@ -1259,17 +1267,11 @@ sub run_command_exec {
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
-        my $command = "";
-
-        while ( my($name, $value) = each %env) {
-            $command .= "$name=$value ";
-        }
-
-        $command .= ' PATH=${PERLBREW_PATH}:${PATH} ';
-        $command .= "; " . join " ", map { quotemeta($_) } @args;
+        local @ENV{ keys %env } = values %env;
+        local $ENV{PATH} = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
 
         print "$i->{name}\n==========\n";
-        system "$command\n";
+        system @args;
         print "\n\n";
         # print "\n<===\n\n\n";
     }
@@ -1344,6 +1346,20 @@ USAGE
     else {
         die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
     }
+}
+
+sub resolve_installation_name {
+    my ($self, $name) = @_;
+    die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
+
+    if ( $self->is_installed($name) ) {
+        return $name;
+    }
+    elsif ($self->is_installed("perl-$name")) {
+        return "perl-$name";
+    }
+
+    return undef;
 }
 
 sub conf {
