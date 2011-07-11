@@ -1442,6 +1442,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew switch /usr/bin/perl
 
     # Or turn it off completely. Useful when you messed up too deep.
+    # Or want to go back to the system Perl.
     perlbrew off
 
     # Use 'switch' command to turn it back on.
