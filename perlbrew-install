@@ -7,7 +7,7 @@ echo "## Download the latest perlbrew"
 curl -k -Lo perlbrew https://raw.github.com/gugod/App-perlbrew/master/perlbrew >/dev/null 2>&1
 
 echo "## Download the packed patchperl"
-curl -k -Lo patchperl https://raw.github.com/gist/962406/93cd90f5e6c6a86073afb3815f0ea06c3c9e99ed/patchperl >/dev/null 2>&1
+curl -k -Lo patchperl https://raw.github.com/gist/962406/726cb2e1b6c1eb7da814ff635518b264b1790ce8/patchperl >/dev/null 2>&1
 
 echo
 echo "## Installing perlbrew"
