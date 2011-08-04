@@ -1533,6 +1533,10 @@ using any perlbrew-based perl.
 
 Without a parameter, shows the version of perl currently in use.
 
+=item B<available>
+
+Displays the available versions of perl on CPAN.
+
 
 =item B<switch> [perl-<version>]
 
