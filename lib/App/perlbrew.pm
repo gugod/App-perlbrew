@@ -1034,6 +1034,16 @@ sub run_command_use {
     my $self = shift;
     my $perl = shift;
 
+    if ( !$perl ) {
+        my $current = $self->current_perl;
+        if ($current) {
+            print "Currently using $current\n";
+        } else {
+            print "No version in use; defaulting to system\n";
+        }
+        return;
+    }
+
     my $shell = $self->env('SHELL');
     my %env = ($self->perlbrew_env($perl), PERLBREW_SKIP_INIT => 1);
 
