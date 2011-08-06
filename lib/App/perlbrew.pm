@@ -97,11 +97,12 @@ perlbrew () {
                       exit_status=1
                   fi
               else
-                if [[ -z "$PERLBREW_PERL" ]] ; then
-                    echo "No version in use; defaulting to system"
-                else
-                    echo "Using $PERLBREW_PERL version"
-                fi
+                  if [[ -s $HOME/.perlbrew/init && $(grep PERLBREW_PERL $HOME/.perlbrew/init) ]] ; then
+                      current="to $(grep PERLBREW_PERL $HOME/.perlbrew/init | awk '{split($2,PERLBREW,"="); print PERLBREW[2]}')"
+                  else
+                      current="off"
+                  fi
+                  echo 'Currently switched' $current;
               fi
               ;;
 
