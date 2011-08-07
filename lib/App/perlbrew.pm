@@ -1266,6 +1266,7 @@ sub run_command_exec {
     shift @args;
 
     for my $i ( $self->installed_perls ) {
+        next if -l $ROOT . '/perls/' . $i->{name}; # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
