@@ -4,6 +4,7 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
+use File::Path::Tiny;
 use FindBin;
 
 our $VERSION = "0.27";
@@ -139,51 +140,12 @@ setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
 CSHRC
 }
 
-# File::Path::Tiny::mk
 sub mkpath {
-    my ($path,$mask) = @_;
-    return 2 if -d $path;
-    if (-e $path) { $! = 20;return; }
-    $mask ||= '0777'; # Perl::Critic == Integer with leading zeros at ...
-    $mask = oct($mask) if substr($mask,0,1) eq '0';
-    require File::Spec;
-    my ($progressive, @parts) = File::Spec->splitdir($path);
-    if (!$progressive) {
-        $progressive = File::Spec->catdir($progressive, shift(@parts));
-    }
-    if(!-d $progressive) {
-        mkdir($progressive, $mask) or return;
-    }
-    for my $part (@parts) {
-        $progressive = File::Spec->catdir($progressive,$part);
-        if (!-d $progressive) {
-            mkdir($progressive, $mask) or return;
-        }
-    }
-    return 1 if -d $path;
-    return;
+    File::Path::Tiny::mk(@_);
 }
 
-# File::Path::Tiny::rm
 sub rmpath {
-    my ($path) = @_;
-    if (-e $path && !-d $path) { $! = 20;return; }
-    return 2 if !-d $path;
-    opendir(DIR, $path) or return;
-    my @contents = grep { $_ ne '.' && $_ ne '..' } readdir(DIR);
-    closedir DIR;
-    require File::Spec if @contents;
-    for my $thing (@contents) {
-        my $long = File::Spec->catdir($path, $thing);
-        if (!-l $long && -d $long) {
-            rmpath($long) or return;
-        }
-        else {
-            unlink $long or return;
-        }
-    }
-    rmdir($path) or return;
-    return 1;
+    File::Path::Tiny::rm(@_)
 }
 
 {
