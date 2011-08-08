@@ -1,12 +1,3 @@
-my $author = ((grep{ $_ eq '--author' } @ARGV) or -d '.git' && `git remote -v` =~ /git\@github/);
-
-# Author: perl Makefile.PL packs App/perlbrew.pm to perlbrew
-if ($author) {
-    print STDERR "Running as an author mode!\n";
-    unshift @INC, "lib";
-    system("bin/build.pl");
-}
-
 use inc::Module::Install;
 
 license 'mit';
