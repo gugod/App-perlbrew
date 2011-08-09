@@ -98,12 +98,7 @@ perlbrew () {
                       exit_status=1
                   fi
               else
-                  if [[ -s $HOME/.perlbrew/init && $(grep PERLBREW_PERL $HOME/.perlbrew/init) ]] ; then
-                      current="to $(grep PERLBREW_PERL $HOME/.perlbrew/init | awk '{split($2,PERLBREW,"="); print PERLBREW[2]}')"
-                  else
-                      current="off"
-                  fi
-                  echo 'Currently switched' $current;
+                  command perlbrew switch
               fi
               ;;
 
