@@ -1,3 +1,9 @@
+0.28:
+- fixes for cpantester
+- Fix 'switch' and 'use' for bash users, by Woody2143++
+- The standalone `perlbrew` file is now packed with fatpacker, by running `dev-bin/build.sh`. `perl Makefile.PL` does no trigger a re-build anymore.
+- Update the installer to grab patchperl 0.46
+
 0.27:
 - Hotfix for `perlbrew install` command
 

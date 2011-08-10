@@ -1,6 +1,6 @@
 #!perl
 use strict;
-require App::perlbrew;
+use App::perlbrew;
 
 my $app = App::perlbrew->new(@ARGV);
 $app->run();
@@ -25,7 +25,7 @@ perlbrew - Perl Environment manager.
         available      List perls available to install
         switch         Permanently use the specified perl as default
         mirror         Pick a preferred mirror site
-        off            Permanently turn off perlbrew
+        off            Permanently turn off perlbrew, go back to system Perl
         version        Display version
         help           Read more detailed instructions
 
@@ -122,6 +122,10 @@ using any perlbrew-based perl.
 
 Without a parameter, shows the version of perl currently in use.
 
+=item B<available>
+
+Displays the available versions of perl on CPAN.
+
 
 =item B<switch> [perl-<version>]
 
@@ -148,6 +152,7 @@ Delete the given alias.
 
 Disable perlbrew. Use C<switch> command to re-enable it.
 
+Re-enables the default system Perl, whatever that is.
 
 =item B<exec> command
 

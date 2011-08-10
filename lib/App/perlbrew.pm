@@ -4,9 +4,10 @@ use warnings;
 use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
+use File::Path::Tiny;
 use FindBin;
 
-our $VERSION = "0.27";
+our $VERSION = "0.28";
 our $CONF;
 
 my $ROOT             = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -97,11 +98,7 @@ perlbrew () {
                       exit_status=1
                   fi
               else
-                if [[ -z "$PERLBREW_PERL" ]] ; then
-                    echo "No version in use; defaulting to system"
-                else
-                    echo "Using $PERLBREW_PERL version"
-                fi
+                  command perlbrew switch
               fi
               ;;
 
@@ -138,51 +135,12 @@ setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
 CSHRC
 }
 
-# File::Path::Tiny::mk
 sub mkpath {
-    my ($path,$mask) = @_;
-    return 2 if -d $path;
-    if (-e $path) { $! = 20;return; }
-    $mask ||= '0777'; # Perl::Critic == Integer with leading zeros at ...
-    $mask = oct($mask) if substr($mask,0,1) eq '0';
-    require File::Spec;
-    my ($progressive, @parts) = File::Spec->splitdir($path);
-    if (!$progressive) {
-        $progressive = File::Spec->catdir($progressive, shift(@parts));
-    }
-    if(!-d $progressive) {
-        mkdir($progressive, $mask) or return;
-    }
-    for my $part (@parts) {
-        $progressive = File::Spec->catdir($progressive,$part);
-        if (!-d $progressive) {
-            mkdir($progressive, $mask) or return;
-        }
-    }
-    return 1 if -d $path;
-    return;
+    File::Path::Tiny::mk(@_);
 }
 
-# File::Path::Tiny::rm
 sub rmpath {
-    my ($path) = @_;
-    if (-e $path && !-d $path) { $! = 20;return; }
-    return 2 if !-d $path;
-    opendir(DIR, $path) or return;
-    my @contents = grep { $_ ne '.' && $_ ne '..' } readdir(DIR);
-    closedir DIR;
-    require File::Spec if @contents;
-    for my $thing (@contents) {
-        my $long = File::Spec->catdir($path, $thing);
-        if (!-l $long && -d $long) {
-            rmpath($long) or return;
-        }
-        else {
-            unlink $long or return;
-        }
-    }
-    rmdir($path) or return;
-    return 1;
+    File::Path::Tiny::rm(@_)
 }
 
 {
@@ -1034,6 +992,16 @@ sub run_command_use {
     my $self = shift;
     my $perl = shift;
 
+    if ( !$perl ) {
+        my $current = $self->current_perl;
+        if ($current) {
+            print "Currently using $current\n";
+        } else {
+            print "No version in use; defaulting to system\n";
+        }
+        return;
+    }
+
     my $shell = $self->env('SHELL');
     my %env = ($self->perlbrew_env($perl), PERLBREW_SKIP_INIT => 1);
 
@@ -1442,6 +1410,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew switch /usr/bin/perl
 
     # Or turn it off completely. Useful when you messed up too deep.
+    # Or want to go back to the system Perl.
     perlbrew off
 
     # Use 'switch' command to turn it back on.
