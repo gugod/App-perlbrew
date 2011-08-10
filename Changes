@@ -1,4 +1,4 @@
-NEXT:
+0.28:
 - fixes for cpantester
 - Fix 'switch' and 'use' for bash users, by Woody2143++
 - The standalone `perlbrew` file is now packed with fatpacker, by running `dev-bin/build.sh`. `perl Makefile.PL` does no trigger a re-build anymore.
