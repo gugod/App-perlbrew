@@ -22,3 +22,10 @@
 ^README\.pod$
 ^perlbrew$
 ^perlbrew-install$
+^cover_db/
+^dev-bin/
+^fatlib/
+^fatpacker.trace$
+^packlists$
+^README.hacking.md$
+
