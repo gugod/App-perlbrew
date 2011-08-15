@@ -11,7 +11,7 @@ requires
     'Devel::PatchPerl' => '0.26',
     'Cwd' => '3.26';
 
-test_requires 'Test::Simple';
+test_requires 'Test::Simple' => '0.98';
 test_requires 'Test::More';
 test_requires 'Test::Output';
 test_requires 'Test::Exception';
