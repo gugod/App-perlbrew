@@ -167,15 +167,15 @@ Depending on your actual installations, the output might look like this:
     perl-5.12.2
     ==========
     Hello word from perl-5.012002
-    
+
     perl-5.12.3
     ==========
     Hello word from perl-5.012003
-    
+
     perl-5.13.10
     ==========
     Hello word from perl-5.013010
-    
+
     perl-5.14.0
     ==========
     Hello word from perl-5.014000
@@ -218,7 +218,7 @@ This essentially creates this symlink:
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
-=item B<self-upgrade>
+=item B<self_upgrade>
 
 This command upgrades Perlbrew to its latest version.
 
