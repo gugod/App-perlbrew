@@ -54,7 +54,6 @@ perlbrew - Perl Environment manager.
 Run this once to setup the C<perlbrew> directory ready for installing
 perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
-
 =item B<install> perl-<version-number>
 
 =item B<install> <version-number>
@@ -109,23 +108,18 @@ from. Hit 'q' to cancel the selection.
 
 List the installed versions of perl.
 
+=item B<available>
+
+List the available versions of perl on CPAN.
 
 =item B<use> [perl-<version>]
 
 =item B<use> [<version>]
 
-Switch to the given version of perl only in the current shell. This
-will not effect newly opened shells.
-
-You can use as C<perl-version> the special keyword C<system> to stop
-using any perlbrew-based perl.
+Use the given version perl in current shell. This will not effect newly opened
+shells.
 
 Without a parameter, shows the version of perl currently in use.
-
-=item B<available>
-
-Displays the available versions of perl on CPAN.
-
 
 =item B<switch> [perl-<version>]
 
