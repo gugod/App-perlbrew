@@ -1036,16 +1036,6 @@ sub run_command_switch {
       if $alias && $alias =~ /^perl-/;
 
     my $vers = $dist;
-    if (-x $dist) {
-        $alias = 'custom' unless $alias;
-        my $bin_dir = "$ROOT/perls/$alias/bin";
-        my $perl = catfile($bin_dir, 'perl');
-        mkpath($bin_dir);
-        unlink $perl;
-        symlink $dist, $perl;
-        $dist = $alias;
-        $vers = "$vers as $alias";
-    }
 
     die "${dist} is not installed\n" unless -d "$ROOT/perls/${dist}";
 
@@ -1412,9 +1402,6 @@ App::perlbrew - Manage perl installations in your $HOME
     # Temporarily use another version only in current shell.
     perlbrew use perl-5.8.1
     perl -v
-
-    # Switch to a certain perl executable not managed by perlbrew.
-    perlbrew switch /usr/bin/perl
 
     # Or turn it off completely. Useful when you messed up too deep.
     # Or want to go back to the system Perl.
