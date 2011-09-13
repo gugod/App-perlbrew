@@ -1,6 +1,14 @@
 #!/bin/sh
 
-cd /tmp
+if [[ -z "$TMPDIR" ]]; then
+    if [[ -d "/tmp" ]]; then
+        TMPDIR="/tmp"
+    else
+        TMPDIR="."
+    fi
+fi
+
+cd $TMPDIR
 
 echo
 echo "## Download the latest perlbrew"
