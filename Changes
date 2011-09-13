@@ -1,4 +1,5 @@
 NEXT:
+- Fixd GH #108. `perlbrew use` has a fallback for users that does not use bash/csh -compitable shell.
 - Deprecate the command 'perlbrew use system' simply use 'perlbrew off' instead.
 
 0.28:

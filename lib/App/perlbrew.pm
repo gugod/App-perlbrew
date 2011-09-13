@@ -30,8 +30,10 @@ if [[ -z "$PERLBREW_HOME" ]]; then
     export PERLBREW_HOME="$HOME/.perlbrew"
 fi
 
-if [[ -f "$PERLBREW_HOME/init" ]]; then
-    . "$PERLBREW_HOME/init"
+if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
+    if [[ -f "$PERLBREW_HOME/init" ]]; then
+        . "$PERLBREW_HOME/init"
+    fi
 fi
 
 __perlbrew_reinit () {
