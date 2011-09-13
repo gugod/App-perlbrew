@@ -50,6 +50,7 @@ __perlbrew_reinit () {
 __perlbrew_set_path () {
     [[ -z "$PERLBREW_ROOT" ]] && return 1
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
+
     export PATH_WITHOUT_PERLBREW=$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')
 
     if [[ -z "$PERLBREW_PATH" ]]; then
@@ -80,7 +81,7 @@ perlbrew () {
                 else
                     echo "Using $PERLBREW_PERL version"
                 fi
-            elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" || "$2" = "system" ]]; then
+            elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
                 eval $(command perlbrew $short_option env $2)
                 __perlbrew_set_path
             elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
@@ -111,9 +112,15 @@ perlbrew () {
 
         (off)
             unset PERLBREW_PERL
-            command perlbrew $short_option off
+            eval `perlbrew env`
+            __perlbrew_set_path
+            echo "perlbrew is turned off."
+            ;;
 
+        (switch-off)
+            unset PERLBREW_PERL
             __perlbrew_reinit
+            echo "perlbrew is switched off."
             ;;
 
         (*)
@@ -1050,10 +1057,28 @@ sub run_command_switch {
 
 sub run_command_off {
     my $self = shift;
-    my $HOME = $self->env("HOME");
 
-    mkpath("${HOME}/.perlbrew");
-    system("env PERLBREW_PERL= $0 env > ${HOME}/.perlbrew/init");
+    my $shell = $self->env('SHELL');
+
+    $ENV{PERLBREW_PERL} = "";
+    my %env = ($self->perlbrew_env, PERLBREW_SKIP_INIT => 1);
+
+    my $command = "env ";
+    while (my ($k, $v) = each(%env)) {
+        $command .= "$k=$v ";
+    }
+    $command .= " $shell";
+
+    print "\nA sub-shell is launched with perlbrew turned off. Run 'exit' to finish it.\n\n";
+    exec($command);
+}
+
+sub run_command_switch_off {
+    my $self = shift;
+    my $pb_home = $self->env("PERLBREW_HOME") || $PB_HOME;
+
+    mkpath($pb_home);
+    system("env PERLBREW_PERL= $0 env > ${pb_home}/init");
 
     print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
     print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";

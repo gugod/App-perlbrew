@@ -144,7 +144,13 @@ Delete the given alias.
 
 =item B<off>
 
-Disable perlbrew. Use C<switch> command to re-enable it.
+Temporarily disable perlbrew in the current shell.
+
+Re-enables the default system Perl, whatever that is.
+
+=item B<switch-off>
+
+Permananently disable perlbrew. Use C<switch> command to re-enable it.
 
 Re-enables the default system Perl, whatever that is.
 
