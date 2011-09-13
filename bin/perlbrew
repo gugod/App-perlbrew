@@ -54,7 +54,6 @@ perlbrew - Perl Environment manager.
 Run this once to setup the C<perlbrew> directory ready for installing
 perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
 
-
 =item B<install> perl-<version-number>
 
 =item B<install> <version-number>
@@ -109,23 +108,18 @@ from. Hit 'q' to cancel the selection.
 
 List the installed versions of perl.
 
+=item B<available>
+
+List the available versions of perl on CPAN.
 
 =item B<use> [perl-<version>]
 
 =item B<use> [<version>]
 
-Switch to the given version of perl only in the current shell. This
-will not effect newly opened shells.
-
-You can use as C<perl-version> the special keyword C<system> to stop
-using any perlbrew-based perl.
+Use the given version perl in current shell. This will not effect newly opened
+shells.
 
 Without a parameter, shows the version of perl currently in use.
-
-=item B<available>
-
-Displays the available versions of perl on CPAN.
-
 
 =item B<switch> [perl-<version>]
 
@@ -162,7 +156,7 @@ For example, run a Hello program:
 
     perlbrew exec perl -e 'print "Hello from $]\n"'
 
-Depending on your actual installations, the output might look like this:
+The output depends on your perl installations, and looks like this:
 
     perl-5.12.2
     ==========
@@ -180,6 +174,8 @@ Depending on your actual installations, the output might look like this:
     ==========
     Hello word from perl-5.014000
 
+Notice that the command is not executed in parallel.
+
 =item B<env> [perl-version]
 
 Low-level command. Use this command to see the list of environment
@@ -188,24 +184,24 @@ variables that are set by C<perlbrew> itself for shell integration.
 The output is something similar to this (if your shell is bash):
 
     export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
-    export PERLBREW_VERSION=0.13
+    export PERLBREW_VERSION=0.28
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
-    export PERLBREW_PERL=perl-5.12.3
+    export PERLBREW_PERL=perl-5.14.1
 
 You can also ask for the proper variables for a specific perl version.
 
-
 =item B<symlink_executables> <perl-version>
 
-Low-level command. Use this command to create the C<perl> executable
-symbolic link to , say, C<perl5.13.6>. This is only useful
-for development version of perls.
+Low-level command. This command is used to create the C<perl> executable
+symbolic link to, say, C<perl5.13.6>. This is only required for
+development version of perls.
 
 You don't need to do this unless you have been using old perlbrew to
 install perls. The installation layout is changed since version 0.11.
 
-If you just upgraded perlbrew and found C<perlbrew switch> failed to work
-after you switch to a development release of perl, say, perl-5.13.6, run this command:
+If you just upgraded perlbrew (from 0.11 or earlier versions) and C<perlbrew
+switch> failed to work after you switch to a development release of perl, say,
+perl-5.13.6, run this command:
 
     perlbrew symlink_executables perl-5.13.6
 
@@ -214,9 +210,15 @@ This essentially creates this symlink:
    ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl
    -> ${PERLBREW_ROOT}/perls/perl-5.13.6/bin/perl5.13.6
 
+Newly installed perls, whether they are development versions or not, does not
+need manually treatment with this command.
+
 =item B<install-cpanm>
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
+
+For more rationale about the existence of this command, read
+<http://www.perlbrew.pl/Perlbrew-and-Friends.html>
 
 =item B<self-upgrade>
 
@@ -225,7 +227,6 @@ This command upgrades Perlbrew to its latest version.
 =item B<version>
 
 Show the version of perlbrew.
-
 
 =back
 
@@ -254,7 +255,8 @@ Skip the test suite
 
 =item B<-q| --quiet>
 
-Log output to a log file rather than STDOUT. This is the default. The log file is saved in F<$ROOT/build.log>
+Log output to a log file rather than STDOUT. This is the default. The log file
+is saved as F<$PERLBREW_ROOT/build.log>, which is, by default, F<~/perl5/perlbrew/build.log>.
 
 =item B<-v| --verbose>
 
