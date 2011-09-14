@@ -1457,7 +1457,7 @@ there in order to fetch files from the internet.
 The recommended way to install perlbrew is to run this statement in
 your shell:
 
-    curl -L http://xrl.us/perlbrewinstall | bash
+    curl -kL http://xrl.us/perlbrewinstall | bash
 
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
 and you should follow the instruction on screen to setup your
@@ -1477,7 +1477,7 @@ because, say, your HOME has limited quota, you can do that by setting
 a C<PERLBREW_ROOT> environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perlbrew
-    curl -L http://xrl.us/perlbrewinstall | bash
+    curl -kL http://xrl.us/perlbrewinstall | bash
 
 By default, C<perlbrew> looks for the intialization file that exports
 C<PERLBREW_ROOT> in C<~/.perlbrew/init>.  In some cases (for instance,
