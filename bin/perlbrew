@@ -224,7 +224,6 @@ Show the version of perlbrew.
 
 =back
 
-
 =head1 OPTIONS
 
 =over 4
@@ -249,12 +248,13 @@ Skip the test suite
 
 =item B<-q| --quiet>
 
-Log output to a log file rather than STDOUT. This is the default. The log file
-is saved as F<$PERLBREW_ROOT/build.log>, which is, by default, F<~/perl5/perlbrew/build.log>.
+Make perlbrew command quieter.
 
 =item B<-v| --verbose>
 
-Log output to STDOUT rather than a log file.
+Make perlbrew command say more.
+
+For C<install> command, this prints the building whole process to STDOUT.
 
 =item B<--as>
 

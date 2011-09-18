@@ -214,7 +214,7 @@ sub new {
     my %opt = (
         original_argv  => \@argv,
         force => 0,
-        quiet => 1,
+        quiet => 0,
         D => [],
         U => [],
         A => [],
@@ -797,7 +797,7 @@ sub do_install_this {
     unshift @d_options, qq(prefix=$ROOT/perls/$as);
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
-    print <<INSTALL if $self->{quiet} && !$self->{verbose};
+    print <<INSTALL if !$self->{verbose};
 
 This could take a while. You can run the following command on another shell to track the status:
 
@@ -1147,17 +1147,33 @@ sub run_command_symlink_executables {
 
 sub run_command_install_cpanm {
     my ($self, $perl) = @_;
+    my $out = "$ROOT/bin/cpanm";
+
+    if (-f $out && !$self->{force}) {
+        require ExtUtils::MakeMaker;
+
+        my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
+
+        if ($ans !~ /^Y/i) {
+            print "\ncpanm installation skipped.\n\n"
+                unless $self->{quiet};
+            exit;
+        }
+    }
+
     my $body = http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
 
     unless ($body) {
         die "\nERROR: Failed to retrive cpanm executable.\n\n";
     }
 
-    open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
+    open my $CPANM, '>', $out or die "cannot open file($out): $!";
     print $CPANM $body;
     close $CPANM;
-    chmod 0755, "$ROOT/bin/cpanm";
-    print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
+    chmod 0755, $out;
+
+    print "\ncpanm is installed to\n\n\t$out\n\n"
+        unless $self->{quiet};
 }
 
 sub run_command_self_upgrade {
