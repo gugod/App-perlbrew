@@ -14,7 +14,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   use File::Path::Tiny;
   use FindBin;
   
-  our $VERSION = "0.28";
+  our $VERSION = "0.29";
   our $CONF;
   
   my $ROOT             = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -1686,43 +1686,42 @@ perlbrew - Perl Environment manager.
         init           Initialize perlbrew environment.
         install        Install perl
         uninstall      Uninstall the given installation
+        available      List perls available to install
         list           List installed perls
         use            Use the specified perl in current shell
-        available      List perls available to install
+        off            Turn off perlbrew in current shel
         switch         Permanently use the specified perl as default
+        switch-off     Permanently turn off perl
         mirror         Pick a preferred mirror site
-        off            Permanently turn off perlbrew, go back to system Perl
         version        Display version
         help           Read more detailed instructions
 
     Examples:
-        perlbrew install perl-5.14.0
-        perlbrew install 5.12.3
+        perlbrew install perl-5.14.1
+        perlbrew install 5.12.1
 
         perlbrew list
 
         perlbrew use perl-5.12.3
-        perlbrew switch perl-5.14.0
+        perlbrew switch perl-5.14.1
 
-        perlbrew switch /path/to/special/perl
-        perlbrew switch /path/to/special/perl special-perl
+=head1 INITIALIZATION
 
-        # later
-        perlbrew switch special-perl
+If you never run perlbrew before, or you do not have a C<~/.perlbrew> directory,
+you should perform the initialization process by running:
 
+    perlbrew init
+
+This step needs to be done only once.
+
+If latter on you need to change C<$PERLBREW_ROOT>, you (and all other users
+who share the same C<$PERLBREW_ROOT> will have to run this again to make it affective.
 
 =head1 COMMANDS
 
 =over 4
 
-=item B<init>
-
-Run this once to setup the C<perlbrew> directory ready for installing
-perls into. Run it again if you decide to change C<PERLBREW_ROOT>.
-
-=item B<install> perl-<version-number>
-
-=item B<install> <version-number>
+=item B<install> [ perl-<version> | <version> ]
 
 Build and install the given version of perl.
 
@@ -1732,23 +1731,17 @@ Version numbers usually look like "5.x.xx", or
 The specified perl is downloaded from the CPAN website, unless mirror
 setting are present.
 
+=item B<install> [ perl-blead | blead ]
 
-=item B<install> perl-blead
-
-=item B<install> blead
-
-A special way to install the blead version of perl.
-
-The blead version is downloaded from:
+A special way to install the blead version of perl, which is downloaded from
+this specific URL regardless of mirror settings:
 
     http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
-
-This command does not consult mirror settings.
-
 
 =item B<install> /path/to/perl/git/checkout/dir
 
 Build and install from the given git checkout dir.
+
 
 =item B<install> /path/to/perl-5.14.0.tar.gz
 
@@ -1763,12 +1756,19 @@ C<https://>, C<ftp://> and C<file://>.
 
 Uninstalls the given version.
 
-=item B<mirror>
+=item B<use> [perl-<version> | <version> | <name>]
 
-Run this if you want to choose a specific CPAN mirror to install the
-perls from. It will display a list of mirrors for you to pick
-from. Hit 'q' to cancel the selection.
+Use the given version perl in current shell. This will not effect newly opened
+shells.
 
+Without a parameter, shows the version of perl currently in use.
+
+=item B<switch> [perl-<version> | <version> | <name>]
+
+Switch to the given version, and makes it the default for this and all
+future terminal sessions.
+
+Without a parameter, shows the version of perl currently selected.
 
 =item B<list>
 
@@ -1778,23 +1778,17 @@ List the installed versions of perl.
 
 List the available versions of perl on CPAN.
 
-=item B<use> [perl-<version>]
+=item B<off>
 
-=item B<use> [<version>]
+Temporarily disable perlbrew in the current shell.
 
-Use the given version perl in current shell. This will not effect newly opened
-shells.
+Re-enables the default system Perl, whatever that is.
 
-Without a parameter, shows the version of perl currently in use.
+=item B<switch-off>
 
-=item B<switch> [perl-<version>]
+Permananently disable perlbrew. Use C<switch> command to re-enable it.
 
-=item B<switch> [<version>]
-
-Switch to the given version, and makes it the default for this and all
-future terminal sessions.
-
-Without a parameter, shows the version of perl currently selected.
+Re-enables the default system Perl, whatever that is.
 
 =item B<alias> [-f] create <name> <alias>
 
@@ -1808,17 +1802,11 @@ Rename the alias to a new name.
 
 Delete the given alias.
 
-=item B<off>
+=item B<mirror>
 
-Temporarily disable perlbrew in the current shell.
-
-Re-enables the default system Perl, whatever that is.
-
-=item B<switch-off>
-
-Permananently disable perlbrew. Use C<switch> command to re-enable it.
-
-Re-enables the default system Perl, whatever that is.
+Run this if you want to choose a specific CPAN mirror to install the
+perls from. It will display a list of mirrors for you to pick
+from. Hit 'q' to cancel the selection.
 
 =item B<exec> command
 
