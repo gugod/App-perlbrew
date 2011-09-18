@@ -7,9 +7,10 @@ all_from 'lib/App/perlbrew.pm';
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires
-    'File::Path::Tiny', => 0,
-    'Devel::PatchPerl' => '0.46',
-    'Cwd' => '3.26';
+    'File::Path::Tiny'  => '0.1',
+    'Text::Levenshtein' => '0.04',
+    'Devel::PatchPerl'  => '0.46',
+    'Cwd'               => '3.26';
 
 test_requires 'Test::Simple' => '0.98';
 test_requires 'Test::More';
