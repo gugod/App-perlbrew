@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PERLBREWURL=https://raw.github.com/gugod/App-perlbrew/master/perlbrew
-PATCHPERLURL=https://raw.github.com/gist/962406/fb2db5087040540240c12691a5171c26cafcdf1d/patchperl
+PATCHPERLURL=https://raw.github.com/gugod/patchperl-packing/master/patchperl
 
 if [ -z "$TMPDIR" ]; then
     if [ -d "/tmp" ]; then
