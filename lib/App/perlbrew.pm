@@ -5,6 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile );
 use File::Path::Tiny;
+use Text::Levenshtein ();
 use FindBin;
 
 our $VERSION = "0.29";
@@ -315,8 +316,6 @@ sub get_command_list {
 
 sub find_similar_commands {
     my ( $self, $command ) = @_;
-
-    require Text::Levenshtein;
 
     my @commands = $self->get_command_list;
 
