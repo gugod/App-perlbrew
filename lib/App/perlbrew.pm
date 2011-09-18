@@ -306,6 +306,7 @@ sub get_command_list {
             my $glob = $symtable->{$sym};
             if(defined *$glob{CODE}) {
                 $sym =~ s/^run_command_//;
+                $sym =~ s/_/-/g;
                 push @commands, $sym;
             }
         }
@@ -340,6 +341,8 @@ sub find_similar_commands {
 
 sub run_command {
     my ( $self, $x, @args ) = @_;
+    my $command = $x;
+
     $self->{log_file} ||= "$ROOT/build.log";
     if($self->{version}) {
         $x = 'version';
@@ -354,7 +357,7 @@ sub run_command {
 
     my $s = $self->can("run_command_$x");
     unless ($s) {
-        $x =~ s/-/_/;
+        $x =~ y/-/_/;
         $s = $self->can("run_command_$x");
     }
 
@@ -363,11 +366,11 @@ sub run_command {
 
         if(@commands > 1) {
             @commands = map { '    ' . $_ } @commands;
-            die "Unknown command: `$x`. Did you mean one of the following?\n" . join("\n", @commands) . "\n";
+            die "Unknown command: `$command`. Did you mean one of the following?\n" . join("\n", @commands) . "\n";
         } elsif(@commands == 1) {
-            die "Unknown command: `$x`. Did you mean `$commands[0]`?\n";
+            die "Unknown command: `$command`. Did you mean `$commands[0]`?\n";
         } else {
-            die "Unknown command: `$x`. Typo?\n";
+            die "Unknown command: `$command`. Typo?\n";
         }
     }
 
