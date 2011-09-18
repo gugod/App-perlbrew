@@ -1,5 +1,8 @@
 #!/bin/sh
 
+PERLBREWURL=https://raw.github.com/gugod/App-perlbrew/master/perlbrew
+PATCHPERLURL=https://raw.github.com/gist/962406/fb2db5087040540240c12691a5171c26cafcdf1d/patchperl
+
 if [[ -z "$TMPDIR" ]]; then
     if [[ -d "/tmp" ]]; then
         TMPDIR="/tmp"
@@ -11,11 +14,22 @@ fi
 cd $TMPDIR
 
 echo
-echo "## Download the latest perlbrew"
-curl -k -Lo perlbrew https://raw.github.com/gugod/App-perlbrew/master/perlbrew >/dev/null 2>&1
+if type curl >/dev/null 2>&1; then
+  echo "## Download the latest perlbrew"
+  curl -k -Lo perlbrew $PERLBREWURL >/dev/null 2>&1
 
-echo "## Download the packed patchperl"
-curl -k -Lo patchperl https://raw.github.com/gist/962406/fb2db5087040540240c12691a5171c26cafcdf1d/patchperl >/dev/null 2>&1
+  echo "## Download the packed patchperl"
+  curl -k -Lo patchperl $PATCHPERLURL >/dev/null 2>&1
+elif type wget >/dev/null 2>&1; then
+  echo "## Download the latest perlbrew"
+  wget --no-check-certificate -O perlbrew $PERLBREWURL >/dev/null 2>&1
+
+  echo "## Download the packed patchperl"
+  wget --no-check-certificate -O patchperl $PATCHPERLURL >/dev/null 2>&1
+else
+  echo "Need wget or curl to use $0"
+  exit 1
+fi
 
 echo
 echo "## Installing perlbrew"
@@ -23,7 +37,7 @@ chmod +x perlbrew
 ./perlbrew install
 
 echo "## Installing patchperl"
-if [ "X${PERLBREW_ROOT}" == "X" ]; then
+if [ "X${PERLBREW_ROOT}" = "X" ]; then
     PERLBREW_ROOT="${HOME}/perl5/perlbrew"
 fi
 mkdir -p "$PERLBREW_ROOT"
