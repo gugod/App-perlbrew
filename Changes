@@ -1,3 +1,10 @@
+0.29:
+- The installer now honors $TMPDIR (RT #70850)
+- Fixd GH #108. `perlbrew use` has a fallback for users that does not use bash/csh -compitable shell.
+- Deprecate the command 'perlbrew use system' simply use 'perlbrew off' or 'perlbrew switch-off' instead.
+- Deprecate the special case of `perlbrew use /path/to/bin/perl` and `perlbrew switch /path/to/bin/perl
+  - perlbrew no longer cast magic to external perls. But there will be an alternative.
+
 0.28:
 - fixes for cpantester
 - Fix 'switch' and 'use' for bash users, by Woody2143++
