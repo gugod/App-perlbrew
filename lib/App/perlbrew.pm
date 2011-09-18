@@ -157,51 +157,6 @@ sub rmpath {
     File::Path::Tiny::rm(@_)
 }
 
-{
-
-no warnings;
-
-# Text::Levenshtein::_min
-sub _min
-{
-	return $_[0] < $_[1]
-		? $_[0] < $_[2] ? $_[0] : $_[2]
-		: $_[1] < $_[2] ? $_[1] : $_[2];
-}
-
-# Text::Levenshtein::fastdistance
-sub fastdistance
-{
-	my $word1 = shift;
-	my $word2 = shift;
-
-	return 0 if $word1 eq $word2;
-	my @d;
-
-	my $len1 = length $word1;
-	my $len2 = length $word2;
-
-	$d[0][0] = 0;
-	for (1 .. $len1) {
-		$d[$_][0] = $_;
-		return $_ if $_!=$len1 && substr($word1,$_) eq substr($word2,$_);
-	}
-	for (1 .. $len2) {
-		$d[0][$_] = $_;
-		return $_ if $_!=$len2 && substr($word1,$_) eq substr($word2,$_);
-	}
-
-	for my $i (1 .. $len1) {
-		my $w1 = substr($word1,$i-1,1);
-		for (1 .. $len2) {
-			$d[$i][$_] = _min($d[$i-1][$_]+1, $d[$i][$_-1]+1, $d[$i-1][$_-1]+($w1 eq substr($word2,$_-1,1) ? 0 : 1));
-		}
-	}
-	return $d[$len1][$len2];
-}
-
-}
-
 sub uniq(@) {
     my %a;
     grep { ++$a{$_} == 1 } @_;
@@ -361,10 +316,12 @@ sub get_command_list {
 sub find_similar_commands {
     my ( $self, $command ) = @_;
 
+    require Text::Levenshtein;
+
     my @commands = $self->get_command_list;
 
     foreach my $cmd (@commands) {
-        my $dist = fastdistance($cmd, $command);
+        my $dist =  Text::Levenshtein::fastdistance($cmd, $command);
         if($dist < $SIMILAR_DISTANCE) {
             $cmd = [ $cmd, $dist ];
         } else {
