@@ -1017,15 +1017,22 @@ sub run_command_use {
     }
 
     my $shell = $self->env('SHELL');
+    my $shell_opt = "";
     my %env = ($self->perlbrew_env($perl), PERLBREW_SKIP_INIT => 1);
+
+    unless ($ENV{PERLBREW_VERSION}) {
+        # The user does not source bashrc/csh in their shell initialization.
+        $env{PATH} = $env{PERLBREW_PATH} . ":" . join ":", grep { !/$ROOT/ } split ":", $ENV{PATH};
+    }
 
     my $command = "env ";
     while (my ($k, $v) = each(%env)) {
         $command .= "$k=$v ";
     }
-    $command .= " $shell";
+    $command .= " $shell $shell_opt";
 
     print "\nA sub-shell is launched with $perl as the activated perl. Run 'exit' to finish it.\n\n";
+
     exec($command);
 }
 
