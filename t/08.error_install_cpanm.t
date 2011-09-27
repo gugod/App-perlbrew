@@ -1,7 +1,12 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
+use Path::Class;
+BEGIN {
+    $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
+}
+App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
+
 use App::perlbrew;
 use Test::More;
 use Test::Exception;
@@ -18,3 +23,5 @@ throws_ok(
 );
 
 done_testing;
+
+App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
