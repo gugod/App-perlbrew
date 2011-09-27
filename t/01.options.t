@@ -16,11 +16,10 @@ is_deeply $app->{D}, [qw(usethreads DEBUGGING)], '-D';
 is_deeply $app->{U}, [qw(usemymalloc)],          '-U';
 is_deeply $app->{A}, [qw(ccflags)],              '-A';
 
-ok $app->{quiet},  'quiet';
+ok !$app->{quiet},  'not quiet';
 ok $app->{notest}, 'notest';
 
-
-$app = App::perlbrew->new('install', '--no-quiet', 'perl-5.12.1',
+$app = App::perlbrew->new('install', '--quiet', 'perl-5.12.1',
     '-D', 'usethreads', '-D=DEBUGGING', '-U', 'usemymalloc', '-A', 'ccflags');
 
 note explain($app)
@@ -32,5 +31,5 @@ is_deeply $app->{D}, [qw(usethreads DEBUGGING)], '-D';
 is_deeply $app->{U}, [qw(usemymalloc)],          '-U';
 is_deeply $app->{A}, [qw(ccflags)],              '-A';
 
-ok !$app->{quiet},  'quiet';
+ok $app->{quiet},  'quiet';
 ok !$app->{notest}, 'notest';
