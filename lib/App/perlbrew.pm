@@ -805,8 +805,7 @@ This could take a while. You can run the following command on another shell to t
 
 INSTALL
 
-    my $configure_flags = '-des';
-    $configure_flags = '-de';
+    my $configure_flags = '-de';
     # Test via "make test_harness" if available so we'll get
     # automatic parallel testing via $HARNESS_OPTIONS. The
     # "test_harness" target was added in 5.7.3, which was the last
