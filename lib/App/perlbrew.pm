@@ -732,7 +732,7 @@ sub run_command_install {
     }
 
     my $installation_name = $self->{as} || $dist;
-    if ($self->is_installed( $installation_name )) {
+    if ($self->is_installed( $installation_name ) && !$self->{force}) {
         die "\nABORT: $installation_name is already installed.\n\n";
     }
 
