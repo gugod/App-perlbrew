@@ -22,7 +22,6 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   my $PB_HOME          = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
   my $CONF_FILE        = catfile( $ROOT, 'Conf.pm' );
   my $CURRENT_PERL     = $ENV{PERLBREW_PERL};
-  my $SIMILAR_DISTANCE = 6;
   
   local $SIG{__DIE__} = sub {
       my $message = shift;
@@ -34,9 +33,8 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   sub BASHRC_CONTENT() {
       return <<'RC';
-  if [[ -z "$PERLBREW_HOME" ]]; then
-      export PERLBREW_HOME="$HOME/.perlbrew"
-  fi
+  [[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+  [[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
   
   if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
       if [[ -f "$PERLBREW_HOME/init" ]]; then
@@ -56,7 +54,6 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   }
   
   __perlbrew_set_path () {
-      [[ -z "$PERLBREW_ROOT" ]] && return 1
       [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
   
       export PATH_WITHOUT_PERLBREW=$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')
@@ -221,7 +218,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       my %opt = (
           original_argv  => \@argv,
           force => 0,
-          quiet => 1,
+          quiet => 0,
           D => [],
           U => [],
           A => [],
@@ -313,6 +310,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
               my $glob = $symtable->{$sym};
               if(defined *$glob{CODE}) {
                   $sym =~ s/^run_command_//;
+                  $sym =~ s/_/-/g;
                   push @commands, $sym;
               }
           }
@@ -323,6 +321,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   sub find_similar_commands {
       my ( $self, $command ) = @_;
+      my $SIMILAR_DISTANCE = 6;
   
       my @commands = $self->get_command_list;
   
@@ -347,6 +346,8 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   sub run_command {
       my ( $self, $x, @args ) = @_;
+      my $command = $x;
+  
       $self->{log_file} ||= "$ROOT/build.log";
       if($self->{version}) {
           $x = 'version';
@@ -361,7 +362,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
       my $s = $self->can("run_command_$x");
       unless ($s) {
-          $x =~ s/-/_/;
+          $x =~ y/-/_/;
           $s = $self->can("run_command_$x");
       }
   
@@ -370,11 +371,11 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
           if(@commands > 1) {
               @commands = map { '    ' . $_ } @commands;
-              die "Unknown command: `$x`. Did you mean one of the following?\n" . join("\n", @commands) . "\n";
+              die "Unknown command: `$command`. Did you mean one of the following?\n" . join("\n", @commands) . "\n";
           } elsif(@commands == 1) {
-              die "Unknown command: `$x`. Did you mean `$commands[0]`?\n";
+              die "Unknown command: `$command`. Did you mean `$commands[0]`?\n";
           } else {
-              die "Unknown command: `$x`. Typo?\n";
+              die "Unknown command: `$command`. Typo?\n";
           }
       }
   
@@ -736,7 +737,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       }
   
       my $installation_name = $self->{as} || $dist;
-      if ($self->is_installed( $installation_name )) {
+      if ($self->is_installed( $installation_name ) && !$self->{force}) {
           die "\nABORT: $installation_name is already installed.\n\n";
       }
   
@@ -801,7 +802,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       unshift @d_options, qq(prefix=$ROOT/perls/$as);
       push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
       print "Installing $dist_extracted_dir into " . $self->path_with_tilde("$ROOT/perls/$as") . "\n";
-      print <<INSTALL if $self->{quiet} && !$self->{verbose};
+      print <<INSTALL if !$self->{verbose};
   
   This could take a while. You can run the following command on another shell to track the status:
   
@@ -809,8 +810,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   INSTALL
   
-      my $configure_flags = '-des';
-      $configure_flags = '-de';
+      my $configure_flags = '-de';
       # Test via "make test_harness" if available so we'll get
       # automatic parallel testing via $HARNESS_OPTIONS. The
       # "test_harness" target was added in 5.7.3, which was the last
@@ -1151,17 +1151,33 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   sub run_command_install_cpanm {
       my ($self, $perl) = @_;
+      my $out = "$ROOT/bin/cpanm";
+  
+      if (-f $out && !$self->{force}) {
+          require ExtUtils::MakeMaker;
+  
+          my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
+  
+          if ($ans !~ /^Y/i) {
+              print "\ncpanm installation skipped.\n\n"
+                  unless $self->{quiet};
+              exit;
+          }
+      }
+  
       my $body = http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
   
       unless ($body) {
           die "\nERROR: Failed to retrive cpanm executable.\n\n";
       }
   
-      open my $CPANM, '>', "$ROOT/bin/cpanm" or die "cannot open file($ROOT/bin/cpanm): $!";
+      open my $CPANM, '>', $out or die "cannot open file($out): $!";
       print $CPANM $body;
       close $CPANM;
-      chmod 0755, "$ROOT/bin/cpanm";
-      print "cpanm is installed to $ROOT/bin/cpanm\n" if $self->{verbose};
+      chmod 0755, $out;
+  
+      print "\ncpanm is installed to\n\n\t$out\n\n"
+          unless $self->{quiet};
   }
   
   sub run_command_self_upgrade {
@@ -1308,6 +1324,14 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       else {
           die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
       }
+  }
+  
+  sub run_command_display_bashrc {
+      print BASHRC_CONTENT;
+  }
+  
+  sub run_command_display_cshrc {
+      print CSHRC_CONTENT;
   }
   
   sub resolve_installation_name {
@@ -2000,7 +2024,6 @@ Show the version of perlbrew.
 
 =back
 
-
 =head1 OPTIONS
 
 =over 4
@@ -2025,12 +2048,13 @@ Skip the test suite
 
 =item B<-q| --quiet>
 
-Log output to a log file rather than STDOUT. This is the default. The log file
-is saved as F<$PERLBREW_ROOT/build.log>, which is, by default, F<~/perl5/perlbrew/build.log>.
+Make perlbrew command quieter.
 
 =item B<-v| --verbose>
 
-Log output to STDOUT rather than a log file.
+Make perlbrew command say more.
+
+For C<install> command, this prints the building whole process to STDOUT.
 
 =item B<--as>
 

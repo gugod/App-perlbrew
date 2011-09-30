@@ -26,9 +26,8 @@ sub current_perl { $CURRENT_PERL || '' }
 
 sub BASHRC_CONTENT() {
     return <<'RC';
-if [[ -z "$PERLBREW_HOME" ]]; then
-    export PERLBREW_HOME="$HOME/.perlbrew"
-fi
+[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+[[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
 if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
     if [[ -f "$PERLBREW_HOME/init" ]]; then
@@ -48,7 +47,6 @@ __perlbrew_reinit () {
 }
 
 __perlbrew_set_path () {
-    [[ -z "$PERLBREW_ROOT" ]] && return 1
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
     export PATH_WITHOUT_PERLBREW=$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')
@@ -1319,6 +1317,14 @@ USAGE
     else {
         die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
     }
+}
+
+sub run_command_display_bashrc {
+    print BASHRC_CONTENT;
+}
+
+sub run_command_display_cshrc {
+    print CSHRC_CONTENT;
 }
 
 sub resolve_installation_name {
