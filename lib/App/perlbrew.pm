@@ -15,7 +15,6 @@ my $ROOT             = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 my $PB_HOME          = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
 my $CONF_FILE        = catfile( $ROOT, 'Conf.pm' );
 my $CURRENT_PERL     = $ENV{PERLBREW_PERL};
-my $SIMILAR_DISTANCE = 6;
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
@@ -317,6 +316,7 @@ sub get_command_list {
 
 sub find_similar_commands {
     my ( $self, $command ) = @_;
+    my $SIMILAR_DISTANCE = 6;
 
     my @commands = $self->get_command_list;
 
