@@ -26,7 +26,7 @@ local $SIG{__DIE__} = sub {
 sub current_perl { $CURRENT_PERL || '' }
 
 sub BASHRC_CONTENT() {
-    return <<'RC';
+    return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
 [[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
 [[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
@@ -136,7 +136,7 @@ RC
 }
 
 sub CSHRC_CONTENT {
-    return <<'CSHRC';
+    return "setenv PERLBREW_CSHRC_VERSION $VERSION\n\n" . <<'CSHRC';
 if ( $?PERLBREW_SKIP_INIT == 0 ) then
     if ( -f "$HOME/.perlbrew/init" ) then
         source "$HOME/.perlbrew/init"
@@ -1236,7 +1236,7 @@ sub run_command_exec {
     shift @args;
 
     for my $i ( $self->installed_perls ) {
-        next if -l $ROOT . '/perls/' . $i->{name}; # Skip Aliases
+        next if -l $PERLBREW_ROOT . '/perls/' . $i->{name}; # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
