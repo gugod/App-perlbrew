@@ -19,7 +19,7 @@ throws_ok(
         my $app = App::perlbrew->new("unknown-command");
         $app->run;
     },
-    qr[unknown_command]
+    qr[unknown-command]
 );
 
 system("perl -Ilib ${bin_perlbrew} unknown-command 2>&1");
