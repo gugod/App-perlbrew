@@ -137,10 +137,23 @@ RC
 
 sub CSHRC_CONTENT {
     return "setenv PERLBREW_CSHRC_VERSION $VERSION\n\n" . <<'CSHRC';
+
+if ( $?PERLBREW_HOME == 0 ) then
+    setenv PERLBREW_HOME "$HOME/.perlbrew"
+endif
+
+if ( $?PERLBREW_ROOT == 0 ) then
+    setenv PERLBREW_ROOT "$HOME/perl5/perlbrew"
+endif
+
 if ( $?PERLBREW_SKIP_INIT == 0 ) then
-    if ( -f "$HOME/.perlbrew/init" ) then
-        source "$HOME/.perlbrew/init"
+    if ( -f "$PERLBREW_HOME/init" ) then
+        source "PERLBREW_$HOME/init"
     endif
+endif
+
+if ( $?PERLBREW_PATH == 0 ) then
+    setenv PERLBREW_PATH "$PERLBREW_ROOT/bin"
 endif
 
 setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
@@ -476,8 +489,6 @@ sub run_command_init {
     else {
         $shrc = $yourshrc = 'bashrc';
     }
-
-    system("$0 env @{[ $self->current_perl ]}> ${PERLBREW_HOME}/init");
 
     $self->run_command_symlink_executables;
 
