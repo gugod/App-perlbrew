@@ -1176,6 +1176,8 @@ sub run_command_install_cpanm {
         die "\nERROR: Failed to retrive cpanm executable.\n\n";
     }
 
+    mkpath("$PERLBREW_ROOT/bin") unless -d "$PERLBREW_ROOT/bin";
+
     open my $CPANM, '>', $out or die "cannot open file($out): $!";
     print $CPANM $body;
     close $CPANM;
