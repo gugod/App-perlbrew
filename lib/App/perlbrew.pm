@@ -1185,6 +1185,38 @@ sub run_command_install_cpanm {
         unless $self->{quiet};
 }
 
+sub run_command_install_patchperl {
+    my ($self) = @_;
+    my $out = "$PERLBREW_ROOT/bin/patchperl";
+
+    if (-f $out && !$self->{force}) {
+        require ExtUtils::MakeMaker;
+
+        my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
+
+        if ($ans !~ /^Y/i) {
+            print "\npatchperl installation skipped.\n\n"
+                unless $self->{quiet};
+            exit;
+        }
+    }
+
+    my $body = http_get('https://raw.github.com/gugod/patchperl-packing/master/patchperl');
+
+    unless ($body) {
+        die "\nERROR: Failed to retrive patchperl executable.\n\n";
+    }
+
+    mkpath("$PERLBREW_ROOT/bin") unless -d "$PERLBREW_ROOT/bin";
+    open my $OUT, '>', $out or die "cannot open file($out): $!";
+    print $OUT $body;
+    close $OUT;
+    chmod 0755, $out;
+
+    print "\npatchperl is installed to\n\n\t$out\n\n"
+        unless $self->{quiet};
+}
+
 sub run_command_self_upgrade {
     my ($self) = @_;
 

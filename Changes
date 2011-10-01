@@ -1,4 +1,5 @@
 NEXT:
+- New command: install-patchperl
 - skip runs of 'exec' on aliases https://github.com/gugod/App-perlbrew/pull/135
 - Respect -f flag when installing to replace an already installed perl.
 - Redefine the default value of -q flag to be false, and define it's meaning to be "complete silent"
