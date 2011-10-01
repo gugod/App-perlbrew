@@ -24,7 +24,9 @@ describe "App::perlbrew->install_patchperl" => sub {
         my $app = App::perlbrew->new("install-patchperl", "-q");
         $app->run();
 
-        ok -f file($perlbrew_root, "bin", "patchperl");
+        my $patchperl = file($perlbrew_root, "bin", "patchperl")->absolute;
+        ok -f $patchperl, "patchperl is produced. $patchperl";
+        ok -x $patchperl, "patchperl should be an executable.";
     };
 };
 
