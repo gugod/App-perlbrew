@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use File::Temp qw( tempdir );
 use File::Spec::Functions qw( catdir );
+use File::Path::Tiny;
 use Test::Spec;
 use Test::Output;
 use App::perlbrew;
@@ -32,7 +33,7 @@ describe "lib command," => sub {
 
     describe "`delete` sub-command," => sub {
         before each => sub {
-            App::perlbrew::mkpath(
+            File::Path::Tiny::mk(
                 catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
             );
         };
