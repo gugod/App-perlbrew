@@ -1,6 +1,9 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
+use FindBin;
+use lib $FindBin::Bin;
+
 use File::Temp qw( tempdir );
 use File::Spec::Functions qw( catdir );
 use File::Path::Tiny;
@@ -8,8 +11,7 @@ use Test::Spec;
 use Test::Output;
 use App::perlbrew;
 
-$App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
-$App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
+require "test_helpers.pl";
 
 describe "lib command," => sub {
     it "shows a page of usage synopsis when no sub-command are given." => sub {
