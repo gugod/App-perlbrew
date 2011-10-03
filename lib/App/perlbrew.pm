@@ -24,7 +24,7 @@ local $SIG{__DIE__} = sub {
 
 sub current_perl {
     my ($self) = @_;
-    return $self->env('CURRENT_PERL')  || ''
+    return $self->env('PERLBREW_PERL')  || ''
 }
 
 sub BASHRC_CONTENT() {
