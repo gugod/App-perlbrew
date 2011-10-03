@@ -3,14 +3,11 @@ use strict;
 use warnings;
 use FindBin;
 use lib $FindBin::Bin;
+use App::perlbrew;
+require "test_helpers.pl";
 
-use Path::Class;
-use IO::All;
 use Test::Spec;
 use Test::Exception;
-use App::perlbrew;
-
-require "test_helpers.pl";
 
 mock_perlbrew_install("perl-5.8.9");
 mock_perlbrew_install("perl-5.14.0");
