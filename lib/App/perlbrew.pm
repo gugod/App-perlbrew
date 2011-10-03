@@ -1419,8 +1419,12 @@ USAGE
         return;
     }
 
-    if ($subcommand eq 'create') {
-        $self->run_command_lib_create(@args);
+    my $sub = "run_command_lib_$subcommand";
+    if ($self->can($sub)) {
+        $self->$sub( @args );
+    }
+    else {
+        print "Unknown command: $subcommand\n";
     }
 }
 
@@ -1431,6 +1435,18 @@ sub run_command_lib_create {
     mkpath( catdir($PERLBREW_HOME,  "libs", $fullname) );
 
     print "lib '$fullname' is created.\n"
+        unless $self->{quiet};
+
+    return;
+}
+
+sub run_command_lib_delete {
+    my ($self, $name) = @_;
+
+    my $fullname = $self->current_perl . '@' . $name;
+    rmpath( catdir($PERLBREW_HOME,  "libs", $fullname) );
+
+    print "lib '$fullname' is deleted.\n"
         unless $self->{quiet};
 
     return;

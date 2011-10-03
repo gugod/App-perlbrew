@@ -29,6 +29,25 @@ describe "lib command," => sub {
             ok -d catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
         };
     };
+
+    describe "`delete` sub-command," => sub {
+        before each => sub {
+            App::perlbrew::mkpath(
+                catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
+            );
+        };
+
+        it "deletes the local::lib folder" => sub {
+            stdout_is {
+                my $app = App::perlbrew->new("lib", "delete", "nobita");
+                $app->expects("current_perl")->returns("perl-5.14.2");
+                $app->run;
+            } qq{lib 'perl-5.14.2\@nobita' is deleted.\n};
+
+            ok !-d catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
+            ok !-e catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
+        };
+    };
 };
 
 runtests unless caller;
