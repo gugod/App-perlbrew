@@ -15,6 +15,8 @@ put 't/' dir to `@INC`.
 =cut
 
 use Test::More;
+use Path::Class;
+use IO::All;
 use File::Temp qw( tempdir );
 
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
