@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use 5.008;
 use Getopt::Long ();
-use File::Spec::Functions qw( catfile );
+use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
 use Text::Levenshtein ();
 use FindBin;
@@ -11,11 +11,10 @@ use FindBin;
 our $VERSION = "0.29";
 our $CONF;
 
-our $PERLBREW_ROOT   ||= $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
-our $PERLBREW_HOME   ||= $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
+our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
 
 my $CONF_FILE        = catfile( $PERLBREW_ROOT, 'Conf.pm' );
-my $CURRENT_PERL     = $ENV{PERLBREW_PERL};
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
@@ -23,7 +22,10 @@ local $SIG{__DIE__} = sub {
     exit 1;
 };
 
-sub current_perl { $CURRENT_PERL || '' }
+sub current_perl {
+    my ($self) = @_;
+    return $self->env('CURRENT_PERL')  || ''
+}
 
 sub BASHRC_CONTENT() {
     return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
@@ -906,7 +908,7 @@ sub installed_perls {
         push @result, {
             name => $name,
             version => $self->format_perl_version(`$executable -e 'print \$]'`),
-            is_current => (current_perl eq $name),
+            is_current => ($self->current_perl eq $name),
             is_external => 0
         };
     }
@@ -1416,6 +1418,22 @@ inside different perls. Here are some a brief usage.
 USAGE
         return;
     }
+
+    if ($subcommand eq 'create') {
+        $self->run_command_lib_create(@args);
+    }
+}
+
+sub run_command_lib_create {
+    my ($self, $name) = @_;
+
+    my $fullname = $self->current_perl . '@' . $name;
+    mkpath( catdir($PERLBREW_HOME,  "libs", $fullname) );
+
+    print "lib '$fullname' is created.\n"
+        unless $self->{quiet};
+
+    return;
 }
 
 sub resolve_installation_name {
