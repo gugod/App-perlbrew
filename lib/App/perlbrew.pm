@@ -939,7 +939,7 @@ sub is_installed {
 
 # Return a hash of PERLBREW_* variables
 sub perlbrew_env {
-    my ($self, $perl) = @_;
+    my ($self, $name) = @_;
 
     my %env = (
         PERLBREW_VERSION => $VERSION,
@@ -947,16 +947,31 @@ sub perlbrew_env {
         PERLBREW_ROOT => $PERLBREW_ROOT
     );
 
-    if ($perl) {
-        if(-d "$PERLBREW_ROOT/perls/$perl/bin") {
-            $env{PERLBREW_PERL} = $perl;
-            $env{PERLBREW_PATH} .= ":$PERLBREW_ROOT/perls/$perl/bin";
+    if ($name) {
+        my ($perl_name, $lib_name) = split("@", $name);
+        $perl_name = $name unless $lib_name;
+
+        if(-d "$PERLBREW_ROOT/perls/$perl_name/bin") {
+            $env{PERLBREW_PERL} = $perl_name;
+            $env{PERLBREW_PATH} .= ":$PERLBREW_ROOT/perls/$perl_name/bin";
+        }
+
+        if ($lib_name) {
+            require local::lib;
+            my $base = "$PERLBREW_HOME/libs/$name";
+
+            my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
+
+            $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
+            $env{PERLBREW_LIB}  = $lib_name;
+            $env{PERL5LIB} = $lib_env{PERL5LIB};
         }
     }
     elsif ( $self->env("PERLBREW_PERL") ) {
         $env{PERLBREW_PERL} = $self->env("PERLBREW_PERL");
         $env{PERLBREW_PATH} .= ":$PERLBREW_ROOT/perls/$env{PERLBREW_PERL}/bin";
     }
+
 
     return %env;
 }
@@ -1456,11 +1471,14 @@ sub resolve_installation_name {
     my ($self, $name) = @_;
     die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
 
-    if ( $self->is_installed($name) ) {
+    my ($perl_name, $lib_name) = split('@', $name);
+    $perl_name = $name unless $lib_name;
+
+    if ( $self->is_installed($perl_name) ) {
         return $name;
     }
-    elsif ($self->is_installed("perl-$name")) {
-        return "perl-$name";
+    elsif ($self->is_installed("perl-${perl_name}")) {
+        return "perl-${name}";
     }
 
     return undef;
