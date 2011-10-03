@@ -1,3 +1,22 @@
+=begin yada yada
+
+Copy this snippet to the beginning of tests:
+
+    use FindBin;
+    use lib $FindBin::Bin;
+    use App::perlbrew;
+    require 'test_helpers.pl';
+
+tldr: This file should be `require`-ed after the "use App::perlbrew;" statement in
+the test. It is meant to override subroutines for testing purposes and not
+mess up developer's own perlbrew environment. `FindBin` should be used to
+put 't/' dir to `@INC`.
+
+=cut
+
+use Test::More;
+use File::Temp qw( tempdir );
+
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 
@@ -8,7 +27,7 @@ sub App::perlbrew::do_install_release {
 
     $name = $self->{as} if $self->{as};
 
-    my $root = dir($ENV{PERLBREW_ROOT});
+    my $root = dir($App::perlbrew::PERLBREW_ROOT);
     my $installation_dir = $root->subdir("perls", $name);
     App::perlbrew::mkpath($installation_dir);
     App::perlbrew::mkpath($root->subdir("perls", $name, "bin"));
@@ -16,6 +35,13 @@ sub App::perlbrew::do_install_release {
     my $perl = $root->subdir("perls", $name, "bin")->file("perl");
     io($perl)->print("#!/bin/sh\nperl \"\$@\";\n");
     chmod 0755, $perl;
+
+    note "(mock) installed $name to $installation_dir";
+}
+
+sub mock_perlbrew_install {
+    my ($name, @args) = @_;
+    App::perlbrew->new(install => $name, @args)->run();
 }
 
 1;

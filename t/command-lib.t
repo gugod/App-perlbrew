@@ -4,7 +4,6 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin;
 
-use File::Temp qw( tempdir );
 use File::Spec::Functions qw( catdir );
 use File::Path::Tiny;
 use Test::Spec;
