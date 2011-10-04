@@ -78,19 +78,18 @@ perlbrew () {
         (use)
             if [[ -z "$2" ]] ; then
                 if [[ -z "$PERLBREW_PERL" ]] ; then
-                    echo "No version in use; defaulting to system"
+                    echo "Currently using system perl"
                 else
-                    echo "Using $PERLBREW_PERL version"
+                    echo "Currently using $PERLBREW_PERL"
                 fi
-            elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
-                eval $(command perlbrew $short_option env $2)
-                __perlbrew_set_path
-            elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
-                eval $(command perlbrew $short_option env "perl-$2")
-                __perlbrew_set_path
             else
-                echo "$2 is not installed" >&2
-                exit_status=1
+                code=$(command perlbrew env $2);
+                if [ -z "$code" ]; then
+                    exit_status=1
+                else
+                    eval $code
+                    __perlbrew_set_path
+                fi
             fi
             ;;
 
@@ -964,14 +963,15 @@ sub perlbrew_env {
 
             $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
             $env{PERLBREW_LIB}  = $lib_name;
-            $env{PERL5LIB} = $lib_env{PERL5LIB};
+            $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
+            $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
+            $env{PERL5LIB}      = $lib_env{PERL5LIB};
+            $env{PERL_LOCAL_LIB_ROOT} = $lib_env{PERL_LOCAL_LIB_ROOT};
         }
     }
-    elsif ( $self->env("PERLBREW_PERL") ) {
-        $env{PERLBREW_PERL} = $self->env("PERLBREW_PERL");
-        $env{PERLBREW_PATH} .= ":$PERLBREW_ROOT/perls/$env{PERLBREW_PERL}/bin";
+    else {
+        $env{PERLBREW_PERL} = "";
     }
-
 
     return %env;
 }
@@ -1146,12 +1146,14 @@ sub run_command_env {
 
     if ($self->env('SHELL') =~ /(ba|k|z|\/)sh$/) {
         while (my ($k, $v) = each(%env)) {
-            print "export $k=$v\n";
+            $v =~ s/(\\")/\\$1/g if defined $v;
+            print "export $k=\"$v\"\n";
         }
     }
     else {
         while (my ($k, $v) = each(%env)) {
-            print "setenv $k $v\n";
+            $v =~ s/(\\")/\\$1/g if defined $v;
+            print "setenv $k \"$v\"\n";
         }
     }
 }
