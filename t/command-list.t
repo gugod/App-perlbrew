@@ -45,13 +45,12 @@ EOF
 
     describe "when there are lib under PERLBREW_HOME,", sub {
         before each => sub {
-            stdout_is {
+            unless ( -d catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.12.3@nobita') ) {
                 App::perlbrew->new("lib", "create", "nobita")->run;
+            }
+            unless ( -d catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.12.3@shizuka') ) {
                 App::perlbrew->new("lib", "create", "shizuka")->run;
-            } <<'OUT';
-lib 'perl-5.12.3@nobita' is created.
-lib 'perl-5.12.3@shizuka' is created.
-OUT
+            }
         };
 
         it "displays lib names" => sub {
