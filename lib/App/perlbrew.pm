@@ -1469,6 +1469,17 @@ sub run_command_lib_delete {
     return;
 }
 
+sub run_command_lib_list {
+    my ($self) = @_;
+
+    opendir my $dh, catdir($PERLBREW_HOME,  "libs");
+    my @libs = grep { !/^\./ } readdir($dh);
+
+    for (@libs) {
+        print "  $_\n";
+    }
+}
+
 sub resolve_installation_name {
     my ($self, $name) = @_;
     die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
