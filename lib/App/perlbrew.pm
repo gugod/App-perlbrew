@@ -1510,11 +1510,26 @@ sub run_command_lib_create {
 sub run_command_lib_delete {
     my ($self, $name) = @_;
 
-    my $fullname = $self->current_perl . '@' . $name;
-    rmpath( catdir($PERLBREW_HOME,  "libs", $fullname) );
+    my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
+    my $fullname = ($name =~ /@/) ? $name : $self->current_perl . '@' . $name;
 
-    print "lib '$fullname' is deleted.\n"
-        unless $self->{quiet};
+    my $dir = catdir($PERLBREW_HOME,  "libs", $fullname);
+
+    if (-d $dir) {
+
+        if ($fullname eq $current) {
+            die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
+        }
+
+        rmpath($dir);
+
+        print "lib '$fullname' is deleted.\n"
+            unless $self->{quiet};
+    }
+    else {
+        print "'$fullname' is not in the list of lib\n"
+            unless $self->{quiet};
+    }
 
     return;
 }

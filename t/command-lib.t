@@ -24,7 +24,7 @@ describe "lib command," => sub {
         it "creates the local::lib folder" => sub {
             stdout_is {
                 my $app = App::perlbrew->new("lib", "create", "nobita");
-                $app->expects("current_perl")->returns("perl-5.14.2");
+                $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
                 $app->run;
             } qq{lib 'perl-5.14.2\@nobita' is created.\n};
 
@@ -42,7 +42,7 @@ describe "lib command," => sub {
         it "deletes the local::lib folder" => sub {
             stdout_is {
                 my $app = App::perlbrew->new("lib", "delete", "nobita");
-                $app->expects("current_perl")->returns("perl-5.14.2");
+                $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
                 $app->run;
             } qq{lib 'perl-5.14.2\@nobita' is deleted.\n};
 
