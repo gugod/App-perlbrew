@@ -959,6 +959,7 @@ sub perlbrew_env {
             require local::lib;
             my $base = "$PERLBREW_HOME/libs/$name";
 
+            delete $ENV{PERL_LOCAL_LIB_ROOT};
             my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
 
             $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
@@ -967,6 +968,15 @@ sub perlbrew_env {
             $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
             $env{PERL5LIB}      = $lib_env{PERL5LIB};
             $env{PERL_LOCAL_LIB_ROOT} = $lib_env{PERL_LOCAL_LIB_ROOT};
+        }
+        else {
+            if ($self->env("PERLBREW_LIB")) {
+                $env{PERLBREW_LIB}        = undef;
+                $env{PERL_MM_OPT}         = undef;
+                $env{PERL_MB_OPT}         = undef;
+                $env{PERL5LIB}            = undef;
+                $env{PERL_LOCAL_LIB_ROOT} = undef;
+            }
         }
     }
     else {
@@ -1146,14 +1156,24 @@ sub run_command_env {
 
     if ($self->env('SHELL') =~ /(ba|k|z|\/)sh$/) {
         while (my ($k, $v) = each(%env)) {
-            $v =~ s/(\\")/\\$1/g if defined $v;
-            print "export $k=\"$v\"\n";
+            if (defined $v) {
+                $v =~ s/(\\")/\\$1/g;
+                print "export $k=\"$v\"\n";
+            }
+            else {
+                print "unset $k\n";
+            }
         }
     }
     else {
         while (my ($k, $v) = each(%env)) {
-            $v =~ s/(\\")/\\$1/g if defined $v;
-            print "setenv $k \"$v\"\n";
+            if (defined $v) {
+                $v =~ s/(\\")/\\$1/g;
+                print "setenv $k \"$v\"\n";
+            }
+            else {
+                print "unsetenv $k\n";
+            }
         }
     }
 }
@@ -1472,11 +1492,17 @@ sub run_command_lib_delete {
 sub run_command_lib_list {
     my ($self) = @_;
 
+    my $current;
+    if ($self->current_perl && $self->env("PERLBREW_LIB")) {
+        $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
+    }
+
     opendir my $dh, catdir($PERLBREW_HOME,  "libs");
     my @libs = grep { !/^\./ } readdir($dh);
 
     for (@libs) {
-        print "  $_\n";
+        print $current eq $_ ? "* " : "  ";
+        print "$_\n";
     }
 }
 

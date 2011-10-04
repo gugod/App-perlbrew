@@ -19,6 +19,14 @@ use Config;
 mock_perlbrew_install("perl-5.14.1");
 
 describe "env command," => sub {
+    before each => sub {
+        delete $ENV{PERL_MB_OPT};
+        delete $ENV{PERL_MM_OPT};
+        delete $ENV{PERL_LOCAL_LIB_ROOT};
+        delete $ENV{PERLBREW_LIB};
+        delete $ENV{PERL5LIB};
+    };
+
     describe "when invoked with a perl installation name,", sub {
         it "displays environment variables that should be set to use the given perl." => sub {
             my $app = App::perlbrew->new("env", "perl-5.14.1");
