@@ -908,7 +908,8 @@ sub installed_perls {
             name => $name,
             version => $self->format_perl_version(`$executable -e 'print \$]'`),
             is_current => ($self->current_perl eq $name),
-            is_external => 0
+            is_external => 0,
+            libs => [ $self->local_libs($name) ]
         };
     }
 
@@ -928,6 +929,30 @@ sub installed_perls {
     }
 
     return @result;
+}
+
+sub local_libs {
+    my ($self, $perl_name) = @_;
+
+    my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <$PERLBREW_HOME/libs/*>;
+
+    if ($perl_name) {
+        @libs = grep { /^$perl_name/ } @libs;
+    }
+
+    my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
+
+    @libs = map {
+        my ($p, $l) = split(/@/, $_);
+
+        +{
+            name       => $_,
+            is_current => $_ eq $current,
+            perl_name  => $p,
+            lib_name   => $l
+        }
+    } @libs;
+    return @libs;
 }
 
 sub is_installed {
@@ -994,6 +1019,11 @@ sub run_command_list {
             $i->{name},
             (index($i->{name}, $i->{version}) < $[) ? " ($i->{version})" : "",
             "\n";
+
+        for my $lib (@{$i->{libs}}) {
+            print $lib->{is_current} ? "* " : "  ",
+                $lib->{name}, "\n"
+        }
     }
 }
 
@@ -1522,6 +1552,7 @@ sub resolve_installation_name {
 
     return undef;
 }
+
 
 sub conf {
     my($self) = @_;
