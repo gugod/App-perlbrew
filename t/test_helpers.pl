@@ -35,7 +35,15 @@ sub App::perlbrew::do_install_release {
     App::perlbrew::mkpath($root->subdir("perls", $name, "bin"));
 
     my $perl = $root->subdir("perls", $name, "bin")->file("perl");
-    io($perl)->print("#!/bin/sh\nperl \"\$@\";\n");
+    io($perl)->print(<<'CODE');
+#!/usr/bin/env perl
+use File::Basename;
+my $name = basename(dirname(dirname($0))), "\n";
+$name =~ s/^perl-//;
+my ($a,$b,$c) = split /\./, $name;
+printf('%d.%03d%03d' . "\n", $a, $b, $c);
+CODE
+
     chmod 0755, $perl;
 
     note "(mock) installed $name to $installation_dir";
