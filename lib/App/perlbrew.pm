@@ -905,9 +905,9 @@ sub installed_perls {
         my $executable = catfile($_, 'bin', 'perl');
 
         push @result, {
-            name => $name,
-            version => $self->format_perl_version(`$executable -e 'print \$]'`),
-            is_current => ($self->current_perl eq $name),
+            name        => $name,
+            version     => $self->format_perl_version(`$executable -e 'print \$]'`),
+            is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
             is_external => 0,
             libs => [ $self->local_libs($name) ]
         };

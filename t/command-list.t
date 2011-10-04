@@ -24,11 +24,9 @@ mock_perlbrew_install("perl-5.14.2");
 }
 
 describe "list command," => sub {
-    my $app;
-
     describe "when there no libs under PERLBREW_HOME,", sub {
         it "displays a list of perl installation names", sub {
-            $app = App::perlbrew->new("list");
+            my $app = App::perlbrew->new("list");
 
             my $out = stdout_from { $app->run; };
 
@@ -57,8 +55,7 @@ OUT
         };
 
         it "displays lib names" => sub {
-            $app = App::perlbrew->new("list");
-
+            my $app = App::perlbrew->new("list");
             my $out = stdout_from { $app->run };
 
             ## Remove paths to system perl from the list
@@ -73,6 +70,25 @@ OUT
   perl-5.14.1
   perl-5.14.2
 OUT
+        };
+
+        it "marks currently activated lib", sub {
+            $ENV{PERLBREW_LIB} = "nobita";
+            my $app = App::perlbrew->new("list");
+            my $out = stdout_from { $app->run };
+            ## Remove paths to system perl from the list
+            $out =~ s/^[* ] \/.+$//mg;
+            $out =~ s/\n\n+/\n/;
+
+            is $out, <<'OUT';
+  perl-5.12.3
+* perl-5.12.3@nobita
+  perl-5.12.3@shizuka
+  perl-5.12.4
+  perl-5.14.1
+  perl-5.14.2
+OUT
+
         };
     };
 };

@@ -912,10 +912,11 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
           my $executable = catfile($_, 'bin', 'perl');
   
           push @result, {
-              name => $name,
-              version => $self->format_perl_version(`$executable -e 'print \$]'`),
-              is_current => ($self->current_perl eq $name),
-              is_external => 0
+              name        => $name,
+              version     => $self->format_perl_version(`$executable -e 'print \$]'`),
+              is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
+              is_external => 0,
+              libs => [ $self->local_libs($name) ]
           };
       }
   
@@ -935,6 +936,30 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       }
   
       return @result;
+  }
+  
+  sub local_libs {
+      my ($self, $perl_name) = @_;
+  
+      my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <$PERLBREW_HOME/libs/*>;
+  
+      if ($perl_name) {
+          @libs = grep { /^$perl_name/ } @libs;
+      }
+  
+      my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
+  
+      @libs = map {
+          my ($p, $l) = split(/@/, $_);
+  
+          +{
+              name       => $_,
+              is_current => $_ eq $current,
+              perl_name  => $p,
+              lib_name   => $l
+          }
+      } @libs;
+      return @libs;
   }
   
   sub is_installed {
@@ -966,6 +991,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
               require local::lib;
               my $base = "$PERLBREW_HOME/libs/$name";
   
+              delete $ENV{PERL_LOCAL_LIB_ROOT};
               my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
   
               $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
@@ -974,6 +1000,15 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
               $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
               $env{PERL5LIB}      = $lib_env{PERL5LIB};
               $env{PERL_LOCAL_LIB_ROOT} = $lib_env{PERL_LOCAL_LIB_ROOT};
+          }
+          else {
+              if ($self->env("PERLBREW_LIB")) {
+                  $env{PERLBREW_LIB}        = undef;
+                  $env{PERL_MM_OPT}         = undef;
+                  $env{PERL_MB_OPT}         = undef;
+                  $env{PERL5LIB}            = undef;
+                  $env{PERL_LOCAL_LIB_ROOT} = undef;
+              }
           }
       }
       else {
@@ -991,6 +1026,11 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
               $i->{name},
               (index($i->{name}, $i->{version}) < $[) ? " ($i->{version})" : "",
               "\n";
+  
+          for my $lib (@{$i->{libs}}) {
+              print $lib->{is_current} ? "* " : "  ",
+                  $lib->{name}, "\n"
+          }
       }
   }
   
@@ -1153,14 +1193,24 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
       if ($self->env('SHELL') =~ /(ba|k|z|\/)sh$/) {
           while (my ($k, $v) = each(%env)) {
-              $v =~ s/(\\")/\\$1/g if defined $v;
-              print "export $k=\"$v\"\n";
+              if (defined $v) {
+                  $v =~ s/(\\")/\\$1/g;
+                  print "export $k=\"$v\"\n";
+              }
+              else {
+                  print "unset $k\n";
+              }
           }
       }
       else {
           while (my ($k, $v) = each(%env)) {
-              $v =~ s/(\\")/\\$1/g if defined $v;
-              print "setenv $k \"$v\"\n";
+              if (defined $v) {
+                  $v =~ s/(\\")/\\$1/g;
+                  print "setenv $k \"$v\"\n";
+              }
+              else {
+                  print "unsetenv $k\n";
+              }
           }
       }
   }
@@ -1479,11 +1529,17 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   sub run_command_lib_list {
       my ($self) = @_;
   
+      my $current;
+      if ($self->current_perl && $self->env("PERLBREW_LIB")) {
+          $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
+      }
+  
       opendir my $dh, catdir($PERLBREW_HOME,  "libs");
       my @libs = grep { !/^\./ } readdir($dh);
   
       for (@libs) {
-          print "  $_\n";
+          print $current eq $_ ? "* " : "  ";
+          print "$_\n";
       }
   }
   
@@ -1503,6 +1559,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
       return undef;
   }
+  
   
   sub conf {
       my($self) = @_;
