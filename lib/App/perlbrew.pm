@@ -1477,7 +1477,7 @@ inside different perls. Here are some a brief usage.
     perlbrew switch perl-5.14.2@nobita
 
     # Remove libs, notice `shizuka` here means `perl-5.14.2@shizuka`
-    perlbrew lib remove perl-5.12.3@nobita shizuka
+    perlbrew lib delete perl-5.12.3@nobita shizuka
 
     # Back to a local::lib-less state.
     perlbrew switch perl-5.14.2
@@ -1498,8 +1498,15 @@ USAGE
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
-    my $fullname = $self->current_perl . '@' . $name;
-    mkpath( catdir($PERLBREW_HOME,  "libs", $fullname) );
+    my $fullname = ($name =~ /@/) ? $name : $self->current_perl . '@' . $name;
+
+    my $dir = catdir($PERLBREW_HOME,  "libs", $fullname);
+
+    if (-d $dir) {
+        die "$fullname is already there.\n";
+    }
+
+    mkpath($dir);
 
     print "lib '$fullname' is created.\n"
         unless $self->{quiet};
@@ -1537,7 +1544,7 @@ sub run_command_lib_delete {
 sub run_command_lib_list {
     my ($self) = @_;
 
-    my $current;
+    my $current = "";
     if ($self->current_perl && $self->env("PERLBREW_LIB")) {
         $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
     }
