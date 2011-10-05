@@ -1,4 +1,6 @@
 NEXT:
+- New command: lib
+  - local::lib integration is done with this command.
 - New command: install-patchperl
 - skip runs of 'exec' on aliases https://github.com/gugod/App-perlbrew/pull/135
 - Respect -f flag when installing to replace an already installed perl.

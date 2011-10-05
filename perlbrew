@@ -10,7 +10,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   use warnings;
   use 5.008;
   use Getopt::Long ();
-  use File::Spec::Functions qw( catfile );
+  use File::Spec::Functions qw( catfile catdir );
   use File::Path::Tiny;
   use Text::Levenshtein ();
   use FindBin;
@@ -18,11 +18,10 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   our $VERSION = "0.29";
   our $CONF;
   
-  our $PERLBREW_ROOT   ||= $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
-  our $PERLBREW_HOME   ||= $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
+  our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
+  our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
   
   my $CONF_FILE        = catfile( $PERLBREW_ROOT, 'Conf.pm' );
-  my $CURRENT_PERL     = $ENV{PERLBREW_PERL};
   
   local $SIG{__DIE__} = sub {
       my $message = shift;
@@ -30,7 +29,10 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       exit 1;
   };
   
-  sub current_perl { $CURRENT_PERL || '' }
+  sub current_perl {
+      my ($self) = @_;
+      return $self->env('PERLBREW_PERL')  || ''
+  }
   
   sub BASHRC_CONTENT() {
       return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
@@ -83,19 +85,18 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
           (use)
               if [[ -z "$2" ]] ; then
                   if [[ -z "$PERLBREW_PERL" ]] ; then
-                      echo "No version in use; defaulting to system"
+                      echo "Currently using system perl"
                   else
-                      echo "Using $PERLBREW_PERL version"
+                      echo "Currently using $PERLBREW_PERL"
                   fi
-              elif [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
-                  eval $(command perlbrew $short_option env $2)
-                  __perlbrew_set_path
-              elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
-                  eval $(command perlbrew $short_option env "perl-$2")
-                  __perlbrew_set_path
               else
-                  echo "$2 is not installed" >&2
-                  exit_status=1
+                  code=$(command perlbrew env $2);
+                  if [ -z "$code" ]; then
+                      exit_status=1
+                  else
+                      eval $code
+                      __perlbrew_set_path
+                  fi
               fi
               ;;
   
@@ -911,10 +912,11 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
           my $executable = catfile($_, 'bin', 'perl');
   
           push @result, {
-              name => $name,
-              version => $self->format_perl_version(`$executable -e 'print \$]'`),
-              is_current => (current_perl eq $name),
-              is_external => 0
+              name        => $name,
+              version     => $self->format_perl_version(`$executable -e 'print \$]'`),
+              is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
+              is_external => 0,
+              libs => [ $self->local_libs($name) ]
           };
       }
   
@@ -936,6 +938,30 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       return @result;
   }
   
+  sub local_libs {
+      my ($self, $perl_name) = @_;
+  
+      my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <$PERLBREW_HOME/libs/*>;
+  
+      if ($perl_name) {
+          @libs = grep { /^$perl_name/ } @libs;
+      }
+  
+      my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
+  
+      @libs = map {
+          my ($p, $l) = split(/@/, $_);
+  
+          +{
+              name       => $_,
+              is_current => $_ eq $current,
+              perl_name  => $p,
+              lib_name   => $l
+          }
+      } @libs;
+      return @libs;
+  }
+  
   sub is_installed {
       my ($self, $name) = @_;
       my @installed = grep { !$_->{is_external} } $self->installed_perls;
@@ -944,7 +970,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   # Return a hash of PERLBREW_* variables
   sub perlbrew_env {
-      my ($self, $perl) = @_;
+      my ($self, $name) = @_;
   
       my %env = (
           PERLBREW_VERSION => $VERSION,
@@ -952,15 +978,41 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
           PERLBREW_ROOT => $PERLBREW_ROOT
       );
   
-      if ($perl) {
-          if(-d "$PERLBREW_ROOT/perls/$perl/bin") {
-              $env{PERLBREW_PERL} = $perl;
-              $env{PERLBREW_PATH} .= ":$PERLBREW_ROOT/perls/$perl/bin";
+      if ($name) {
+          my ($perl_name, $lib_name) = split("@", $name);
+          $perl_name = $name unless $lib_name;
+  
+          if(-d "$PERLBREW_ROOT/perls/$perl_name/bin") {
+              $env{PERLBREW_PERL} = $perl_name;
+              $env{PERLBREW_PATH} .= ":$PERLBREW_ROOT/perls/$perl_name/bin";
+          }
+  
+          if ($lib_name) {
+              require local::lib;
+              my $base = "$PERLBREW_HOME/libs/$name";
+  
+              delete $ENV{PERL_LOCAL_LIB_ROOT};
+              my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
+  
+              $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
+              $env{PERLBREW_LIB}  = $lib_name;
+              $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
+              $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
+              $env{PERL5LIB}      = $lib_env{PERL5LIB};
+              $env{PERL_LOCAL_LIB_ROOT} = $lib_env{PERL_LOCAL_LIB_ROOT};
+          }
+          else {
+              if ($self->env("PERLBREW_LIB")) {
+                  $env{PERLBREW_LIB}        = undef;
+                  $env{PERL_MM_OPT}         = undef;
+                  $env{PERL_MB_OPT}         = undef;
+                  $env{PERL5LIB}            = undef;
+                  $env{PERL_LOCAL_LIB_ROOT} = undef;
+              }
           }
       }
-      elsif ( $self->env("PERLBREW_PERL") ) {
-          $env{PERLBREW_PERL} = $self->env("PERLBREW_PERL");
-          $env{PERLBREW_PATH} .= ":$PERLBREW_ROOT/perls/$env{PERLBREW_PERL}/bin";
+      else {
+          $env{PERLBREW_PERL} = "";
       }
   
       return %env;
@@ -974,6 +1026,11 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
               $i->{name},
               (index($i->{name}, $i->{version}) < $[) ? " ($i->{version})" : "",
               "\n";
+  
+          for my $lib (@{$i->{libs}}) {
+              print $lib->{is_current} ? "* " : "  ",
+                  $lib->{name}, "\n"
+          }
       }
   }
   
@@ -1136,12 +1193,24 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
       if ($self->env('SHELL') =~ /(ba|k|z|\/)sh$/) {
           while (my ($k, $v) = each(%env)) {
-              print "export $k=$v\n";
+              if (defined $v) {
+                  $v =~ s/(\\")/\\$1/g;
+                  print "export $k=\"$v\"\n";
+              }
+              else {
+                  print "unset $k\n";
+              }
           }
       }
       else {
           while (my ($k, $v) = each(%env)) {
-              print "setenv $k $v\n";
+              if (defined $v) {
+                  $v =~ s/(\\")/\\$1/g;
+                  print "setenv $k \"$v\"\n";
+              }
+              else {
+                  print "unsetenv $k\n";
+              }
           }
       }
   }
@@ -1182,6 +1251,8 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       unless ($body) {
           die "\nERROR: Failed to retrive cpanm executable.\n\n";
       }
+  
+      mkpath("$PERLBREW_ROOT/bin") unless -d "$PERLBREW_ROOT/bin";
   
       open my $CPANM, '>', $out or die "cannot open file($out): $!";
       print $CPANM $body;
@@ -1379,19 +1450,138 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       print CSHRC_CONTENT;
   }
   
+  sub run_command_lib {
+      my ($self, $subcommand, @args) = @_;
+      unless ($subcommand) {
+          print <<'USAGE';
+  
+  The 'lib' command can be used to manage multiple local::lib containers
+  inside different perls. Here are some a brief usage.
+  
+      # Assuming perl-5.14.2 for the following examples.
+      perlbrew switch 5.14.2
+  
+      # Create a local::lib folder named `nobita` inside current perl
+      perlbrew lib create nobita
+  
+      # Create multiple local::lib folders in one command.
+      perlbrew lib create nobita shizuka naruto
+  
+      # Get a list of local::lib folders
+      perlbrew lib list
+  
+      # Create a local::lib folder named `shizuka` inside perl-5.12.3,
+      # ... without activating to perl-5.12.3 first.
+      perlbrew lib create perl-5.12.3@shizuka
+  
+      # Activate perl-5.12.3, with the 'nobita' local::lib
+      perlbrew use perl-5.12.3@nobita
+  
+      # Activate perl-5.14.2, with the 'nobita' local::lib
+      perlbrew use perl-5.14.2@nobita
+  
+      # Make perl-5.14.2@nobita the default perl + local::lib setting for new shells.
+      perlbrew switch perl-5.14.2@nobita
+  
+      # Remove libs, notice `shizuka` here means `perl-5.14.2@shizuka`
+      perlbrew lib delete perl-5.12.3@nobita shizuka
+  
+      # Back to a local::lib-less state.
+      perlbrew switch perl-5.14.2
+  
+  USAGE
+          return;
+      }
+  
+      my $sub = "run_command_lib_$subcommand";
+      if ($self->can($sub)) {
+          $self->$sub( @args );
+      }
+      else {
+          print "Unknown command: $subcommand\n";
+      }
+  }
+  
+  sub run_command_lib_create {
+      my ($self, $name) = @_;
+  
+      my $fullname = ($name =~ /@/) ? $name : $self->current_perl . '@' . $name;
+  
+      my $dir = catdir($PERLBREW_HOME,  "libs", $fullname);
+  
+      if (-d $dir) {
+          die "$fullname is already there.\n";
+      }
+  
+      mkpath($dir);
+  
+      print "lib '$fullname' is created.\n"
+          unless $self->{quiet};
+  
+      return;
+  }
+  
+  sub run_command_lib_delete {
+      my ($self, $name) = @_;
+  
+      my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
+      my $fullname = ($name =~ /@/) ? $name : $self->current_perl . '@' . $name;
+  
+      my $dir = catdir($PERLBREW_HOME,  "libs", $fullname);
+  
+      if (-d $dir) {
+  
+          if ($fullname eq $current) {
+              die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
+          }
+  
+          rmpath($dir);
+  
+          print "lib '$fullname' is deleted.\n"
+              unless $self->{quiet};
+      }
+      else {
+          print "'$fullname' is not in the list of lib\n"
+              unless $self->{quiet};
+      }
+  
+      return;
+  }
+  
+  sub run_command_lib_list {
+      my ($self) = @_;
+  
+      my $current = "";
+      if ($self->current_perl && $self->env("PERLBREW_LIB")) {
+          $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
+      }
+  
+      opendir my $dh, catdir($PERLBREW_HOME,  "libs");
+      my @libs = grep { !/^\./ } readdir($dh);
+  
+      for (@libs) {
+          print $current eq $_ ? "* " : "  ";
+          print "$_\n";
+      }
+  }
+  
   sub resolve_installation_name {
       my ($self, $name) = @_;
       die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
   
-      if ( $self->is_installed($name) ) {
+      my ($perl_name, $lib_name) = split('@', $name);
+      $perl_name = $name unless $lib_name;
+  
+      if ( $self->is_installed($perl_name) ) {
           return $name;
       }
-      elsif ($self->is_installed("perl-$name")) {
-          return "perl-$name";
+      elsif ($self->is_installed("perl-${perl_name}")) {
+          return "perl-${name}";
       }
   
       return undef;
   }
+  
   
   sub conf {
       my($self) = @_;
