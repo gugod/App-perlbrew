@@ -10,16 +10,17 @@ requires
     'File::Path::Tiny'  => '0.1',
     'Text::Levenshtein' => '0.04',
     'Devel::PatchPerl'  => '0.46',
-    'Cwd'               => '3.26';
+    'local::lib'        => '1.0';
 
-test_requires 'Test::Simple' => '0.98';
-test_requires 'Test::More';
-test_requires 'Test::Output';
-test_requires 'Test::Exception';
-test_requires 'Test::Spec';
-test_requires 'Path::Class';
-test_requires 'IO::All';
-test_requires 'File::Temp';
+test_requires
+    'Test::Simple'    => '0.98',
+    'Test::More'      => '0',
+    'Test::Output'    => '0',
+    'Test::Exception' => '0',
+    'Test::Spec'      => '0',
+    'Path::Class'     => '0',
+    'IO::All'         => '0',
+    'File::Temp'      => '0';
 
 install_script 'bin/perlbrew';
 
