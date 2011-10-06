@@ -365,7 +365,7 @@ sub run_command {
         @args = (0, $self->{help} ? 2 : 0);
     }
     elsif($x eq 'help') {
-        @args = (0, 2);
+        @args = (0, 2) unless @args;
     }
 
     my $s = $self->can("run_command_$x");
@@ -417,8 +417,55 @@ VERSION
 
 sub run_command_help {
     my ($self, $status, $verbose) = @_;
-    require Pod::Usage;
-    Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
+
+    if ($self->can("run_command_help_${status}")) {
+        $self->can("run_command_help_${status}")->($self);
+        exit;
+    }
+    else {
+        require Pod::Usage;
+        Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
+    }
+}
+
+sub run_command_help_lib {
+    print <<'HELP';
+
+The 'lib' command can be used to manage multiple local::lib containers
+inside different perls. Here are some a brief examples:
+
+    # Assuming perl-5.14.2 for the following examples.
+    perlbrew switch 5.14.2
+
+    # Create a local::lib folder named `nobita` inside current perl
+    perlbrew lib create nobita
+
+    # Create multiple local::lib folders in one command.
+    perlbrew lib create nobita shizuka naruto
+
+    # Create a local::lib folder named `shizuka` inside perl-5.12.3,
+    # ... without activating to perl-5.12.3 first.
+    perlbrew lib create perl-5.12.3@shizuka
+
+    # Get a list of local::lib folders
+    perlbrew lib list
+
+    # Activate perl-5.12.3, with the 'nobita' local::lib
+    perlbrew use perl-5.12.3@nobita
+
+    # Activate perl-5.14.2, with the 'nobita' local::lib
+    perlbrew use perl-5.14.2@nobita
+
+    # Make perl-5.14.2@nobita the default perl + local::lib setting for new shells.
+    perlbrew switch perl-5.14.2@nobita
+
+    # Remove libs, notice `shizuka` here means `perl-5.14.2@shizuka`
+    perlbrew lib delete perl-5.12.3@nobita shizuka
+
+    # Back to a local::lib-less state.
+    perlbrew switch perl-5.14.2
+
+HELP
 }
 
 sub run_command_available {
@@ -1448,39 +1495,14 @@ sub run_command_lib {
     unless ($subcommand) {
         print <<'USAGE';
 
-The 'lib' command can be used to manage multiple local::lib containers
-inside different perls. Here are some a brief usage.
+Usage: perlbrew lib <action> <name> [<name> <name> ...]
 
-    # Assuming perl-5.14.2 for the following examples.
-    perlbrew switch 5.14.2
-
-    # Create a local::lib folder named `nobita` inside current perl
-    perlbrew lib create nobita
-
-    # Create multiple local::lib folders in one command.
-    perlbrew lib create nobita shizuka naruto
-
-    # Get a list of local::lib folders
     perlbrew lib list
+    perlbrew lib create nobita
+    perlbrew lib create perl-5.14.2@nobita
 
-    # Create a local::lib folder named `shizuka` inside perl-5.12.3,
-    # ... without activating to perl-5.12.3 first.
-    perlbrew lib create perl-5.12.3@shizuka
-
-    # Activate perl-5.12.3, with the 'nobita' local::lib
-    perlbrew use perl-5.12.3@nobita
-
-    # Activate perl-5.14.2, with the 'nobita' local::lib
     perlbrew use perl-5.14.2@nobita
-
-    # Make perl-5.14.2@nobita the default perl + local::lib setting for new shells.
-    perlbrew switch perl-5.14.2@nobita
-
-    # Remove libs, notice `shizuka` here means `perl-5.14.2@shizuka`
     perlbrew lib delete perl-5.12.3@nobita shizuka
-
-    # Back to a local::lib-less state.
-    perlbrew switch perl-5.14.2
 
 USAGE
         return;
