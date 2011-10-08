@@ -302,7 +302,7 @@ sub get_args {
     return @{ $self->{args} };
 }
 
-sub get_command_list {
+sub commands {
     my ( $self ) = @_;
 
     my $package =  ref $self ? ref $self : $self;
@@ -331,22 +331,19 @@ sub find_similar_commands {
     my ( $self, $command ) = @_;
     my $SIMILAR_DISTANCE = 6;
 
-    my @commands = $self->get_command_list;
+    my @commands = sort {
+        $a->[1] <=> $b->[1]
+    } grep {
+        defined
+    } map {
+        my $d =  Text::Levenshtein::fastdistance($_, $command);
 
-    foreach my $cmd (@commands) {
-        my $dist =  Text::Levenshtein::fastdistance($cmd, $command);
-        if($dist < $SIMILAR_DISTANCE) {
-            $cmd = [ $cmd, $dist ];
-        } else {
-            undef $cmd;
-        }
-    }
-    @commands = grep { defined } @commands;
-    @commands = sort { $a->[1] <=> $b->[1] } @commands;
+        ($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : undef
+    } $self->commands;
+
     if(@commands) {
         my $best  = $commands[0][1];
-        @commands = grep { $_->[1] == $best } @commands;
-        @commands = map { $_->[0] } @commands;
+        @commands = map { $_->[0] } grep { $_->[1] == $best } @commands;
     }
 
     return @commands;
