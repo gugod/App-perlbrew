@@ -9,12 +9,12 @@ use Text::Levenshtein ();
 use FindBin;
 
 our $VERSION = "0.29";
-our $CONF;
+our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
 
-my $CONF_FILE        = catfile( $PERLBREW_ROOT, 'Conf.pm' );
+my $CONFIG_FILE    = catfile( $PERLBREW_ROOT, 'Config.pm' );
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
@@ -740,7 +740,7 @@ sub do_install_release {
     my $dist = shift;
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
-    my $mirror = $self->conf->{mirror};
+    my $mirror = $self->config->{mirror};
     my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
     my $html = http_get("http://search.cpan.org/dist/$dist", $header);
 
@@ -1217,9 +1217,9 @@ sub run_command_mirror {
     }
     die "You didn't select a mirror!\n" if ! $select;
     print "Selected $select->{name} ($select->{url}) as the mirror\n";
-    my $conf = $self->conf;
+    my $conf = $self->config;
     $conf->{mirror} = $select;
-    $self->_save_conf;
+    $self->_save_config;
     return;
 }
 
@@ -1595,40 +1595,40 @@ sub resolve_installation_name {
 }
 
 
-sub conf {
+sub config {
     my($self) = @_;
-    $self->_get_conf if ! $CONF;
-    return $CONF;
+    $self->_load_config if ! $CONFIG;
+    return $CONFIG;
 }
 
-sub _save_conf {
+sub _save_config {
     my($self) = @_;
     require Data::Dumper;
-    open my $FH, '>', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!";
-    my $d = Data::Dumper->new([$CONF],['App::perlbrew::CONF']);
+    open my $FH, '>', $CONFIG_FILE or die "Unable to open config ($CONFIG_FILE): $!";
+    my $d = Data::Dumper->new([$CONFIG],['App::perlbrew::CONFIG']);
     print $FH $d->Dump;
     close $FH;
 }
 
-sub _get_conf {
+sub _load_config {
     my($self) = @_;
 
-    if ( ! -e $CONF_FILE ) {
-        local $CONF = {} if ! $CONF;
-        $self->_save_conf;
+    if ( ! -e $CONFIG_FILE ) {
+        local $CONFIG = {} if ! $CONFIG;
+        $self->_save_config;
     }
 
-    open my $FH, '<', $CONF_FILE or die "Unable to open conf ($CONF_FILE): $!\n";
+    open my $FH, '<', $CONFIG_FILE or die "Unable to open config ($CONFIG_FILE): $!\n";
     my $raw = do { local $/; my $rv = <$FH>; $rv };
     close $FH;
 
     my $rv = eval $raw;
     if ( $@ ) {
         warn "Error loading conf: $@\n";
-        $CONF = {};
+        $CONFIG = {};
         return;
     }
-    $CONF = {} if ! $CONF;
+    $CONFIG = {} if ! $CONFIG;
     return;
 }
 
