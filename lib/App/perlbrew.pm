@@ -294,10 +294,10 @@ sub is_shell_csh {
 
 sub run {
     my($self) = @_;
-    $self->run_command($self->get_args);
+    $self->run_command($self->args);
 }
 
-sub get_args {
+sub args {
     my ( $self ) = @_;
     return @{ $self->{args} };
 }
