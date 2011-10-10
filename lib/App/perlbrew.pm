@@ -468,7 +468,7 @@ HELP
 sub run_command_available {
     my ( $self, $dist, $opts ) = @_;
 
-    my @available = $self->get_available_perls(@_);
+    my @available = $self->available_perls(@_);
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
@@ -486,7 +486,7 @@ sub run_command_available {
     }
 }
 
-sub get_available_perls {
+sub available_perls {
     my ( $self, $dist, $opts ) = @_;
 
     my $url = "http://www.cpan.org/src/README.html";
