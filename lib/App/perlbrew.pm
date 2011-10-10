@@ -1597,7 +1597,7 @@ sub resolve_installation_name {
 
 sub conf {
     my($self) = @_;
-    $self->_get_conf if ! $CONF;
+    $self->_load_conf if ! $CONF;
     return $CONF;
 }
 
@@ -1610,7 +1610,7 @@ sub _save_conf {
     close $FH;
 }
 
-sub _get_conf {
+sub _load_conf {
     my($self) = @_;
 
     if ( ! -e $CONF_FILE ) {
