@@ -8,7 +8,7 @@ use File::Path::Tiny;
 use Text::Levenshtein ();
 use FindBin;
 
-our $VERSION = "0.29";
+our $VERSION = "0.30";
 our $CONF;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
