@@ -15,7 +15,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   use Text::Levenshtein ();
   use FindBin;
   
-  our $VERSION = "0.29";
+  our $VERSION = "0.30";
   our $CONF;
   
   our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -101,19 +101,11 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
               ;;
   
           (switch)
-                if [[ -n "$2" ]] ; then
-                    if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
-                        perlbrew $short_option use $2
-                        __perlbrew_reinit $2
-                    elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
-                        perlbrew $short_option use "perl-$2"
-                        __perlbrew_reinit "perl-$2"
-                    else
-                        echo "$2 is not installed" >&2
-                        exit_status=1
-                    fi
-                else
+                if [[ -z "$2" ]] ; then
                     command perlbrew switch
+                else
+                    perlbrew use $2
+                    __perlbrew_reinit $2
                 fi
                 ;;
   
@@ -438,26 +430,12 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   The 'lib' command can be used to manage multiple local::lib containers
   inside different perls. Here are some a brief examples:
   
-      # Assuming perl-5.14.2 for the following examples.
-      perlbrew switch 5.14.2
-  
-      # Create a local::lib folder named `nobita` inside current perl
       perlbrew lib create nobita
-  
-      # Create multiple local::lib folders in one command.
-      perlbrew lib create nobita shizuka naruto
-  
-      # Create a local::lib folder named `shizuka` inside perl-5.12.3,
-      # ... without activating to perl-5.12.3 first.
       perlbrew lib create perl-5.12.3@shizuka
   
-      # Get a list of local::lib folders
       perlbrew lib list
   
-      # Activate perl-5.12.3, with the 'nobita' local::lib
       perlbrew use perl-5.12.3@nobita
-  
-      # Activate perl-5.14.2, with the 'nobita' local::lib
       perlbrew use perl-5.14.2@nobita
   
       # Make perl-5.14.2@nobita the default perl + local::lib setting for new shells.
@@ -3211,6 +3189,7 @@ perlbrew - Perl Environment manager.
         off            Turn off perlbrew in current shel
         switch         Permanently use the specified perl as default
         switch-off     Permanently turn off perl
+        lib            Manage local::lib directories.
         mirror         Pick a preferred mirror site
         version        Display version
         help           Read more detailed instructions
@@ -3308,6 +3287,10 @@ Re-enables the default system Perl, whatever that is.
 Permananently disable perlbrew. Use C<switch> command to re-enable it.
 
 Re-enables the default system Perl, whatever that is.
+
+=item B<lib>
+
+Manage local::lib folders. See C<perlbrew help lib> for more detail.
 
 =item B<alias> [-f] create <name> <alias>
 
