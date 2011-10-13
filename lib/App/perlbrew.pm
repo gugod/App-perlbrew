@@ -8,7 +8,7 @@ use File::Path::Tiny;
 use Text::Levenshtein ();
 use FindBin;
 
-our $VERSION = "0.29";
+our $VERSION = "0.30";
 our $CONF;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -94,19 +94,11 @@ perlbrew () {
             ;;
 
         (switch)
-              if [[ -n "$2" ]] ; then
-                  if [[ -x "$PERLBREW_ROOT/perls/$2/bin/perl" ]]; then
-                      perlbrew $short_option use $2
-                      __perlbrew_reinit $2
-                  elif [[ -x "$PERLBREW_ROOT/perls/perl-$2/bin/perl" ]]; then
-                      perlbrew $short_option use "perl-$2"
-                      __perlbrew_reinit "perl-$2"
-                  else
-                      echo "$2 is not installed" >&2
-                      exit_status=1
-                  fi
-              else
+              if [[ -z "$2" ]] ; then
                   command perlbrew switch
+              else
+                  perlbrew use $2
+                  __perlbrew_reinit $2
               fi
               ;;
 
@@ -431,36 +423,27 @@ sub run_command_help_lib {
 The 'lib' command can be used to manage multiple local::lib containers
 inside different perls. Here are some a brief examples:
 
-    # Assuming perl-5.14.2 for the following examples.
-    perlbrew switch 5.14.2
-
-    # Create a local::lib folder named `nobita` inside current perl
     perlbrew lib create nobita
-
-    # Create multiple local::lib folders in one command.
-    perlbrew lib create nobita shizuka naruto
-
-    # Create a local::lib folder named `shizuka` inside perl-5.12.3,
-    # ... without activating to perl-5.12.3 first.
     perlbrew lib create perl-5.12.3@shizuka
 
-    # Get a list of local::lib folders
     perlbrew lib list
 
-    # Activate perl-5.12.3, with the 'nobita' local::lib
     perlbrew use perl-5.12.3@nobita
-
-    # Activate perl-5.14.2, with the 'nobita' local::lib
     perlbrew use perl-5.14.2@nobita
 
-    # Make perl-5.14.2@nobita the default perl + local::lib setting for new shells.
     perlbrew switch perl-5.14.2@nobita
 
-    # Remove libs, notice `shizuka` here means `perl-5.14.2@shizuka`
-    perlbrew lib delete perl-5.12.3@nobita shizuka
+    perlbrew lib delete perl-5.12.3@nobita
 
-    # Back to a local::lib-less state.
-    perlbrew switch perl-5.14.2
+A "lib" is reference by it's name, which can be a short one consists of letters,
+or a fully-qualified one, prefixed with the perl installation name, and an `@`
+character in between. Short names are local to current perl. A lib name 'nobita'
+can refer to 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your
+current perl.
+
+Always use a full name To `use` or `switch` to a perl with lib, for it might be
+ambigous. A rule of thumb: the name after `use` or `switch` should be one of the
+item in the output of `list`.
 
 HELP
 }

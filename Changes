@@ -1,4 +1,4 @@
-NEXT:
+0.30:
 - New command: lib
   - local::lib integration is done with this command.
 - New command: install-patchperl
