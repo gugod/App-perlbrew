@@ -8,5 +8,8 @@
 6. Run `shipit -n` to make sure no test failures
 7. Fix test failures if any
 8. Run `git flow release finish <version>`
-9. shipit
+9. Run `git checkout master`
+10. Run `git push; git push --tags`
+11. Run `shipit`
+12. Update webpages of release note etc
 

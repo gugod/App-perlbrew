@@ -26,6 +26,7 @@ perlbrew - Perl Environment manager.
         off            Turn off perlbrew in current shel
         switch         Permanently use the specified perl as default
         switch-off     Permanently turn off perl
+        lib            Manage local::lib directories.
         mirror         Pick a preferred mirror site
         version        Display version
         help           Read more detailed instructions
@@ -123,6 +124,10 @@ Re-enables the default system Perl, whatever that is.
 Permananently disable perlbrew. Use C<switch> command to re-enable it.
 
 Re-enables the default system Perl, whatever that is.
+
+=item B<lib>
+
+Manage local::lib folders. See C<perlbrew help lib> for more detail.
 
 =item B<alias> [-f] create <name> <alias>
 
@@ -224,7 +229,6 @@ Show the version of perlbrew.
 
 =back
 
-
 =head1 OPTIONS
 
 =over 4
@@ -249,12 +253,13 @@ Skip the test suite
 
 =item B<-q| --quiet>
 
-Log output to a log file rather than STDOUT. This is the default. The log file
-is saved as F<$PERLBREW_ROOT/build.log>, which is, by default, F<~/perl5/perlbrew/build.log>.
+Make perlbrew command quieter.
 
 =item B<-v| --verbose>
 
-Log output to STDOUT rather than a log file.
+Make perlbrew command say more.
+
+For C<install> command, this prints the building whole process to STDOUT.
 
 =item B<--as>
 

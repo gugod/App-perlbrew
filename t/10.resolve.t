@@ -1,42 +1,18 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Path::Class;
-use IO::All;
-BEGIN {
-    $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
-}
-
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require "test_helpers.pl";
+
 use Test::Spec;
 use Test::Exception;
 
-App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
-## mock
-
-no warnings 'redefine';
-
-sub App::perlbrew::do_install_release {
-    my ($self, $name) = @_;
-
-    $name = $self->{as} if $self->{as};
-
-    my $root = dir($ENV{PERLBREW_ROOT});
-    my $installation_dir = $root->subdir("perls", $name);
-    App::perlbrew::mkpath($installation_dir);
-    App::perlbrew::mkpath($root->subdir("perls", $name, "bin"));
-
-    my $perl = $root->subdir("perls", $name, "bin")->file("perl");
-    io($perl)->print("#!/bin/sh\nperl \"\$@\";\n");
-    chmod 0755, $perl;
-}
-
-use warnings;
-
-App::perlbrew->new("install", "perl-5.8.9")->run();
-App::perlbrew->new("install", "perl-5.14.0")->run();
-App::perlbrew->new("install", "--as" => "5.8.9", "perl-5.8.9")->run();
-App::perlbrew->new("install", "--as" => "perl-shiny", "perl-5.14.0")->run();
+mock_perlbrew_install("perl-5.8.9");
+mock_perlbrew_install("perl-5.14.0");
+mock_perlbrew_install("perl-5.8.9",  "--as" => "5.8.9");
+mock_perlbrew_install("perl-5.14.0", "--as" => "perl-shiny", "perl-5.14.0");
 
 ## spec
 

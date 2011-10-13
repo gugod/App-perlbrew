@@ -1,3 +1,11 @@
+0.30:
+- New command: lib
+  - local::lib integration is done with this command.
+- New command: install-patchperl
+- skip runs of 'exec' on aliases https://github.com/gugod/App-perlbrew/pull/135
+- Respect -f flag when installing to replace an already installed perl.
+- Redefine the default value of -q flag to be false, and define it's meaning to be "complete silent"
+
 0.29:
 - The installer now honors $TMPDIR (RT #70850)
 - Fixd GH #108. `perlbrew use` has a fallback for users that does not use bash/csh -compitable shell.
