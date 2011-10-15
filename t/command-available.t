@@ -17,7 +17,7 @@ describe "available command output, when nothing installed locally," => sub {
 
         my @available_perls = qw(perl-5.14.1 perl-5.14.2 perl-5.12.4);
 
-        $app->expects("get_available_perls")->returns(@available_perls);
+        $app->expects("available_perls")->returns(@available_perls);
 
         stdout_is sub {
             $app->run();
@@ -39,7 +39,7 @@ describe "available command output, when something installed locally," => sub {
             { name => "perl-5.14.2" }
         );
 
-        $app->expects("get_available_perls")->returns(@available_perls);
+        $app->expects("available_perls")->returns(@available_perls);
         $app->expects("installed_perls")->returns(@installed_perls);
 
         stdout_is sub {

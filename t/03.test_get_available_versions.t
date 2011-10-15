@@ -21,14 +21,14 @@ plan tests => 9;
 
 my $app = App::perlbrew->new();
 
-is scalar $app->get_available_perls(), 8, "Correct number of releases found";
+is scalar $app->available_perls(), 8, "Correct number of releases found";
 
 my @known_perl_versions = (
     'perl-5.13.11', 'perl-5.12.3',  'perl-5.10.1',  'perl-5.8.9',
     'perl-5.6.2',   'perl5.005_04', 'perl5.004_05', 'perl5.003_07'
 );
 
-for my $perl_version ( $app->get_available_perls() ) {
+for my $perl_version ( $app->available_perls() ) {
     ok grep( $_ eq $perl_version, @known_perl_versions ), "$perl_version found";
 }
 
