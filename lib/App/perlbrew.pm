@@ -9,7 +9,7 @@ use Text::Levenshtein ();
 use FindBin;
 
 our $VERSION = "0.30";
-our $CONF;
+our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
