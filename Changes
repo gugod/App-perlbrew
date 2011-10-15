@@ -1,3 +1,6 @@
+NEXT:
+- NOTICE: Remove $PERLBREW_ROOT/Conf.pm if it's there, and re-run `perlbrew mirror`
+
 0.30:
 - New command: lib
   - local::lib integration is done with this command.
