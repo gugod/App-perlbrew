@@ -31,14 +31,9 @@ perlbrew - Perl Environment manager.
         version        Display version
         help           Read more detailed instructions
 
-    Examples:
-        perlbrew install perl-5.14.1
-        perlbrew install 5.12.1
+    See `perlbrew help commands` for the full list of commands.
 
-        perlbrew list
-
-        perlbrew use perl-5.12.3
-        perlbrew switch perl-5.14.1
+    See `perlbrew help <command>` for the detail description for the command.
 
 =head1 INITIALIZATION
 
