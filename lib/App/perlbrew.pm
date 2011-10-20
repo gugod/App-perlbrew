@@ -1551,7 +1551,10 @@ sub run_command_lib_list {
         $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
     }
 
-    opendir my $dh, catdir($PERLBREW_HOME,  "libs");
+    my $dir = catdir($PERLBREW_HOME,  "libs");
+    return unless -d $dir;
+
+    opendir my $dh, $dir or die "open $dir failed: $!";
     my @libs = grep { !/^\./ } readdir($dh);
 
     for (@libs) {
