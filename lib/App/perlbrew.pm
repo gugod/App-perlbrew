@@ -407,90 +407,46 @@ VERSION
 sub run_command_help {
     my ($self, $status, $verbose) = @_;
 
-    if ($self->can("run_command_help_${status}")) {
-        $self->can("run_command_help_${status}")->($self);
-        exit;
+    require Pod::Usage;
+
+    if ($status && !defined($verbose)) {
+        if ($self->can("run_command_help_${status}")) {
+            $self->can("run_command_help_${status}")->($self);
+        }
+        else {
+            my $out = "";
+            open my $fh, ">", \$out;
+
+            Pod::Usage::pod2usage(
+                -exitval  => "NOEXIT",
+                -verbose  => 99,
+                -sections => "COMMAND: " . uc($status),
+                -output   => $fh,
+            );
+
+            $out =~ s/\A[^\n]+\n//s;
+            $out =~ s/^    //gm;
+
+            if ($out =~ /\A\s*\Z/) {
+                $out = "Cannot find documentation for '$status'\n\n";
+            }
+
+            print "\n$out";
+            close $fh;
+            exit;
+        }
     }
     else {
-        require Pod::Usage;
         Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
     }
 }
 
 sub run_command_help_commands {
-    print <<'HELP';
-
-perlbrew commands:
-
-    init           Initialize perlbrew environment.
-
-    install        Install perl
-    uninstall      Uninstall the given installation
-    available      List perls available to install
-    lib            Manage local::lib directories.
-    alias          Give perl installations a new name
-
-    list           List installed perls
-    use            Use the specified perl in current shell
-    off            Turn off perlbrew in current shel
-    switch         Permanently use the specified perl as default
-    switch-off     Permanently turn off perl
-
-    mirror         Pick a preferred mirror site
-    version        Display version
-    help           Read more detailed instructions
-
-See `perlbrew help <command>` for detail description of the command.
-
-HELP
-}
-
-sub run_command_help_lib {
-    print <<'HELP';
-
-Usage:
-
-    perlbrew lib create <lib-name>
-    perlbrew lib delete <lib-name>
-
-The `lib` command is used to manipulate local::lib roots inside perl
-installations. Effectively it is similar to `perl
--Mlocal::lib=/path/to/lib-name`, but a little bit more than just that.
-
-A lib name can be a short name, containing alphanumeric, like 'awesome', or
-a full name, prefixed with a perl installation name and a '@' sign, for
-example, 'perl-5.14.2@awesome'.
-
-Here are some a brief examples to use them:
-
-    # Create libs by name
-    perlbrew lib create nobita
-    perlbrew lib create perl-5.12.3@shizuka
-
-    perlbrew list     # See the list of use/switch targets.
-
-    # Activate lib in current shell.
-    perlbrew use perl-5.12.3@nobita
-    perlbrew use perl-5.14.2@nobita
-
-    # Activate lib in as default.
-    perlbrew switch perl-5.14.2@nobita
-
-    # Clean the lib
-    perlbrew lib delete nobita
-    perlbrew lib delete perl-5.12.3@shizuka
-
-A "lib" is reference by it's name, which can be a short one consists of letters,
-or a fully-qualified one, prefixed with the perl installation name, and an `@`
-character in between. Short names are local to current perl. A lib name 'nobita'
-can refer to 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your
-current perl.
-
-When invoking `use` or `switch` command to a lib, always use the long name for
-it might be ambigous. A simple rule: the name after `use` or `switch` should be
-in the output of `list`.
-
-HELP
+    Pod::Usage::pod2usage(
+        -exitval => 0,
+        -verbose => 99,
+        -sections => "COMMANDS"
+    );
 }
 
 sub run_command_available {
