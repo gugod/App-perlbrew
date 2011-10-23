@@ -418,10 +418,11 @@ sub run_command_help {
             open my $fh, ">", \$out;
 
             Pod::Usage::pod2usage(
-                -exitval  => "NOEXIT",
-                -verbose  => 99,
-                -sections => "COMMAND: " . uc($status),
-                -output   => $fh,
+                -exitval   => "NOEXIT",
+                -verbose   => 99,
+                -sections  => "COMMAND: " . uc($status),
+                -output    => $fh,
+                -noperldoc => 1
             );
 
             $out =~ s/\A[^\n]+\n//s;
