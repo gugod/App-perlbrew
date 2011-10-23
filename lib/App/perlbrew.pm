@@ -434,7 +434,6 @@ sub run_command_help {
 
             print "\n$out";
             close $fh;
-            exit;
         }
     }
     else {
@@ -444,9 +443,11 @@ sub run_command_help {
 
 sub run_command_help_commands {
     Pod::Usage::pod2usage(
-        -exitval => 0,
-        -verbose => 99,
-        -sections => "COMMANDS"
+        -output    => \*STDOUT,
+        -exitval   => 0,
+        -verbose   => 99,
+        -sections  => "COMMANDS",
+        -noperldoc => 1
     );
 }
 
