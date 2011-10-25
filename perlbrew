@@ -423,45 +423,38 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   sub run_command_help {
       my ($self, $status, $verbose) = @_;
   
-      if ($self->can("run_command_help_${status}")) {
-          $self->can("run_command_help_${status}")->($self);
-          exit;
+      require Pod::Usage;
+  
+      if ($status && !defined($verbose)) {
+          if ($self->can("run_command_help_${status}")) {
+              $self->can("run_command_help_${status}")->($self);
+          }
+          else {
+              my $out = "";
+              open my $fh, ">", \$out;
+  
+              Pod::Usage::pod2usage(
+                  -exitval   => "NOEXIT",
+                  -verbose   => 99,
+                  -sections  => "COMMAND: " . uc($status),
+                  -output    => $fh,
+                  -noperldoc => 1
+              );
+  
+              $out =~ s/\A[^\n]+\n//s;
+              $out =~ s/^    //gm;
+  
+              if ($out =~ /\A\s*\Z/) {
+                  $out = "Cannot find documentation for '$status'\n\n";
+              }
+  
+              print "\n$out";
+              close $fh;
+          }
       }
       else {
-          require Pod::Usage;
           Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
       }
-  }
-  
-  sub run_command_help_lib {
-      print <<'HELP';
-  
-  The 'lib' command can be used to manage multiple local::lib containers
-  inside different perls. Here are some a brief examples:
-  
-      perlbrew lib create nobita
-      perlbrew lib create perl-5.12.3@shizuka
-  
-      perlbrew lib list
-  
-      perlbrew use perl-5.12.3@nobita
-      perlbrew use perl-5.14.2@nobita
-  
-      perlbrew switch perl-5.14.2@nobita
-  
-      perlbrew lib delete perl-5.12.3@nobita
-  
-  A "lib" is reference by it's name, which can be a short one consists of letters,
-  or a fully-qualified one, prefixed with the perl installation name, and an `@`
-  character in between. Short names are local to current perl. A lib name 'nobita'
-  can refer to 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your
-  current perl.
-  
-  Always use a full name To `use` or `switch` to a perl with lib, for it might be
-  ambigous. A rule of thumb: the name after `use` or `switch` should be one of the
-  item in the output of `list`.
-  
-  HELP
   }
   
   sub run_command_available {
