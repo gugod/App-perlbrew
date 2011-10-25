@@ -1,5 +1,6 @@
 NEXT:
 - NOTICE: Remove $PERLBREW_ROOT/Conf.pm if it's there, and re-run `perlbrew mirror`
+- perlbrew help system is changing. `perlbrew help <command>` now displays brief documentation for the command.
 
 0.30:
 - New command: lib
