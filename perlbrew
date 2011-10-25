@@ -3196,29 +3196,26 @@ perlbrew - Perl Environment manager.
 
 =head1 SYNOPSIS
 
-perlbrew <command> [options] [arguments]
+    perlbrew <command> [options] [arguments]
 
-Commands
+    Commonly used commands:
+        init           Initialize perlbrew environment.
+        install        Install perl
+        uninstall      Uninstall the given installation
+        available      List perls available to install
+        list           List installed perls
+        use            Use the specified perl in current shell
+        off            Turn off perlbrew in current shel
+        switch         Permanently use the specified perl as default
+        switch-off     Permanently turn off perl
+        lib            Manage local::lib directories.
+        mirror         Pick a preferred mirror site
+        version        Display version
+        help           Read more detailed instructions
 
-    init           Initialize perlbrew environment.
+    See `perlbrew help commands` for the full list of commands.
 
-    install        Install perl
-    uninstall      Uninstall the given installation
-    available      List perls available to install
-    lib            Manage local::lib directories.
-    alias          Give perl installations a new name
-
-    list           List installed perls
-    use            Use the specified perl in current shell
-    off            Turn off perlbrew in current shel
-    switch         Permanently use the specified perl as default
-    switch-off     Permanently turn off perl
-
-    mirror         Pick a preferred mirror site
-    version        Display version
-    help           Read more detailed instructions
-
-See `perlbrew help <command>` for detail description of the command.
+    See `perlbrew help <command>` for the detail description for the command.
 
 =head1 INITIALIZATION
 
@@ -3231,6 +3228,42 @@ This step needs to be done only once.
 
 If latter on you need to change C<$PERLBREW_ROOT>, you (and all other users
 who share the same C<$PERLBREW_ROOT> will have to run this again to make it affective.
+
+=head1 COMMANDS
+
+perlbrew commands:
+
+    init           Initialize perlbrew environment.
+
+    install        Install perl
+    uninstall      Uninstall the given installation
+    available      List perls available to install
+    lib            Manage local::lib directories.
+    alias          Give perl installations a new name
+
+    list           List perl installations
+    use            Use the specified perl in current shell
+    off            Turn off perlbrew in current shel
+    switch         Permanently use the specified perl as default
+    switch-off     Permanently turn off perlbrew (revert to system perl)
+
+    self-upgrade       Upgrade perlbrew itself.
+    install-cpanm      Install cpanm, a friendly companion.
+    install-patchperl  Install patchperl
+
+    mirror         Pick a preferred mirror site
+    version        Display version
+    help           Read more detailed instructions
+
+See `perlbrew help <command>` for detail description of the command.
+
+=head1 COMMAND: INIT
+
+The C<init> command should be manually invoked whenever you (the perlbrew user)
+upgrade perlbrew.
+
+However, if the upgrade is done with C<self-upgrade> command, or by running the
+one-line installer manually, this command is invoked automatically.
 
 =head1 COMMAND: INSTALL
 
@@ -3338,10 +3371,11 @@ Usage: perlbrew alias delete <alias>
 
 =head1 COMMAND: MIRROR
 
+Usage: perlbrew mirror
+
 Run this if you want to choose a specific CPAN mirror to install the
 perls from. It will display a list of mirrors for you to pick
 from. Hit 'q' to cancel the selection.
-
 
 =head1 COMMAND: EXEC
 
@@ -3380,31 +3414,34 @@ Usage: perlbrew env <name>
 Low-level command. Use this command to see the list of environment
 variables that are set by C<perlbrew> itself for shell integration.
 
-The output is something similar to this (if your shell is bash):
+The output is something similar to this (if your shell is bash/zsh):
 
     export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
-    export PERLBREW_VERSION=0.28
+    export PERLBREW_VERSION=0.31
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
     export PERLBREW_PERL=perl-5.14.1
 
 You can also ask for the proper variables for a specific perl version.
 
-=head1 COMMAND: SYMLINK-EXECUTABLE
+=head1 COMMAND: SYMLINK-EXECUTABLES
 
-Usage: perlbrew symlink_executables <name>
+Usage: perlbrew symlink-executables <name>
 
 Low-level command. This command is used to create the C<perl> executable
 symbolic link to, say, C<perl5.13.6>. This is only required for
 development version of perls.
 
-You don't need to do this unless you have been using old perlbrew to
-install perls. The installation layout is changed since version 0.11.
+You don't need to do this unless you have been using old perlbrew to install
+perls, and you find youself confused because the perl that you just installed
+appears to be missing after invoking `use` or `switch`. perbrew changes its
+installation layout since version 0.11, which generades symlinks to executables
+in a better way.
 
 If you just upgraded perlbrew (from 0.11 or earlier versions) and C<perlbrew
 switch> failed to work after you switch to a development release of perl, say,
 perl-5.13.6, run this command:
 
-    perlbrew symlink_executables perl-5.13.6
+    perlbrew symlink-executables perl-5.13.6
 
 This essentially creates this symlink:
 
@@ -3445,8 +3482,6 @@ This command upgrades Perlbrew to its latest version.
 Usage: perlbrew version
 
 Show the version of perlbrew.
-
-
 
 =head1 COMMAND: LIB
 
