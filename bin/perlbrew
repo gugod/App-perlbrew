@@ -14,42 +14,9 @@ perlbrew - Perl Environment manager.
 
 =head1 SYNOPSIS
 
-    perlbrew <command> [options] [arguments]
+perlbrew <command> [options] [arguments]
 
-    Commonly used commands:
-        init           Initialize perlbrew environment.
-        install        Install perl
-        uninstall      Uninstall the given installation
-        available      List perls available to install
-        list           List installed perls
-        use            Use the specified perl in current shell
-        off            Turn off perlbrew in current shel
-        switch         Permanently use the specified perl as default
-        switch-off     Permanently turn off perl
-        lib            Manage local::lib directories.
-        mirror         Pick a preferred mirror site
-        version        Display version
-        help           Read more detailed instructions
-
-    See `perlbrew help commands` for the full list of commands.
-
-    See `perlbrew help <command>` for the detail description for the command.
-
-=head1 INITIALIZATION
-
-If you never run perlbrew before, or you do not have a C<~/.perlbrew> directory,
-you should perform the initialization process by running:
-
-    perlbrew init
-
-This step needs to be done only once.
-
-If latter on you need to change C<$PERLBREW_ROOT>, you (and all other users
-who share the same C<$PERLBREW_ROOT> will have to run this again to make it affective.
-
-=head1 COMMANDS
-
-perlbrew commands:
+Commands
 
     init           Initialize perlbrew environment.
 
@@ -70,6 +37,18 @@ perlbrew commands:
     help           Read more detailed instructions
 
 See `perlbrew help <command>` for detail description of the command.
+
+=head1 INITIALIZATION
+
+If you never run perlbrew before, or you do not have a C<~/.perlbrew> directory,
+you should perform the initialization process by running:
+
+    perlbrew init
+
+This step needs to be done only once.
+
+If latter on you need to change C<$PERLBREW_ROOT>, you (and all other users
+who share the same C<$PERLBREW_ROOT> will have to run this again to make it affective.
 
 =head1 COMMAND: INSTALL
 

@@ -441,16 +441,6 @@ sub run_command_help {
     }
 }
 
-sub run_command_help_commands {
-    Pod::Usage::pod2usage(
-        -output    => \*STDOUT,
-        -exitval   => 0,
-        -verbose   => 99,
-        -sections  => "COMMANDS",
-        -noperldoc => 1
-    );
-}
-
 sub run_command_available {
     my ( $self, $dist, $opts ) = @_;
 
