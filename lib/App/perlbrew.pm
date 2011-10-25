@@ -14,8 +14,6 @@ our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
 
-my $CONFIG_FILE    = catfile( $PERLBREW_ROOT, 'Config.pm' );
-
 local $SIG{__DIE__} = sub {
     my $message = shift;
     warn $message;
@@ -1602,10 +1600,15 @@ sub config {
     return $CONFIG;
 }
 
+sub config_file {
+    my ($self) = @_; 
+    catfile( $self->root, 'Config.pm' );
+}
+
 sub _save_config {
     my($self) = @_;
     require Data::Dumper;
-    open my $FH, '>', $CONFIG_FILE or die "Unable to open config ($CONFIG_FILE): $!";
+    open my $FH, '>', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!";
     my $d = Data::Dumper->new([$CONFIG],['App::perlbrew::CONFIG']);
     print $FH $d->Dump;
     close $FH;
@@ -1614,12 +1617,12 @@ sub _save_config {
 sub _load_config {
     my($self) = @_;
 
-    if ( ! -e $CONFIG_FILE ) {
+    if ( ! -e $self->config_file ) {
         local $CONFIG = {} if ! $CONFIG;
         $self->_save_config;
     }
 
-    open my $FH, '<', $CONFIG_FILE or die "Unable to open config ($CONFIG_FILE): $!\n";
+    open my $FH, '<', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!\n";
     my $raw = do { local $/; my $rv = <$FH>; $rv };
     close $FH;
 
