@@ -149,7 +149,7 @@ endif
 
 if ( $?PERLBREW_SKIP_INIT == 0 ) then
     if ( -f "$PERLBREW_HOME/init" ) then
-        source "PERLBREW_$HOME/init"
+        source "$PERLBREW_HOME/init"
     endif
 endif
 
