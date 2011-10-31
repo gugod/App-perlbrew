@@ -14,7 +14,7 @@ throws_ok(
         my $app = App::perlbrew->new("mirror");
         $app->run;
     },
-    qr"ERROR: Failed to retrive the mirror list."
+    qr"ERROR: Failed to retrieve the mirror list."
 );
 
 done_testing;
