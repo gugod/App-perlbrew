@@ -8,7 +8,7 @@ repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires
     'File::Path::Tiny'  => '0.1',
-    'Text::Levenshtein' => '0.04',
+    'List::Util'        => '0';
     'Devel::PatchPerl'  => '0.46',
     'local::lib'        => '1.0';
 

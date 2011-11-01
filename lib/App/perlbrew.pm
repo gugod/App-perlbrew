@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
-use Text::Levenshtein ();
+use List::Util qw( min );
 use FindBin;
 
 our $VERSION = "0.30";
@@ -328,6 +328,27 @@ sub commands {
     return @commands;
 }
 
+# straight copy of Wikipedia's "Levenshtein Distance"
+sub editdist {
+    my @a = split //, shift;
+    my @b = split //, shift;
+
+    # There is an extra row and column in the matrix. This is the
+    # distance from the empty string to a substring of the target.
+    my @d;
+    $d[$_][0] = $_ for (0 .. @a);
+    $d[0][$_] = $_ for (0 .. @b);
+
+    for my $i (1 .. @a) {
+        for my $j (1 .. @b) {
+            $d[$i][$j] = ($a[$i-1] eq $b[$j-1] ? $d[$i-1][$j-1]
+                : 1 + min($d[$i-1][$j], $d[$i][$j-1], $d[$i-1][$j-1]));
+        }
+    }
+
+    return $d[@a][@b];
+}
+
 sub find_similar_commands {
     my ( $self, $command ) = @_;
     my $SIMILAR_DISTANCE = 6;
@@ -337,7 +358,7 @@ sub find_similar_commands {
     } grep {
         defined
     } map {
-        my $d =  Text::Levenshtein::fastdistance($_, $command);
+        my $d = editdist($_, $command);
 
         ($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : undef
     } $self->commands;
