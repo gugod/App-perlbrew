@@ -12,3 +12,4 @@ t/mock_perlbrew_root
 fatpacker.trace
 packlists
 fatlib/
+.tracker.json

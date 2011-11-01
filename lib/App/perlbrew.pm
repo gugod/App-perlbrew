@@ -5,7 +5,6 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
-use List::Util qw( min );
 use FindBin;
 
 our $VERSION = "0.30";
@@ -173,6 +172,15 @@ sub rmpath {
 sub uniq(@) {
     my %a;
     grep { ++$a{$_} == 1 } @_;
+}
+
+sub min(@) {
+    my @a = @_;
+    my $m = $a[0];
+    for my $x (@a) {
+        $m = $x if $x < $m
+    }
+    return $m;
 }
 
 {
