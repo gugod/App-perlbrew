@@ -5,7 +5,7 @@ use 5.008;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
-use Text::Levenshtein ();
+use List::Util qw( min );
 use FindBin;
 
 our $VERSION = "0.30";
@@ -328,6 +328,27 @@ sub commands {
     return @commands;
 }
 
+# straight copy of Wikipedia's "Levenshtein Distance"
+sub editdist {
+    my @a = split //, shift;
+    my @b = split //, shift;
+
+    # There is an extra row and column in the matrix. This is the
+    # distance from the empty string to a substring of the target.
+    my @d;
+    $d[$_][0] = $_ for (0 .. @a);
+    $d[0][$_] = $_ for (0 .. @b);
+
+    for my $i (1 .. @a) {
+        for my $j (1 .. @b) {
+            $d[$i][$j] = ($a[$i-1] eq $b[$j-1] ? $d[$i-1][$j-1]
+                : 1 + min($d[$i-1][$j], $d[$i][$j-1], $d[$i-1][$j-1]));
+        }
+    }
+
+    return $d[@a][@b];
+}
+
 sub find_similar_commands {
     my ( $self, $command ) = @_;
     my $SIMILAR_DISTANCE = 6;
@@ -337,7 +358,7 @@ sub find_similar_commands {
     } grep {
         defined
     } map {
-        my $d =  Text::Levenshtein::fastdistance($_, $command);
+        my $d = editdist($_, $command);
 
         ($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : undef
     } $self->commands;
@@ -1153,7 +1174,7 @@ sub run_command_mirror {
     my $raw = http_get("http://search.cpan.org/mirror");
 
     unless ($raw) {
-        die "\nERROR: Failed to retrive the mirror list.\n\n";
+        die "\nERROR: Failed to retrieve the mirror list.\n\n";
     }
 
     my $found;
@@ -1274,7 +1295,7 @@ sub run_command_install_cpanm {
     my $body = http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
 
     unless ($body) {
-        die "\nERROR: Failed to retrive cpanm executable.\n\n";
+        die "\nERROR: Failed to retrieve cpanm executable.\n\n";
     }
 
     mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
@@ -1307,7 +1328,7 @@ sub run_command_install_patchperl {
     my $body = http_get('https://raw.github.com/gugod/patchperl-packing/master/patchperl');
 
     unless ($body) {
-        die "\nERROR: Failed to retrive patchperl executable.\n\n";
+        die "\nERROR: Failed to retrieve patchperl executable.\n\n";
     }
 
     mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";

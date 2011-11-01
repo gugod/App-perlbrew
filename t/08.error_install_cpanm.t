@@ -19,7 +19,7 @@ throws_ok(
         my $app = App::perlbrew->new("install-cpanm");
         $app->run;
     },
-    qr[ERROR: Failed to retrive cpanm executable.]
+    qr[ERROR: Failed to retrieve cpanm executable.]
 );
 
 done_testing;
