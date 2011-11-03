@@ -29,3 +29,7 @@
 ^packlists$
 ^README.hacking.md$
 ^README.releasing.md$
+^.tracker.json$
+^MYMETA.json$
+^MYMETA.yml$
+
