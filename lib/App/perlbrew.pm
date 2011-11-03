@@ -967,24 +967,8 @@ sub installed_perls {
             name        => $name,
             version     => $self->format_perl_version(`$executable -e 'print \$]'`),
             is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
-            is_external => 0,
             libs => [ $self->local_libs($name) ]
         };
-    }
-
-    my $current_perl_executable = `which perl`;
-    $current_perl_executable =~ s/\n$//;
-
-    my $current_perl_executable_version;
-    for ( grep { -f $_ && -x $_ } uniq map { s/\/+$//; "$_/perl" } split(":", $self->env('PATH')) ) {
-        $current_perl_executable_version =
-          $self->format_perl_version(`$_ -e 'print \$]'`);
-        push @result, {
-            name => $_,
-            version => $current_perl_executable_version,
-            is_current => $current_perl_executable && ($_ eq $current_perl_executable),
-            is_external => 1
-        } unless index($_, $self->root) == 0;
     }
 
     return @result;
@@ -1016,8 +1000,8 @@ sub local_libs {
 
 sub is_installed {
     my ($self, $name) = @_;
-    my @installed = grep { !$_->{is_external} } $self->installed_perls;
-    return grep { $name eq $_->{name} } @installed;
+
+    return grep { $name eq $_->{name} } $self->installed_perls;
 }
 
 # Return a hash of PERLBREW_* variables
