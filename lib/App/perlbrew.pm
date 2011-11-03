@@ -7,7 +7,7 @@ use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
 use FindBin;
 
-our $VERSION = "0.30";
+our $VERSION = "0.31";
 our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -1392,7 +1392,14 @@ USAGE
 sub run_command_exec {
     my $self = shift;
     my @args = @{$self->{original_argv}};
+
+    if ($args[0] eq '--root') {
+        shift @args;
+        shift @args;
+    }
+
     shift @args;
+
 
     for my $i ( $self->installed_perls ) {
         next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
