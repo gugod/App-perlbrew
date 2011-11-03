@@ -1392,7 +1392,14 @@ USAGE
 sub run_command_exec {
     my $self = shift;
     my @args = @{$self->{original_argv}};
+
+    if ($args[0] eq '--root') {
+        shift @args;
+        shift @args;
+    }
+
     shift @args;
+
 
     for my $i ( $self->installed_perls ) {
         next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
