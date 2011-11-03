@@ -31,14 +31,9 @@ perlbrew - Perl Environment manager.
         version        Display version
         help           Read more detailed instructions
 
-    Examples:
-        perlbrew install perl-5.14.1
-        perlbrew install 5.12.1
+    See `perlbrew help commands` for the full list of commands.
 
-        perlbrew list
-
-        perlbrew use perl-5.12.3
-        perlbrew switch perl-5.14.1
+    See `perlbrew help <command>` for the detail description for the command.
 
 =head1 INITIALIZATION
 
@@ -53,6 +48,42 @@ If latter on you need to change C<$PERLBREW_ROOT>, you (and all other users
 who share the same C<$PERLBREW_ROOT> will have to run this again to make it affective.
 
 =head1 COMMANDS
+
+perlbrew commands:
+
+    init           Initialize perlbrew environment.
+
+    install        Install perl
+    uninstall      Uninstall the given installation
+    available      List perls available to install
+    lib            Manage local::lib directories.
+    alias          Give perl installations a new name
+
+    list           List perl installations
+    use            Use the specified perl in current shell
+    off            Turn off perlbrew in current shel
+    switch         Permanently use the specified perl as default
+    switch-off     Permanently turn off perlbrew (revert to system perl)
+
+    self-upgrade       Upgrade perlbrew itself.
+    install-cpanm      Install cpanm, a friendly companion.
+    install-patchperl  Install patchperl
+
+    mirror         Pick a preferred mirror site
+    version        Display version
+    help           Read more detailed instructions
+
+See `perlbrew help <command>` for detail description of the command.
+
+=head1 COMMAND: INIT
+
+The C<init> command should be manually invoked whenever you (the perlbrew user)
+upgrade perlbrew.
+
+However, if the upgrade is done with C<self-upgrade> command, or by running the
+one-line installer manually, this command is invoked automatically.
+
+=head1 COMMAND: INSTALL
 
 =over 4
 
@@ -87,69 +118,88 @@ Build and install from the given archive file.
 Build and install from the given URL. Supported URL schemes are C<http://>,
 C<https://>, C<ftp://> and C<file://>.
 
-=item B<uninstall> <target>
+=back
 
-Uninstalls the given version.
+=head1 COMMAND: UNINSTALL
 
-=item B<use> [perl-<version> | <version> | <name>]
+Usage: perlbrew uninstall <name>
+
+Uninstalls the given perl installation.
+
+=head1 COMMAND: USE
+
+Usage: perlbrew B<use> [perl-<version> | <version> | <name>]
 
 Use the given version perl in current shell. This will not effect newly opened
 shells.
 
 Without a parameter, shows the version of perl currently in use.
 
-=item B<switch> [perl-<version> | <version> | <name>]
+=head1 COMMAND: SWITCH
+
+Usage: perlbrew switch [ <name> ]
 
 Switch to the given version, and makes it the default for this and all
 future terminal sessions.
 
 Without a parameter, shows the version of perl currently selected.
 
-=item B<list>
+=head1 COMMAND: LIST
+
+Usage: perlbrew list
 
 List the installed versions of perl.
 
-=item B<available>
+=head1 COMMAND: AVAILABLE
+
+Usage: perlbrew available
 
 List the available versions of perl on CPAN.
 
-=item B<off>
+=head1 COMMAND: OFF
+
+Usage: perlbrew off
 
 Temporarily disable perlbrew in the current shell.
 
 Re-enables the default system Perl, whatever that is.
 
-=item B<switch-off>
+=head1 COMMAND: SWITCH-OFF
 
-Permananently disable perlbrew. Use C<switch> command to re-enable it.
+Usage: perlbrew switch-off
+
+Permananently disable perlbrew. Use C<switch> command to re-enable it. Invoke
+C<use> command to enable it only in the current shell.
 
 Re-enables the default system Perl, whatever that is.
 
-=item B<lib>
+=head1 COMMAND: ALIAS
 
-Manage local::lib folders. See C<perlbrew help lib> for more detail.
+Usage: perlbrew alias [-f] create <name> <alias>
 
-=item B<alias> [-f] create <name> <alias>
+    Create an alias for the installation named <name>.
 
-Create an alias for the installation named <name>.
+Usage: perlbrew alias [-f] rename <old_alias> <new_alias>
 
-=item B<alias> [-f] rename <old_alias> <new_alias>
+    Rename the alias to a new name.
 
-Rename the alias to a new name.
+Usage: perlbrew alias delete <alias>
 
-=item B<alias> delete <alias>
+    Delete the given alias.
 
-Delete the given alias.
+=head1 COMMAND: MIRROR
 
-=item B<mirror>
+Usage: perlbrew mirror
 
 Run this if you want to choose a specific CPAN mirror to install the
 perls from. It will display a list of mirrors for you to pick
 from. Hit 'q' to cancel the selection.
 
-=item B<exec> command
+=head1 COMMAND: EXEC
 
-Execute command for all perls.
+Usage: perlbrew exec <command> <args...>
+
+Execute command for all perls, one by one.
 
 For example, run a Hello program:
 
@@ -175,34 +225,41 @@ The output depends on your perl installations, and looks like this:
 
 Notice that the command is not executed in parallel.
 
-=item B<env> [perl-version]
+=head1 COMMAND: ENV
+
+Usage: perlbrew env <name>
 
 Low-level command. Use this command to see the list of environment
 variables that are set by C<perlbrew> itself for shell integration.
 
-The output is something similar to this (if your shell is bash):
+The output is something similar to this (if your shell is bash/zsh):
 
     export PERLBREW_ROOT=/Users/gugod/perl5/perlbrew
-    export PERLBREW_VERSION=0.28
+    export PERLBREW_VERSION=0.31
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
     export PERLBREW_PERL=perl-5.14.1
 
 You can also ask for the proper variables for a specific perl version.
 
-=item B<symlink_executables> <perl-version>
+=head1 COMMAND: SYMLINK-EXECUTABLES
+
+Usage: perlbrew symlink-executables <name>
 
 Low-level command. This command is used to create the C<perl> executable
 symbolic link to, say, C<perl5.13.6>. This is only required for
 development version of perls.
 
-You don't need to do this unless you have been using old perlbrew to
-install perls. The installation layout is changed since version 0.11.
+You don't need to do this unless you have been using old perlbrew to install
+perls, and you find youself confused because the perl that you just installed
+appears to be missing after invoking `use` or `switch`. perbrew changes its
+installation layout since version 0.11, which generades symlinks to executables
+in a better way.
 
 If you just upgraded perlbrew (from 0.11 or earlier versions) and C<perlbrew
 switch> failed to work after you switch to a development release of perl, say,
 perl-5.13.6, run this command:
 
-    perlbrew symlink_executables perl-5.13.6
+    perlbrew symlink-executables perl-5.13.6
 
 This essentially creates this symlink:
 
@@ -212,22 +269,81 @@ This essentially creates this symlink:
 Newly installed perls, whether they are development versions or not, does not
 need manually treatment with this command.
 
-=item B<install-cpanm>
+=head1 COMMAND: INSTALL-CPANM
+
+Usage: perlbrew install-cpanm
 
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 For more rationale about the existence of this command, read
 <http://www.perlbrew.pl/Perlbrew-and-Friends.html>
 
-=item B<self-upgrade>
+=head1 COMMAND: INSTALL-PATCHPERL
+
+Usage: perlbrew install-patchperl
+
+Install the C<patchperl> standalone executable in C<$PERLBREW_ROOT/bin>.  This
+is automaticall invoked if your perlbrew installation is done with the
+installer, but not with cpan.
+
+For more rationale about the existence of this command, read
+<http://www.perlbrew.pl/Perlbrew-and-Friends.html>
+
+=head1 COMMAND: SELF-UPGRADE
+
+Usage: perlbrew self-upgrade
 
 This command upgrades Perlbrew to its latest version.
 
-=item B<version>
+=head1 COMMAND: VERSION
+
+Usage: perlbrew version
 
 Show the version of perlbrew.
 
-=back
+=head1 COMMAND: LIB
+
+Usage:
+
+    perlbrew lib create <lib-name>
+    perlbrew lib delete <lib-name>
+
+The `lib` command is used to manipulate local::lib roots inside perl
+installations. Effectively it is similar to `perl
+-Mlocal::lib=/path/to/lib-name`, but a little bit more than just that.
+
+A lib name can be a short name, containing alphanumeric, like 'awesome', or
+a full name, prefixed with a perl installation name and a '@' sign, for
+example, 'perl-5.14.2@awesome'.
+
+Here are some a brief examples to use them:
+
+    # Create libs by name
+    perlbrew lib create nobita
+    perlbrew lib create perl-5.12.3@shizuka
+
+    perlbrew list     # See the list of use/switch targets.
+
+    # Activate lib in current shell.
+    perlbrew use perl-5.12.3@nobita
+    perlbrew use perl-5.14.2@nobita
+
+    # Activate lib in as default.
+    perlbrew switch perl-5.14.2@nobita
+
+    # Clean the lib
+    perlbrew lib delete nobita
+    perlbrew lib delete perl-5.12.3@shizuka
+
+A "lib" is reference by it's name, which can be a short one consists of letters,
+or a fully-qualified one, prefixed with the perl installation name, and an `@`
+character in between. Short names are local to current perl. A lib name 'nobita'
+can refer to 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your
+current perl.
+
+When invoking `use` or `switch` command to a lib, always use the long name for
+it might be ambigous. A simple rule: the name after `use` or `switch` should be
+in the output of `list`.
 
 =head1 OPTIONS
 
@@ -275,7 +391,6 @@ pass through switches to the perl Configure script.
 
 =back
 
-
 =head1 CONFIGURATION
 
 =over 4
@@ -288,7 +403,6 @@ set this environment variable in your C<bashrc> to the directory
 before running perlbrew.
 
 =back
-
 
 =head1 UPGRADE NOTES
 
