@@ -1,3 +1,6 @@
+0.32:
+- A hotfix release: local::lib was not bundled in the previous release.
+
 0.31:
 - NOTICE: Remove $PERLBREW_ROOT/Conf.pm if it's there, and re-run `perlbrew mirror`
 - perlbrew help system is changing. `perlbrew help <command>` now displays brief documentation for the command.
