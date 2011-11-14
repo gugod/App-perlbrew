@@ -1,3 +1,8 @@
+0.33:
+- Remove Text::Levenshtein from the standalone executable.
+- Rearrange documentation so all perlbrew command usage document can be found in `perldoc perlbrew`
+  - In the future, App::perlbrew POD should only contain the API doc for the module.
+
 0.32:
 - A hotfix release: local::lib was not bundled in the previous release.
 
