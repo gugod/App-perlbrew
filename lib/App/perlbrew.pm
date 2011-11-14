@@ -7,7 +7,7 @@ use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
 use FindBin;
 
-our $VERSION = "0.32";
+our $VERSION = "0.33";
 our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -1698,100 +1698,19 @@ App::perlbrew - Manage perl installations in your $HOME
 
 =head1 DESCRIPTION
 
-perlbrew is a program to automate the building and installation of
-perl in the users HOME. At the moment, it installs everything to
-C<~/perl5/perlbrew>, and requires you to tweak your PATH by including a
-bashrc/cshrc file it provides. You then can benefit from not having
-to run 'sudo' commands to install cpan modules because those are
-installed inside your HOME too. It's a completely separate perl
-environment.
+perlbrew is a program to automate the building and installation of perl in an
+easy way. It installs everything to C<~/perl5/perlbrew>, and requires you to
+tweak your PATH by including a bashrc/cshrc file it provides. You then can
+benefit from not having to run 'sudo' commands to install cpan modules because
+those are installed inside your HOME too. It provides multiple isolated perl
+environments, and a mechanism for you to switch between them.
 
-=head1 INSTALLATION
+For the documentation of perlbrew usage see L<perlbrew> command
+on CPAN, or by running C<perlbew help>. The following documentation
+features the API of C<App::perlbrew> module, and may not be remotely
+close to what your want to read.
 
-To use C<perlbrew>, it is required to install C<curl> or C<wget>
-first. C<perlbrew> depends on one of this two external commmands to be
-there in order to fetch files from the internet.
-
-The recommended way to install perlbrew is to run this statement in
-your shell:
-
-    curl -kL http://xrl.us/perlbrewinstall | bash
-
-After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
-and you should follow the instruction on screen to setup your
-C<.bashrc> or C<.cshrc> to put it in your PATH.
-
-The downloaded perlbrew is a self-contained standalone program that
-embeds all non-core modules it uses. It should be runnable with perl
-5.8 or later versions of perl.
-
-This installer also installs a packed version of C<patchperl> to
-C<~/perl5/perlbrew/bin>, which is required to build old perls.
-
-The directory C<~/perl5/perlbrew> will contain all install perl
-executables, libraries, documentations, lib, site_libs. If you need to
-install C<perlbrew>, and the perls it brews, into somewhere else
-because, say, your HOME has limited quota, you can do that by setting
-a C<PERLBREW_ROOT> environment variable before running the installer:
-
-    export PERLBREW_ROOT=/opt/perlbrew
-    curl -kL http://xrl.us/perlbrewinstall | bash
-
-By default, C<perlbrew> looks for the intialization file that exports
-C<PERLBREW_ROOT> in C<~/.perlbrew/init>.  In some cases (for instance,
-if your home directory is shared across multiple machines), you may
-wish to have several different perlbrew setting per-machine. If so,
-you can use the C<PERLBREW_HOME> environment variable to tell perlbrew
-where to look for the initialization file.
-
- # on machine a
- $ PERLBREW_HOME=~/.perlbrew-a PERLBREW_ROOT=~/perl5/perlbrew-a ./perlbrew install
-
- # on machine b
- $ PERLBREW_HOME=~/.perlbrew-b PERLBREW_ROOT=~/perl5/perlbrew-b ./perlbrew install
-
-If you specify C<PERLBREW_HOME>, you will also need to specify both
-C<PERLBREW_HOME> and C<PERLBREW_ROOT> when you first install perlbrew.
-After that, you'll need to make sure C<PERLBREW_HOME> is exported when
-you log in, before you source C<$PERLBREW_ROOT/etc/bashrc> (or
-C<cshrc>). Example C<.bashrc>:
-
-    if [ "$(hostname)" == "machine-a" ]; then
-        export PERLBREW_HOME=~/.perlbrew-a
-        source ~/perl5/perlbrew-a/etc/bashrc
-    elif [ "$(hostname)" == "machine-b" ]; then
-        export PERLBREW_HOME=~/.perlbrew-b
-        source ~/perl5/perlbrew-b/etc/bashrc
-    fi
-
-You may also install perlbrew from CPAN:
-
-    cpan App::perlbrew
-
-However, please make sure not to run this with one of the perls brewed
-with perlbrew. It's the best to turn perlbrew off before you run that,
-if you're upgrading.
-
-    perlbrew off
-    cpan App::perlbrew
-
-You should always use system cpan (like /usr/bin/cpan) to install
-C<App::perlbrew> because then it will be installed under a system PATH
-like C</usr/bin>, which is not affected by perlbrew C<switch> or
-C<use> command.
-
-However, it is still recommended to let C<perlbrew> install itself. It's
-easier, and it works better.
-
-=head1 USAGE
-
-Please read the program usage by running
-
-    perlbrew
-
-(No arguments.) To read a more detailed one:
-
-    perlbrew -h
+=head1 METHODS
 
 =head1 PROJECT DEVELOPMENT
 

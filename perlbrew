@@ -14,7 +14,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   use File::Path::Tiny;
   use FindBin;
   
-  our $VERSION = "0.32";
+  our $VERSION = "0.33";
   our $CONFIG;
   
   our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
@@ -1705,100 +1705,19 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   =head1 DESCRIPTION
   
-  perlbrew is a program to automate the building and installation of
-  perl in the users HOME. At the moment, it installs everything to
-  C<~/perl5/perlbrew>, and requires you to tweak your PATH by including a
-  bashrc/cshrc file it provides. You then can benefit from not having
-  to run 'sudo' commands to install cpan modules because those are
-  installed inside your HOME too. It's a completely separate perl
-  environment.
+  perlbrew is a program to automate the building and installation of perl in an
+  easy way. It installs everything to C<~/perl5/perlbrew>, and requires you to
+  tweak your PATH by including a bashrc/cshrc file it provides. You then can
+  benefit from not having to run 'sudo' commands to install cpan modules because
+  those are installed inside your HOME too. It provides multiple isolated perl
+  environments, and a mechanism for you to switch between them.
   
-  =head1 INSTALLATION
+  For the documentation of perlbrew usage see L<perlbrew> command
+  on CPAN, or by running C<perlbew help>. The following documentation
+  features the API of C<App::perlbrew> module, and may not be remotely
+  close to what your want to read.
   
-  To use C<perlbrew>, it is required to install C<curl> or C<wget>
-  first. C<perlbrew> depends on one of this two external commmands to be
-  there in order to fetch files from the internet.
-  
-  The recommended way to install perlbrew is to run this statement in
-  your shell:
-  
-      curl -kL http://xrl.us/perlbrewinstall | bash
-  
-  After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>,
-  and you should follow the instruction on screen to setup your
-  C<.bashrc> or C<.cshrc> to put it in your PATH.
-  
-  The downloaded perlbrew is a self-contained standalone program that
-  embeds all non-core modules it uses. It should be runnable with perl
-  5.8 or later versions of perl.
-  
-  This installer also installs a packed version of C<patchperl> to
-  C<~/perl5/perlbrew/bin>, which is required to build old perls.
-  
-  The directory C<~/perl5/perlbrew> will contain all install perl
-  executables, libraries, documentations, lib, site_libs. If you need to
-  install C<perlbrew>, and the perls it brews, into somewhere else
-  because, say, your HOME has limited quota, you can do that by setting
-  a C<PERLBREW_ROOT> environment variable before running the installer:
-  
-      export PERLBREW_ROOT=/opt/perlbrew
-      curl -kL http://xrl.us/perlbrewinstall | bash
-  
-  By default, C<perlbrew> looks for the intialization file that exports
-  C<PERLBREW_ROOT> in C<~/.perlbrew/init>.  In some cases (for instance,
-  if your home directory is shared across multiple machines), you may
-  wish to have several different perlbrew setting per-machine. If so,
-  you can use the C<PERLBREW_HOME> environment variable to tell perlbrew
-  where to look for the initialization file.
-  
-   # on machine a
-   $ PERLBREW_HOME=~/.perlbrew-a PERLBREW_ROOT=~/perl5/perlbrew-a ./perlbrew install
-  
-   # on machine b
-   $ PERLBREW_HOME=~/.perlbrew-b PERLBREW_ROOT=~/perl5/perlbrew-b ./perlbrew install
-  
-  If you specify C<PERLBREW_HOME>, you will also need to specify both
-  C<PERLBREW_HOME> and C<PERLBREW_ROOT> when you first install perlbrew.
-  After that, you'll need to make sure C<PERLBREW_HOME> is exported when
-  you log in, before you source C<$PERLBREW_ROOT/etc/bashrc> (or
-  C<cshrc>). Example C<.bashrc>:
-  
-      if [ "$(hostname)" == "machine-a" ]; then
-          export PERLBREW_HOME=~/.perlbrew-a
-          source ~/perl5/perlbrew-a/etc/bashrc
-      elif [ "$(hostname)" == "machine-b" ]; then
-          export PERLBREW_HOME=~/.perlbrew-b
-          source ~/perl5/perlbrew-b/etc/bashrc
-      fi
-  
-  You may also install perlbrew from CPAN:
-  
-      cpan App::perlbrew
-  
-  However, please make sure not to run this with one of the perls brewed
-  with perlbrew. It's the best to turn perlbrew off before you run that,
-  if you're upgrading.
-  
-      perlbrew off
-      cpan App::perlbrew
-  
-  You should always use system cpan (like /usr/bin/cpan) to install
-  C<App::perlbrew> because then it will be installed under a system PATH
-  like C</usr/bin>, which is not affected by perlbrew C<switch> or
-  C<use> command.
-  
-  However, it is still recommended to let C<perlbrew> install itself. It's
-  easier, and it works better.
-  
-  =head1 USAGE
-  
-  Please read the program usage by running
-  
-      perlbrew
-  
-  (No arguments.) To read a more detailed one:
-  
-      perlbrew -h
+  =head1 METHODS
   
   =head1 PROJECT DEVELOPMENT
   
@@ -1902,160 +1821,6 @@ $fatpacked{"File/Path/Tiny.pm"} = <<'FILE_PATH_TINY';
   
   1;
 FILE_PATH_TINY
-
-$fatpacked{"Text/Levenshtein.pm"} = <<'TEXT_LEVENSHTEIN';
-  package Text::Levenshtein;
-  
-  use strict;
-  use Exporter;
-  use vars qw($VERSION @ISA @EXPORT @EXPORT_OK %EXPORT_TAGS);
-  
-  $VERSION     = '0.04';
-  @ISA         = qw(Exporter);
-  @EXPORT      = ();
-  @EXPORT_OK   = qw(&distance &fastdistance);
-  %EXPORT_TAGS = ();
-  
-  
-  sub _min
-  {
-  	return $_[0] < $_[1]
-  		? $_[0] < $_[2] ? $_[0] : $_[2]
-  		: $_[1] < $_[2] ? $_[1] : $_[2];
-  }
-  
-  
-  sub distance
-  {
-  	my ($s,@t)=@_;
-  
-  	my $n=length($s);
-  	my @result;
-  
-  	foreach my $t (@t) {
-  		if ($s eq $t) {
-  			push @result, 0;
-  			next;
-  		}
-  		my @d;
-  		my $cost=0;
-  
-  		my $m=length($t);
-  		push @result,$m and next unless $n;
-  		push @result,$n and next unless $m;
-  
-  		$d[0][0]=0;
-  		foreach my $i (1 .. $n) {
-  			if ($i != $n && substr($s,$i) eq substr($t,$i)) {
-  				push @result,$i;next;
-  			}
-  			$d[$i][0]=$i;
-  		}
-  		foreach my $j (1 .. $m) {
-  			if ($j != $m && substr($s,$j) eq substr($t,$j)) {
-  				push @result,$j;next;
-  			}
-  			$d[0][$j]=$j;
-  		}
-  
-  		for my $i (1 .. $n) {
-  			my $s_i=substr($s,$i-1,1);
-  			for my $j (1 .. $m) {
-  				$d[$i][$j]=&_min($d[$i-1][$j]+1,
-  					 $d[$i][$j-1]+1,
-  					 $d[$i-1][$j-1]+($s_i eq substr($t,$j-1,1) ? 0 : 1) )
-  			}
-  		}
-  
-  		push @result,$d[$n][$m];
-  	}
-  
-  	if (wantarray) {return @result} else {return $result[0]}
-  }
-  
-  sub fastdistance
-  {
-  	my $word1 = shift;
-  	my $word2 = shift;
-  
-  	return 0 if $word1 eq $word2;
-  	my @d;
-  
-  	my $len1 = length $word1;
-  	my $len2 = length $word2;
-  
-  	$d[0][0] = 0;
-  	for (1 .. $len1) {
-  		$d[$_][0] = $_;
-  		return $_ if $_!=$len1 && substr($word1,$_) eq substr($word2,$_);
-  	}
-  	for (1 .. $len2) {
-  		$d[0][$_] = $_;
-  		return $_ if $_!=$len2 && substr($word1,$_) eq substr($word2,$_);
-  	}
-  
-  	for my $i (1 .. $len1) {
-  		my $w1 = substr($word1,$i-1,1);
-  		for (1 .. $len2) {
-  			$d[$i][$_] = _min($d[$i-1][$_]+1, $d[$i][$_-1]+1, $d[$i-1][$_-1]+($w1 eq substr($word2,$_-1,1) ? 0 : 1));
-  		}
-  	}
-  	return $d[$len1][$len2];
-  }
-  	
-  1;
-  
-  __END__
-  
-  =head1 NAME
-  
-  Text::Levenshtein - An implementation of the Levenshtein edit distance
-  
-  =head1 SYNOPSIS
-  
-   use Text::Levenshtein qw(distance);
-  
-   print distance("foo","four");
-   # prints "2"
-  
-   print fastdistance("foo","four");
-   # prints "2" faster
-  
-   my @words=("four","foo","bar");
-   my @distances=distance("foo",@words);
-  
-   print "@distances";
-   # prints "2 0 3"
-   
-  
-  =head1 DESCRIPTION
-  
-  This module implements the Levenshtein edit distance.
-  The Levenshtein edit distance is a measure of the degree of proximity between two strings.
-  This distance is the number of substitutions, deletions or insertions ("edits") 
-  needed to transform one string into the other one (and vice versa).
-  When two strings have distance 0, they are the same.
-  A good point to start is: <http://www.merriampark.com/ld.htm>
-  
-  &fastdistance can be called with two scalars and is faster in most cases.
-  
-  See also Text::LevenshteinXS on CPAN if you do not require a perl-only implementation.  It
-  is extremely faster in nearly all cases.
-  
-  See also Text::WagnerFischer on CPAN for a configurable edit distance, i.e. for
-  configurable costs (weights) for the edits.
-  
-  
-  =head1 AUTHOR
-  
-  Copyright 2002 Dree Mistrut <F<dree@friul.it>>
-  
-  This package is free software and is provided "as is" without express
-  or implied warranty.  You can redistribute it and/or modify it under 
-  the same terms as Perl itself.
-  
-  =cut
-TEXT_LEVENSHTEIN
 
 $fatpacked{"lib/core/only.pm"} = <<'LIB_CORE_ONLY';
   package lib::core::only;
@@ -3233,21 +2998,59 @@ perlbrew - Perl Environment manager.
         version        Display version
         help           Read more detailed instructions
 
-    See `perlbrew help commands` for the full list of commands.
+    See `perlbrew help` for the full list of commands and more descriptions
 
     See `perlbrew help <command>` for the detail description for the command.
 
-=head1 INITIALIZATION
+=head1 INSTALLATION
 
-If you never run perlbrew before, or you do not have a C<~/.perlbrew> directory,
-you should perform the initialization process by running:
+It is the simpleist to use the perlbrew installer, just paste this statement to
+your termanl:
 
-    perlbrew init
+    curl -kL http://xrl.us/perlbrewinstall | bash
 
-This step needs to be done only once.
+After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
+should follow the instruction on screen to setup your C<.bashrc> or C<.cshrc> to
+put it in your PATH.
 
-If latter on you need to change C<$PERLBREW_ROOT>, you (and all other users
-who share the same C<$PERLBREW_ROOT> will have to run this again to make it affective.
+The installed perlbrew command is a standalone executable that can be run with
+system perl. The minimun system perl version requirement is 5.8.0, which should
+be good enough for most of the OSes these days.
+
+A packed version of C<patchperl> to C<~/perl5/perlbrew/bin>, which is required
+to build old perls.
+
+The directory C<~/perl5/perlbrew> will contain all install perl executables,
+libraries, documentations, lib, site_libs. In the documentation, that directory
+is referred as "perlbrew root". If you need to set it to somewhere else because,
+say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
+environment variable before running the installer:
+
+    export PERLBREW_ROOT=/opt/perl5
+    curl -kL http://xrl.us/perlbrewinstall | bash
+
+You may also install perlbrew from CPAN:
+
+    cpan App::perlbrew
+
+In this case, the perlbrew command is installed as C</usr/bin/perlbrew> or
+C</usr/localbin/perlbrew> or others, depending on the location of your system
+perl installation.
+
+Please make sure not to run this with one of the perls brewed with
+perlbrew. It's the best to turn perlbrew off before you run that, if you're
+upgrading.
+
+    perlbrew off
+    cpan App::perlbrew
+
+You should always use system cpan (like /usr/bin/cpan) to install
+C<App::perlbrew> because it will be installed under a system PATH like
+C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
+
+The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
+command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
+again.
 
 =head1 COMMANDS
 
@@ -3296,8 +3099,10 @@ Build and install the given version of perl.
 Version numbers usually look like "5.x.xx", or
 "perl-5.xx.x-RCx" for release candidates.
 
-The specified perl is downloaded from the CPAN website, unless mirror
-setting are present.
+The specified perl is downloaded from the offical CPAN website or from the
+mirror site configured before.
+
+To configure mirror site, invoke `mirror` command.
 
 =item B<install> [ perl-blead | blead ]
 
@@ -3356,15 +3161,22 @@ List the installed versions of perl.
 
 Usage: perlbrew available
 
-List the available versions of perl on CPAN.
+List the recently available versions of perl on CPAN.
+
+The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
+and is not the list of *all* perl versions ever releasesed in the past.
+
+NOTICE: This command might be gone in the future and becomes an option of 'list' command.
 
 =head1 COMMAND: OFF
 
 Usage: perlbrew off
 
-Temporarily disable perlbrew in the current shell.
+Temporarily disable perlbrew in the current shell. Effectively re-enables the
+default system Perl, whatever that is.
 
-Re-enables the default system Perl, whatever that is.
+This command works only if you add the statement of `source $PERLBREW_ROOT/etc/bashrc`
+in your shell initialization (bashrc / zshrc).
 
 =head1 COMMAND: SWITCH-OFF
 
@@ -3431,7 +3243,7 @@ Notice that the command is not executed in parallel.
 
 Usage: perlbrew env <name>
 
-Low-level command. Use this command to see the list of environment
+Low-level command. Invoke this command to see the list of environment
 variables that are set by C<perlbrew> itself for shell integration.
 
 The output is something similar to this (if your shell is bash/zsh):
@@ -3441,7 +3253,7 @@ The output is something similar to this (if your shell is bash/zsh):
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
     export PERLBREW_PERL=perl-5.14.1
 
-You can also ask for the proper variables for a specific perl version.
+tcsh / csh users shall seens lines of 'setenv' statements instead of `export`.
 
 =head1 COMMAND: SYMLINK-EXECUTABLES
 
@@ -3514,11 +3326,11 @@ The `lib` command is used to manipulate local::lib roots inside perl
 installations. Effectively it is similar to `perl
 -Mlocal::lib=/path/to/lib-name`, but a little bit more than just that.
 
-A lib name can be a short name, containing alphanumeric, like 'awesome', or
-a full name, prefixed with a perl installation name and a '@' sign, for
-example, 'perl-5.14.2@awesome'.
+A lib name can be a short name, containing alphanumeric, like 'awesome', or a
+full name, prefixed by a perl installation name and a '@' sign, for example,
+'perl-5.14.2@awesome'.
 
-Here are some a brief examples to use them:
+Here are some a brief examples to invoke the `lib` command:
 
     # Create libs by name
     perlbrew lib create nobita
@@ -3537,15 +3349,12 @@ Here are some a brief examples to use them:
     perlbrew lib delete nobita
     perlbrew lib delete perl-5.12.3@shizuka
 
-A "lib" is reference by it's name, which can be a short one consists of letters,
-or a fully-qualified one, prefixed with the perl installation name, and an `@`
-character in between. Short names are local to current perl. A lib name 'nobita'
-can refer to 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your
-current perl.
+Short lib names are local to current perl. A lib name 'nobita' can refer to
+'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your current perl.
 
-When invoking `use` or `switch` command to a lib, always use the long name for
-it might be ambigous. A simple rule: the name after `use` or `switch` should be
-in the output of `list`.
+When C<use>ing or C<switch>ing to a lib, always provide the long name. A simple
+rule: the argument to C<use> or C<siwtch> command should appear in the output of
+C<perlbrew list>.
 
 =head1 OPTIONS
 
@@ -3602,7 +3411,59 @@ pass through switches to the perl Configure script.
 By default, perlbrew builds and installs perls into
 C<$ENV{HOME}/perl5/perlbrew> directory. To use a different directory,
 set this environment variable in your C<bashrc> to the directory
-before running perlbrew.
+in your shell RC before sourcing perlbrew's RC.
+
+It is possible to share one perlbrew root with multilpe user account
+on the same machine. Therefore people do not have to install the same
+version of perl over an over. Let's say C</opt/perl5> is the directory
+we want to share. All users should be able append this snippet to their
+bashrc to make it effective:
+
+    export PERLBREW_ROOT=/opt/perl5
+    source ${PERLBREW_ROOT}/etc/bashrc
+
+After doing so, everone's PATH should include C</opt/perl5/bin> and
+C</opt/perl5/perls/${PERLBREW_PERL}/bin>. Each user can invoke C<perlbrew
+switch> and C<perlbrew use> to independently switch to different perl
+environment of their choice. However, only the user with write permission to
+C<$PERLBREW_ROOT> may install CPAN modules. This is both good and bad depending
+on the working convention of your team.
+
+If you wish to install CPAN modules only for yourself, you should use the C<lib>
+command to construct a perlsonal local::lib enviroment. local::lib enviroments
+are personal, and are not shared between different users. For more detail, read
+C<perlbrew help lib> and the documentation of L<local::lib>.
+
+If you want even a cooler module isolation and wish to install CPAN modules used
+for just one project, you should use L<carton> for this purpose.
+
+It is also possible to set this variable before installing perlbrew
+to make perlbrew install itself under the given PERLBREW_ROOT:
+
+    export PERLBREW_ROOT=/opt/perl5
+    curl -kL http://xrl.us/perlbrewinstall | bash
+
+After doing this, the perlbrew executable is installed as C</opt/perl5/bin/perlbrew>
+
+=item PERLBREW_HOME
+
+By default, perlbrew stores per-user setting to C<$ENV{HOME}/.perlbrew>
+directory. To use a different directory, set this environment variable
+in your shell RC before sourcing perlbrew's RC.
+
+In some cases, say, your home directory is on NFS and shared across multiple
+machines, you may wish to have several different perlbrew setting
+per-machine. To do so, you can use the C<PERLBREW_HOME> environment variable to
+tell perlbrew where to look for the initialization file. Here's a brief bashrc
+snippet for the given senario.
+
+    if [ "$(hostname)" == "machine-a" ]; then
+        export PERLBREW_HOME=~/.perlbrew-a
+    elif [ "$(hostname)" == "machine-b" ]; then
+        export PERLBREW_HOME=~/.perlbrew-b
+    fi
+
+    source ~/perl5/perlbrew/etc/bashrc
 
 =back
 

@@ -31,21 +31,59 @@ perlbrew - Perl Environment manager.
         version        Display version
         help           Read more detailed instructions
 
-    See `perlbrew help commands` for the full list of commands.
+    See `perlbrew help` for the full list of commands and more descriptions
 
     See `perlbrew help <command>` for the detail description for the command.
 
-=head1 INITIALIZATION
+=head1 INSTALLATION
 
-If you never run perlbrew before, or you do not have a C<~/.perlbrew> directory,
-you should perform the initialization process by running:
+It is the simpleist to use the perlbrew installer, just paste this statement to
+your termanl:
 
-    perlbrew init
+    curl -kL http://xrl.us/perlbrewinstall | bash
 
-This step needs to be done only once.
+After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
+should follow the instruction on screen to setup your C<.bashrc> or C<.cshrc> to
+put it in your PATH.
 
-If latter on you need to change C<$PERLBREW_ROOT>, you (and all other users
-who share the same C<$PERLBREW_ROOT> will have to run this again to make it affective.
+The installed perlbrew command is a standalone executable that can be run with
+system perl. The minimun system perl version requirement is 5.8.0, which should
+be good enough for most of the OSes these days.
+
+A packed version of C<patchperl> to C<~/perl5/perlbrew/bin>, which is required
+to build old perls.
+
+The directory C<~/perl5/perlbrew> will contain all install perl executables,
+libraries, documentations, lib, site_libs. In the documentation, that directory
+is referred as "perlbrew root". If you need to set it to somewhere else because,
+say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
+environment variable before running the installer:
+
+    export PERLBREW_ROOT=/opt/perl5
+    curl -kL http://xrl.us/perlbrewinstall | bash
+
+You may also install perlbrew from CPAN:
+
+    cpan App::perlbrew
+
+In this case, the perlbrew command is installed as C</usr/bin/perlbrew> or
+C</usr/localbin/perlbrew> or others, depending on the location of your system
+perl installation.
+
+Please make sure not to run this with one of the perls brewed with
+perlbrew. It's the best to turn perlbrew off before you run that, if you're
+upgrading.
+
+    perlbrew off
+    cpan App::perlbrew
+
+You should always use system cpan (like /usr/bin/cpan) to install
+C<App::perlbrew> because it will be installed under a system PATH like
+C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
+
+The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
+command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
+again.
 
 =head1 COMMANDS
 
@@ -94,8 +132,10 @@ Build and install the given version of perl.
 Version numbers usually look like "5.x.xx", or
 "perl-5.xx.x-RCx" for release candidates.
 
-The specified perl is downloaded from the CPAN website, unless mirror
-setting are present.
+The specified perl is downloaded from the offical CPAN website or from the
+mirror site configured before.
+
+To configure mirror site, invoke `mirror` command.
 
 =item B<install> [ perl-blead | blead ]
 
@@ -154,15 +194,22 @@ List the installed versions of perl.
 
 Usage: perlbrew available
 
-List the available versions of perl on CPAN.
+List the recently available versions of perl on CPAN.
+
+The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
+and is not the list of *all* perl versions ever releasesed in the past.
+
+NOTICE: This command might be gone in the future and becomes an option of 'list' command.
 
 =head1 COMMAND: OFF
 
 Usage: perlbrew off
 
-Temporarily disable perlbrew in the current shell.
+Temporarily disable perlbrew in the current shell. Effectively re-enables the
+default system Perl, whatever that is.
 
-Re-enables the default system Perl, whatever that is.
+This command works only if you add the statement of `source $PERLBREW_ROOT/etc/bashrc`
+in your shell initialization (bashrc / zshrc).
 
 =head1 COMMAND: SWITCH-OFF
 
@@ -229,7 +276,7 @@ Notice that the command is not executed in parallel.
 
 Usage: perlbrew env <name>
 
-Low-level command. Use this command to see the list of environment
+Low-level command. Invoke this command to see the list of environment
 variables that are set by C<perlbrew> itself for shell integration.
 
 The output is something similar to this (if your shell is bash/zsh):
@@ -239,7 +286,7 @@ The output is something similar to this (if your shell is bash/zsh):
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
     export PERLBREW_PERL=perl-5.14.1
 
-You can also ask for the proper variables for a specific perl version.
+tcsh / csh users shall seens lines of 'setenv' statements instead of `export`.
 
 =head1 COMMAND: SYMLINK-EXECUTABLES
 
@@ -312,11 +359,11 @@ The `lib` command is used to manipulate local::lib roots inside perl
 installations. Effectively it is similar to `perl
 -Mlocal::lib=/path/to/lib-name`, but a little bit more than just that.
 
-A lib name can be a short name, containing alphanumeric, like 'awesome', or
-a full name, prefixed with a perl installation name and a '@' sign, for
-example, 'perl-5.14.2@awesome'.
+A lib name can be a short name, containing alphanumeric, like 'awesome', or a
+full name, prefixed by a perl installation name and a '@' sign, for example,
+'perl-5.14.2@awesome'.
 
-Here are some a brief examples to use them:
+Here are some a brief examples to invoke the `lib` command:
 
     # Create libs by name
     perlbrew lib create nobita
@@ -335,15 +382,12 @@ Here are some a brief examples to use them:
     perlbrew lib delete nobita
     perlbrew lib delete perl-5.12.3@shizuka
 
-A "lib" is reference by it's name, which can be a short one consists of letters,
-or a fully-qualified one, prefixed with the perl installation name, and an `@`
-character in between. Short names are local to current perl. A lib name 'nobita'
-can refer to 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your
-current perl.
+Short lib names are local to current perl. A lib name 'nobita' can refer to
+'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your current perl.
 
-When invoking `use` or `switch` command to a lib, always use the long name for
-it might be ambigous. A simple rule: the name after `use` or `switch` should be
-in the output of `list`.
+When C<use>ing or C<switch>ing to a lib, always provide the long name. A simple
+rule: the argument to C<use> or C<siwtch> command should appear in the output of
+C<perlbrew list>.
 
 =head1 OPTIONS
 
@@ -400,7 +444,59 @@ pass through switches to the perl Configure script.
 By default, perlbrew builds and installs perls into
 C<$ENV{HOME}/perl5/perlbrew> directory. To use a different directory,
 set this environment variable in your C<bashrc> to the directory
-before running perlbrew.
+in your shell RC before sourcing perlbrew's RC.
+
+It is possible to share one perlbrew root with multilpe user account
+on the same machine. Therefore people do not have to install the same
+version of perl over an over. Let's say C</opt/perl5> is the directory
+we want to share. All users should be able append this snippet to their
+bashrc to make it effective:
+
+    export PERLBREW_ROOT=/opt/perl5
+    source ${PERLBREW_ROOT}/etc/bashrc
+
+After doing so, everone's PATH should include C</opt/perl5/bin> and
+C</opt/perl5/perls/${PERLBREW_PERL}/bin>. Each user can invoke C<perlbrew
+switch> and C<perlbrew use> to independently switch to different perl
+environment of their choice. However, only the user with write permission to
+C<$PERLBREW_ROOT> may install CPAN modules. This is both good and bad depending
+on the working convention of your team.
+
+If you wish to install CPAN modules only for yourself, you should use the C<lib>
+command to construct a perlsonal local::lib enviroment. local::lib enviroments
+are personal, and are not shared between different users. For more detail, read
+C<perlbrew help lib> and the documentation of L<local::lib>.
+
+If you want even a cooler module isolation and wish to install CPAN modules used
+for just one project, you should use L<carton> for this purpose.
+
+It is also possible to set this variable before installing perlbrew
+to make perlbrew install itself under the given PERLBREW_ROOT:
+
+    export PERLBREW_ROOT=/opt/perl5
+    curl -kL http://xrl.us/perlbrewinstall | bash
+
+After doing this, the perlbrew executable is installed as C</opt/perl5/bin/perlbrew>
+
+=item PERLBREW_HOME
+
+By default, perlbrew stores per-user setting to C<$ENV{HOME}/.perlbrew>
+directory. To use a different directory, set this environment variable
+in your shell RC before sourcing perlbrew's RC.
+
+In some cases, say, your home directory is on NFS and shared across multiple
+machines, you may wish to have several different perlbrew setting
+per-machine. To do so, you can use the C<PERLBREW_HOME> environment variable to
+tell perlbrew where to look for the initialization file. Here's a brief bashrc
+snippet for the given senario.
+
+    if [ "$(hostname)" == "machine-a" ]; then
+        export PERLBREW_HOME=~/.perlbrew-a
+    elif [ "$(hostname)" == "machine-b" ]; then
+        export PERLBREW_HOME=~/.perlbrew-b
+    fi
+
+    source ~/perl5/perlbrew/etc/bashrc
 
 =back
 

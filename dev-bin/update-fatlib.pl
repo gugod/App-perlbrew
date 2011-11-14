@@ -7,7 +7,6 @@ use Cwd;
 my $modules = [ split /\s+/, <<MODULES ];
 local/lib.pm
 File/Path/Tiny.pm
-Text/Levenshtein.pm
 MODULES
 
 my $packer = App::FatPacker->new;
