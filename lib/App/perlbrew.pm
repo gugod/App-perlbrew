@@ -980,7 +980,7 @@ sub local_libs {
     my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <$PERLBREW_HOME/libs/*>;
 
     if ($perl_name) {
-        @libs = grep { /^$perl_name/ } @libs;
+        @libs = grep { /^$perl_name\@/ } @libs;
     }
 
     my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
@@ -1581,7 +1581,7 @@ sub run_command_lib_list {
     return unless -d $dir;
 
     opendir my $dh, $dir or die "open $dir failed: $!";
-    my @libs = grep { !/^\./ } readdir($dh);
+    my @libs = grep { !/^\./ && /\@/ } readdir($dh);
 
     for (@libs) {
         print $current eq $_ ? "* " : "  ";
