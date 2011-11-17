@@ -987,7 +987,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <$PERLBREW_HOME/libs/*>;
   
       if ($perl_name) {
-          @libs = grep { /^$perl_name/ } @libs;
+          @libs = grep { /^$perl_name\@/ } @libs;
       }
   
       my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
@@ -1588,7 +1588,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       return unless -d $dir;
   
       opendir my $dh, $dir or die "open $dir failed: $!";
-      my @libs = grep { !/^\./ } readdir($dh);
+      my @libs = grep { !/^\./ && /\@/ } readdir($dh);
   
       for (@libs) {
           print $current eq $_ ? "* " : "  ";
