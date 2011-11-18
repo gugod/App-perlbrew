@@ -38,7 +38,7 @@ chmod +x $LOCALINSTALLER
 ./$LOCALINSTALLER install || clean_exit 1
 
 echo "## Installing patchperl"
-./$LOCALINSTALLER -q install-patchperl || clean_exit 1
+./$LOCALINSTALLER -f -q install-patchperl || clean_exit 1
 
 echo
 echo "## Done."
