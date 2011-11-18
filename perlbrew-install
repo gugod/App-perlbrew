@@ -12,18 +12,20 @@ fi
 
 cd $TMPDIR || exit 1
 
+LOCALINSTALLER="perlbrew-$$"
+
 echo
 if type curl >/dev/null 2>&1; then
-  PERLBREWDOWNLOAD="curl -k -f -sS -Lo perlbrew $PERLBREWURL"
+  PERLBREWDOWNLOAD="curl -k -f -sS -Lo $LOCALINSTALLER $PERLBREWURL"
 elif type wget >/dev/null 2>&1; then
-  PERLBREWDOWNLOAD="wget --no-check-certificate -nv -O perlbrew $PERLBREWURL"
+  PERLBREWDOWNLOAD="wget --no-check-certificate -nv -O $LOCALINSTALLER $PERLBREWURL"
 else
   echo "Need wget or curl to use $0"
   exit 1
 fi
 
 clean_exit () {
-  [ -f "perlbrew" ] && rm perlbrew
+  [ -f $LOCALINSTALLER ] && rm $LOCALINSTALLER
   exit $1
 }
 
@@ -32,13 +34,13 @@ $PERLBREWDOWNLOAD || clean_exit 1
 
 echo
 echo "## Installing perlbrew"
-chmod +x perlbrew
-./perlbrew install || clean_exit 1
+chmod +x $LOCALINSTALLER
+./$LOCALINSTALLER install || clean_exit 1
 
 echo "## Installing patchperl"
-./perlbrew -q install-patchperl || clean_exit 1
+./$LOCALINSTALLER -f -q install-patchperl || clean_exit 1
 
 echo
 echo "## Done."
-rm ./perlbrew
+rm ./$LOCALINSTALLER
 
