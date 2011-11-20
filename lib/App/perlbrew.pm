@@ -131,7 +131,7 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
-export PERLBREW="command perlbrew compgen"
+export PERLBREW="command perlbrew"
 _perlbrew_compgen()
 {
     COMPREPLY=( $($PERLBREW compgen $COMP_CWORD ${COMP_WORDS[*]}) )
