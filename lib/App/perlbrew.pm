@@ -131,6 +131,12 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
+export PERLBREW="command perlbrew compgen"
+_perlbrew_compgen()
+{
+    COMPREPLY=( $($PERLBREW compgen $COMP_CWORD ${COMP_WORDS[*]}) )
+}
+complete -F _perlbrew_compgen perlbrew
 RC
 
 }
@@ -476,6 +482,58 @@ sub run_command_help {
     }
     else {
         Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
+    }
+}
+
+# introspection for compgen
+my %comp_installed = (
+    use    => 1,
+    switch => 1,
+);
+sub run_command_compgen {
+    my($self, $cur, @args) = @_;
+
+    # do `tail -f bashcomp.log` for debugging
+    if($self->env('PERLBREW_DEBUG_COMPLETION')) {
+        open my $log, '>>', 'bashcomp.log';
+        print $log "[$$] $cur of [@args]\n";
+    }
+    my $subcommand           = $args[1];
+    my $subcommand_completed = ( $cur >= 2 );
+
+    if(!$subcommand_completed) {
+        $self->_compgen($subcommand, $self->commands);
+    }
+    else { # complete args of a subcommand
+        if($comp_installed{$subcommand}) {
+            if($cur <= 2) {
+                my $part;
+                if(defined($part = $args[2])) {
+                    $part = qr/ \Q$part\E /xms;
+                }
+                $self->_compgen($part,
+                    map{ $_->{name} } $self->installed_perls());
+            }
+        }
+        elsif($subcommand eq 'help') {
+            if($cur <= 2) {
+                $self->_compgen($args[2], $self->commands());
+            }
+        }
+        else {
+            # TODO
+        }
+    }
+}
+
+sub _compgen {
+    my($self, $part, @reply) = @_;
+    if(defined $part) {
+        $part = qr/\A \Q$part\E /xms if ref($part) ne ref(qr//);
+        @reply = grep { /$part/ } @reply;
+    }
+    foreach my $word(@reply) {
+        print $word, "\n";
     }
 }
 
