@@ -498,8 +498,11 @@ my %comp_installed = (
     use    => 1,
     switch => 1,
 );
+
 sub run_command_compgen {
     my($self, $cur, @args) = @_;
+
+    $cur = 0 unless defined($cur);
 
     # do `tail -f bashcomp.log` for debugging
     if($self->env('PERLBREW_DEBUG_COMPLETION')) {
