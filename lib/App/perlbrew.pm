@@ -1764,7 +1764,7 @@ those are installed inside your HOME too. It provides multiple isolated perl
 environments, and a mechanism for you to switch between them.
 
 For the documentation of perlbrew usage see L<perlbrew> command
-on CPAN, or by running C<perlbew help>. The following documentation
+on CPAN, or by running C<perlbrew help>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 
