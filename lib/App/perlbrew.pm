@@ -648,7 +648,7 @@ INSTRUCTION
 
 }
 
-sub run_command_install_perlbrew {
+sub run_command_self_install {
     my $self = shift;
     require File::Copy;
 
@@ -667,21 +667,6 @@ sub run_command_install_perlbrew {
     mkpath("@{[ $self->root ]}/bin");
     File::Copy::copy($executable, $target);
     chmod(0755, $target);
-
-    http_get(
-        'https://raw.github.com/gist/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc',
-        undef,
-        sub {
-            my ( $body ) = @_;
-
-            my $patchperl_path = catfile($self->root, 'bin', 'patchperl');
-
-            open my $fh, '>', $patchperl_path or die "Couldn't write patchperl: $!";
-            print $fh $body;
-            close $fh;
-            chmod 0755, $patchperl_path;
-        }
-    );
 
     my $path = $self->path_with_tilde($target);
 
@@ -866,7 +851,7 @@ sub run_command_install {
     $self->{dist_name} = $dist;
 
     unless ($dist) {
-        $self->run_command_install_perlbrew();
+        $self->run_command_self_install();
         return
     }
 

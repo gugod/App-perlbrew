@@ -342,6 +342,22 @@ Usage: perlbrew self-upgrade
 
 This command upgrades Perlbrew to its latest version.
 
+=head1 COMMAND: SELF-INSTALL
+
+Usage: perlbrew self-install
+
+NOTICE: You should not run this command in your daily routine.
+
+This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended
+used by the perlbrew installer. However, you may manually do the following to
+re-install only the C<perlbrew> executable:
+
+    curl -kLO http://xrl.us/perlbrew
+    perl ./perlbrew install
+
+It is slightly different from running the perlbrew installer because
+C<patchperl> is not installed in this case.
+
 =head1 COMMAND: VERSION
 
 Usage: perlbrew version
