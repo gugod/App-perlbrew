@@ -23,7 +23,7 @@ perlbrew - Perl Environment manager.
         available      List perls available to install
         list           List installed perls
         use            Use the specified perl in current shell
-        off            Turn off perlbrew in current shel
+        off            Turn off perlbrew in current shell
         switch         Permanently use the specified perl as default
         switch-off     Permanently turn off perl
         lib            Manage local::lib directories.
@@ -99,7 +99,7 @@ perlbrew commands:
 
     list           List perl installations
     use            Use the specified perl in current shell
-    off            Turn off perlbrew in current shel
+    off            Turn off perlbrew in current shell
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
 
