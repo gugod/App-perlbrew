@@ -137,6 +137,15 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       hash -r
       return ${exit_status:-0}
   }
+  RC
+  
+  }
+  
+  sub BASH_COMPLETION_CONTENT() {
+      return <<'COMPLETION';
+  if [[ -n ${ZSH_VERSION-} ]]; then
+      autoload -U +X bashcompinit && bashcompinit
+  fi
   
   export PERLBREW="command perlbrew"
   _perlbrew_compgen()
@@ -144,8 +153,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       COMPREPLY=( $($PERLBREW compgen $COMP_CWORD ${COMP_WORDS[*]}) )
   }
   complete -F _perlbrew_compgen perlbrew
-  RC
-  
+  COMPLETION
   }
   
   sub CSHRC_CONTENT {
@@ -497,8 +505,11 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       use    => 1,
       switch => 1,
   );
+  
   sub run_command_compgen {
       my($self, $cur, @args) = @_;
+  
+      $cur = 0 unless defined($cur);
   
       # do `tail -f bashcomp.log` for debugging
       if($self->env('PERLBREW_DEBUG_COMPLETION')) {
@@ -600,6 +611,10 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       print BASHRC BASHRC_CONTENT;
       close BASHRC;
   
+      open BASH_COMPLETION, "> @{[ $self->root ]}/etc/perlbrew-completion.bash";
+      print BASH_COMPLETION BASH_COMPLETION_CONTENT;
+      close BASH_COMPLETION;
+  
       open CSHRC, "> @{[ $self->root ]}/etc/cshrc";
       print CSHRC CSHRC_CONTENT;
       close CSHRC;
@@ -643,7 +658,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   
   }
   
-  sub run_command_install_perlbrew {
+  sub run_command_self_install {
       my $self = shift;
       require File::Copy;
   
@@ -662,21 +677,6 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       mkpath("@{[ $self->root ]}/bin");
       File::Copy::copy($executable, $target);
       chmod(0755, $target);
-  
-      http_get(
-          'https://raw.github.com/gist/962406/5aa30dd2ec33cd9cea42ed2125154dcc1406edbc',
-          undef,
-          sub {
-              my ( $body ) = @_;
-  
-              my $patchperl_path = catfile($self->root, 'bin', 'patchperl');
-  
-              open my $fh, '>', $patchperl_path or die "Couldn't write patchperl: $!";
-              print $fh $body;
-              close $fh;
-              chmod 0755, $patchperl_path;
-          }
-      );
   
       my $path = $self->path_with_tilde($target);
   
@@ -861,7 +861,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       $self->{dist_name} = $dist;
   
       unless ($dist) {
-          $self->run_command_install_perlbrew();
+          $self->run_command_self_install();
           return
       }
   
@@ -1771,7 +1771,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   environments, and a mechanism for you to switch between them.
   
   For the documentation of perlbrew usage see L<perlbrew> command
-  on CPAN, or by running C<perlbew help>. The following documentation
+  on CPAN, or by running C<perlbrew help>. The following documentation
   features the API of C<App::perlbrew> module, and may not be remotely
   close to what your want to read.
   
@@ -3063,7 +3063,7 @@ perlbrew - Perl Environment manager.
 =head1 INSTALLATION
 
 It is the simpleist to use the perlbrew installer, just paste this statement to
-your termanl:
+your terminal:
 
     curl -kL http://xrl.us/perlbrewinstall | bash
 
@@ -3366,6 +3366,22 @@ For more rationale about the existence of this command, read
 Usage: perlbrew self-upgrade
 
 This command upgrades Perlbrew to its latest version.
+
+=head1 COMMAND: SELF-INSTALL
+
+Usage: perlbrew self-install
+
+NOTICE: You should not run this command in your daily routine.
+
+This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended
+used by the perlbrew installer. However, you may manually do the following to
+re-install only the C<perlbrew> executable:
+
+    curl -kLO http://xrl.us/perlbrew
+    perl ./perlbrew install
+
+It is slightly different from running the perlbrew installer because
+C<patchperl> is not installed in this case.
 
 =head1 COMMAND: VERSION
 
