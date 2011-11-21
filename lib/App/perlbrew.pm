@@ -130,6 +130,15 @@ perlbrew () {
     hash -r
     return ${exit_status:-0}
 }
+RC
+
+}
+
+sub BASH_COMPLETION_CONTENT() {
+    return <<'COMPLETION';
+if [[ -n ${ZSH_VERSION-} ]]; then
+    autoload -U +X bashcompinit && bashcompinit
+fi
 
 export PERLBREW="command perlbrew"
 _perlbrew_compgen()
@@ -137,8 +146,7 @@ _perlbrew_compgen()
     COMPREPLY=( $($PERLBREW compgen $COMP_CWORD ${COMP_WORDS[*]}) )
 }
 complete -F _perlbrew_compgen perlbrew
-RC
-
+COMPLETION
 }
 
 sub CSHRC_CONTENT {
@@ -592,6 +600,10 @@ sub run_command_init {
     open BASHRC, "> @{[ $self->root ]}/etc/bashrc";
     print BASHRC BASHRC_CONTENT;
     close BASHRC;
+
+    open BASH_COMPLETION, "> @{[ $self->root ]}/etc/perlbrew-completion.bash";
+    print BASH_COMPLETION BASH_COMPLETION_CONTENT;
+    close BASH_COMPLETION;
 
     open CSHRC, "> @{[ $self->root ]}/etc/cshrc";
     print CSHRC CSHRC_CONTENT;
@@ -1764,7 +1776,7 @@ those are installed inside your HOME too. It provides multiple isolated perl
 environments, and a mechanism for you to switch between them.
 
 For the documentation of perlbrew usage see L<perlbrew> command
-on CPAN, or by running C<perlbew help>. The following documentation
+on CPAN, or by running C<perlbrew help>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 

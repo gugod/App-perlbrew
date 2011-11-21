@@ -38,7 +38,7 @@ perlbrew - Perl Environment manager.
 =head1 INSTALLATION
 
 It is the simpleist to use the perlbrew installer, just paste this statement to
-your termanl:
+your terminal:
 
     curl -kL http://xrl.us/perlbrewinstall | bash
 
