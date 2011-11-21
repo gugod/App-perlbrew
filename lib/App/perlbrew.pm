@@ -136,6 +136,10 @@ RC
 
 sub BASH_COMPLETION_CONTENT() {
     return <<'COMPLETION';
+if [[ -n ${ZSH_VERSION-} ]]; then
+    autoload -U +X bashcompinit && bashcompinit
+fi
+
 export PERLBREW="command perlbrew"
 _perlbrew_compgen()
 {
