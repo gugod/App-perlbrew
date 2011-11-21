@@ -130,15 +130,19 @@ perlbrew () {
     hash -r
     return ${exit_status:-0}
 }
+RC
 
+}
+
+sub BASH_COMPLETION_CONTENT() {
+    return <<'COMPLETION';
 export PERLBREW="command perlbrew"
 _perlbrew_compgen()
 {
     COMPREPLY=( $($PERLBREW compgen $COMP_CWORD ${COMP_WORDS[*]}) )
 }
 complete -F _perlbrew_compgen perlbrew
-RC
-
+COMPLETION
 }
 
 sub CSHRC_CONTENT {
@@ -592,6 +596,10 @@ sub run_command_init {
     open BASHRC, "> @{[ $self->root ]}/etc/bashrc";
     print BASHRC BASHRC_CONTENT;
     close BASHRC;
+
+    open BASH_COMPLETION, "> @{[ $self->root ]}/etc/perlbrew-completion.bash";
+    print BASH_COMPLETION BASH_COMPLETION_CONTENT;
+    close BASH_COMPLETION;
 
     open CSHRC, "> @{[ $self->root ]}/etc/cshrc";
     print CSHRC CSHRC_CONTENT;
