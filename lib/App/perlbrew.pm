@@ -595,9 +595,8 @@ sub run_command_init {
     my $HOME = $self->env('HOME');
 
     mkpath($_) for (
-        "$PERLBREW_HOME",
-        "@{[ $self->root ]}/perls", "@{[ $self->root ]}/dists", "@{[ $self->root ]}/build", "@{[ $self->root ]}/etc",
-        "@{[ $self->root ]}/bin"
+        "@{[ $self->root ]}/perls", "@{[ $self->root ]}/dists", "@{[ $self->root ]}/build",
+        "@{[ $self->root ]}/etc", "@{[ $self->root ]}/bin"
     );
 
     open BASHRC, "> @{[ $self->root ]}/etc/bashrc";
@@ -618,21 +617,22 @@ sub run_command_init {
         $self->env("SHELL") =~ m/(t?csh)/;
         $yourshrc = $1 . "rc";
     }
-    else {
-        $shrc = $yourshrc = 'bashrc';
+    elsif ($self->env("SHELL") =~ m/zsh$/) {
+        $shrc = "bashrc";
+        $yourshrc = 'zshenv';
     }
-
-    $self->run_command_symlink_executables;
+    else {
+        $shrc = "bashrc";
+        $yourshrc = "bash_profile";
+    }
 
     my $root_dir = $self->path_with_tilde($self->root);
     my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
 
     print <<INSTRUCTION;
-Perlbrew environment initiated, required directories are created under
+Perlbrew environment initiated under $root_dir
 
-    $root_dir
-
-Paste the following line(s) to the end of your ~/.${yourshrc} and start a
+Append the following piece of code to the end of your ~/.${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
 INSTRUCTION
@@ -646,7 +646,8 @@ INSTRUCTION
 
 For further instructions, simply run `perlbrew` to see the help message.
 
-Enjoy perlbrew at \$HOME!!
+Happy brewing!
+
 INSTRUCTION
 
 }
