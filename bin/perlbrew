@@ -451,14 +451,14 @@ Here are some a brief examples to invoke the `lib` command:
 
     perlbrew list     # See the list of use/switch targets.
 
-    # Activate lib in current shell.
+    # Activate a lib in current shell.
     perlbrew use perl-5.12.3@nobita
     perlbrew use perl-5.14.2@nobita
 
-    # Activate lib in as default.
+    # Activate a lib as default.
     perlbrew switch perl-5.14.2@nobita
 
-    # Clean the lib
+    # Delete the lib
     perlbrew lib delete nobita
     perlbrew lib delete perl-5.12.3@shizuka
 
