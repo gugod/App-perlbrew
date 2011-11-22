@@ -471,14 +471,35 @@ C<perlbrew list>.
 
 =head1 UPGRADE NOTES
 
-If you upgraded C<perlbrew> from version 0.16 or older, you should do
-this cleanup your setup. Failure to do so might make the C<use>
-command to fail.
+If you plan to upgrade C<perlbrew> from version 0.16 or order to a recent
+version, you should do these steps to adjust your perl installations:
 
-Note the version of perl currently selected with C<perlbrew switch>.
-Then turn C<perlbrew off>, and switched back again with C<perlbrew
-switch previous-perl-version>.
+    1. remove $PERLBREW_ROOT/perls/current if it exists
+    2. remove symlinks under $PERLBREW_ROOT/perls/bin
+    3. run C<perlbrew symlink-executables>
+    4. run C<perlbrew init>
+    5. run C<perlbrew switch $something> to set your default perl.
 
+Or simply run these statements to do so (you might need to change the value of PERLBREW_ROOT):
+
+    export PERLBREW_ROOT=${HOME}/perl5/perlbrew
+    rm -f $PERLBREW_ROOT/perls/current
+    rm -f `find $PERLBREW_ROOT/perls/bin -type l`
+    perlbrew symlink-executables
+    perlbrew init
+    perlbrew switch perl-5.14.2 # or other ones.
+
+Finally, you should add this line to the end of your C<~/.bash_profile> or
+C<~/.zshenv> file:
+
+    source "$HOME/perl5/perlbrew/etc/bashrc"
+
+Or if you have differnt PERLBREW_ROOT at, say, C</opt/perl5>, add:
+
+    export PERLBREW_ROOT=/opt/perl5
+    source "$PERLBREW_ROOT/etc/bashrc"
+
+After doing that, you will be good to go.
 
 =head1 SEE ALSO
 
