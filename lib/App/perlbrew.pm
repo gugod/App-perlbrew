@@ -31,9 +31,24 @@ sub root {
     return $self->{root} || $PERLBREW_ROOT;
 }
 
+my $current;
+
 sub current_perl {
     my ($self) = @_;
-    return $self->env('PERLBREW_PERL')  || ''
+    return $current if defined($current);
+
+    # return $self->env('PERLBREW_PERL')  || '';
+
+    if ( -f "$PERLBREW_HOME/current" ) {
+        open my $fh, "<", "$PERLBREW_HOME/current";
+        $current = <$fh>;
+        close $fh;
+    }
+    else {
+        $current = "";
+    }
+
+    return $current;
 }
 
 sub BASHRC_CONTENT() {
