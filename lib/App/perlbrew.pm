@@ -1556,6 +1556,17 @@ USAGE
     exec 'rm', '-rf', $dir;
 }
 
+sub run_command_run {
+    my $self = shift;
+    my @args = @{$self->{original_argv}};
+
+    shift @args; #=> "run"
+
+    my $perl_path = join "/", $self->root, "perls", $self->current_perl, "bin";
+    $ENV{PATH} = $perl_path . ":" . $ENV{PATH};
+    exec @args;
+}
+
 sub run_command_exec {
     my $self = shift;
     my @args = @{$self->{original_argv}};
@@ -1566,7 +1577,6 @@ sub run_command_exec {
     }
 
     shift @args;
-
 
     for my $i ( $self->installed_perls ) {
         next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
