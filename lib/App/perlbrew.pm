@@ -31,24 +31,19 @@ sub root {
     return $self->{root} || $PERLBREW_ROOT;
 }
 
-my $current;
 
 sub current_perl {
     my ($self) = @_;
-    return $current if defined($current);
 
-    # return $self->env('PERLBREW_PERL')  || '';
+    my $v = "";
+    my $x = catfile($PERLBREW_HOME, "current");
 
-    if ( -f "$PERLBREW_HOME/current" ) {
-        open my $fh, "<", "$PERLBREW_HOME/current";
-        $current = <$fh>;
-        close $fh;
-    }
-    else {
-        $current = "";
+    if ( -f $x ) {
+        open my $fh, "<", $x;
+        $v = <$fh>;
     }
 
-    return $current;
+    return $v;
 }
 
 sub BASHRC_CONTENT() {
