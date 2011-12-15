@@ -31,12 +31,11 @@ sub root {
     return $self->{root} || $PERLBREW_ROOT;
 }
 
-
 sub current_perl {
     my ($self) = @_;
 
     my $v = "";
-    my $x = catfile($PERLBREW_HOME, "current");
+    my $x = catfile($PERLBREW_HOME, "version");
 
     if ( -f $x ) {
         open my $fh, "<", $x;

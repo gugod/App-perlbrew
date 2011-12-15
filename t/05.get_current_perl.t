@@ -34,7 +34,7 @@ subtest "Current perl is decided from environment variable PERLBREW_PERL" => sub
     }
 };
 
-my $current = file($App::perlbrew::PERLBREW_HOME, "current");
+my $current = file($App::perlbrew::PERLBREW_HOME, "version");
 
 ok !-f $current;
 is $app->current_perl, "";
