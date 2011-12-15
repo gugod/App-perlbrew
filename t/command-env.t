@@ -17,6 +17,7 @@ use Test::Output;
 use Config;
 
 mock_perlbrew_install("perl-5.14.1");
+mock_perlbrew_lib_create('perl-5.14.1@nobita');
 
 describe "env command," => sub {
     before each => sub {

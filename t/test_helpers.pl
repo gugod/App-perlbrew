@@ -54,4 +54,9 @@ sub mock_perlbrew_install {
     App::perlbrew->new(install => $name, @args)->run();
 }
 
+sub mock_perlbrew_lib_create {
+    my $name = shift;
+    App::perlbrew::mkpath(dir($App::perlbrew::PERLBREW_HOME, "libs", $name));
+}
+
 1;

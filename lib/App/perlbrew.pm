@@ -441,17 +441,7 @@ sub run_command {
         }
     }
 
-    # Assume 5.12.3 means perl-5.12.3, for example.
-    if ($x =~ /\A(?:switch|use|env)\Z/ and my $name = shift @args) {
-        my $fullname = $self->resolve_installation_name($name);
-        if ($fullname) {
-            unshift @args, $fullname;
-        }
-        else {
-            die "Unknown installation name: $name\n";
-        }
-    }
-    elsif ($x eq 'install') {
+    if ($x eq 'install') {
         # prepend "perl-" to version number, but only if there is an argument
         $args[0] =~ s/\A((?:\d+\.)*\d+)\Z/perl-$1/
             if @args;
@@ -1088,8 +1078,7 @@ sub perlbrew_env {
     );
 
     if ($name) {
-        my ($perl_name, $lib_name) = split("@", $name);
-        $perl_name = $name unless $lib_name;
+        my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
         if(-d "@{[ $self->root ]}/perls/$perl_name/bin") {
             $env{PERLBREW_PERL} = $perl_name;
@@ -1099,18 +1088,20 @@ sub perlbrew_env {
 
         if ($lib_name) {
             require local::lib;
-            my $base = "$PERLBREW_HOME/libs/$name";
+            my $base = "$PERLBREW_HOME/libs/${perl_name}\@${lib_name}";
 
-            delete $ENV{PERL_LOCAL_LIB_ROOT};
-            my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
+            if (-d $base) {
+                delete $ENV{PERL_LOCAL_LIB_ROOT};
+                my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
 
-            $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
-            $env{PERLBREW_MANPATH} = "$base/man:" . $env{PERLBREW_MANPATH};
-            $env{PERLBREW_LIB}  = $lib_name;
-            $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
-            $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
-            $env{PERL5LIB}      = $lib_env{PERL5LIB};
-            $env{PERL_LOCAL_LIB_ROOT} = $lib_env{PERL_LOCAL_LIB_ROOT};
+                $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
+                $env{PERLBREW_MANPATH} = "$base/man:" . $env{PERLBREW_MANPATH};
+                $env{PERLBREW_LIB}  = $lib_name;
+                $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
+                $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
+                $env{PERL5LIB}      = $lib_env{PERL5LIB};
+                $env{PERL_LOCAL_LIB_ROOT} = $lib_env{PERL_LOCAL_LIB_ROOT};
+            }
         }
         else {
             if ($self->env("PERLBREW_LIB")) {
@@ -1486,7 +1477,7 @@ sub run_command_exec {
 
         local @ENV{ keys %env } = values %env;
         local $ENV{PATH} = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
-        local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH});
+        local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
 
         print "$i->{name}\n==========\n";
         system @args;
