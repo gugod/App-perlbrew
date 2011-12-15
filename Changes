@@ -1,4 +1,4 @@
-NEXT:
+0.34:
 - Fix: remove duplicated items from the output of `perlbrew list`.
 - New Command: self-install.
   - This is actually renamed from an undocumented command `install-perlbrew`
