@@ -94,7 +94,7 @@ You may also install perlbrew from CPAN:
     cpan App::perlbrew
 
 In this case, the perlbrew command is installed as C</usr/bin/perlbrew> or
-C</usr/localbin/perlbrew> or others, depending on the location of your system
+C</usr/local/bin/perlbrew> or others, depending on the location of your system
 perl installation.
 
 Please make sure not to run this with one of the perls brewed with
