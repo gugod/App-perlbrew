@@ -6,6 +6,7 @@ NEXT:
 - Provide aditional bash completion control helper commands.
 - Documentation fixes / typo corrections.
 - alter MANPATHs, see GH #173
+- Allow the representation like '@lib' te mean "a lib name under current perl.". See GH #153
 
 0.33:
 - Remove Text::Levenshtein from the standalone executable.
