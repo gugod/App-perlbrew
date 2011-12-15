@@ -66,6 +66,13 @@ __perlbrew_set_path () {
     fi
 
     export PATH="$PERLBREW_PATH:$PATH_WITHOUT_PERLBREW"
+
+    export MANPATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{MANPATH};')"
+    if [ -n "$PERLBREW_MANPATH" ]; then
+        export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
+    else
+        export MANPATH="$MANPATH_WITHOUT_PERLBREW"
+    fi
 }
 __perlbrew_set_path
 
@@ -172,6 +179,13 @@ endif
 
 setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
 setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+
+setenv MANPATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{MANPATH};'`
+if ( $?PERLBREW_MANPATH == 1 ) then
+    setenv MANPATH ${PERLBREW_MANPATH}:${MANPATH_WITHOUT_PERLBREW}
+else
+    setenv MANPATH ${MANPATH_WITHOUT_PERLBREW}
+endif
 CSHRC
 }
 
@@ -1070,6 +1084,7 @@ sub perlbrew_env {
     my %env = (
         PERLBREW_VERSION => $VERSION,
         PERLBREW_PATH => "@{[ $self->root ]}/bin",
+        PERLBREW_MANPATH => "",
         PERLBREW_ROOT => $self->root
     );
 
@@ -1080,6 +1095,7 @@ sub perlbrew_env {
         if(-d "@{[ $self->root ]}/perls/$perl_name/bin") {
             $env{PERLBREW_PERL} = $perl_name;
             $env{PERLBREW_PATH} .= ":@{[ $self->root ]}/perls/$perl_name/bin";
+            $env{PERLBREW_MANPATH} = "@{[ $self->root ]}/perls/$perl_name/man";
         }
 
         if ($lib_name) {
@@ -1090,6 +1106,7 @@ sub perlbrew_env {
             my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
 
             $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
+            $env{PERLBREW_MANPATH} = "$base/man:" . $env{PERLBREW_MANPATH};
             $env{PERLBREW_LIB}  = $lib_name;
             $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
             $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
@@ -1151,6 +1168,7 @@ sub run_command_use {
         my $root = $self->root;
         # The user does not source bashrc/csh in their shell initialization.
         $env{PATH} = $env{PERLBREW_PATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
+        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{MANPATH};
     }
 
     my $command = "env ";
@@ -1467,6 +1485,7 @@ sub run_command_exec {
 
         local @ENV{ keys %env } = values %env;
         local $ENV{PATH} = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
+        local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH});
 
         print "$i->{name}\n==========\n";
         system @args;
@@ -1673,7 +1692,7 @@ sub config {
 }
 
 sub config_file {
-    my ($self) = @_; 
+    my ($self) = @_;
     catfile( $self->root, 'Config.pm' );
 }
 
