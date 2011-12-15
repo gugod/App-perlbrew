@@ -1,3 +1,13 @@
+0.34:
+- Fix: remove duplicated items from the output of `perlbrew list`.
+- New Command: self-install.
+  - This is actually renamed from an undocumented command `install-perlbrew`
+  - Plus it gets documented.
+- Provide aditional bash completion control helper commands.
+- Documentation fixes / typo corrections.
+- alter MANPATHs, see GH #173
+- Allow the representation like '@lib' te mean "a lib name under current perl.". See GH #153
+
 0.33:
 - Remove Text::Levenshtein from the standalone executable.
 - Rearrange documentation so all perlbrew command usage document can be found in `perldoc perlbrew`
