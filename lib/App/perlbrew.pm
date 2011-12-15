@@ -1673,7 +1673,7 @@ sub config {
 }
 
 sub config_file {
-    my ($self) = @_; 
+    my ($self) = @_;
     catfile( $self->root, 'Config.pm' );
 }
 
