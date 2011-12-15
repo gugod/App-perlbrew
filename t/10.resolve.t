@@ -14,6 +14,11 @@ mock_perlbrew_install("perl-5.14.0");
 mock_perlbrew_install("perl-5.8.9",  "--as" => "5.8.9");
 mock_perlbrew_install("perl-5.14.0", "--as" => "perl-shiny", "perl-5.14.0");
 
+{
+    no warnings 'redefine';
+    sub App::perlbrew::current_perl { "perl-5.14.0" }
+}
+
 ## spec
 
 describe "App::perlbrew->resolve_installation_name" => sub {
@@ -43,6 +48,20 @@ describe "App::perlbrew->resolve_installation_name" => sub {
 
     it "returns undef if no proper installation can be found", sub {
         is $app->resolve_installation_name("nihao"), undef;
+    };
+
+    describe 'with lib names' => sub {
+        it 'returns both perl version and libnames' => sub {
+            my ($v, $l) = $app->resolve_installation_name('perl-5.14.0@soya');
+            is $v, "perl-5.14.0";
+            is $l, "soya";
+        };
+
+        it 'returns current perl version when only a libname is given' => sub {
+            my ($v, $l) = $app->resolve_installation_name('@soya');
+            is $v, $app->current_perl;
+            is $l, "soya";
+        };
     };
 };
 

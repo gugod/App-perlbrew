@@ -66,7 +66,6 @@ __perlbrew_set_path () {
     fi
 
     export PATH="$PERLBREW_PATH:$PATH_WITHOUT_PERLBREW"
-
     export MANPATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{MANPATH};')"
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
@@ -1675,15 +1674,18 @@ sub resolve_installation_name {
 
     my ($perl_name, $lib_name) = split('@', $name);
     $perl_name = $name unless $lib_name;
+    $perl_name ||= $self->current_perl;
 
-    if ( $self->is_installed($perl_name) ) {
-        return $name;
-    }
-    elsif ($self->is_installed("perl-${perl_name}")) {
-        return "perl-${name}";
+    if ( !$self->is_installed($perl_name) ) {
+        if ($self->is_installed("perl-${perl_name}") ) {
+            $perl_name = "perl-${perl_name}";
+        }
+        else {
+            return undef;
+        }
     }
 
-    return undef;
+    return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
 
 
