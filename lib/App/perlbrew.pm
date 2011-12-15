@@ -1278,16 +1278,18 @@ sub run_command_switch {
 
     my $vers = $dist;
 
-    die "${dist} is not installed\n" unless -d catdir($self->root, "perls", $dist);
+    $dist =~ s/@.*$//;
 
-    local $ENV{PERLBREW_PERL} = $dist;
-    my $HOME = $self->env('HOME');
-    my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+    die "${dist} is not installed\n" unless -d "@{[ $self->root ]}/perls/${dist}";
 
-    mkpath($pb_home);
-    system("$0 env $dist > " . catfile($pb_home, "init"));
+    my $xf = catfile($PERLBREW_HOME, "version");
+    open my $xh, ">", $xf;
+    print $xh $vers;
+    close $xh;
 
-    print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
+    print "Switched to $vers\n";
+
+    # print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
 sub run_command_off {
