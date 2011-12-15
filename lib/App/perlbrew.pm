@@ -1394,21 +1394,23 @@ sub run_command_install_patchperl {
 
 sub run_command_self_upgrade {
     my ($self) = @_;
+    my $TMPDIR = $ENV{TMPDIR} || "/tmp";
+    my $TMP_PERLBREW = catfile($TMPDIR, "perlbrew");
 
     unless(-w $FindBin::Bin) {
         die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
 
-    http_get('https://raw.github.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
+    http_get('http://get.perlbrew.pl', undef, sub {
         my ( $body ) = @_;
 
-        open my $fh, '>', '/tmp/perlbrew' or die "Unable to write perlbrew: $!";
+        open my $fh, '>', $TMP_PERLBREW or die "Unable to write perlbrew: $!";
         print $fh $body;
         close $fh;
     });
 
-    chmod 0755, '/tmp/perlbrew';
-    my $new_version = qx(/tmp/perlbrew version);
+    chmod 0755, $TMP_PERLBREW;
+    my $new_version = qx($TMP_PERLBREW version);
     chomp $new_version;
     if($new_version =~ /App::perlbrew\/(\d+\.\d+)$/) {
         $new_version = $1;
@@ -1419,8 +1421,8 @@ sub run_command_self_upgrade {
         print "Your perlbrew is up-to-date.\n";
         return;
     }
-    system "/tmp/perlbrew", "install";
-    unlink "/tmp/perlbrew";
+    system $TMP_PERLBREW, "install";
+    unlink $TMP_PERLBREW;
 }
 
 sub run_command_uninstall {
