@@ -3110,8 +3110,8 @@ your terminal:
     curl -kL http://install.perlbrew.pl | bash
 
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
-should follow the instruction on screen to setup your C<.bashrc> or C<.cshrc> to
-put it in your PATH.
+should follow the instruction on screen to modify your shell rc file to put it
+in your PATH.
 
 The installed perlbrew command is a standalone executable that can be run with
 system perl. The minimun system perl version requirement is 5.8.0, which should
@@ -3134,7 +3134,7 @@ You may also install perlbrew from CPAN:
     cpan App::perlbrew
 
 In this case, the perlbrew command is installed as C</usr/bin/perlbrew> or
-C</usr/localbin/perlbrew> or others, depending on the location of your system
+C</usr/local/bin/perlbrew> or others, depending on the location of your system
 perl installation.
 
 Please make sure not to run this with one of the perls brewed with
@@ -3204,7 +3204,7 @@ in your shell RC before sourcing perlbrew's RC.
 In some cases, say, your home directory is on NFS and shared across multiple
 machines, you may wish to have several different perlbrew setting
 per-machine. To do so, you can use the C<PERLBREW_HOME> environment variable to
-tell perlbrew where to look for the initialization file. Here's a brief bashrc
+tell perlbrew where to look for the initialization file. Here's a brief bash
 snippet for the given senario.
 
     if [ "$(hostname)" == "machine-a" ]; then
