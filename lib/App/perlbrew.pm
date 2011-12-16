@@ -1069,7 +1069,7 @@ sub perlbrew_env {
 
     my %env = (
         PERLBREW_VERSION => $VERSION,
-        PERLBREW_PATH => "@{[ $self->root ]}/bin",
+        PERLBREW_PATH    => catdir($self->root, "bin"),
         PERLBREW_MANPATH => "",
         PERLBREW_ROOT => $self->root
     );
@@ -1077,10 +1077,10 @@ sub perlbrew_env {
     if ($name) {
         my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
-        if(-d "@{[ $self->root ]}/perls/$perl_name/bin") {
-            $env{PERLBREW_PERL} = $perl_name;
-            $env{PERLBREW_PATH} .= ":@{[ $self->root ]}/perls/$perl_name/bin";
-            $env{PERLBREW_MANPATH} = "@{[ $self->root ]}/perls/$perl_name/man";
+        if(-d  "@{[ $self->root ]}/perls/$perl_name/bin") {
+            $env{PERLBREW_PERL}    = $perl_name;
+            $env{PERLBREW_PATH}   .= ":" . catdir($self->root, "perls", $perl_name, "bin");
+            $env{PERLBREW_MANPATH} = catdir($self->root, "perls", $perl_name, "man")
         }
 
         if ($lib_name) {
@@ -1091,8 +1091,8 @@ sub perlbrew_env {
                 delete $ENV{PERL_LOCAL_LIB_ROOT};
                 my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
 
-                $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
-                $env{PERLBREW_MANPATH} = "$base/man:" . $env{PERLBREW_MANPATH};
+                $env{PERLBREW_PATH}    = catdir($base, "bin") . ":" . $env{PERLBREW_PATH};
+                $env{PERLBREW_MANPATH} = catdir($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
                 $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
                 $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
@@ -1154,7 +1154,7 @@ sub run_command_use {
     unless ($ENV{PERLBREW_VERSION}) {
         my $root = $self->root;
         # The user does not source bashrc/csh in their shell initialization.
-        $env{PATH} = $env{PERLBREW_PATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
+        $env{PATH   } = $env{PERLBREW_PATH   } . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
         $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{MANPATH};
     }
 
@@ -1184,13 +1184,14 @@ sub run_command_switch {
 
     my $vers = $dist;
 
-    die "${dist} is not installed\n" unless -d "@{[ $self->root ]}/perls/${dist}";
+    die "${dist} is not installed\n" unless -d catdir($self->root, "perls", $dist);
 
     local $ENV{PERLBREW_PERL} = $dist;
     my $HOME = $self->env('HOME');
+    my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
 
-    mkpath("${HOME}/.perlbrew");
-    system("$0 env $dist > ${HOME}/.perlbrew/init");
+    mkpath($pb_home);
+    system("$0 env $dist > " . catfile($pb_home, "init"));
 
     print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
@@ -1218,7 +1219,7 @@ sub run_command_switch_off {
     my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
 
     mkpath($pb_home);
-    system("env PERLBREW_PERL= $0 env > ${pb_home}/init");
+    system("env PERLBREW_PERL= $0 env > " . catfile($pb_home, "init"));
 
     print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
     print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
@@ -1473,7 +1474,7 @@ sub run_command_exec {
         next if !$env{PERLBREW_PERL};
 
         local @ENV{ keys %env } = values %env;
-        local $ENV{PATH} = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
+        local $ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
         local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
 
         print "$i->{name}\n==========\n";
