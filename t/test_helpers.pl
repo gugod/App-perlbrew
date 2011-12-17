@@ -21,6 +21,7 @@ use File::Temp qw( tempdir );
 
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
+$ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 
 no warnings 'redefine';
 
@@ -52,6 +53,11 @@ CODE
 sub mock_perlbrew_install {
     my ($name, @args) = @_;
     App::perlbrew->new(install => $name, @args)->run();
+}
+
+sub mock_perlbrew_lib_create {
+    my $name = shift;
+    App::perlbrew::mkpath(dir($App::perlbrew::PERLBREW_HOME, "libs", $name));
 }
 
 1;

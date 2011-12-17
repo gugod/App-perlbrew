@@ -67,11 +67,11 @@ See `perlbrew help <command>` for detail description of the command.
 It is the simpleist to use the perlbrew installer, just paste this statement to
 your terminal:
 
-    curl -kL http://xrl.us/perlbrewinstall | bash
+    curl -kL http://install.perlbrew.pl | bash
 
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
-should follow the instruction on screen to setup your C<.bashrc> or C<.cshrc> to
-put it in your PATH.
+should follow the instruction on screen to modify your shell rc file to put it
+in your PATH.
 
 The installed perlbrew command is a standalone executable that can be run with
 system perl. The minimun system perl version requirement is 5.8.0, which should
@@ -87,14 +87,14 @@ say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
 environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -kL http://xrl.us/perlbrewinstall | bash
+    curl -kL http://install.perlbrew.pl | bash
 
 You may also install perlbrew from CPAN:
 
     cpan App::perlbrew
 
 In this case, the perlbrew command is installed as C</usr/bin/perlbrew> or
-C</usr/localbin/perlbrew> or others, depending on the location of your system
+C</usr/local/bin/perlbrew> or others, depending on the location of your system
 perl installation.
 
 Please make sure not to run this with one of the perls brewed with
@@ -151,7 +151,7 @@ It is also possible to set this variable before installing perlbrew
 to make perlbrew install itself under the given PERLBREW_ROOT:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -kL http://xrl.us/perlbrewinstall | bash
+    curl -kL http://install.perlbrew.pl | bash
 
 After doing this, the perlbrew executable is installed as C</opt/perl5/bin/perlbrew>
 
@@ -164,7 +164,7 @@ in your shell RC before sourcing perlbrew's RC.
 In some cases, say, your home directory is on NFS and shared across multiple
 machines, you may wish to have several different perlbrew setting
 per-machine. To do so, you can use the C<PERLBREW_HOME> environment variable to
-tell perlbrew where to look for the initialization file. Here's a brief bashrc
+tell perlbrew where to look for the initialization file. Here's a brief bash
 snippet for the given senario.
 
     if [ "$(hostname)" == "machine-a" ]; then
@@ -410,13 +410,13 @@ This command upgrades Perlbrew to its latest version.
 
 Usage: perlbrew self-install
 
-NOTICE: You should not run this command in your daily routine.
+NOTICE: You should not need to run this command in your daily routine.
 
 This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended
 used by the perlbrew installer. However, you may manually do the following to
 re-install only the C<perlbrew> executable:
 
-    curl -kLO http://xrl.us/perlbrew
+    curl -kL http://get.perlbrew.pl -o perlbrew
     perl ./perlbrew install
 
 It is slightly different from running the perlbrew installer because

@@ -17,6 +17,7 @@ use Test::Output;
 use Config;
 
 mock_perlbrew_install("perl-5.14.1");
+mock_perlbrew_lib_create('perl-5.14.1@nobita');
 
 describe "env command," => sub {
     before each => sub {
@@ -34,6 +35,7 @@ describe "env command," => sub {
             stdout_is {
                 $app->run;
             } <<"OUT";
+export PERLBREW_MANPATH="$App::perlbrew::PERLBREW_ROOT/perls/perl-5.14.1/man"
 export PERLBREW_PERL="perl-5.14.1"
 export PERLBREW_VERSION="$App::perlbrew::VERSION"
 export PERLBREW_PATH="$App::perlbrew::PERLBREW_ROOT/bin:$App::perlbrew::PERLBREW_ROOT/perls/perl-5.14.1/bin"
@@ -59,6 +61,7 @@ export PERL_MB_OPT="--install_base $lib_dir"
 export PERL_MM_OPT="INSTALL_BASE=$lib_dir"
 export PERL_LOCAL_LIB_ROOT="$lib_dir"
 export PERL5LIB="$lib_dir/lib/perl5/$Config{archname}:$lib_dir/lib/perl5${PERL5LIB_maybe}"
+export PERLBREW_MANPATH="$lib_dir/man:$App::perlbrew::PERLBREW_ROOT/perls/perl-5.14.1/man"
 export PERLBREW_LIB="nobita"
 export PERLBREW_PATH="$lib_dir/bin:$App::perlbrew::PERLBREW_ROOT/bin:$App::perlbrew::PERLBREW_ROOT/perls/perl-5.14.1/bin"
 export PERLBREW_ROOT="$App::perlbrew::PERLBREW_ROOT"
@@ -68,4 +71,3 @@ OUT
 };
 
 runtests unless caller;
-
