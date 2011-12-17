@@ -1,4 +1,4 @@
-NEXT:
+0.35:
 - fixes for cpantester failures
 - requiers local::lib version 1.008
 
