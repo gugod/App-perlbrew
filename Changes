@@ -1,3 +1,6 @@
+0.36:
+- fix test errors on freebsd that makes it uninstallable
+
 0.35:
 - fixes for cpantester failures
 - requiers local::lib version 1.008
