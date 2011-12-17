@@ -21,6 +21,7 @@ use File::Temp qw( tempdir );
 
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
+$ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 
 no warnings 'redefine';
 

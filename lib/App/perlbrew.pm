@@ -7,11 +7,11 @@ use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
 use FindBin;
 
-our $VERSION = "0.34";
+our $VERSION = "0.35";
 our $CONFIG;
 
-our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || "$ENV{HOME}/perl5/perlbrew";
-our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || "$ENV{HOME}/.perlbrew";
+our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
+our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || catdir($ENV{HOME}, ".perlbrew");
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
@@ -410,7 +410,7 @@ sub run_command {
     my ( $self, $x, @args ) = @_;
     my $command = $x;
 
-    $self->{log_file} ||= "@{[ $self->root ]}/build.log";
+    $self->{log_file} ||= catfile($self->root, "build.log");
     if($self->{version}) {
         $x = 'version';
     }
@@ -597,20 +597,17 @@ sub run_command_init {
     my $self = shift;
     my $HOME = $self->env('HOME');
 
-    mkpath($_) for (
-        "@{[ $self->root ]}/perls", "@{[ $self->root ]}/dists", "@{[ $self->root ]}/build",
-        "@{[ $self->root ]}/etc", "@{[ $self->root ]}/bin"
-    );
+    mkpath($_) for (map { catdir($self->root, $_) } qw(perls dists build etc bin));
 
-    open BASHRC, "> @{[ $self->root ]}/etc/bashrc";
+    open BASHRC, ">", catfile($self->root, "etc", "bashrc");
     print BASHRC BASHRC_CONTENT;
     close BASHRC;
 
-    open BASH_COMPLETION, "> @{[ $self->root ]}/etc/perlbrew-completion.bash";
+    open BASH_COMPLETION, ">", catfile($self->root, "etc", "perlbrew-completion.bash");
     print BASH_COMPLETION BASH_COMPLETION_CONTENT;
     close BASH_COMPLETION;
 
-    open CSHRC, "> @{[ $self->root ]}/etc/cshrc";
+    open CSHRC, ">", catfile($self->root, "etc", "cshrc");
     print CSHRC CSHRC_CONTENT;
     close CSHRC;
 
@@ -640,7 +637,7 @@ new shell, perlbrew should be up and fully functional from there:
 
 INSTRUCTION
 
-    if ($PERLBREW_HOME ne "$ENV{HOME}/.perlbrew") {
+    if ($PERLBREW_HOME ne catdir($ENV{HOME}, ".perlbrew")) {
         print "export PERLBREW_HOME=$pb_home_dir\n";
     }
 
@@ -671,7 +668,7 @@ sub run_command_self_install {
         exit;
     }
 
-    mkpath("@{[ $self->root ]}/bin");
+    mkpath( catdir($self->root, "bin" ));
     File::Copy::copy($executable, $target);
     chmod(0755, $target);
 
@@ -720,7 +717,7 @@ sub do_install_url {
     my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
     my ($dist_tarball) = $dist =~ m{/([^/]*)$};
 
-    my $dist_tarball_path = "@{[ $self->root ]}/dists/$dist_tarball";
+    my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
     my $dist_tarball_url  = $dist;
     $dist = "$dist_name-$dist_version"; # we install it as this name later
 
@@ -774,7 +771,7 @@ sub do_install_blead {
     # We always blindly overwrite anything that's already there,
     # because blead is a moving target.
     my $dist_tarball = 'blead.tar.gz';
-    my $dist_tarball_path = "@{[ $self->root ]}/dists/$dist_tarball";
+    my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
     http_get(
         "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball",
@@ -794,19 +791,19 @@ sub do_install_blead {
     # Returns the wrong extracted dir for blead
     $self->do_extract_tarball($dist_tarball_path);
 
+    my $build_dir = catdir($self->root, "build");
     local *DIRH;
-    opendir DIRH, "@{[ $self->root ]}/build" or die "Couldn't open @{[ $self->root ]}/build: $!";
+    opendir DIRH, $build_dir or die "Couldn't open ${build_dir}: $!";
     my @contents = readdir DIRH;
-    closedir DIRH or warn "Couldn't close @{[ $self->root ]}/build: $!";
+    closedir DIRH or warn "Couldn't close ${build_dir}: $!";
     my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
     # Use a Schwartzian Transform in case there are lots of dirs that
     # look like "perl-$SHA1", which is what's inside blead.tar.gz,
     # so we stat each one only once.
     @candidates =   map  { $_->[0] }
                     sort { $b->[1] <=> $a->[1] } # descending
-                    map  { [ $_, (stat("@{[ $self->root ]}/build/$_"))[9] ] }
-                        @candidates;
-    my $dist_extracted_dir = "@{[ $self->root ]}/build/$candidates[0]"; # take the newest one
+                    map  { [ $_, (stat( catdir($build_dir, $_) ))[9] ] } @candidates;
+    my $dist_extracted_dir = catdir($self->root, "build", $candidates[0]); # take the newest one
     $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
     return;
 }
@@ -829,7 +826,7 @@ sub do_install_release {
     die "ERROR: Cannot find the tarball for $dist\n"
         if !$dist_path and !$dist_tarball;
 
-    my $dist_tarball_path = "@{[ $self->root ]}/dists/${dist_tarball}";
+    my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
     my $dist_tarball_url  = "http://search.cpan.org${dist_path}";
 
     if (-f $dist_tarball_path) {
@@ -982,7 +979,7 @@ INSTALL
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
     if (!system($cmd)) {
-        unless (-e "@{[ $self->root ]}/perls/$as/bin/perl") {
+        unless (-e catfile($self->root, "perls", $as, "bin", "perl")) {
             $self->run_command_symlink_executables($as);
         }
 
@@ -1072,7 +1069,7 @@ sub perlbrew_env {
 
     my %env = (
         PERLBREW_VERSION => $VERSION,
-        PERLBREW_PATH => "@{[ $self->root ]}/bin",
+        PERLBREW_PATH    => catdir($self->root, "bin"),
         PERLBREW_MANPATH => "",
         PERLBREW_ROOT => $self->root
     );
@@ -1080,10 +1077,10 @@ sub perlbrew_env {
     if ($name) {
         my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
-        if(-d "@{[ $self->root ]}/perls/$perl_name/bin") {
-            $env{PERLBREW_PERL} = $perl_name;
-            $env{PERLBREW_PATH} .= ":@{[ $self->root ]}/perls/$perl_name/bin";
-            $env{PERLBREW_MANPATH} = "@{[ $self->root ]}/perls/$perl_name/man";
+        if(-d  "@{[ $self->root ]}/perls/$perl_name/bin") {
+            $env{PERLBREW_PERL}    = $perl_name;
+            $env{PERLBREW_PATH}   .= ":" . catdir($self->root, "perls", $perl_name, "bin");
+            $env{PERLBREW_MANPATH} = catdir($self->root, "perls", $perl_name, "man")
         }
 
         if ($lib_name) {
@@ -1094,8 +1091,8 @@ sub perlbrew_env {
                 delete $ENV{PERL_LOCAL_LIB_ROOT};
                 my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
 
-                $env{PERLBREW_PATH} = "$base/bin:" . $env{PERLBREW_PATH};
-                $env{PERLBREW_MANPATH} = "$base/man:" . $env{PERLBREW_MANPATH};
+                $env{PERLBREW_PATH}    = catdir($base, "bin") . ":" . $env{PERLBREW_PATH};
+                $env{PERLBREW_MANPATH} = catdir($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
                 $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
                 $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
@@ -1157,7 +1154,7 @@ sub run_command_use {
     unless ($ENV{PERLBREW_VERSION}) {
         my $root = $self->root;
         # The user does not source bashrc/csh in their shell initialization.
-        $env{PATH} = $env{PERLBREW_PATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
+        $env{PATH   } = $env{PERLBREW_PATH   } . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
         $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{MANPATH};
     }
 
@@ -1187,13 +1184,14 @@ sub run_command_switch {
 
     my $vers = $dist;
 
-    die "${dist} is not installed\n" unless -d "@{[ $self->root ]}/perls/${dist}";
+    die "${dist} is not installed\n" unless -d catdir($self->root, "perls", $dist);
 
     local $ENV{PERLBREW_PERL} = $dist;
     my $HOME = $self->env('HOME');
+    my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
 
-    mkpath("${HOME}/.perlbrew");
-    system("$0 env $dist > ${HOME}/.perlbrew/init");
+    mkpath($pb_home);
+    system("$0 env $dist > " . catfile($pb_home, "init"));
 
     print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
@@ -1221,7 +1219,7 @@ sub run_command_switch_off {
     my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
 
     mkpath($pb_home);
-    system("env PERLBREW_PERL= $0 env > ${pb_home}/init");
+    system("env PERLBREW_PERL= $0 env > " . catfile($pb_home, "init"));
 
     print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
     print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
@@ -1476,7 +1474,7 @@ sub run_command_exec {
         next if !$env{PERLBREW_PERL};
 
         local @ENV{ keys %env } = values %env;
-        local $ENV{PATH} = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
+        local $ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
         local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
 
         print "$i->{name}\n==========\n";

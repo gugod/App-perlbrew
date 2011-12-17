@@ -1,3 +1,7 @@
+0.35:
+- fixes for cpantester failures
+- requiers local::lib version 1.008
+
 0.34:
 - Fix: remove duplicated items from the output of `perlbrew list`.
 - New Command: self-install.

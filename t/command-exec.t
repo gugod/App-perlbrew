@@ -1,16 +1,16 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
+use FindBin;
+use lib $FindBin::Bin;
+use App::perlbrew;
+require 'test_helpers.pl';
+
 use Test::More;
 use Path::Class;
-use IO::All;
 use File::Temp qw( tempdir );
 
-my $tmpd = tempdir( CLEANUP => 1 );
-$ENV{PERLBREW_ROOT} = $tmpd;
-my $root = dir($tmpd);
-require App::perlbrew;
+my $root = dir($App::perlbrew::PERLBREW_ROOT);
 
 my @perls = qw( yak needs shave );
 my %exe = (
