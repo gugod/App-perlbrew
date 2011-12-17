@@ -18,7 +18,6 @@ mock_perlbrew_install("perl-5.14.2");
 subtest "perlbrew version" => sub {
     my $app = App::perlbrew->new();
     my $version = $App::perlbrew::VERSION;
-
     stdout_is(
         sub {
             $app->run_command('version');
