@@ -37,6 +37,9 @@ my %exe = (
     },
 );
 
+close STDOUT;
+close STDERR;
+
 # build a fake root with some fake perls (most of this was modified from stuff found in t/installation.t)
 foreach my $name ( @perls ) {
     my $bin = $root->subdir("perls", $name, "bin");
