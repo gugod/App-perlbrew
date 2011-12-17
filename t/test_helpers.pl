@@ -47,7 +47,7 @@ CODE
 
     chmod 0755, $perl;
 
-    note "(mock) installed $name to $installation_dir";
+    diag "(mock) installed $name to $installation_dir";
 }
 
 sub mock_perlbrew_install {

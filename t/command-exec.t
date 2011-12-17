@@ -32,10 +32,13 @@ my %exe = (
     # NOTE: this script may need to change if the usage of these perlbrew vars changes
     test_env => {
         content => '', # don't create a file for this one
-        args    => [ qw( exec sh -c ), 'echo "$PERLBREW_PERL--$PERLBREW_PATH" >> $1', '-' ],
+        args    => [ qw( exec sh -c ), 'echo "$PERLBREW_PERL--$PERLBREW_PATH" >> $0' ],
         output  => join('', sort map { "$_--$root/bin:$root/perls/$_/bin\n" } @perls),
     },
 );
+
+close STDOUT;
+close STDERR;
 
 # build a fake root with some fake perls (most of this was modified from stuff found in t/installation.t)
 foreach my $name ( @perls ) {

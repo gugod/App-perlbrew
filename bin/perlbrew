@@ -140,7 +140,7 @@ C<$PERLBREW_ROOT> may install CPAN modules. This is both good and bad depending
 on the working convention of your team.
 
 If you wish to install CPAN modules only for yourself, you should use the C<lib>
-command to construct a perlsonal local::lib enviroment. local::lib enviroments
+command to construct a personal local::lib environment. local::lib environments
 are personal, and are not shared between different users. For more detail, read
 C<perlbrew help lib> and the documentation of L<local::lib>.
 
