@@ -2,6 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
+use Capture::Tiny;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
@@ -265,6 +266,7 @@ sub new {
         D => [],
         U => [],
         A => [],
+        sitecustomize => '',
     );
 
     # build a local @ARGV to allow us to use an older
@@ -293,7 +295,9 @@ sub new {
         'U=s@',
         'A=s@',
 
-        'j=i'
+        'j=i',
+        # options that affect Configure and customize post-build
+        'sitecustomize=s',
     )
       or run_command_help(1);
 
@@ -920,9 +924,17 @@ sub do_install_this {
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
+    my $sitecustomize = $self->{sitecustomize};
     $as = $self->{as} if $self->{as};
 
-    unshift @d_options, qq(prefix=@{[ $self->root ]}/perls/$as);
+    if ( $sitecustomize ) {
+        die "Could not read sitecustomize file '$sitecustomize'\n"
+            unless -r $sitecustomize;
+        push @d_options, "usesitecustomize";
+    }
+
+    my $perlpath = $self->root . "/perls/$as";
+    unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$as") . "\n";
     print <<INSTALL if !$self->{verbose};
@@ -983,7 +995,17 @@ INSTALL
         unless (-e $newperl) {
             $self->run_command_symlink_executables($as);
         }
-
+        if ( $sitecustomize ) {
+            my $capture = $self->do_capture("$newperl -V:sitelib");
+            my ($sitelib) = $capture =~ /sitelib='(.*)';/;
+            mkpath($sitelib) unless -d $sitelib;
+            my $target = "$sitelib/sitecustomize.pl";
+            open my $dst, ">", $target
+                or die "Could not open '$target' for writing: $!\n";
+            open my $src, "<", $sitecustomize
+                or die "Could not open '$sitecustomize' for reading: $!\n";
+            print {$dst} do { local $/; <$src> };
+        }
         print <<SUCCESS;
 Installed $dist_extracted_dir as $as successfully. Run the following command to switch to it.
 
@@ -1006,6 +1028,13 @@ FAIL
 sub do_system {
   my ($self, $cmd) = @_;
   return ! system($cmd);
+}
+
+sub do_capture {
+  my ($self, $cmd) = @_;
+  return Capture::Tiny::capture {
+    $self->do_system($cmd);
+  };
 }
 
 sub format_perl_version {
