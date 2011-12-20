@@ -978,8 +978,9 @@ INSTALL
 
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
-    if (!system($cmd)) {
-        unless (-e catfile($self->root, "perls", $as, "bin", "perl")) {
+    if ($self->do_system($cmd)) {
+        my $newperl = catfile($self->root, "perls", $as, "bin", "perl"); 
+        unless (-e $newperl) {
             $self->run_command_symlink_executables($as);
         }
 
@@ -1000,6 +1001,11 @@ If you want to force install the distribution, try:
 FAIL
     }
     return;
+}
+
+sub do_system {
+  my ($self, $cmd) = @_;
+  return ! system($cmd);
 }
 
 sub format_perl_version {
