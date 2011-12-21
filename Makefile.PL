@@ -10,6 +10,7 @@ requires
     'File::Path::Tiny'  => '0.1',
     'Devel::PatchPerl'  => '0.46',
     'local::lib'        => '1.008';
+    'Capture::Tiny'     => '0.13';
 
 test_requires
     'Test::Simple'    => '0.98',
