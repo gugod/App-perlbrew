@@ -1158,7 +1158,7 @@ sub run_command_list {
     for my $i ( $self->installed_perls ) {
         print $i->{is_current} ? '* ': '  ',
             $i->{name},
-            (index($i->{name}, $i->{version}) < $[) ? " ($i->{version})" : "",
+            (index($i->{name}, $i->{version}) < 0) ? " ($i->{version})" : "",
             "\n";
 
         for my $lib (@{$i->{libs}}) {
