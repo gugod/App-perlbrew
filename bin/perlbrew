@@ -43,7 +43,7 @@ Commands:
 
 Options for C<install> command:
 
-    -f --force     Fore installation
+    -f --force     Force installation
     -j $n          Parallel buildng and testing. ex. C<perlbrew install -j 5 perl-5.14.2>
     -n --notest    Skip testing
 
@@ -52,6 +52,9 @@ Options for C<install> command:
 
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
+
+    --sitecustomize $filename
+                   Specify a file to be installed as sitecustomize.pl
 
 Generic command options:
 
