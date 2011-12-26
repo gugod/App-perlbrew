@@ -1,18 +1,37 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
-use Test::More tests => 1;
+
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require 'test_helpers.pl';
+
+use Test::More;
 use Test::Output;
 
-my $app = App::perlbrew->new();
-my $version = $App::perlbrew::VERSION;
+mock_perlbrew_install("perl-5.12.3");
+mock_perlbrew_install("perl-5.12.4");
+mock_perlbrew_install("perl-5.14.1");
+mock_perlbrew_install("perl-5.14.2");
 
-stdout_is(
-    sub {
-        $app->run_command('version');
-    },
-    "t/05.get_current_perl.t  - App::perlbrew/$version\n",
-    'Test version'
-);
+subtest "perlbrew version" => sub {
+    my $app = App::perlbrew->new();
+    my $version = $App::perlbrew::VERSION;
+    stdout_is(
+        sub {
+            $app->run_command('version');
+        },
+        "t/05.get_current_perl.t  - App::perlbrew/$version\n"
+    );
+};
+
+subtest "Current perl is decided from environment variable PERLBREW_PERL" => sub {
+    for my $v (qw(perl-5.12.3 perl-5.12.3 perl-5.14.1 perl-5.14.2)) {
+        local $ENV{PERLBREW_PERL} = $v;
+        my $app = App::perlbrew->new;
+        is $app->current_perl, $v;
+    }
+};
+
+done_testing;

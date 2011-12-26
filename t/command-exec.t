@@ -1,16 +1,16 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
+use FindBin;
+use lib $FindBin::Bin;
+use App::perlbrew;
+require 'test_helpers.pl';
+
 use Test::More;
 use Path::Class;
-use IO::All;
 use File::Temp qw( tempdir );
 
-my $tmpd = tempdir( CLEANUP => 1 );
-$ENV{PERLBREW_ROOT} = $tmpd;
-my $root = dir($tmpd);
-require App::perlbrew;
+my $root = dir($App::perlbrew::PERLBREW_ROOT);
 
 my @perls = qw( yak needs shave );
 my %exe = (
@@ -32,10 +32,13 @@ my %exe = (
     # NOTE: this script may need to change if the usage of these perlbrew vars changes
     test_env => {
         content => '', # don't create a file for this one
-        args    => [ qw( exec sh -c ), 'echo "$PERLBREW_PERL--$PERLBREW_PATH" >> $1', '-' ],
+        args    => [ qw( exec sh -c ), 'echo "$PERLBREW_PERL--$PERLBREW_PATH" >> $0' ],
         output  => join('', sort map { "$_--$root/bin:$root/perls/$_/bin\n" } @perls),
     },
 );
+
+close STDOUT;
+close STDERR;
 
 # build a fake root with some fake perls (most of this was modified from stuff found in t/installation.t)
 foreach my $name ( @perls ) {
