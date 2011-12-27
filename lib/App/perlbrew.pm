@@ -1120,6 +1120,15 @@ sub perlbrew_env {
 
         if ($lib_name) {
             require local::lib;
+
+            if (
+                $ENV{PERL_LOCAL_LIB_ROOT}
+                && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^$PERLBREW_HOME/
+            ) {
+                my %deactivate_env = local::lib->build_deact_all_environment_vars_for($ENV{PERL_LOCAL_LIB_ROOT});
+                @env{keys %deactivate_env} = values %deactivate_env;
+            }
+
             my $base = "$PERLBREW_HOME/libs/${perl_name}\@${lib_name}";
 
             if (-d $base) {
