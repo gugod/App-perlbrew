@@ -81,7 +81,7 @@ perlbrew () {
     local short_option
     export SHELL
 
-    if [[ `echo $1 | awk 'BEGIN{FS=""}{print $1}'` = '-' ]]; then
+    if [[ $1 == -* ]]; then
         short_option=$1
         shift
     else
