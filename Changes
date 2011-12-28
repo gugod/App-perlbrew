@@ -1,3 +1,7 @@
+0.37:
+- fix ENV mess after switching to diffirent libs multiple times
+- add --sitecustomize option
+
 0.36:
 - fix test errors on freebsd that makes it uninstallable
 
