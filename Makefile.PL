@@ -9,7 +9,7 @@ repository 'git://github.com/gugod/App-perlbrew.git';
 requires
     'File::Path::Tiny'  => '0.1',
     'Devel::PatchPerl'  => '0.46',
-    'local::lib'        => '1.008';
+    'local::lib'        => '1.008',
     'Capture::Tiny'     => '0.13';
 
 test_requires
