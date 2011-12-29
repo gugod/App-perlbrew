@@ -1,3 +1,6 @@
+0.38:
+- fix deps
+
 0.37:
 - fix ENV mess after switching to diffirent libs multiple times
 - add --sitecustomize option
