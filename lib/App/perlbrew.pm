@@ -101,7 +101,12 @@ perlbrew () {
                 if [ -z "$code" ]; then
                     exit_status=1
                 else
-                    eval $code
+                    OLD_IFS=$IFS
+                    IFS="$(echo -e "\n\r")"
+                    for line in $code; do
+                        eval $line
+                    done
+                    IFS=$OLD_IFS
                     __perlbrew_set_path
                 fi
             fi
