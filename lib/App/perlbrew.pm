@@ -8,7 +8,7 @@ use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
 use FindBin;
 
-our $VERSION = "0.38";
+our $VERSION = "0.39";
 our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -81,7 +81,7 @@ perlbrew () {
     local short_option
     export SHELL
 
-    if [[ `echo $1 | awk 'BEGIN{FS=""}{print $1}'` = '-' ]]; then
+    if [[ $1 == -* ]]; then
         short_option=$1
         shift
     else
@@ -101,7 +101,12 @@ perlbrew () {
                 if [ -z "$code" ]; then
                     exit_status=1
                 else
-                    eval $code
+                    OLD_IFS=$IFS
+                    IFS="$(echo -e "\n\r")"
+                    for line in $code; do
+                        eval $line
+                    done
+                    IFS=$OLD_IFS
                     __perlbrew_set_path
                 fi
             fi
@@ -1133,7 +1138,8 @@ sub perlbrew_env {
 
             if (-d $base) {
                 delete $ENV{PERL_LOCAL_LIB_ROOT};
-                my %lib_env = local::lib->build_environment_vars_for($base, 0, 0);
+                @ENV{keys %env} = values %env;
+                my %lib_env = local::lib->build_environment_vars_for($base, 0, 1);
 
                 $env{PERLBREW_PATH}    = catdir($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = catdir($base, "man") . ":" . $env{PERLBREW_MANPATH};
@@ -1638,8 +1644,16 @@ USAGE
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
-    my $fullname = ($name =~ /@/) ? $name : $self->current_perl . '@' . $name;
+    $name =~ s/^/@/ unless $name =~ /@/;
 
+    my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
+
+    if (!$perl_name) {
+        my ($perl_name, $lib_name) = split('@', $name);
+        die "ERROR: '$perl_name' is not installed yet, '$name' cannot be created.\n";
+    }
+
+    my $fullname = $perl_name . '@' . $lib_name;
     my $dir = catdir($PERLBREW_HOME,  "libs", $fullname);
 
     if (-d $dir) {
@@ -1657,8 +1671,16 @@ sub run_command_lib_create {
 sub run_command_lib_delete {
     my ($self, $name) = @_;
 
+    $name =~ s/^/@/ unless $name =~ /@/;
+
+    my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
+
+    if (!$perl_name) {
+    }
+
+    my $fullname = $perl_name . '@' . $lib_name;
+
     my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
-    my $fullname = ($name =~ /@/) ? $name : $self->current_perl . '@' . $name;
 
     my $dir = catdir($PERLBREW_HOME,  "libs", $fullname);
 
@@ -1674,8 +1696,7 @@ sub run_command_lib_delete {
             unless $self->{quiet};
     }
     else {
-        print "'$fullname' is not in the list of lib\n"
-            unless $self->{quiet};
+        die "ERROR: '$fullname' does not exist.\n";
     }
 
     return;
