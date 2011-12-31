@@ -1644,8 +1644,11 @@ USAGE
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
-    my $fullname = ($name =~ /@/) ? $name : $self->current_perl . '@' . $name;
+    $name =~ s/^/@/ unless $name =~ /@/;
 
+    my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
+
+    my $fullname = $perl_name . '@' . $lib_name;
     my $dir = catdir($PERLBREW_HOME,  "libs", $fullname);
 
     if (-d $dir) {
