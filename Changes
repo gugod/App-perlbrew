@@ -1,4 +1,5 @@
 NEXT:
+- Fix GH #179. lib naming are more consistent.
 - Fix GH #171. bash users are suggestted to upgrad to this version.
 - Fix GH #152.
 
