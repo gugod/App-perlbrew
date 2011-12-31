@@ -1,3 +1,7 @@
+NEXT:
+- Fix GH #171. bash users are suggestted to upgrad to this version.
+- Fix GH #152.
+
 0.38:
 - fix deps
 
