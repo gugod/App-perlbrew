@@ -8,6 +8,7 @@ use File::Spec::Functions qw( catdir );
 use File::Path::Tiny;
 use Test::Spec;
 use Test::Output;
+use Test::Exception;
 use App::perlbrew;
 
 require "test_helpers.pl";
@@ -78,7 +79,18 @@ describe "lib command," => sub {
 
                 $libdir = dir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.1@nobita');
                 ok -d $libdir;
-            }
+            };
+
+            it "shows errors if the specified perl does not exist." => sub {
+                throws_ok {
+                    ## perl-5.8.8 is not mock-installed
+                    $app->{args} = [ "lib", "create", 'perl-5.8.8@nobita' ];
+                    $app->run;
+                } qr{^ERROR: 'perl-5.8.8' is not installed yet, 'perl-5.8.8\@nobita' cannot be created.\n};
+
+                $libdir = dir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.8.8@nobita');
+                ok !-d $libdir;
+            };
         };
     };
 
@@ -98,6 +110,14 @@ describe "lib command," => sub {
 
             ok !-d catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
             ok !-e catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
+        };
+
+        it "shows errors when the given lib does not exists " => sub {
+            throws_ok {
+                my $app = App::perlbrew->new("lib", "delete", "yoga");
+                $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
+                $app->run;
+            } qr{^ERROR: 'perl-5\.14\.2\@yoga' does not exist\.};
         };
     };
 };
