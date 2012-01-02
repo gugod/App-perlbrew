@@ -837,38 +837,37 @@ sub do_install_release {
     my $dist = shift;
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
-    my $mirror = $self->config->{mirror};
-    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-    my $html = http_get("http://search.cpan.org/dist/$dist", $header);
 
-    unless ($html) {
-        die "ERROR: Failed to download $dist tarball.";
-    }
-
-    my ($dist_path, $dist_tarball) =
-        $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
-    die "ERROR: Cannot find the tarball for $dist\n"
-        if !$dist_path and !$dist_tarball;
-
+    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
-    my $dist_tarball_url  = "http://search.cpan.org${dist_path}";
 
     if (-f $dist_tarball_path) {
-        print "Use the previously fetched ${dist_tarball}\n";
+        print "Use the previously fetched ${dist_tarball}\n"
+            if $self->{verbose};
     }
     else {
-        print "Fetching $dist as $dist_tarball_path\n";
+        print "Fetching $dist as $dist_tarball_path\n"
+            if $self->{verbose};
+
+        my $mirror = $self->config->{mirror};
+        my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+
         http_get(
             $dist_tarball_url,
             $header,
             sub {
                 my ($body) = @_;
+
+                die "ERROR: Failed to download $dist tarball.\n"
+                    unless $body;
+
                 open my $BALL, "> $dist_tarball_path";
                 print $BALL $body;
                 close $BALL;
             }
         );
     }
+
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
     $self->do_install_this($dist_extracted_path,$dist_version, $dist);
     return;

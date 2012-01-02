@@ -15,9 +15,17 @@ use App::perlbrew;
 App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
 App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("perls") );
 App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("build") );
+App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("dists") );
 
 no warnings 'redefine';
-sub App::perlbrew::http_get { "" }
+sub App::perlbrew::http_get {
+    my ($url, $header, $cb) = @_;
+    if (ref($header) eq 'CODE') {
+        $cb = $header;
+        $header = undef;
+    }
+    $cb->(undef);
+}
 
 throws_ok(
     sub {
