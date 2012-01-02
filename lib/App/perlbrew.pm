@@ -7,6 +7,7 @@ use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
 use FindBin;
+use CPAN::Perl::Releases;
 
 our $VERSION = "0.39";
 our $CONFIG;
@@ -600,6 +601,20 @@ sub available_perls {
     s/\.tar\.gz// for @available_versions;
 
     return @available_versions;
+}
+
+sub perl_release {
+    my ($self, $version) = @_;
+
+    my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
+
+    my $x = (values %$tarballs)[0];
+
+    my $dist_tarball = (split("/", $x))[-1];
+
+    my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/$x";
+
+    return ($dist_tarball, $dist_tarball_url);
 }
 
 sub run_command_init {
