@@ -847,7 +847,7 @@ sub do_install_release {
     }
     else {
         print "Fetching $dist as $dist_tarball_path\n"
-            if $self->{verbose};
+            unless $self->{quiet};
 
         my $mirror = $self->config->{mirror};
         my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
