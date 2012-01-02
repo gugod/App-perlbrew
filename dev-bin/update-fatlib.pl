@@ -23,3 +23,18 @@ File::Find::find({
     wanted => sub {
         /^.*\.pod\z/s && unlink;
     } }, 'fatlib');
+
+if (my $strip = `which perlstrip`) {
+    chomp($strip);
+    my @files;
+    File::Find::find({
+        wanted => sub {
+            /^.*\.pm\z/s or return;
+            push @files, $File::Find::name;
+
+        } }, 'fatlib');
+
+    for (@files){
+        system($strip, $_);
+    }
+}
