@@ -1,8 +1,11 @@
 #!/usr/bin/env perl
 use strict;
 use App::FatPacker ();
-use File::Path;
+use File::Path 2.08 qw(remove_tree);
+use File::Basename;
 use Cwd;
+
+chdir dirname($0);
 
 my $modules = [ split /\s+/, <<MODULES ];
 local/lib.pm
@@ -16,7 +19,7 @@ my @packlists = $packer->packlists_containing($modules);
 $packer->packlists_to_tree(cwd . "/fatlib", \@packlists);
 
 use Config;
-rmtree("fatlib/$Config{archname}");
+remove_tree("fatlib/$Config{archname}");
 
 use File::Find;
 File::Find::find({
