@@ -610,10 +610,25 @@ sub perl_release {
 
     my $x = (values %$tarballs)[0];
 
-    my $dist_tarball = (split("/", $x))[-1];
+    if ($x) {
+        my $dist_tarball = (split("/", $x))[-1];
+        my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/$x";
+        return ($dist_tarball, $dist_tarball_url);
+    }
 
-    my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/$x";
+    my $mirror = $self->config->{mirror};
+    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+    my $html = http_get("http://search.cpan.org/dist/perl-${version}", $header);
 
+    unless ($html) {
+        die "ERROR: Failed to download perl-${version} tarball.";
+    }
+
+    my ($dist_path, $dist_tarball) =
+        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+    die "ERROR: Cannot find the tarball for perl-$version\n"
+        if !$dist_path and !$dist_tarball;
+    my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/${dist_tarball}";
     return ($dist_tarball, $dist_tarball_url);
 }
 
