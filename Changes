@@ -1,3 +1,8 @@
+0.40:
+- Make the stanalone perlbrew program smaller by using Perl::Strip
+- use CPAN::Perl::Releases to decide the location of perl tarball -- less HTTP hits
+- Prefer $PERLBREW_ROOT/bin/patchperl if it is there.
+
 0.39:
 - Fix GH #179. lib naming are more consistent.
 - Fix GH #171. bash users are suggestted to upgrad to this version.

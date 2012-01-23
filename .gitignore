@@ -12,5 +12,6 @@ cover_db
 t/mock_perlbrew_root
 fatpacker.trace
 packlists
-fatlib/
+dev-bin/fatlib/
+dev-bin/lib/
 .tracker.json

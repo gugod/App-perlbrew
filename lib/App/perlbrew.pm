@@ -7,8 +7,9 @@ use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Path::Tiny;
 use FindBin;
+use CPAN::Perl::Releases;
 
-our $VERSION = "0.39";
+our $VERSION = "0.40";
 our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -602,6 +603,35 @@ sub available_perls {
     return @available_versions;
 }
 
+sub perl_release {
+    my ($self, $version) = @_;
+
+    my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
+
+    my $x = (values %$tarballs)[0];
+
+    if ($x) {
+        my $dist_tarball = (split("/", $x))[-1];
+        my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/$x";
+        return ($dist_tarball, $dist_tarball_url);
+    }
+
+    my $mirror = $self->config->{mirror};
+    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+    my $html = http_get("http://search.cpan.org/dist/perl-${version}", $header);
+
+    unless ($html) {
+        die "ERROR: Failed to download perl-${version} tarball.";
+    }
+
+    my ($dist_path, $dist_tarball) =
+        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+    die "ERROR: Cannot find the tarball for perl-$version\n"
+        if !$dist_path and !$dist_tarball;
+    my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/${dist_tarball}";
+    return ($dist_tarball, $dist_tarball_url);
+}
+
 sub run_command_init {
     my $self = shift;
     my $HOME = $self->env('HOME');
@@ -822,38 +852,37 @@ sub do_install_release {
     my $dist = shift;
 
     my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
-    my $mirror = $self->config->{mirror};
-    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-    my $html = http_get("http://search.cpan.org/dist/$dist", $header);
 
-    unless ($html) {
-        die "ERROR: Failed to download $dist tarball.";
-    }
-
-    my ($dist_path, $dist_tarball) =
-        $html =~ m[<a href="(/CPAN/authors/id/.+/(${dist}.tar.(gz|bz2)))">Download</a>];
-    die "ERROR: Cannot find the tarball for $dist\n"
-        if !$dist_path and !$dist_tarball;
-
+    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
-    my $dist_tarball_url  = "http://search.cpan.org${dist_path}";
 
     if (-f $dist_tarball_path) {
-        print "Use the previously fetched ${dist_tarball}\n";
+        print "Use the previously fetched ${dist_tarball}\n"
+            if $self->{verbose};
     }
     else {
-        print "Fetching $dist as $dist_tarball_path\n";
+        print "Fetching $dist as $dist_tarball_path\n"
+            unless $self->{quiet};
+
+        my $mirror = $self->config->{mirror};
+        my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+
         http_get(
             $dist_tarball_url,
             $header,
             sub {
                 my ($body) = @_;
+
+                die "ERROR: Failed to download $dist tarball.\n"
+                    unless $body;
+
                 open my $BALL, "> $dist_tarball_path";
                 print $BALL $body;
                 close $BALL;
             }
         );
     }
+
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
     $self->do_install_this($dist_extracted_path,$dist_version, $dist);
     return;
@@ -939,6 +968,12 @@ sub do_install_this {
     }
 
     my $perlpath = $self->root . "/perls/$as";
+    my $patchperl = $self->root . "/bin/patchperl";
+
+    unless (-x $patchperl && -f _) {
+        $patchperl = "patchperl";
+    }
+
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$as") . "\n";
@@ -971,7 +1006,7 @@ INSTALL
     (
         "cd $dist_extracted_dir",
         "rm -f config.sh Policy.sh",
-        "patchperl",
+        $patchperl,
         "sh Configure $configure_flags " .
             join( ' ',
                 ( map { qq{'-D$_'} } @d_options ),
