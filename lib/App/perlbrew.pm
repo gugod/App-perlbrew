@@ -969,6 +969,11 @@ sub do_install_this {
 
     my $perlpath = $self->root . "/perls/$as";
     my $patchperl = $self->root . "/bin/patchperl";
+
+    unless (-x $patchperl && -f _) {
+        $patchperl = "patchperl";
+    }
+
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$as") . "\n";
