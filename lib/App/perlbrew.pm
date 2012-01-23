@@ -628,7 +628,7 @@ sub perl_release {
         $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
-    my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/${dist_tarball}";
+    my $dist_tarball_url = "http://search.cpan.org/CPAN/authors/id/${dist_path}";
     return ($dist_tarball, $dist_tarball_url);
 }
 
