@@ -1,3 +1,6 @@
+NEXT:
+- Fix installation issue when the specified version is not listed in CPAN::Perl::Releases
+
 0.40:
 - Make the stanalone perlbrew program smaller by using Perl::Strip
 - use CPAN::Perl::Releases to decide the location of perl tarball -- less HTTP hits
