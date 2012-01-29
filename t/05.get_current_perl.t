@@ -34,19 +34,24 @@ subtest "Current perl is decided from environment variable PERLBREW_PERL" => sub
     }
 };
 
-my $current = file($App::perlbrew::PERLBREW_HOME, "version");
+subtest "Current perl is decided from the content of file \$PERLBREW_HOME/version unless \$PERLBREW_PERL is defined." => sub {
+    delete $ENV{PERLBREW_PERL};
 
-ok !-f $current;
-is $app->current_perl, "";
+    my $app = App::perlbrew->new;
+    my $current = file($App::perlbrew::PERLBREW_HOME, "version");
 
-io($current)->print("perl-5.12.3");
-ok -f $current;
-is $app->current_perl, "perl-5.12.3";
+    ok !-f $current;
+    is $app->current_perl, "";
 
-io($current)->print("perl-5.14.2");
-is $app->current_perl, "perl-5.14.2";
+    io($current)->print("perl-5.12.3");
+    ok -f $current;
+    is $app->current_perl, "perl-5.12.3";
 
-io($current)->print('perl-5.14.2@abcd');
-is $app->current_perl, 'perl-5.14.2@abcd';
+    io($current)->print("perl-5.14.2");
+    is $app->current_perl, "perl-5.14.2";
+
+    io($current)->print('perl-5.14.2@abcd');
+    is $app->current_perl, 'perl-5.14.2@abcd';
+};
 
 done_testing;

@@ -34,7 +34,12 @@ sub root {
 sub current_perl {
     my ($self) = @_;
 
-    my $v = "";
+    my $v = $self->env("PERLBREW_PERL") || "";
+
+    if ($v) {
+        return $v;
+    }
+
     my $x = catfile($PERLBREW_HOME, "version");
 
     if ( -f $x ) {

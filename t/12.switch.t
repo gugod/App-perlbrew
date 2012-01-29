@@ -12,6 +12,7 @@ mock_perlbrew_install("perl-5.12.4");
 mock_perlbrew_install("perl-5.14.1");
 mock_perlbrew_install("perl-5.14.2");
 
+delete $ENV{PERLBREW_PERL};
 my $current = file($App::perlbrew::PERLBREW_HOME, "version");
 ok !-f $current;
 my $app = App::perlbrew->new;
