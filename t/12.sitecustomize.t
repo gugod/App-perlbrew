@@ -3,13 +3,14 @@ use strict;
 use Path::Class;
 use Capture::Tiny qw/capture/;
 use IO::All;
-BEGIN {
-    $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
-}
+use App::perlbrew;
+use File::Temp qw( tempdir );
+
+$App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
+$App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
+$ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 
 use Test::More;
-
-use App::perlbrew;
 
 ## setup
 
