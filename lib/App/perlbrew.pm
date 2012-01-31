@@ -1888,6 +1888,19 @@ close to what your want to read.
 
 =head1 METHODS
 
+=over 4
+
+=item (Str) current_perl
+
+Return the "current perl" object attribute string, or, if absent, the value of
+PERLBREW_PERL environment variable.
+
+=item (Str) current_perl (Str)
+
+Set the "current_perl" object attribute to the given value.
+
+=back
+
 =head1 PROJECT DEVELOPMENT
 
 perlbrew project uses github
@@ -1902,7 +1915,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010, 2011 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010, 2011, 2012 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 
