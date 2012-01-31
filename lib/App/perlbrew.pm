@@ -297,7 +297,6 @@ sub new {
         'notest|n!',
         'quiet|q!',
         'verbose|v',
-        'root=s',
         'as=s',
         'help|h',
         'version',
@@ -1549,16 +1548,27 @@ USAGE
 sub run_command_exec {
     my $self = shift;
     my @args = @{$self->{original_argv}};
+    my %opts;
 
-    if ($args[0] eq '--root') {
-        shift @args;
-        shift @args;
+    local (@ARGV) = @args;
+
+    Getopt::Long::GetOptions(
+        \%opts,
+        'root=s',
+        'with=s',
+    );
+
+    if ($opts{root}) {
+        $self->root($opts{root});
     }
 
-    shift @args;
+    my @exec_with = $self->installed_perls;;
 
+    if ($opts{with}) {
+        @exec_with = grep { $_->{name} eq $opts{with} } @exec_with
+    }
 
-    for my $i ( $self->installed_perls ) {
+    for my $i ( @exec_with ) {
         next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
@@ -1568,7 +1578,7 @@ sub run_command_exec {
         local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
 
         print "$i->{name}\n==========\n";
-        system @args;
+        $self->do_system(@args);
         print "\n\n";
         # print "\n<===\n\n\n";
     }
