@@ -32,7 +32,12 @@ sub root {
 }
 
 sub current_perl {
-    my ($self) = @_;
+    my ($self, $v) = @_;
+
+    if ($v) {
+        $self->{current_perl} = $v;
+    }
+
     return $self->{current_perl} || $self->env('PERLBREW_PERL')  || ''
 }
 
