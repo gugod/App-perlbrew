@@ -300,6 +300,8 @@ sub new {
         'as=s',
         'help|h',
         'version',
+        'root=s',
+
         # options passed directly to Configure
         'D=s@',
         'U=s@',
@@ -1547,25 +1549,21 @@ USAGE
 
 sub run_command_exec {
     my $self = shift;
-    my @args = @{$self->{original_argv}};
     my %opts;
 
-    local (@ARGV) = @args;
+    local (@ARGV) = @{$self->{original_argv}};
+
+    shift @ARGV; # "exec"
 
     Getopt::Long::GetOptions(
         \%opts,
-        'root=s',
         'with=s',
     );
 
-    if ($opts{root}) {
-        $self->root($opts{root});
-    }
-
-    my @exec_with = $self->installed_perls;;
+    my @exec_with = $self->installed_perls;
 
     if ($opts{with}) {
-        @exec_with = grep { $_->{name} eq $opts{with} } @exec_with
+        @exec_with = grep { $_->{name} eq $opts{with} } @exec_with;
     }
 
     for my $i ( @exec_with ) {
@@ -1578,7 +1576,7 @@ sub run_command_exec {
         local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
 
         print "$i->{name}\n==========\n";
-        $self->do_system(@args);
+        $self->do_system(@ARGV);
         print "\n\n";
         # print "\n<===\n\n\n";
     }
