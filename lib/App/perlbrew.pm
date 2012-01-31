@@ -33,7 +33,7 @@ sub root {
 
 sub current_perl {
     my ($self) = @_;
-    return $self->env('PERLBREW_PERL')  || ''
+    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || ''
 }
 
 sub BASHRC_CONTENT() {

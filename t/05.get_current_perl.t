@@ -34,4 +34,15 @@ subtest "Current perl is decided from environment variable PERLBREW_PERL" => sub
     }
 };
 
+
+subtest "Current perl can be decided from object attribute, which overrides env var." => sub {
+    local $ENV{PERLBREW_PERL} = "perl-5.12.3";
+
+    for my $v (qw(perl-5.12.3 perl-5.12.3 perl-5.14.1 perl-5.14.2)) {
+        my $app = App::perlbrew->new;
+        $app->{current_perl} = $v;
+        is $app->current_perl, $v;
+    }
+};
+
 done_testing;
