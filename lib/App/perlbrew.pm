@@ -1224,6 +1224,40 @@ sub run_command_list {
     }
 }
 
+
+sub launch_sub_shell {
+    my ($self, $name) = @_;
+    my $shell = $self->env('SHELL');
+
+    my $shell_opt = "";
+
+    if ($shell =~ /\/zsh$/) {
+        $shell_opt = "-d -f";
+    }
+    elsif  ($shell =~ /\/bash$/)  {
+        $shell_opt = "--noprofile --norc";
+    }
+
+    my %env = ($self->perlbrew_env($name), PERLBREW_SKIP_INIT => 1);
+
+    unless ($ENV{PERLBREW_VERSION}) {
+        my $root = $self->root;
+        # The user does not source bashrc/csh in their shell initialization.
+        $env{PATH}    = $env{PERLBREW_PATH}    . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
+        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{MANPATH};
+    }
+
+    my $command = "env ";
+    while (my ($k, $v) = each(%env)) {
+        $command .= "$k=\"$v\" ";
+    }
+    $command .= " $shell $shell_opt";
+
+    print "\nA sub-shell is launched with $name as the activated perl. Run 'exit' to finish it.\n\n";
+    print "|\n| $command\n|\n";
+    exec($command);
+}
+
 sub run_command_use {
     my $self = shift;
     my $perl = shift;
@@ -1238,26 +1272,8 @@ sub run_command_use {
         return;
     }
 
-    my $shell = $self->env('SHELL');
-    my $shell_opt = "";
-    my %env = ($self->perlbrew_env($perl), PERLBREW_SKIP_INIT => 1);
+    $self->launch_sub_shell($perl);
 
-    unless ($ENV{PERLBREW_VERSION}) {
-        my $root = $self->root;
-        # The user does not source bashrc/csh in their shell initialization.
-        $env{PATH   } = $env{PERLBREW_PATH   } . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
-        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{MANPATH};
-    }
-
-    my $command = "env ";
-    while (my ($k, $v) = each(%env)) {
-        $command .= "$k=\"$v\" ";
-    }
-    $command .= " $shell $shell_opt";
-
-    print "\nA sub-shell is launched with $perl as the activated perl. Run 'exit' to finish it.\n\n";
-
-    exec($command);
 }
 
 sub run_command_switch {
@@ -1273,36 +1289,26 @@ sub run_command_switch {
     die "Cannot use for alias something that starts with 'perl-'\n"
       if $alias && $alias =~ /^perl-/;
 
-    my $vers = $dist;
-
     die "${dist} is not installed\n" unless -d catdir($self->root, "perls", $dist);
 
-    local $ENV{PERLBREW_PERL} = $dist;
-    my $HOME = $self->env('HOME');
-    my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+    if ($self->env("PERLBREW_BASHRC_VERSION")) {
+        local $ENV{PERLBREW_PERL} = $dist;
+        my $HOME = $self->env('HOME');
+        my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
 
-    mkpath($pb_home);
-    system("$0 env $dist > " . catfile($pb_home, "init"));
+        mkpath($pb_home);
+        system("$0 env $dist > " . catfile($pb_home, "init"));
 
-    print "Switched to $vers. To use it immediately, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
+        print "Switched to $dist.\n\n";
+    }
+    else {
+        $self->launch_sub_shell($dist);
+    }
 }
 
 sub run_command_off {
     my $self = shift;
-
-    my $shell = $self->env('SHELL');
-
-    $ENV{PERLBREW_PERL} = "";
-    my %env = ($self->perlbrew_env, PERLBREW_SKIP_INIT => 1);
-
-    my $command = "env ";
-    while (my ($k, $v) = each(%env)) {
-        $command .= "$k=$v ";
-    }
-    $command .= " $shell";
-
-    print "\nA sub-shell is launched with perlbrew turned off. Run 'exit' to finish it.\n\n";
-    exec($command);
+    $self->launch_sub_shell;
 }
 
 sub run_command_switch_off {
