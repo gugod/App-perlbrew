@@ -16,11 +16,12 @@ mock_perlbrew_install("perl-5.14.1");
 mock_perlbrew_install("perl-5.14.2");
 
 subtest "perlbrew version" => sub {
-    my $app = App::perlbrew->new();
+
     my $version = $App::perlbrew::VERSION;
     stdout_is(
         sub {
-            $app->run_command('version');
+            my $app = App::perlbrew->new("version");
+            $app->run;
         },
         "t/05.get_current_perl.t  - App::perlbrew/$version\n"
     );
@@ -30,6 +31,17 @@ subtest "Current perl is decided from environment variable PERLBREW_PERL" => sub
     for my $v (qw(perl-5.12.3 perl-5.12.3 perl-5.14.1 perl-5.14.2)) {
         local $ENV{PERLBREW_PERL} = $v;
         my $app = App::perlbrew->new;
+        is $app->current_perl, $v;
+    }
+};
+
+
+subtest "Current perl can be decided from object attribute, which overrides env var." => sub {
+    local $ENV{PERLBREW_PERL} = "perl-5.12.3";
+
+    for my $v (qw(perl-5.12.3 perl-5.12.3 perl-5.14.1 perl-5.14.2)) {
+        my $app = App::perlbrew->new;
+        $app->{current_perl} = $v;
         is $app->current_perl, $v;
     }
 };

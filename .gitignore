@@ -15,3 +15,4 @@ packlists
 dev-bin/fatlib/
 dev-bin/lib/
 .tracker.json
+.prove

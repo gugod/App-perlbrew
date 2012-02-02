@@ -1,18 +1,17 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
+
+use FindBin;
+use lib $FindBin::Bin;
+use App::perlbrew;
+require 'test_helpers.pl';
+
 use Test::More;
 use Test::Exception;
 use Path::Class;
 
-BEGIN {
-    $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
-}
-
 my $bin_perlbrew = file(__FILE__)->dir->parent->subdir("bin")->file("perlbrew");
-
-use App::perlbrew;
 
 throws_ok(
     sub {

@@ -2,29 +2,20 @@
 use strict;
 use warnings;
 
-use Path::Class;
-BEGIN {
-    $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
-}
+use FindBin;
+use lib $FindBin::Bin;
+use App::perlbrew;
+require 'test_helpers.pl';
 
 use Test::Spec;
 
-use App::perlbrew;
-
 ## setup
-
-
 
 ##
 
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 
 describe "App::perlbrew" => sub {
-    before each => sub {
-        App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
-        App::perlbrew::mkpath( $ENV{PERLBREW_ROOT} );
-    };
-
     describe "->do_install_url method" => sub {
         it "should accept an URL to perl tarball, and download the tarball." => sub {
             my $app = App::perlbrew->new;

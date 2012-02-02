@@ -37,7 +37,7 @@ describe "App::perlbrew#perl_release method" => sub {
         my $app = App::perlbrew->new;
         my ($ball, $url) = $app->perl_release($version);
         like $ball, qr/perl-?${version}.tar.(bz2|gz)/, $ball;
-        like $url, qr/${ball}$/, $url;
+        like $url, qr#authors/id/.+/${ball}$#, $url;
 
         *CPAN::Perl::Releases::perl_tarballs = $orig_sub;
     };
