@@ -1233,6 +1233,26 @@ sub launch_sub_shell {
 
     if ($shell =~ /\/zsh$/) {
         $shell_opt = "-d -f";
+
+        if ($^O eq 'darwin') {
+            my $root_dir = $self->root;
+            print <<"WARNINGONMAC"
+--------------------------------------------------------------------------------
+WARNING: zsh perlbrew sub-shell is not working on Mac OSX Lion.
+
+It is known that on MacOS Lion, zsh always resets the value of PATH on launching
+a sub-shell. Effectively nullify the changes required by perlbrew sub-shell. You
+may `echo \$PATH` to examine it and if you see perlbrew related paths are in the
+end, instead of in the beginning, you are unfortunate.
+
+You are advertised to include the following line to your ~/.zshenv as a better
+way to work with perlbrew:
+
+    source $root_dir/etc/bashrc
+
+--------------------------------------------------------------------------------
+WARNINGONMAC
+        }
     }
     elsif  ($shell =~ /\/bash$/)  {
         $shell_opt = "--noprofile --norc";
@@ -1254,7 +1274,6 @@ sub launch_sub_shell {
     $command .= " $shell $shell_opt";
 
     print "\nA sub-shell is launched with $name as the activated perl. Run 'exit' to finish it.\n\n";
-    print "|\n| $command\n|\n";
     exec($command);
 }
 
