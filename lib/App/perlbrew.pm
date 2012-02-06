@@ -1158,6 +1158,10 @@ sub perlbrew_env {
     if ($name) {
         my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
+        unless ($perl_name) {
+            die "\nERROR: The installation \"$name\" is unknown.\n\n";
+        }
+
         if(-d  "@{[ $self->root ]}/perls/$perl_name/bin") {
             $env{PERLBREW_PERL}    = $perl_name;
             $env{PERLBREW_PATH}   .= ":" . catdir($self->root, "perls", $perl_name, "bin");
