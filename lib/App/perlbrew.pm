@@ -1061,6 +1061,10 @@ SUCCESS
     else {
         die <<FAIL;
 Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
+You might want to try upgrading patchperl before trying again:
+
+  perlbrew install-patchperl
+
 If you want to force install the distribution, try:
 
   perlbrew --force install $self->{dist_name}
