@@ -122,8 +122,7 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2
-                  __perlbrew_reinit $2
+                  perlbrew use $2 && __perlbrew_reinit $2
               fi
               ;;
 
