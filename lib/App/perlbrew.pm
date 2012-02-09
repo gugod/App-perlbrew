@@ -1075,8 +1075,8 @@ FAIL
 }
 
 sub do_system {
-  my ($self, $cmd) = @_;
-  return ! system($cmd);
+  my ($self, @cmd) = @_;
+  return ! system(@cmd);
 }
 
 sub do_capture {
