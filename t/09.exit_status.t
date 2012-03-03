@@ -21,10 +21,11 @@ throws_ok(
     qr[unknown-command]
 );
 
-system("perl -Ilib ${bin_perlbrew} unknown-command 2>&1");
+my $perl = $^X;
+system("$perl -Ilib ${bin_perlbrew} unknown-command 2>&1");
 ok($? != 0);
 
-system("perl -Ilib ${bin_perlbrew} version 2>&1");
+system("$perl -Ilib ${bin_perlbrew} version 2>&1");
 ok($? == 0);
 
 done_testing;
