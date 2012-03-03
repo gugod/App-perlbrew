@@ -1025,6 +1025,9 @@ INSTALL
         $make,
         @install
     );
+
+    unlink($self->{log_file});
+
     if($self->{verbose}) {
         $cmd = "($cmd) 2>&1 | tee $self->{log_file}";
         print "$cmd\n" if $self->{verbose};
