@@ -2,3 +2,5 @@ language: perl
 perl:
   - "5.14"
   - "5.12"
+  - "5.10"
+before_install: cpanm --notest Module::Install
