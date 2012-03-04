@@ -1,5 +1,6 @@
 NEXT:
 - Improvement: die when running perlbrew (use|switch) with unknown installation name.
+- clean 'build.log' on install. ref: RT #69168.
 
 0.41:
 - Fix installation issue when the specified version is not listed in CPAN::Perl::Releases
