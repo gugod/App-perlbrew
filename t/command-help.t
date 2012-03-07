@@ -15,7 +15,9 @@ my $bin_perlbrew = file(__FILE__)->dir->parent->subdir("bin")->file("perlbrew");
 
 describe "help" => sub {
     it "should instruct user to read help for individual commands." => sub {
-        my $out = `perl -Ilib $bin_perlbrew help`;
+        my $perl = $^X;
+
+        my $out = `$perl -Ilib $bin_perlbrew help`;
         like $out, qr/perlbrew help <command>/si;
     };
 };

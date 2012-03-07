@@ -9,7 +9,7 @@ use File::Path::Tiny;
 use FindBin;
 use CPAN::Perl::Releases;
 
-our $VERSION = "0.41";
+our $VERSION = "0.42";
 our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -122,8 +122,7 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2
-                  __perlbrew_reinit $2
+                  perlbrew use $2 && __perlbrew_reinit $2
               fi
               ;;
 
@@ -618,7 +617,7 @@ sub perl_release {
 
     if ($x) {
         my $dist_tarball = (split("/", $x))[-1];
-        my $dist_tarball_url = "http://search.cpan.org//CPAN/authors/id/$x";
+        my $dist_tarball_url = "http://search.cpan.org/CPAN/authors/id/$x";
         return ($dist_tarball, $dist_tarball_url);
     }
 
@@ -634,7 +633,7 @@ sub perl_release {
         $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
-    my $dist_tarball_url = "http://search.cpan.org/CPAN/authors/id/${dist_path}";
+    my $dist_tarball_url = "http://search.cpan.org${dist_path}";
     return ($dist_tarball, $dist_tarball_url);
 }
 
@@ -1026,6 +1025,9 @@ INSTALL
         $make,
         @install
     );
+
+    unlink($self->{log_file});
+
     if($self->{verbose}) {
         $cmd = "($cmd) 2>&1 | tee $self->{log_file}";
         print "$cmd\n" if $self->{verbose};
@@ -1062,6 +1064,10 @@ SUCCESS
     else {
         die <<FAIL;
 Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
+You might want to try upgrading patchperl before trying again:
+
+  perlbrew install-patchperl
+
 If you want to force install the distribution, try:
 
   perlbrew --force install $self->{dist_name}
@@ -1072,8 +1078,8 @@ FAIL
 }
 
 sub do_system {
-  my ($self, $cmd) = @_;
-  return ! system($cmd);
+  my ($self, @cmd) = @_;
+  return ! system(@cmd);
 }
 
 sub do_capture {
@@ -1157,6 +1163,10 @@ sub perlbrew_env {
 
     if ($name) {
         my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
+
+        unless ($perl_name) {
+            die "\nERROR: The installation \"$name\" is unknown.\n\n";
+        }
 
         if(-d  "@{[ $self->root ]}/perls/$perl_name/bin") {
             $env{PERLBREW_PERL}    = $perl_name;
