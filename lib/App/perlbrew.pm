@@ -1039,7 +1039,7 @@ INSTALL
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
     if ($self->do_system($cmd)) {
-        my $newperl = catfile($self->root, "perls", $as, "bin", "perl"); 
+        my $newperl = catfile($self->root, "perls", $as, "bin", "perl");
         unless (-e $newperl) {
             $self->run_command_symlink_executables($as);
         }
@@ -1697,10 +1697,8 @@ sub run_command_display_cshrc {
     print CSHRC_CONTENT;
 }
 
-sub run_command_lib {
-    my ($self, $subcommand, @args) = @_;
-    unless ($subcommand) {
-        print <<'USAGE';
+sub lib_usage {
+    my $usage = <<'USAGE';
 
 Usage: perlbrew lib <action> <name> [<name> <name> ...]
 
@@ -1712,6 +1710,13 @@ Usage: perlbrew lib <action> <name> [<name> <name> ...]
     perlbrew lib delete perl-5.12.3@nobita shizuka
 
 USAGE
+    return $usage;
+}
+
+sub run_command_lib {
+    my ($self, $subcommand, @args) = @_;
+    unless ($subcommand) {
+        print lib_usage;
         return;
     }
 
@@ -1726,6 +1731,8 @@ USAGE
 
 sub run_command_lib_create {
     my ($self, $name) = @_;
+
+    die "ERROR: No lib name\n", lib_usage unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
@@ -1753,6 +1760,8 @@ sub run_command_lib_create {
 
 sub run_command_lib_delete {
     my ($self, $name) = @_;
+
+    die "ERROR: No lib to delete\n", lib_usage unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
