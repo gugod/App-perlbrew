@@ -55,7 +55,7 @@ INSTALLATION
     The recommended way to install perlbrew is to run these statements in
     your shell:
 
-        curl -L http://xrl.us/perlbrewinstall | bash
+        curl -Lk http://xrl.us/perlbrewinstall | bash
 
     After that, "perlbrew" installs itself to "~/perl5/perlbrew/bin", and
     you should follow the instruction on screen to setup your ".bashrc" or
@@ -75,7 +75,7 @@ INSTALLATION
     "PERLBREW_ROOT" environment variable before running the installer:
 
         export PERLBREW_ROOT=/opt/perlbrew
-        curl -L http://xrl.us/perlbrewinstall | bash
+        curl -Lk http://xrl.us/perlbrewinstall | bash
 
     You may also install perlbrew from CPAN:
 
