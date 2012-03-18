@@ -72,6 +72,10 @@ your terminal:
 
     curl -kL http://install.perlbrew.pl | bash
 
+Or this one, if you have C<fetch> (default on FreeBSD):
+
+    fetch -o- http://install.perlbrew.pl | sh
+
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
 should follow the instruction on screen to modify your shell rc file to put it
 in your PATH.

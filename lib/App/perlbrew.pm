@@ -235,6 +235,7 @@ sub min(@) {
             my @commands = (
                 # curl's --fail option makes the exit code meaningful
                 [qw( curl --silent --location --fail --insecure )],
+                [qw( fetch -o - )],
                 [qw( wget --no-check-certificate --quiet -O - )],
             );
             for my $command (@commands) {
@@ -258,6 +259,9 @@ sub min(@) {
         die 'Page not retrieved; HTTP error code 400 or above.'
             if $command[0] eq 'curl' # Exit code is 22 on 404s etc
             and $? >> 8 == 22; # exit code is packed into $?; see perlvar
+        die 'Page not retrieved: fetch failed.'
+            if $command[0] eq 'fetch' # Exit code is not 0 on error
+            and $?;
         die 'Server issued an error response.'
             if $command[0] eq 'wget' # Exit code is 8 on 404s etc
             and $? >> 8 == 8;
