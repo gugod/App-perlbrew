@@ -25,6 +25,9 @@ subtest "`perlbrew self-install` initialize the required dir structure under PER
     ok -f file($ENV{PERLBREW_ROOT}, "bin", "perlbrew");
     ok -f file($ENV{PERLBREW_ROOT}, "etc", "bashrc");
     ok -f file($ENV{PERLBREW_ROOT}, "etc", "cshrc");
+    ok -f file($ENV{PERLBREW_ROOT}, "etc", "csh_reinit");
+    ok -f file($ENV{PERLBREW_ROOT}, "etc", "csh_set_path");
+    ok -f file($ENV{PERLBREW_ROOT}, "etc", "csh_wrapper");
 };
 
 done_testing;
