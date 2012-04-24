@@ -511,7 +511,11 @@ sub run_command_help {
         }
     }
     else {
-        Pod::Usage::pod2usage(-verbose => $verbose||0, -exitval => (defined $status ? $status : 1));
+        Pod::Usage::pod2usage(
+            -noperldoc => 1,
+            -verbose => $verbose||0,
+            -exitval => (defined $status ? $status : 1)
+        );
     }
 }
 
