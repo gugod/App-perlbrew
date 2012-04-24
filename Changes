@@ -1,3 +1,6 @@
+- csh support. Big thanks to matzsoft.
+
+
 0.42:
 - Improvement: die when running perlbrew (use|switch) with unknown installation name.
 - clean 'build.log' on install. ref: RT #69168.
