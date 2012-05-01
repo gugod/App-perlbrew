@@ -1065,7 +1065,7 @@ sub do_install_archive {
     }
 
     unless ($dist_version && $installation_name) {
-        die "Unable to determin perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2\n";
+        die "Unable to determine perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2\n";
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
