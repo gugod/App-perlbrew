@@ -1106,7 +1106,30 @@ This could take a while. You can run the following command on another shell to t
 
 INSTALL
 
+    my @preconfigure_commands = (
+        "cd $dist_extracted_dir",
+        "rm -f config.sh Policy.sh",
+        $patchperl,
+    );
+
     my $configure_flags = '-de';
+    my @configure_commands = (
+        "sh Configure $configure_flags " .
+            join( ' ',
+                ( map { qq{'-D$_'} } @d_options ),
+                ( map { qq{'-U$_'} } @u_options ),
+                ( map { qq{'-A$_'} } @a_options ),
+            ),
+        $dist_version =~ /^5\.(\d+)\.(\d+)/
+            && ($1 < 8 || $1 == 8 && $2 < 9)
+                ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
+                : ()
+    );
+
+    my @build_commands = (
+        "make " . ($self->{j} ? "-j$self->{j}" : "")
+    );
+
     # Test via "make test_harness" if available so we'll get
     # automatic parallel testing via $HARNESS_OPTIONS. The
     # "test_harness" target was added in 5.7.3, which was the last
@@ -1119,27 +1142,15 @@ INSTALL
     local $ENV{TEST_JOBS}=$self->{j}
       if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-    my $make = "make " . ($self->{j} ? "-j$self->{j}" : "");
-    my @install = $self->{notest} ? "make install" : ("make $test_target", "make install");
-    @install    = join " && ", @install unless($self->{force});
+    my @install_commands = $self->{notest} ? "make install" : ("make $test_target", "make install");
+    @install_commands    = join " && ", @install_commands unless($self->{force});
 
     my $cmd = join ";",
     (
-        "cd $dist_extracted_dir",
-        "rm -f config.sh Policy.sh",
-        $patchperl,
-        "sh Configure $configure_flags " .
-            join( ' ',
-                ( map { qq{'-D$_'} } @d_options ),
-                ( map { qq{'-U$_'} } @u_options ),
-                ( map { qq{'-A$_'} } @a_options ),
-            ),
-        $dist_version =~ /^5\.(\d+)\.(\d+)/
-            && ($1 < 8 || $1 == 8 && $2 < 9)
-                ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
-                : (),
-        $make,
-        @install
+        @preconfigure_commands,
+        @configure_commands,
+        @build_commands,
+        @install_commands
     );
 
     unlink($self->{log_file});
