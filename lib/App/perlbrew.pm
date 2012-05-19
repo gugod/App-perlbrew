@@ -5,6 +5,7 @@ use 5.008;
 use Capture::Tiny;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
+use File::Basename;
 use File::Path::Tiny;
 use FindBin;
 use CPAN::Perl::Releases;
@@ -1059,7 +1060,7 @@ sub do_install_archive {
     my $dist_version;
     my $installation_name;
 
-    if ($dist_tarball_path =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
+    if (basename($dist_tarball_path) =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
         $dist_version = $1;
         $installation_name = "perl-${dist_version}";
     }
