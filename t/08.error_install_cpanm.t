@@ -1,13 +1,12 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use Path::Class;
-BEGIN {
-    $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
-}
-App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
 
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require 'test_helpers.pl';
+
 use Test::More;
 use Test::Exception;
 
@@ -23,5 +22,3 @@ throws_ok(
 );
 
 done_testing;
-
-App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );

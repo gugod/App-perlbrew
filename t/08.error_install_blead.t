@@ -1,14 +1,15 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
+
+use FindBin;
+use lib $FindBin::Bin;
+use App::perlbrew;
+require 'test_helpers.pl';
+
 use Test::More;
 use Test::Exception;
 use Path::Class;
-
-BEGIN {
-    $ENV{PERLBREW_ROOT} = file(__FILE__)->dir->subdir("mock_perlbrew_root");
-}
 
 use App::perlbrew;
 {
@@ -18,10 +19,6 @@ use App::perlbrew;
         $cb->("");
     }
 }
-
-App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
-App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("perls") );
-App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("build") );
 
 throws_ok(
     sub {

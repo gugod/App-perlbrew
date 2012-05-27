@@ -10,7 +10,7 @@ require 'test_helpers.pl';
 use Path::Class;
 use Test::More;
 
-diag "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
+note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 
 subtest "`perlbrew self-install` initialize the required dir structure under PERLBREW_ROOT", sub {
     my $app = App::perlbrew->new('--quiet', 'self-install');
@@ -25,6 +25,9 @@ subtest "`perlbrew self-install` initialize the required dir structure under PER
     ok -f file($ENV{PERLBREW_ROOT}, "bin", "perlbrew");
     ok -f file($ENV{PERLBREW_ROOT}, "etc", "bashrc");
     ok -f file($ENV{PERLBREW_ROOT}, "etc", "cshrc");
+    ok -f file($ENV{PERLBREW_ROOT}, "etc", "csh_reinit");
+    ok -f file($ENV{PERLBREW_ROOT}, "etc", "csh_set_path");
+    ok -f file($ENV{PERLBREW_ROOT}, "etc", "csh_wrapper");
 };
 
 done_testing;

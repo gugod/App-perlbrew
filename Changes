@@ -1,6 +1,21 @@
-NEXT:
+0.43:
+- cpantester-error fixes
+- csh support. Big thanks to matzsoft.
+- support 'fetch' command on FreeBSD.
+- Fix a bug that perlbrew failed to resolve version number when dist path contain "perl5"
+
+0.42:
+- Improvement: die when running perlbrew (use|switch) with unknown installation name.
+- clean 'build.log' on install. ref: RT #69168.
+
+0.41:
+- Fix installation issue when the specified version is not listed in CPAN::Perl::Releases
+- Fix sub-shell invocation for 'switch' and 'use' command. This is particularly for csh users, but it should also work for bash users.
+
+0.40:
 - Make the stanalone perlbrew program smaller by using Perl::Strip
 - use CPAN::Perl::Releases to decide the location of perl tarball -- less HTTP hits
+- Prefer $PERLBREW_ROOT/bin/patchperl if it is there.
 
 0.39:
 - Fix GH #179. lib naming are more consistent.

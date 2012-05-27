@@ -23,6 +23,10 @@ $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 
+App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("perls") );
+App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("build") );
+App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("dists") );
+
 no warnings 'redefine';
 
 sub App::perlbrew::do_install_release {
@@ -47,7 +51,7 @@ CODE
 
     chmod 0755, $perl;
 
-    diag "(mock) installed $name to $installation_dir";
+    note "(mock) installed $name to $installation_dir";
 }
 
 sub mock_perlbrew_install {

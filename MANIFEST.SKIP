@@ -33,3 +33,6 @@
 ^MYMETA.json$
 ^MYMETA.yml$
 ^t/mock_perlbrew_root/
+^.prove$
+^.travis.yml$
+
