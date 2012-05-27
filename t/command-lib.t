@@ -24,6 +24,24 @@ describe "lib command," => sub {
         } qr/usage/i;
     };
 
+    describe "without lib name" => sub {
+        it "create errs gracefully showing usage" => sub {
+            my $app = App::perlbrew->new;
+            throws_ok {
+                $app->{args} = [ "lib", "create"];
+                $app->run;
+            } qr/ERROR: /i;
+        };
+        it "delte errs gracefully showing usage" => sub {
+            my $app = App::perlbrew->new;
+            throws_ok {
+                $app->{args} = [ "lib", "delete"];
+                $app->run;
+            } qr/ERROR: /i;
+        };
+    };
+
+
     describe "`create` sub-command," => sub {
         my ($app, $libdir);
 
@@ -123,4 +141,3 @@ describe "lib command," => sub {
 };
 
 runtests unless caller;
-

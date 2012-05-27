@@ -1,3 +1,9 @@
+0.43:
+- cpantester-error fixes
+- csh support. Big thanks to matzsoft.
+- support 'fetch' command on FreeBSD.
+- Fix a bug that perlbrew failed to resolve version number when dist path contain "perl5"
+
 0.42:
 - Improvement: die when running perlbrew (use|switch) with unknown installation name.
 - clean 'build.log' on install. ref: RT #69168.
