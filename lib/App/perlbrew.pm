@@ -1942,6 +1942,56 @@ sub run_command_lib_list {
     }
 }
 
+sub run_command_upgrade_perl {
+    my ($self) = @_;
+
+    my $PERL_VERSION_RE = qr/(\d+)\.(\d+)\.(\d+)/;
+
+    my ( $current ) = grep { $_->{is_current} } $self->installed_perls;
+
+    unless(defined $current) {
+        print "no perlbrew environment is currently in use\n";
+        exit 1;
+    }
+
+    my ( $major, $minor, $release );
+
+    if($current->{version} =~ /^$PERL_VERSION_RE$/) {
+        ( $major, $minor, $release ) = ( $1, $2, $3 );
+    } else {
+        print "unable to parse version '$current->{version}'\n";
+        exit 1;
+    }
+
+    my @available = grep {
+        /^perl-$major\.$minor/
+    } $self->available_perls;
+
+    my $latest_available_perl = $release;
+
+    foreach my $perl (@available) {
+        if($perl =~ /^perl-$PERL_VERSION_RE$/) {
+            my $this_release = $3;
+            if($this_release > $latest_available_perl) {
+                $latest_available_perl = $this_release;
+            }
+        }
+    }
+
+    if($latest_available_perl == $release) {
+        print "This perlbrew environment ($current->{name}) is already up-to-date.\n";
+        exit 0;
+    }
+
+    my $dist_version = "$major.$minor.$latest_available_perl";
+    my $dist         = "perl-$dist_version";
+
+    print "Upgrading $current->{name} to $dist_version\n";
+    local $self->{as}        = $current->{name};
+    local $self->{dist_name} = $dist;
+    $self->do_install_release($dist);
+}
+
 sub resolve_installation_name {
     my ($self, $name) = @_;
     die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
