@@ -10,7 +10,7 @@ use File::Path::Tiny;
 use FindBin;
 use CPAN::Perl::Releases;
 
-our $VERSION = "0.42";
+our $VERSION = "0.43";
 our $CONFIG;
 
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
