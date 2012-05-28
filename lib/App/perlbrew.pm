@@ -1098,6 +1098,11 @@ sub do_install_this {
 
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
+
+    unless (grep { /eval:scripdir=/} @a_options) {
+        push @a_options, "'eval:scriptdir=${perlpath}/bin'";
+    }
+
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$as") . "\n";
     print <<INSTALL if !$self->{verbose};
 
