@@ -1336,16 +1336,21 @@ sub perlbrew_env {
         }
         else {
             if ($self->env("PERLBREW_LIB")) {
-                $env{PERLBREW_LIB}        = undef;
-                $env{PERL_MM_OPT}         = undef;
-                $env{PERL_MB_OPT}         = undef;
-                $env{PERL5LIB}            = undef;
-                $env{PERL_LOCAL_LIB_ROOT} = undef;
+                $env{PERLBREW_LIB}        = "";
+                $env{PERL_MM_OPT}         = "";
+                $env{PERL_MB_OPT}         = "";
+                $env{PERL5LIB}            = "";
+                $env{PERL_LOCAL_LIB_ROOT} = "";
             }
         }
     }
     else {
         $env{PERLBREW_PERL} = "";
+        $env{PERLBREW_LIB}  = "";
+        $env{PERL_MM_OPT}   = "";
+        $env{PERL_MB_OPT}   = "";
+        $env{PERL5LIB}      = "";
+        $env{PERL_LOCAL_LIB_ROOT} = "";
     }
 
     return %env;
