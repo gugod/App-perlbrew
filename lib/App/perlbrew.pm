@@ -67,7 +67,7 @@ __perlbrew_reinit () {
 __perlbrew_set_path () {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
-    export PATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};')"
+    export PATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};')"
 
     if [[ -z "$PERLBREW_PATH" ]]; then
         export PERLBREW_PATH="$PERLBREW_ROOT/bin"
