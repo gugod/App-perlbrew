@@ -2,6 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
+use Config;
 use Capture::Tiny;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
@@ -1054,9 +1055,8 @@ sub run_command_install {
     return;
 }
 
-sub system_perl_shebang {
+sub system_perl_path {
     my ($self) = @_;
-
     my $path = $self->env("PATH") or return;
     my $perlbrew_root = $self->root;
     my $perlbrew_home = $PERLBREW_HOME;
@@ -1067,12 +1067,17 @@ sub system_perl_shebang {
         index($_, $perlbrew_root) < 0
     } split /:/, $path;
 
-    my $system_perl_shebang = do {
+    my $system_perl_path = do {
         local $ENV{PATH} = join(":", @path_without_perlbrew);
-        `perl -MConfig -e 'print \$Config{startperl}'`
+        `perl -MConfig -e 'print \$Config{perlpath}'`
     };
 
-    return $system_perl_shebang;
+    return $system_perl_path;
+}
+
+sub system_perl_shebang {
+    my ($self) = @_;
+    return $Config{sharpbang}. $self->system_perl_path;
 }
 
 sub run_command_display_system_perl_shebang {
@@ -1232,6 +1237,7 @@ If you want to force install the distribution, try:
   perlbrew --force install $self->{dist_name}
 
 FAIL
+
 
     }
     return;
@@ -1427,6 +1433,7 @@ way to work with perlbrew:
 
 --------------------------------------------------------------------------------
 WARNINGONMAC
+
 
         }
     }
@@ -1877,6 +1884,8 @@ Usage: perlbrew lib <action> <name> [<name> <name> ...]
     perlbrew lib delete perl-5.12.3@nobita shizuka
 
 USAGE
+
+
     return $usage;
 }
 
