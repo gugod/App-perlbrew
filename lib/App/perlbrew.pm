@@ -1054,6 +1054,32 @@ sub run_command_install {
     return;
 }
 
+sub system_perl_shebang {
+    my ($self) = @_;
+
+    my $path = $self->env("PATH") or return;
+    my $perlbrew_root = $self->root;
+    my $perlbrew_home = $PERLBREW_HOME;
+
+    my @path_without_perlbrew = grep {
+        index($_, $perlbrew_home) < 0
+    } grep {
+        index($_, $perlbrew_root) < 0
+    } split /:/, $path;
+
+    my $system_perl_shebang = do {
+        local $ENV{PATH} = join(":", @path_without_perlbrew);
+        `perl -MConfig -e 'print \$Config{startperl}'`
+    };
+
+    return $system_perl_shebang;
+}
+
+sub run_command_display_system_perl_shebang {
+    my ($self) = @_;
+    print $self->system_perl_shebang . "\n";
+}
+
 sub do_install_archive {
     my $self = shift;
     my $dist_tarball_path = shift;
@@ -1151,7 +1177,7 @@ INSTALL
     my @install_commands = $self->{notest} ? "make install" : ("make $test_target", "make install");
     @install_commands    = join " && ", @install_commands unless($self->{force});
 
-    my $cmd = join ";",
+    my $cmd = join " && ",
     (
         @preconfigure_commands,
         @configure_commands,
@@ -1206,6 +1232,7 @@ If you want to force install the distribution, try:
   perlbrew --force install $self->{dist_name}
 
 FAIL
+
     }
     return;
 }
@@ -1400,6 +1427,7 @@ way to work with perlbrew:
 
 --------------------------------------------------------------------------------
 WARNINGONMAC
+
         }
     }
     elsif  ($shell =~ /\/bash$/)  {
@@ -1781,6 +1809,7 @@ Usage: perlbrew alias [-f] <action> <name> [<alias>]
     perlbrew alias rename <old_alias> <new_alias>
 
 USAGE
+
         return;
     }
 
