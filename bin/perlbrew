@@ -38,6 +38,8 @@ Commands:
     install-cpanm      Install cpanm, a friendly companion.
     install-patchperl  Install patchperl
 
+    self-install       Install perlbrew itself under PERLBREW_ROOT/bin
+
     mirror         Pick a preferred mirror site
     version        Display version
     help           Read more detailed instructions
@@ -425,7 +427,7 @@ used by the perlbrew installer. However, you may manually do the following to
 re-install only the C<perlbrew> executable:
 
     curl -kL http://get.perlbrew.pl -o perlbrew
-    perl ./perlbrew install
+    perl ./perlbrew self-install
 
 It is slightly different from running the perlbrew installer because
 C<patchperl> is not installed in this case.
