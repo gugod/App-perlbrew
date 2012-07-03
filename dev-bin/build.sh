@@ -14,10 +14,8 @@ perl -e 'print "+++ perlbrew fatpacking with $]\n"'
 
 export PERL5LIB="lib":$PERL5LIB
 
-cat - <<'EOF' > perlbrew
-#!/bin/sh -- # −*−perl−*−
-eval 'exec perl -wS $0 ${1+"$@"}'
-  if 0;
+cat - <<"EOF" > perlbrew
+#!/usr/bin/perl
 EOF
 
 (fatpack file; cat ../bin/perlbrew) >> perlbrew
