@@ -596,7 +596,6 @@ sub run_command_help {
                 -output    => $fh,
                 -noperldoc => 1
             );
-
             $out =~ s/\A[^\n]+\n//s;
             $out =~ s/^    //gm;
 
@@ -2244,6 +2243,9 @@ L<http://github.com/gugod/App-perlbrew/issues> and RT
 tracking. Issues sent to these two systems will eventually be reviewed
 and handled.
 
+See L<https://github.com/gugod/App-perlbrew/contributors> for a list
+of project contributors.
+
 =head1 AUTHOR
 
 Kang-min Liu  C<< <gugod@gugod.org> >>
@@ -2255,10 +2257,6 @@ Copyright (c) 2010, 2011, 2012 Kang-min Liu C<< <gugod@gugod.org> >>.
 =head1 LICENCE
 
 The MIT License
-
-=head1 CONTRIBUTORS
-
-See L<https://github.com/gugod/App-perlbrew/contributors>
 
 =head1 DISCLAIMER OF WARRANTY
 
