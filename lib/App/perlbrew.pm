@@ -815,7 +815,6 @@ INSTRUCTION
 
 sub run_command_self_install {
     my $self = shift;
-    require File::Copy;
 
     my $executable = $0;
 
@@ -830,7 +829,17 @@ sub run_command_self_install {
     }
 
     mkpath( catdir($self->root, "bin" ));
-    File::Copy::copy($executable, $target);
+
+    open my $fh, "<", $executable;
+    my @lines =  <$fh>;
+    close $fh;
+
+    $lines[0] = $self->system_perl_shebang . "\n";
+
+    open $fh, ">", $target;
+    print $fh $_ for @lines;
+    close $fh;
+
     chmod(0755, $target);
 
     my $path = $self->path_with_tilde($target);
