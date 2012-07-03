@@ -2115,6 +2115,9 @@ App::perlbrew - Manage perl installations in your $HOME
 
 =head1 SYNOPSIS
 
+    # Installation
+    curl -kL http://install.perlbrew.pl | bash
+
     # Initialize
     perlbrew init
 
@@ -2163,6 +2166,60 @@ For the documentation of perlbrew usage see L<perlbrew> command
 on CPAN, or by running C<perlbrew help>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
+
+=head1 INSTALLATION
+
+It is the simpleist to use the perlbrew installer, just paste this statement to
+your terminal:
+
+    curl -kL http://install.perlbrew.pl | bash
+
+Or this one, if you have C<fetch> (default on FreeBSD):
+
+    fetch -o- http://install.perlbrew.pl | sh
+
+After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
+should follow the instruction on screen to modify your shell rc file to put it
+in your PATH.
+
+The installed perlbrew command is a standalone executable that can be run with
+system perl. The minimun system perl version requirement is 5.8.0, which should
+be good enough for most of the OSes these days.
+
+A packed version of C<patchperl> to C<~/perl5/perlbrew/bin>, which is required
+to build old perls.
+
+The directory C<~/perl5/perlbrew> will contain all install perl executables,
+libraries, documentations, lib, site_libs. In the documentation, that directory
+is referred as "perlbrew root". If you need to set it to somewhere else because,
+say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
+environment variable before running the installer:
+
+    export PERLBREW_ROOT=/opt/perl5
+    curl -kL http://install.perlbrew.pl | bash
+
+You may also install perlbrew from CPAN:
+
+    cpan App::perlbrew
+
+In this case, the perlbrew command is installed as C</usr/bin/perlbrew> or
+C</usr/local/bin/perlbrew> or others, depending on the location of your system
+perl installation.
+
+Please make sure not to run this with one of the perls brewed with
+perlbrew. It's the best to turn perlbrew off before you run that, if you're
+upgrading.
+
+    perlbrew off
+    cpan App::perlbrew
+
+You should always use system cpan (like /usr/bin/cpan) to install
+C<App::perlbrew> because it will be installed under a system PATH like
+C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
+
+The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
+command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
+again.
 
 =head1 METHODS
 
