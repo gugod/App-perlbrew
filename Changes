@@ -1,3 +1,4 @@
+- some documentation tweaks
 - fix: `perlbrew use` to/from a lib has not been working properly.
 
 0.43:
