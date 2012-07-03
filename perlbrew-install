@@ -37,7 +37,7 @@ $PERLBREWDOWNLOAD || clean_exit 1
 echo
 echo "## Installing perlbrew"
 chmod +x $LOCALINSTALLER
-./$LOCALINSTALLER install || clean_exit 1
+./$LOCALINSTALLER self-install || clean_exit 1
 
 echo "## Installing patchperl"
 ./$LOCALINSTALLER -f -q install-patchperl || clean_exit 1
