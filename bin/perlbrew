@@ -1,4 +1,4 @@
-#!perl
+#!/usr/bin/perl
 use strict;
 use App::perlbrew;
 
@@ -26,6 +26,7 @@ Commands:
     available      List perls available to install
     lib            Manage local::lib directories.
     alias          Give perl installations a new name
+    upgrade-perl   Upgrade the current perl
 
     list           List perl installations
     use            Use the specified perl in current shell
@@ -37,24 +38,11 @@ Commands:
     install-cpanm      Install cpanm, a friendly companion.
     install-patchperl  Install patchperl
 
+    self-install       Install perlbrew itself under PERLBREW_ROOT/bin
+
     mirror         Pick a preferred mirror site
     version        Display version
     help           Read more detailed instructions
-
-Options for C<install> command:
-
-    -f --force     Force installation
-    -j $n          Parallel buildng and testing. ex. C<perlbrew install -j 5 perl-5.14.2>
-    -n --notest    Skip testing
-
-       --as        Install the given version of perl by a name.
-                   ex. C<perlbrew install perl-5.6.2 --as legacy-perl>
-
-    -D,-U,-A       Switches passed to perl Configure script.
-                   ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
-
-    --sitecustomize $filename
-                   Specify a file to be installed as sitecustomize.pl
 
 Generic command options:
 
@@ -64,60 +52,6 @@ Generic command options:
 See `perlbrew help` for the full documentation of perlbrew, or
 
 See `perlbrew help <command>` for detail description of the command.
-
-=head1 INSTALLATION
-
-It is the simpleist to use the perlbrew installer, just paste this statement to
-your terminal:
-
-    curl -kL http://install.perlbrew.pl | bash
-
-Or this one, if you have C<fetch> (default on FreeBSD):
-
-    fetch -o- http://install.perlbrew.pl | sh
-
-After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
-should follow the instruction on screen to modify your shell rc file to put it
-in your PATH.
-
-The installed perlbrew command is a standalone executable that can be run with
-system perl. The minimun system perl version requirement is 5.8.0, which should
-be good enough for most of the OSes these days.
-
-A packed version of C<patchperl> to C<~/perl5/perlbrew/bin>, which is required
-to build old perls.
-
-The directory C<~/perl5/perlbrew> will contain all install perl executables,
-libraries, documentations, lib, site_libs. In the documentation, that directory
-is referred as "perlbrew root". If you need to set it to somewhere else because,
-say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
-environment variable before running the installer:
-
-    export PERLBREW_ROOT=/opt/perl5
-    curl -kL http://install.perlbrew.pl | bash
-
-You may also install perlbrew from CPAN:
-
-    cpan App::perlbrew
-
-In this case, the perlbrew command is installed as C</usr/bin/perlbrew> or
-C</usr/local/bin/perlbrew> or others, depending on the location of your system
-perl installation.
-
-Please make sure not to run this with one of the perls brewed with
-perlbrew. It's the best to turn perlbrew off before you run that, if you're
-upgrading.
-
-    perlbrew off
-    cpan App::perlbrew
-
-You should always use system cpan (like /usr/bin/cpan) to install
-C<App::perlbrew> because it will be installed under a system PATH like
-C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
-
-The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
-command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
-again.
 
 =head1 CONFIGURATION
 
@@ -196,7 +130,9 @@ one-line installer manually, this command is invoked automatically.
 
 =over 4
 
-=item B<install> [ perl-<version> | <version> ]
+=item B<install> [options] perl-<version>
+
+=item B<install> [options] <version>
 
 Build and install the given version of perl.
 
@@ -208,28 +144,51 @@ mirror site configured before.
 
 To configure mirror site, invoke `mirror` command.
 
-=item B<install> [ perl-blead | blead ]
+=item B<install> [options]  perl-blead
+
+=item B<install> [options]  blead
 
 A special way to install the blead version of perl, which is downloaded from
 this specific URL regardless of mirror settings:
 
     http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
 
-=item B<install> /path/to/perl/git/checkout/dir
+=item B<install>  [options] /path/to/perl/git/checkout/dir
 
 Build and install from the given git checkout dir.
 
 
-=item B<install> /path/to/perl-5.14.0.tar.gz
+=item B<install>  [options] /path/to/perl-5.14.0.tar.gz
 
 Build and install from the given archive file.
 
-=item B<install> http://example.com/mirror/perl-5.12.3.tar.gz
+=item B<install>  [options] http://example.com/mirror/perl-5.12.3.tar.gz
 
 Build and install from the given URL. Supported URL schemes are C<http://>,
 C<https://>, C<ftp://> and C<file://>.
 
 =back
+
+Options for C<install> command:
+
+    -f --force     Force installation
+    -j $n          Parallel buildng and testing. ex. C<perlbrew install -j 5 perl-5.14.2>
+    -n --notest    Skip testing
+
+       --as        Install the given version of perl by a name.
+                   ex. C<perlbrew install perl-5.6.2 --as legacy-perl>
+
+    -D,-U,-A       Switches passed to perl Configure script.
+                   ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
+
+    --sitecustomize $filename
+                   Specify a file to be installed as sitecustomize.pl
+
+
+By default, all installations are configured after their name like this:
+
+    sh Configure -de -Dprefix=$PERLBREW_ROOT/perls/<name>
+
 
 =head1 COMMAND: UNINSTALL
 
@@ -424,7 +383,7 @@ used by the perlbrew installer. However, you may manually do the following to
 re-install only the C<perlbrew> executable:
 
     curl -kL http://get.perlbrew.pl -o perlbrew
-    perl ./perlbrew install
+    perl ./perlbrew self-install
 
 It is slightly different from running the perlbrew installer because
 C<patchperl> is not installed in this case.
@@ -475,6 +434,12 @@ Short lib names are local to current perl. A lib name 'nobita' can refer to
 When C<use>ing or C<switch>ing to a lib, always provide the long name. A simple
 rule: the argument to C<use> or C<siwtch> command should appear in the output of
 C<perlbrew list>.
+
+=head1 COMMAND: UPGRADE-PERL
+
+Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so
+this command offers you the ability to upgrade older perlbrew environments
+in place.
 
 =head1 UPGRADE NOTES
 

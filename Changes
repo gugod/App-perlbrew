@@ -1,3 +1,9 @@
+0.44:
+- Notice: "self-install" command now alters the shebang to use system perl
+- Notice: "install-patchperl" command now alters the shebang to use system perl.
+- some documentation tweaks
+- fix: `perlbrew use` to/from a lib has not been working properly.
+
 0.43:
 - cpantester-error fixes
 - csh support. Big thanks to matzsoft.
