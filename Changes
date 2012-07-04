@@ -1,3 +1,4 @@
+0.44:
 - Notice: "self-install" command now alters the shebang to use system perl
 - Notice: "install-patchperl" command now alters the shebang to use system perl.
 - some documentation tweaks
