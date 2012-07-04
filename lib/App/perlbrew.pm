@@ -1697,6 +1697,8 @@ sub run_command_install_patchperl {
 
     mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
     open my $OUT, '>', $out or die "cannot open file($out): $!";
+
+    $body =~ s/\A#!.+?\n/ $self->system_perl_shebang . "\n" /se;
     print $OUT $body;
     close $OUT;
     chmod 0755, $out;
