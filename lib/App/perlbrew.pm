@@ -1707,6 +1707,34 @@ sub run_command_install_patchperl {
         unless $self->{quiet};
 }
 
+sub run_command_install_ack {
+    my ($self) = @_;
+    my $out = $self->root . "/bin/ack";
+
+    if (-f $out && !$self->{force}) {
+        require ExtUtils::MakeMaker;
+
+        my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
+
+        if ($ans !~ /^Y/i) {
+            print "\nack installation skipped.\n\n"
+            unless $self->{quiet};
+            return;
+        }
+    }
+
+    my $body = http_get('http://betterthangrep.com/ack-standalone');
+
+    unless ($body) {
+        die "\nERROR: Failed to retrieve ack executable.\n\n";
+    }
+
+    mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
+    open my $OUT, '>', $out or die "cannot open file($out): $!";
+
+    print "\nack is installed to\n\n\t$out\n\n" unless $self->{quiet};
+}
+
 sub run_command_self_upgrade {
     my ($self) = @_;
     my $TMPDIR = $ENV{TMPDIR} || "/tmp";
