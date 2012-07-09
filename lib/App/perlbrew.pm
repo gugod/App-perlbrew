@@ -1567,10 +1567,9 @@ sub run_command_exec {
         local $ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
         local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
 
-        print "$i->{name}\n==========\n";
+        print "$i->{name}\n==========\n" unless $self->{quiet};
         $self->do_system(@ARGV);
-        print "\n\n";
-        # print "\n<===\n\n\n";
+        print "\n\n" unless $self->{quiet};
     }
 }
 
@@ -1822,6 +1821,18 @@ sub run_command_upgrade_perl {
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
     $self->do_install_release($dist);
+}
+
+sub run_command_list_modules {
+    my ($self) = @_;
+
+    $self->{quiet} = 1;
+    $self->{original_argv} = [
+        "exec", "--with", $ENV{PERLBREW_PERL},
+        'perl', '-MExtUtils::Installed', '-le', 'print for ExtUtils::Installed->new->modules'
+    ];
+
+    $self->run_command_exec();
 }
 
 sub resolve_installation_name {
