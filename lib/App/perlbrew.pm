@@ -1552,7 +1552,7 @@ sub run_command_exec {
         'with=s',
     );
 
-    my @exec_with = $self->installed_perls;
+    my @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
 
     if ($opts{with}) {
         @exec_with = grep { $_->{name} eq $opts{with} } @exec_with;
