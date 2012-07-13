@@ -398,6 +398,7 @@ Show the version of perlbrew.
 
 Usage:
 
+    perlbrew lib list
     perlbrew lib create <lib-name>
     perlbrew lib delete <lib-name>
 
