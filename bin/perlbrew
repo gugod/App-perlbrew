@@ -432,7 +432,7 @@ Short lib names are local to current perl. A lib name 'nobita' can refer to
 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your current perl.
 
 When C<use>ing or C<switch>ing to a lib, always provide the long name. A simple
-rule: the argument to C<use> or C<siwtch> command should appear in the output of
+rule: the argument to C<use> or C<switch> command should appear in the output of
 C<perlbrew list>.
 
 =head1 COMMAND: UPGRADE-PERL
