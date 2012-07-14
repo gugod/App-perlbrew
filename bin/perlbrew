@@ -34,6 +34,8 @@ Commands:
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
 
+    exec           Execute command for all perls, one by one
+
     self-upgrade       Upgrade perlbrew itself.
     install-cpanm      Install cpanm, a friendly companion.
     install-patchperl  Install patchperl
