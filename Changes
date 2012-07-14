@@ -1,3 +1,9 @@
+0.45:
+- New command: install-ack . This install the standalone version of ack under $PERLBREW_ROOT/bin
+- New command: list-modules
+- `exec` command now also iterates thourgh all the libs
+- Documented the `--with` argument of exec command. See `perlbrew help exec`
+
 0.44:
 - Notice: "self-install" command now alters the shebang to use system perl
 - Notice: "install-patchperl" command now alters the shebang to use system perl.

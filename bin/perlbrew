@@ -33,12 +33,14 @@ Commands:
     off            Turn off perlbrew in current shell
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
-
-    self-upgrade       Upgrade perlbrew itself.
-    install-cpanm      Install cpanm, a friendly companion.
-    install-patchperl  Install patchperl
+    exec           exec programs with specified perl enviroments.
 
     self-install       Install perlbrew itself under PERLBREW_ROOT/bin
+    self-upgrade       Upgrade perlbrew itself.
+
+    install-patchperl  Install patchperl
+    install-cpanm      Install cpanm, a friendly companion.
+    install-ack        Install ack
 
     mirror         Pick a preferred mirror site
     version        Display version
@@ -274,23 +276,19 @@ from. Hit 'q' to cancel the selection.
 
 =head1 COMMAND: EXEC
 
-Usage: perlbrew exec <command> <args...>
+Usage: perlbrew exec [--with perl-name] <command> <args...>
 
-Execute command for all perls, one by one.
+Execute command for each perl installations, one by one.
 
 For example, run a Hello program:
 
     perlbrew exec perl -e 'print "Hello from $]\n"'
 
-The output depends on your perl installations, and looks like this:
+The output may look like this:
 
     perl-5.12.2
     ==========
     Hello word from perl-5.012002
-    
-    perl-5.12.3
-    ==========
-    Hello word from perl-5.012003
     
     perl-5.13.10
     ==========
@@ -301,6 +299,12 @@ The output depends on your perl installations, and looks like this:
     Hello word from perl-5.014000
 
 Notice that the command is not executed in parallel.
+
+When C<--with> arugemnt is provided, the command will be only executed
+with the specified perl. The following command install Moose module
+into perl-5.12, regardless the current perl:
+
+    perlbrew exec --with perl-5.12 cpanm Moose
 
 =head1 COMMAND: ENV
 
@@ -398,6 +402,7 @@ Show the version of perlbrew.
 
 Usage:
 
+    perlbrew lib list
     perlbrew lib create <lib-name>
     perlbrew lib delete <lib-name>
 
@@ -432,7 +437,7 @@ Short lib names are local to current perl. A lib name 'nobita' can refer to
 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your current perl.
 
 When C<use>ing or C<switch>ing to a lib, always provide the long name. A simple
-rule: the argument to C<use> or C<siwtch> command should appear in the output of
+rule: the argument to C<use> or C<switch> command should appear in the output of
 C<perlbrew list>.
 
 =head1 COMMAND: UPGRADE-PERL
@@ -441,37 +446,34 @@ Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so
 this command offers you the ability to upgrade older perlbrew environments
 in place.
 
+=head1 COMMAND: INSTALL-ACK
+
+Install the stanalone version of C<ack> program under C<$PERLBREW_ROOT/bin>.
+
+=head1 COMMAND: LIST-MODULES
+
+List all installed cpan modules for the current perl.
+
+This command can be used in conjuntion with `perlbrew exec` to migrate
+your module installation to different perl. The following command
+re-install all modules under perl-5.16.0:
+
+    perlbrew list-modules | perlbrew exec --with perl-5.16.0 cpanm
+
 =head1 UPGRADE NOTES
 
-If you plan to upgrade C<perlbrew> from version 0.16 or order to a recent
-version, you should do these steps to adjust your perl installations:
-
-    1. remove $PERLBREW_ROOT/perls/current if it exists
-    2. remove symlinks under $PERLBREW_ROOT/perls/bin
-    3. run C<perlbrew symlink-executables>
-    4. run C<perlbrew init>
-    5. run C<perlbrew switch $something> to set your default perl.
-
-Or simply run these statements to do so (you might need to change the value of PERLBREW_ROOT):
+If you are upgrading C<perlbrew> from 0.16 or ealier versions to a recent
+one (0.40-ish), you should do these steps to adjust your perl installations
+afterwards (you might need to change the value of PERLBREW_ROOT):
 
     export PERLBREW_ROOT=${HOME}/perl5/perlbrew
     rm -f $PERLBREW_ROOT/perls/current
     rm -f `find $PERLBREW_ROOT/perls/bin -type l`
     perlbrew symlink-executables
     perlbrew init
-    perlbrew switch perl-5.14.2 # or other ones.
 
-Finally, you should add this line to the end of your C<~/.bash_profile> or
-C<~/.zshenv> file:
-
-    source "$HOME/perl5/perlbrew/etc/bashrc"
-
-Or if you have differnt PERLBREW_ROOT at, say, C</opt/perl5>, add:
-
-    export PERLBREW_ROOT=/opt/perl5
-    source "$PERLBREW_ROOT/etc/bashrc"
-
-After doing that, you will be good to go.
+Following the instructions on screen to tweak your shell a bit. Then it
+should be good.
 
 =head1 SEE ALSO
 
