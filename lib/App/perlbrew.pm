@@ -1003,6 +1003,36 @@ FAIL
     return;
 }
 
+sub do_install_program_from_url {
+    my ($self, $url, $program_name, $body_filter) = @_;
+
+    my $out = $self->root . "/bin/" . $program_name;
+
+    if (-f $out && !$self->{force}) {
+        require ExtUtils::MakeMaker;
+
+        my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
+
+        if ($ans !~ /^Y/i) {
+            print "\n$program_name installation skipped.\n\n" unless $self->{quiet};
+            return;
+        }
+    }
+
+    my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
+
+    if ($body_filter && ref($body_filter) eq "CODE") {
+        $body = $body_filter->($body);
+    }
+
+    mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
+    open my $OUT, '>', $out or die "cannot open file($out): $!";
+    print $OUT $body;
+    close $OUT;
+    chmod 0755, $out;
+    print "\n$program_name is installed to\n\n    $out\n\n" unless $self->{quiet};
+}
+
 sub do_system {
   my ($self, @cmd) = @_;
   return ! system(@cmd);
@@ -1392,99 +1422,27 @@ sub run_command_symlink_executables {
     }
 }
 
-sub run_command_install_cpanm {
-    my ($self, $perl) = @_;
-    my $out = "@{[ $self->root ]}/bin/cpanm";
-
-    if (-f $out && !$self->{force}) {
-        require ExtUtils::MakeMaker;
-
-        my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
-
-        if ($ans !~ /^Y/i) {
-            print "\ncpanm installation skipped.\n\n"
-                unless $self->{quiet};
-            exit;
-        }
-    }
-
-    my $body = http_get('https://github.com/miyagawa/cpanminus/raw/master/cpanm');
-
-    unless ($body) {
-        die "\nERROR: Failed to retrieve cpanm executable.\n\n";
-    }
-
-    mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
-
-    open my $CPANM, '>', $out or die "cannot open file($out): $!";
-    print $CPANM $body;
-    close $CPANM;
-    chmod 0755, $out;
-
-    print "\ncpanm is installed to\n\n\t$out\n\n"
-        unless $self->{quiet};
-}
-
 sub run_command_install_patchperl {
     my ($self) = @_;
-    my $out = "@{[ $self->root ]}/bin/patchperl";
-
-    if (-f $out && !$self->{force}) {
-        require ExtUtils::MakeMaker;
-
-        my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
-
-        if ($ans !~ /^Y/i) {
-            print "\npatchperl installation skipped.\n\n"
-                unless $self->{quiet};
-            exit;
+    $self->do_install_program_from_url(
+        'https://raw.github.com/gugod/patchperl-packing/master/patchperl',
+        'patchperl',
+        sub {
+            my ($body) = @_;
+            $body =~ s/\A#!.+?\n/ $self->system_perl_shebang . "\n" /se;
+            return $body;
         }
-    }
+    );
+}
 
-    my $body = http_get('https://raw.github.com/gugod/patchperl-packing/master/patchperl');
-
-    unless ($body) {
-        die "\nERROR: Failed to retrieve patchperl executable.\n\n";
-    }
-
-    mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
-    open my $OUT, '>', $out or die "cannot open file($out): $!";
-
-    $body =~ s/\A#!.+?\n/ $self->system_perl_shebang . "\n" /se;
-    print $OUT $body;
-    close $OUT;
-    chmod 0755, $out;
-
-    print "\npatchperl is installed to\n\n\t$out\n\n"
-        unless $self->{quiet};
+sub run_command_install_cpanm {
+    my ($self) = @_;
+    $self->do_install_program_from_url('https://github.com/miyagawa/cpanminus/raw/master/cpanm' => 'cpanm');
 }
 
 sub run_command_install_ack {
     my ($self) = @_;
-    my $out = $self->root . "/bin/ack";
-
-    if (-f $out && !$self->{force}) {
-        require ExtUtils::MakeMaker;
-
-        my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
-
-        if ($ans !~ /^Y/i) {
-            print "\nack installation skipped.\n\n"
-            unless $self->{quiet};
-            return;
-        }
-    }
-
-    my $body = http_get('http://betterthangrep.com/ack-standalone');
-
-    unless ($body) {
-        die "\nERROR: Failed to retrieve ack executable.\n\n";
-    }
-
-    mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
-    open my $OUT, '>', $out or die "cannot open file($out): $!";
-
-    print "\nack is installed to\n\n\t$out\n\n" unless $self->{quiet};
+    $self->do_install_program_from_url('http://betterthangrep.com/ack-standalone' => 'ack');
 }
 
 sub run_command_self_upgrade {
