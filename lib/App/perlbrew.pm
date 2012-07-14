@@ -770,6 +770,12 @@ sub run_command_install {
     $self->{dist_name} = $dist;
 
     unless ($dist) {
+        ## Show a deprecation warning.
+        print STDERR "-" x 76 . "\n";
+        print STDERR "DEPRECATION WARNING:\n\n  Run `perlbrew install` to install perlbrew itself is deprecated. \n  Please run `perlbrew self-install` in the future instead.\n\n";
+        print STDERR "-" x 76 . "\n\n";
+        sleep 5;
+
         $self->run_command_self_install();
         return
     }
