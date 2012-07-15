@@ -1474,7 +1474,7 @@ sub run_command_self_upgrade {
         print "Your perlbrew is up-to-date.\n";
         return;
     }
-    system $TMP_PERLBREW, "install";
+    system $TMP_PERLBREW, "self-install";
     unlink $TMP_PERLBREW;
 }
 
