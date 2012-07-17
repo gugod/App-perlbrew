@@ -1519,7 +1519,13 @@ sub run_command_exec {
     my @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
 
     if ($opts{with}) {
-        @exec_with = grep { $_->{name} eq $opts{with} } @exec_with;
+        my $d = ($opts{with} =~ / /) ? qr( +) : qr(,+);
+        my %x = map { ($_ => 1) } split $d, $opts{with};
+        @exec_with = grep { $x{ $_->{name} } } @exec_with;
+    }
+
+    if (0 == @exec_with) {
+        print "No perl installation found.\n" unless $self->{quiet};
     }
 
     for my $i ( @exec_with ) {
