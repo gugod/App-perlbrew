@@ -1,3 +1,8 @@
+0.46:
+- fix: The deprecation warning when running `self-upgrde`
+- fix: system MANPATH detection 
+- improvement: Specifying multiple perl: `exec --with perl-5.14.2,perl-5.16.0`
+
 0.45:
 - New command: install-ack . This install the standalone version of ack under $PERLBREW_ROOT/bin
 - New command: list-modules
