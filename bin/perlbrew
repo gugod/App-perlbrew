@@ -276,7 +276,7 @@ from. Hit 'q' to cancel the selection.
 
 =head1 COMMAND: EXEC
 
-Usage: perlbrew exec [--with perl-name] <command> <args...>
+Usage: perlbrew exec [--with perl-name[,perl-name...]] <command> <args...>
 
 Execute command for each perl installations, one by one.
 
@@ -284,27 +284,45 @@ For example, run a Hello program:
 
     perlbrew exec perl -e 'print "Hello from $]\n"'
 
-The output may look like this:
+The output looks like this:
 
     perl-5.12.2
     ==========
     Hello word from perl-5.012002
-    
+
     perl-5.13.10
     ==========
     Hello word from perl-5.013010
-    
+
     perl-5.14.0
     ==========
     Hello word from perl-5.014000
 
 Notice that the command is not executed in parallel.
 
-When C<--with> arugemnt is provided, the command will be only executed
-with the specified perl. The following command install Moose module
-into perl-5.12, regardless the current perl:
+When C<--with> arugemnt is provided, the command will be only executed with the
+specified perl installations. The following command install Moose module into
+perl-5.12, regardless the current perl:
 
     perlbrew exec --with perl-5.12 cpanm Moose
+
+Multiple installation names can be provided:
+
+    perlbrew exec --with perl-5.12,perl-5.12-debug,perl-5.14.2 cpanm Moo
+
+The are splited by either spaces or commas. When spaces are used, it is required
+to quote the whole specifiacion as one argument, but then commas can be used in
+the installation names:
+
+    perlbrew exec --with '5.12 5.12,debug 5.14.2@nobita @shizuka' cpanm Moo
+
+As demonstrated above, "perl-" prefix can be omitted, and lib names can be
+specified too. Lib names can appear without a perl installation name, in such
+cases it is assumed to be "current perl".
+
+At the moment, any specified names that fails to be resolved as a real
+installation names are silently ignored in the output. Also, the command exit
+status are not populated back.
 
 =head1 COMMAND: ENV
 
