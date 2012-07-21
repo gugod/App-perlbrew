@@ -1520,7 +1520,11 @@ sub run_command_exec {
 
     if ($opts{with}) {
         my $d = ($opts{with} =~ / /) ? qr( +) : qr(,+);
-        my %x = map { ($_ => 1) } split $d, $opts{with};
+        my %x = map { $_ => 1 } grep { $_ } map {
+            my ($p,$l) = $self->resolve_installation_name($_);
+            $p .= "\@$l" if $l;
+            $p;
+        } split $d, $opts{with};
         @exec_with = grep { $x{ $_->{name} } } @exec_with;
     }
 
