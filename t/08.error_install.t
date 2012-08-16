@@ -32,7 +32,7 @@ throws_ok(
         my $app = App::perlbrew->new("install", "perl-5.12.3");
         $app->run;
     },
-    qr[ERROR: Failed to download perl-5.12.3 tarball.]
+    qr[ERROR: Failed to download .*perl-5.12.3.*]
 );
 
 done_testing;
