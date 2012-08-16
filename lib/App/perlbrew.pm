@@ -536,20 +536,19 @@ sub run_command_init {
     my $root_dir = $self->path_with_tilde($self->root);
     my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
 
+    my $code = qq(    source $root_dir/etc/${shrc});
+
+    if ($PERLBREW_HOME ne catdir($ENV{HOME}, ".perlbrew")) {
+        $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
+    }
+
     print <<INSTRUCTION;
 Perlbrew environment initiated under $root_dir
 
 Append the following piece of code to the end of your ~/.${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
-INSTRUCTION
-
-    if ($PERLBREW_HOME ne catdir($ENV{HOME}, ".perlbrew")) {
-        print "export PERLBREW_HOME=$pb_home_dir\n";
-    }
-
-    print <<INSTRUCTION;
-    source $root_dir/etc/${shrc}
+$code
 
 For further instructions, simply run `perlbrew` to see the help message.
 
