@@ -1,3 +1,5 @@
+- New command: download.
+
 0.46:
 - fix: The deprecation warning when running `self-upgrde`
 - fix: system MANPATH detection 

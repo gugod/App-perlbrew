@@ -269,6 +269,28 @@ sub find_similar_commands {
     return @commands;
 }
 
+sub download {
+    my ($self, $url, $path) = @_;
+
+    my $mirror = $self->config->{mirror};
+    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+
+    http_get(
+        $url,
+        $header,
+        sub {
+            my ($body) = @_;
+
+            die "ERROR: Failed to download $url.\n"
+            unless $body;
+
+            open my $BALL, "> $path";
+            print $BALL $body;
+            close $BALL;
+        }
+    );
+}
+
 sub run_command {
     my ( $self, $x, @args ) = @_;
     my $command = $x;
@@ -537,7 +559,6 @@ sub run_command_init {
     my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
 
     my $code = qq(    source $root_dir/etc/${shrc});
-
     if ($PERLBREW_HOME ne catdir($ENV{HOME}, ".perlbrew")) {
         $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
     }
@@ -737,26 +758,8 @@ sub do_install_release {
             if $self->{verbose};
     }
     else {
-        print "Fetching $dist as $dist_tarball_path\n"
-            unless $self->{quiet};
-
-        my $mirror = $self->config->{mirror};
-        my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-
-        http_get(
-            $dist_tarball_url,
-            $header,
-            sub {
-                my ($body) = @_;
-
-                die "ERROR: Failed to download $dist tarball.\n"
-                    unless $body;
-
-                open my $BALL, "> $dist_tarball_path";
-                print $BALL $body;
-                close $BALL;
-            }
-        );
+        print "Fetching $dist as $dist_tarball_path\n" unless $self->{quiet};
+        $self->download( $dist_tarball_url, $dist_tarball_path );
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -812,6 +815,23 @@ sub run_command_install {
     }
 
     return;
+}
+
+sub run_command_download {
+    my ($self, $dist) = @_;
+
+    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
+
+    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
+
+    if (-f $dist_tarball_path && !$self->{force}) {
+        print "$dist_tarball already exists\n";
+    }
+    else {
+        print "Fetching $dist as $dist_tarball_path\n" unless $self->{quiet};
+        $self->download( $dist_tarball_url, $dist_tarball_path );
+    }
 }
 
 sub system_perl_path {
