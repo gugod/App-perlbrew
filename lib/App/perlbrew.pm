@@ -114,6 +114,21 @@ sub min(@) {
     }
 }
 
+sub perl_version_to_integer {
+    my $version = shift;
+    my @v = split(/[\.\-_]/, $version);
+    if ($v[1] <= 5) {
+        $v[2] ||= 9;
+        $v[3] = 0;
+    }
+    else {
+        $v[3] ||= 9;
+        $v[3] =~ s/[^0-9]//g;
+    }
+
+    return $v[0]*10000000 + $v[1]*10000 + $v[2]*10 + $v[3];
+}
+
 sub new {
     my($class, @argv) = @_;
 
