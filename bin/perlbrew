@@ -118,6 +118,11 @@ snippet for the given senario.
 
     source ~/perl5/perlbrew/etc/bashrc
 
+=item PERLBREW_CONFIGURE_FLAGS
+
+This environment variable specify the list of command like flags to pass through
+to 'sh Configure'. By default it is '-de'.
+
 =back
 
 =head1 COMMAND: INIT
