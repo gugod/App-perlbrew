@@ -285,10 +285,12 @@ sub find_similar_commands {
 }
 
 sub download {
-    my ($self, $url, $path) = @_;
+    my ($self, $url, $path, $on_error) = @_;
 
     my $mirror = $self->config->{mirror};
     my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+
+    open my $BALL, ">", $path or die "Failed to open $path for writing.\n";
 
     http_get(
         $url,
@@ -296,14 +298,21 @@ sub download {
         sub {
             my ($body) = @_;
 
-            die "ERROR: Failed to download $url.\n"
-            unless $body;
+            unless ($body) {
+                if (ref($on_error) eq 'CODE') {
+                    $on_error->($url);
+                }
+                else {
+                    die "ERROR: Failed to download $url.\n"
+                }
+            }
 
-            open my $BALL, "> $path";
+
             print $BALL $body;
-            close $BALL;
         }
     );
+
+    close $BALL;
 }
 
 sub run_command {
@@ -679,16 +688,7 @@ sub do_install_url {
     }
     else {
         print "Fetching $dist as $dist_tarball_path\n";
-        http_get(
-            $dist_tarball_url,
-            undef,
-            sub {
-                my ($body) = @_;
-                open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
-                print $BALL $body;
-                close $BALL;
-            }
-        );
+        $self->download($dist_tarball_url, $dist_tarball_path);
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -724,20 +724,14 @@ sub do_install_blead {
     my $dist_tarball = 'blead.tar.gz';
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
-    http_get(
-        "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball",
+
+    $self->download(
+        "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path,
         sub {
-            my ($body) = @_;
-
-            unless ($body) {
-                die "\nERROR: Failed to download perl-blead tarball.\n\n";
-            }
-
-            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
-            print $BALL $body;
-            close $BALL;
+            die "\nERROR: Failed to download perl-blead tarball.\n\n";
         }
     );
+
 
     # Returns the wrong extracted dir for blead
     $self->do_extract_tarball($dist_tarball_path);
