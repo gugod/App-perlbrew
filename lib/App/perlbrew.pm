@@ -1948,9 +1948,9 @@ __perlbrew_activate() {
     fi
 
     if [[ -z "$PERLBREW_LIB" ]]; then
-        eval $($perlbrew_command env $PERLBREW_PERL)
+        eval "$($perlbrew_command env $PERLBREW_PERL)"
     else
-        eval $(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)
+        eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
     fi
 
     __perlbrew_set_path
@@ -1977,16 +1977,11 @@ perlbrew () {
                     echo "Currently using $PERLBREW_PERL"
                 fi
             else
-                code=$(command perlbrew env $2);
+                code="$(command perlbrew env $2);"
                 if [ -z "$code" ]; then
                     exit_status=1
                 else
-                    OLD_IFS=$IFS
-                    IFS="$(echo -e "\n\r")"
-                    for line in $code; do
-                        eval $line
-                    done
-                    IFS=$OLD_IFS
+                    eval $code
                     __perlbrew_set_path
                 fi
             fi
