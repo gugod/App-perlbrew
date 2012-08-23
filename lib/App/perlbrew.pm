@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.46";
+our $VERSION = "0.47";
 
 use Config;
 use Capture::Tiny;
@@ -112,6 +112,21 @@ sub min(@) {
 
         return $cb ? $cb->($body) : $body;
     }
+}
+
+sub perl_version_to_integer {
+    my $version = shift;
+    my @v = split(/[\.\-_]/, $version);
+    if ($v[1] <= 5) {
+        $v[2] ||= 9;
+        $v[3] = 0;
+    }
+    else {
+        $v[3] ||= 9;
+        $v[3] =~ s/[^0-9]//g;
+    }
+
+    return $v[0]*10000000 + $v[1]*10000 + $v[2]*10 + $v[3];
 }
 
 sub new {
@@ -267,6 +282,37 @@ sub find_similar_commands {
     }
 
     return @commands;
+}
+
+sub download {
+    my ($self, $url, $path, $on_error) = @_;
+
+    my $mirror = $self->config->{mirror};
+    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+
+    open my $BALL, ">", $path or die "Failed to open $path for writing.\n";
+
+    http_get(
+        $url,
+        $header,
+        sub {
+            my ($body) = @_;
+
+            unless ($body) {
+                if (ref($on_error) eq 'CODE') {
+                    $on_error->($url);
+                }
+                else {
+                    die "ERROR: Failed to download $url.\n"
+                }
+            }
+
+
+            print $BALL $body;
+        }
+    );
+
+    close $BALL;
 }
 
 sub run_command {
@@ -536,20 +582,18 @@ sub run_command_init {
     my $root_dir = $self->path_with_tilde($self->root);
     my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
 
+    my $code = qq(    source $root_dir/etc/${shrc});
+    if ($PERLBREW_HOME ne catdir($ENV{HOME}, ".perlbrew")) {
+        $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
+    }
+
     print <<INSTRUCTION;
 Perlbrew environment initiated under $root_dir
 
 Append the following piece of code to the end of your ~/.${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
-INSTRUCTION
-
-    if ($PERLBREW_HOME ne catdir($ENV{HOME}, ".perlbrew")) {
-        print "export PERLBREW_HOME=$pb_home_dir\n";
-    }
-
-    print <<INSTRUCTION;
-    source $root_dir/etc/${shrc}
+$code
 
 For further instructions, simply run `perlbrew` to see the help message.
 
@@ -644,16 +688,7 @@ sub do_install_url {
     }
     else {
         print "Fetching $dist as $dist_tarball_path\n";
-        http_get(
-            $dist_tarball_url,
-            undef,
-            sub {
-                my ($body) = @_;
-                open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
-                print $BALL $body;
-                close $BALL;
-            }
-        );
+        $self->download($dist_tarball_url, $dist_tarball_path);
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -689,20 +724,14 @@ sub do_install_blead {
     my $dist_tarball = 'blead.tar.gz';
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
-    http_get(
-        "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball",
+
+    $self->download(
+        "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path,
         sub {
-            my ($body) = @_;
-
-            unless ($body) {
-                die "\nERROR: Failed to download perl-blead tarball.\n\n";
-            }
-
-            open my $BALL, "> $dist_tarball_path" or die "Couldn't open $dist_tarball_path: $!";
-            print $BALL $body;
-            close $BALL;
+            die "\nERROR: Failed to download perl-blead tarball.\n\n";
         }
     );
+
 
     # Returns the wrong extracted dir for blead
     $self->do_extract_tarball($dist_tarball_path);
@@ -738,26 +767,8 @@ sub do_install_release {
             if $self->{verbose};
     }
     else {
-        print "Fetching $dist as $dist_tarball_path\n"
-            unless $self->{quiet};
-
-        my $mirror = $self->config->{mirror};
-        my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-
-        http_get(
-            $dist_tarball_url,
-            $header,
-            sub {
-                my ($body) = @_;
-
-                die "ERROR: Failed to download $dist tarball.\n"
-                    unless $body;
-
-                open my $BALL, "> $dist_tarball_path";
-                print $BALL $body;
-                close $BALL;
-            }
-        );
+        print "Fetching $dist as $dist_tarball_path\n" unless $self->{quiet};
+        $self->download( $dist_tarball_url, $dist_tarball_path );
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -815,6 +826,23 @@ sub run_command_install {
     return;
 }
 
+sub run_command_download {
+    my ($self, $dist) = @_;
+
+    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
+
+    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
+
+    if (-f $dist_tarball_path && !$self->{force}) {
+        print "$dist_tarball already exists\n";
+    }
+    else {
+        print "Fetching $dist as $dist_tarball_path\n" unless $self->{quiet};
+        $self->download( $dist_tarball_url, $dist_tarball_path );
+    }
+}
+
 sub system_perl_path {
     my ($self) = @_;
     my $path = $self->env("PATH") or return;
@@ -843,6 +871,12 @@ sub system_perl_shebang {
 sub run_command_display_system_perl_shebang {
     my ($self) = @_;
     print $self->system_perl_shebang . "\n";
+}
+
+sub run_command_display_original_path {
+    my ($self) = @_;
+    my $path = join ":" =>  grep { index($_, $self->env("PERLBREW_ROOT") ) < 0 } split /:/, $self->env("PATH");
+    print $path . "\n";
 }
 
 sub do_install_archive {
@@ -909,7 +943,16 @@ INSTALL
         $patchperl,
     );
 
-    my $configure_flags = '-de';
+    my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS");
+    unless (defined($configure_flags)) {
+        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.8.9") ) {
+            $configure_flags = '-de -Duserelocableinc';
+        }
+        else {
+            $configure_flags = '-de';
+        }
+    }
+
     my @configure_commands = (
         "sh Configure $configure_flags " .
             join( ' ',
@@ -1151,6 +1194,7 @@ sub perlbrew_env {
                 $env{PERLBREW_PATH}    = catdir($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = catdir($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
+
                 $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
                 $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
                 $env{PERL5LIB}      = $lib_env{PERL5LIB};
@@ -1877,41 +1921,50 @@ sub BASHRC_CONTENT() {
 [[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
 [[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
-if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
-    if [[ -f "$PERLBREW_HOME/init" ]]; then
-        . "$PERLBREW_HOME/init"
-    fi
-fi
-
 __perlbrew_reinit () {
     if [[ ! -d "$PERLBREW_HOME" ]]; then
         mkdir -p "$PERLBREW_HOME"
     fi
 
     echo '# DO NOT EDIT THIS FILE' >| "$PERLBREW_HOME/init"
-    command perlbrew env $1 >> "$PERLBREW_HOME/init"
+    command perlbrew env $1 |grep PERLBREW_ >> "$PERLBREW_HOME/init"
     . "$PERLBREW_HOME/init"
     __perlbrew_set_path
 }
 
-__perlbrew_set_path () {
-    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
-
-    export PATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};')"
-
-    if [[ -z "$PERLBREW_PATH" ]]; then
-        export PERLBREW_PATH="$PERLBREW_ROOT/bin"
-    fi
-
-    export PATH="$PERLBREW_PATH:$PATH_WITHOUT_PERLBREW"
-    export MANPATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath);')"
+__perlbrew_set_path() {
+    export MANPATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath -q);')"
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
     else
         export MANPATH="$MANPATH_WITHOUT_PERLBREW"
     fi
+
+    export PATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};')"
+    export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+    hash -r
 }
-__perlbrew_set_path
+
+## Input: PERLBREW_PERL, PERLBREW_LIB
+__perlbrew_activate() {
+    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
+
+    perlbrew_bin_path="${PERLBREW_ROOT}/bin"
+
+    if [[ -f $perlbrew_bin_path/perlbrew ]]; then
+        perlbrew_command="$perlbrew_bin_path/perlbrew"
+    else
+        perlbrew_command="perlbrew"
+    fi
+
+    if [[ -z "$PERLBREW_LIB" ]]; then
+        eval $($perlbrew_command env $PERLBREW_PERL)
+    else
+        eval $(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)
+    fi
+
+    __perlbrew_set_path
+}
 
 perlbrew () {
     local exit_status
@@ -1959,8 +2012,7 @@ perlbrew () {
 
         (off)
             unset PERLBREW_PERL
-            eval `perlbrew env`
-            __perlbrew_set_path
+            __perlbrew_activate
             echo "perlbrew is turned off."
             ;;
 
@@ -1978,6 +2030,16 @@ perlbrew () {
     hash -r
     return ${exit_status:-0}
 }
+
+
+if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
+    if [[ -f "$PERLBREW_HOME/init" ]]; then
+        . "$PERLBREW_HOME/init"
+    fi
+fi
+
+__perlbrew_activate
+
 RC
 
 }

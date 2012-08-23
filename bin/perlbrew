@@ -42,6 +42,7 @@ Commands:
     install-cpanm      Install cpanm, a friendly companion.
     install-ack        Install ack
 
+    download       Download the specified perl distribution tarball.
     mirror         Pick a preferred mirror site
     version        Display version
     help           Read more detailed instructions
@@ -117,6 +118,11 @@ snippet for the given senario.
     fi
 
     source ~/perl5/perlbrew/etc/bashrc
+
+=item PERLBREW_CONFIGURE_FLAGS
+
+This environment variable specify the list of command like flags to pass through
+to 'sh Configure'. By default it is '-de'.
 
 =back
 
@@ -463,6 +469,17 @@ C<perlbrew list>.
 Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so
 this command offers you the ability to upgrade older perlbrew environments
 in place.
+
+=head1 COMMAND: DOWNLOAD
+
+Usage:
+
+    perlbrew download perl-5.14.2
+    perlbrew download perl-5.16.1
+    perlbrew download perl-5.17.3
+
+Download the specified version of perl distribution tarball under C<<
+$PERLBREW_ROOT/dists/ >> directory.
 
 =head1 COMMAND: INSTALL-ACK
 

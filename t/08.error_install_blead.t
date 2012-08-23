@@ -15,7 +15,7 @@ use App::perlbrew;
 {
     no warnings 'redefine';
     sub App::perlbrew::http_get {
-        my ($url, $cb) = @_;
+        my ($url, undef, $cb) = @_;
         $cb->("");
     }
 }

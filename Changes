@@ -1,3 +1,9 @@
+0.47: # 2012-08-23T07:59:53+0200
+- New command: download.
+- New env var: PERLBREW_CONFIGURE_FLAGS
+- userelocatableinc is enabled by default when the installing perl version is greater than or equals to 5.8.9. It should make some use cases eaiser. In particular, you can move PERLBREW_ROOT directory to another place.
+- fix https://github.com/gugod/App-perlbrew/issues/216 for bash users and zsh users
+
 0.46:
 - fix: The deprecation warning when running `self-upgrde`
 - fix: system MANPATH detection 
