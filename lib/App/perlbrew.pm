@@ -319,7 +319,6 @@ sub run_command {
     my ( $self, $x, @args ) = @_;
     my $command = $x;
 
-    $self->{log_file} ||= catfile($self->root, "build.log");
     if($self->{version}) {
         $x = 'version';
     }
@@ -913,13 +912,13 @@ sub do_install_archive {
 }
 
 sub do_install_this {
-    my ($self, $dist_extracted_dir, $dist_version, $as) = @_;
+    my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
-    $as = $self->{as} if $self->{as};
+    $installation_name = $self->{as} if $self->{as};
 
     if ( $sitecustomize ) {
         die "Could not read sitecustomize file '$sitecustomize'\n"
@@ -927,7 +926,7 @@ sub do_install_this {
         push @d_options, "usesitecustomize";
     }
 
-    my $perlpath = $self->root . "/perls/$as";
+    my $perlpath = $self->root . "/perls/$installation_name";
     my $patchperl = $self->root . "/bin/patchperl";
 
     unless (-x $patchperl && -f _) {
@@ -941,7 +940,7 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
-    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$as") . "\n";
+    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n";
     print <<INSTALL if !$self->{verbose};
 
 This could take a while. You can run the following command on another shell to track the status:
@@ -1006,6 +1005,7 @@ INSTALL
         @install_commands
     );
 
+    $self->{log_file} ||= catfile($self->root, "build" . $installation_name . ".log");
     unlink($self->{log_file});
 
     if($self->{verbose}) {
@@ -1019,9 +1019,9 @@ INSTALL
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
     if ($self->do_system($cmd)) {
-        my $newperl = catfile($self->root, "perls", $as, "bin", "perl");
+        my $newperl = catfile($self->root, "perls", $installation_name, "bin", "perl");
         unless (-e $newperl) {
-            $self->run_command_symlink_executables($as);
+            $self->run_command_symlink_executables($installation_name);
         }
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
@@ -1035,9 +1035,9 @@ INSTALL
             print {$dst} do { local $/; <$src> };
         }
         print <<SUCCESS;
-Installed $dist_extracted_dir as $as successfully. Run the following command to switch to it.
+Installed $dist_extracted_dir as $installation_name successfully. Run the following command to switch to it.
 
-  perlbrew switch $as
+  perlbrew switch $installation_name
 
 SUCCESS
     }
