@@ -202,7 +202,8 @@ By default, all installations are configured after their name like this:
 
 Usage: perlbrew uninstall <name>
 
-Uninstalls the given perl installation.
+Uninstalls the given perl installation. The name is the installation name as in
+the output of `perlbrew list`
 
 =head1 COMMAND: USE
 

@@ -362,9 +362,7 @@ sub run_command_version {
     my ( $self ) = @_;
     my $package = ref $self;
     my $version = $self->VERSION;
-    print <<"VERSION";
-$0  - $package/$version
-VERSION
+    print "$0  - $package/$version\n";
 }
 
 sub run_command_help {
@@ -596,14 +594,15 @@ sub run_command_init {
     }
 
     print <<INSTRUCTION;
-Perlbrew environment initiated under $root_dir
+
+perlbrew root ($root_dir) is initialized.
 
 Append the following piece of code to the end of your ~/.${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
 $code
 
-For further instructions, simply run `perlbrew` to see the help message.
+Simply run `perlbrew` for usage details.
 
 Happy brewing!
 
@@ -646,14 +645,7 @@ sub run_command_self_install {
 
     my $path = $self->path_with_tilde($target);
 
-    print <<HELP;
-The perlbrew is installed as:
-
-    $path
-
-You may trash the downloaded $executable from now on.
-
-HELP
+    print "perlbrew is installed: $path\n" unless $self->{quiet};
 
     $self->run_command_init();
     return;
@@ -1033,26 +1025,22 @@ INSTALL
                 or die "Could not open '$sitecustomize' for reading: $!\n";
             print {$dst} do { local $/; <$src> };
         }
-        print <<SUCCESS;
-Installed $dist_extracted_dir as $installation_name successfully. Run the following command to switch to it.
-
-  perlbrew switch $installation_name
-
-SUCCESS
+        print "$installation_name is successfully installed.\n";
     }
     else {
         die <<FAIL;
-Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
-You might want to try upgrading patchperl before trying again:
+
+Installing $dist_extracted_dir failed. Read $self->{log_file} to spot any
+issues. You might also want to try upgrading patchperl before trying again:
 
   perlbrew install-patchperl
 
-If you want to force install the distribution, try:
+If some perl tests failed and you want to force install the distribution anyway,
+try:
 
   perlbrew --force install $self->{dist_name}
 
 FAIL
-
 
     }
     return;
@@ -1538,13 +1526,8 @@ sub run_command_uninstall {
     my ( $self, $target ) = @_;
 
     unless($target) {
-        die <<USAGE
-
-Usage: perlbrew uninstall <name>
-
-    The name is the installation name as in the output of `perlbrew list`
-
-USAGE
+        $self->run_command_help("uninstall");
+        exit -1;
     }
 
     my $dir = "@{[ $self->root ]}/perls/$target";
