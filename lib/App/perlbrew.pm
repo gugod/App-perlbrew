@@ -913,6 +913,7 @@ sub do_install_archive {
 
 sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
+    $self->{log_file} ||= catfile($self->root, "build.${installation_name}.log");
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
@@ -940,9 +941,8 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
-    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n";
+    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n\n";
     print <<INSTALL if !$self->{verbose};
-
 This could take a while. You can run the following command on another shell to track the status:
 
   tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
@@ -1005,7 +1005,6 @@ INSTALL
         @install_commands
     );
 
-    $self->{log_file} ||= catfile($self->root, "build" . $installation_name . ".log");
     unlink($self->{log_file});
 
     if($self->{verbose}) {
@@ -2198,6 +2197,7 @@ endif
 source "$PERLBREW_ROOT/etc/csh_set_path"
 alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
 CSHRC
+
 }
 
 1;
