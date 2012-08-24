@@ -192,17 +192,16 @@ Options for C<install> command:
     --sitecustomize $filename
                    Specify a file to be installed as sitecustomize.pl
 
-
 By default, all installations are configured after their name like this:
 
-    sh Configure -de -Dprefix=$PERLBREW_ROOT/perls/<name>
-
+    sh Configure -de -Duserelocatableinc -Dprefix=$PERLBREW_ROOT/perls/<name>
 
 =head1 COMMAND: UNINSTALL
 
 Usage: perlbrew uninstall <name>
 
-Uninstalls the given perl installation.
+Uninstalls the given perl installation. The name is the installation name as in
+the output of `perlbrew list`
 
 =head1 COMMAND: USE
 
@@ -466,9 +465,11 @@ C<perlbrew list>.
 
 =head1 COMMAND: UPGRADE-PERL
 
-Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so
-this command offers you the ability to upgrade older perlbrew environments
-in place.
+Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so this
+command offers you the ability to upgrade older perlbrew environments in place.
+
+It upgrades the currently activated perl to its latest released brothers. If you
+have a shell with 5.14.0 activated, it upgrades it to 5.14.2.
 
 =head1 COMMAND: DOWNLOAD
 

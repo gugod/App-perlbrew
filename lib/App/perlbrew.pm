@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.47";
+our $VERSION = "0.48";
 
 use Config;
 use Capture::Tiny;
@@ -319,7 +319,6 @@ sub run_command {
     my ( $self, $x, @args ) = @_;
     my $command = $x;
 
-    $self->{log_file} ||= catfile($self->root, "build.log");
     if($self->{version}) {
         $x = 'version';
     }
@@ -363,9 +362,7 @@ sub run_command_version {
     my ( $self ) = @_;
     my $package = ref $self;
     my $version = $self->VERSION;
-    print <<"VERSION";
-$0  - $package/$version
-VERSION
+    print "$0  - $package/$version\n";
 }
 
 sub run_command_help {
@@ -536,9 +533,18 @@ sub perl_release {
 
 sub run_command_init {
     my $self = shift;
+    my @args = @_;
     my $HOME = $self->env('HOME');
+    mkpath($_) for (grep { ! -d $_ } map { catdir($self->root, $_) } qw(perls dists build etc bin));
 
-    mkpath($_) for (map { catdir($self->root, $_) } qw(perls dists build etc bin));
+    if (@args && $args[0] eq '-') {
+        if ($self->is_shell_csh) {
+        }
+        else {
+            $self->run_command_init_in_bash;
+        }
+        exit 0;
+    }
 
     open BASHRC, ">", catfile($self->root, "etc", "bashrc");
     print BASHRC BASHRC_CONTENT();
@@ -588,19 +594,24 @@ sub run_command_init {
     }
 
     print <<INSTRUCTION;
-Perlbrew environment initiated under $root_dir
+
+perlbrew root ($root_dir) is initialized.
 
 Append the following piece of code to the end of your ~/.${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
 $code
 
-For further instructions, simply run `perlbrew` to see the help message.
+Simply run `perlbrew` for usage details.
 
 Happy brewing!
 
 INSTRUCTION
 
+}
+
+sub run_command_init_in_bash {
+    print BASHRC_CONTENT();
 }
 
 sub run_command_self_install {
@@ -634,14 +645,7 @@ sub run_command_self_install {
 
     my $path = $self->path_with_tilde($target);
 
-    print <<HELP;
-The perlbrew is installed as:
-
-    $path
-
-You may trash the downloaded $executable from now on.
-
-HELP
+    print "perlbrew is installed: $path\n" unless $self->{quiet};
 
     $self->run_command_init();
     return;
@@ -778,18 +782,13 @@ sub do_install_release {
 
 sub run_command_install {
     my ( $self, $dist, $opts ) = @_;
-    $self->{dist_name} = $dist;
 
-    unless ($dist) {
-        ## Show a deprecation warning.
-        print STDERR "-" x 76 . "\n";
-        print STDERR "DEPRECATION WARNING:\n\n  Run `perlbrew install` to install perlbrew itself is deprecated. \n  Please run `perlbrew self-install` in the future instead.\n\n";
-        print STDERR "-" x 76 . "\n\n";
-        sleep 5;
-
-        $self->run_command_self_install();
-        return
+    unless($dist) {
+        $self->run_command_help("install");
+        exit -1;
     }
+
+    $self->{dist_name} = $dist;
 
     my $installation_name = $self->{as} || $dist;
     if ($self->is_installed( $installation_name ) && !$self->{force}) {
@@ -900,13 +899,14 @@ sub do_install_archive {
 }
 
 sub do_install_this {
-    my ($self, $dist_extracted_dir, $dist_version, $as) = @_;
+    my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
+    $self->{log_file} ||= catfile($self->root, "build.${installation_name}.log");
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
-    $as = $self->{as} if $self->{as};
+    $installation_name = $self->{as} if $self->{as};
 
     if ( $sitecustomize ) {
         die "Could not read sitecustomize file '$sitecustomize'\n"
@@ -914,7 +914,7 @@ sub do_install_this {
         push @d_options, "usesitecustomize";
     }
 
-    my $perlpath = $self->root . "/perls/$as";
+    my $perlpath = $self->root . "/perls/$installation_name";
     my $patchperl = $self->root . "/bin/patchperl";
 
     unless (-x $patchperl && -f _) {
@@ -928,9 +928,8 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
-    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$as") . "\n";
+    print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n\n";
     print <<INSTALL if !$self->{verbose};
-
 This could take a while. You can run the following command on another shell to track the status:
 
   tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
@@ -946,7 +945,7 @@ INSTALL
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS");
     unless (defined($configure_flags)) {
         if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.8.9") ) {
-            $configure_flags = '-de -Duserelocableinc';
+            $configure_flags = '-de -Duserelocatableinc';
         }
         else {
             $configure_flags = '-de';
@@ -1006,9 +1005,9 @@ INSTALL
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
     if ($self->do_system($cmd)) {
-        my $newperl = catfile($self->root, "perls", $as, "bin", "perl");
+        my $newperl = catfile($self->root, "perls", $installation_name, "bin", "perl");
         unless (-e $newperl) {
-            $self->run_command_symlink_executables($as);
+            $self->run_command_symlink_executables($installation_name);
         }
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
@@ -1021,26 +1020,22 @@ INSTALL
                 or die "Could not open '$sitecustomize' for reading: $!\n";
             print {$dst} do { local $/; <$src> };
         }
-        print <<SUCCESS;
-Installed $dist_extracted_dir as $as successfully. Run the following command to switch to it.
-
-  perlbrew switch $as
-
-SUCCESS
+        print "$installation_name is successfully installed.\n";
     }
     else {
         die <<FAIL;
-Installing $dist_extracted_dir failed. See $self->{log_file} to see why.
-You might want to try upgrading patchperl before trying again:
+
+Installing $dist_extracted_dir failed. Read $self->{log_file} to spot any
+issues. You might also want to try upgrading patchperl before trying again:
 
   perlbrew install-patchperl
 
-If you want to force install the distribution, try:
+If some perl tests failed and you want to force install the distribution anyway,
+try:
 
   perlbrew --force install $self->{dist_name}
 
 FAIL
-
 
     }
     return;
@@ -1526,13 +1521,8 @@ sub run_command_uninstall {
     my ( $self, $target ) = @_;
 
     unless($target) {
-        die <<USAGE
-
-Usage: perlbrew uninstall <name>
-
-    The name is the installation name as in the output of `perlbrew list`
-
-USAGE
+        $self->run_command_help("uninstall");
+        exit -1;
     }
 
     my $dir = "@{[ $self->root ]}/perls/$target";
@@ -1918,34 +1908,34 @@ sub _load_config {
 
 sub BASHRC_CONTENT() {
     return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
+
 [[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
 [[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
-__perlbrew_reinit () {
+__perlbrew_reinit() {
     if [[ ! -d "$PERLBREW_HOME" ]]; then
         mkdir -p "$PERLBREW_HOME"
     fi
 
-    echo '# DO NOT EDIT THIS FILE' >| "$PERLBREW_HOME/init"
-    command perlbrew env $1 |grep PERLBREW_ >> "$PERLBREW_HOME/init"
+    echo '# DO NOT EDIT THIS FILE' > "$PERLBREW_HOME/init"
+    command perlbrew env $1 | grep PERLBREW_ >> "$PERLBREW_HOME/init"
     . "$PERLBREW_HOME/init"
     __perlbrew_set_path
 }
 
-__perlbrew_set_path() {
-    export MANPATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath -q);')"
+__perlbrew_set_path () {
+    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath -q);'`
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
     else
         export MANPATH="$MANPATH_WITHOUT_PERLBREW"
     fi
 
-    export PATH_WITHOUT_PERLBREW="$(perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};')"
+    export PATH_WITHOUT_PERLBREW=` perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};' `
     export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
     hash -r
 }
 
-## Input: PERLBREW_PERL, PERLBREW_LIB
 __perlbrew_activate() {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
@@ -1958,9 +1948,9 @@ __perlbrew_activate() {
     fi
 
     if [[ -z "$PERLBREW_LIB" ]]; then
-        eval $($perlbrew_command env $PERLBREW_PERL)
+        eval "$($perlbrew_command env $PERLBREW_PERL)"
     else
-        eval $(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)
+        eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
     fi
 
     __perlbrew_set_path
@@ -1987,16 +1977,11 @@ perlbrew () {
                     echo "Currently using $PERLBREW_PERL"
                 fi
             else
-                code=$(command perlbrew env $2);
+                code="$(command perlbrew env $2);"
                 if [ -z "$code" ]; then
                     exit_status=1
                 else
-                    OLD_IFS=$IFS
-                    IFS="$(echo -e "\n\r")"
-                    for line in $code; do
-                        eval $line
-                    done
-                    IFS=$OLD_IFS
+                    eval $code
                     __perlbrew_set_path
                 fi
             fi
@@ -2030,7 +2015,6 @@ perlbrew () {
     hash -r
     return ${exit_status:-0}
 }
-
 
 if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
     if [[ -f "$PERLBREW_HOME/init" ]]; then
@@ -2186,6 +2170,7 @@ endif
 source "$PERLBREW_ROOT/etc/csh_set_path"
 alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
 CSHRC
+
 }
 
 1;

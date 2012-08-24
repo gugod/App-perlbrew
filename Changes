@@ -1,3 +1,9 @@
+0.48: # 2012-08-24T07:07:52+0200
+- The build log output "build.log" is now named after the installation name for eaiser reference.
+- Fix the invokation configure command to actually contains -Duserelocatableinc
+- Experimental: bash/zsh users may put this to shell init instead: eval "$(~/perl5/perlbrew/bin/perlbrew init -)"
+- A few output message updates
+
 0.47: # 2012-08-23T07:59:53+0200
 - New command: download.
 - New env var: PERLBREW_CONFIGURE_FLAGS
