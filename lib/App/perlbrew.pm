@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.48";
+our $VERSION = "0.49";
 
 use Config;
 use Capture::Tiny;
@@ -924,7 +924,7 @@ sub do_install_this {
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
 
-    unless (grep { /eval:scripdir=/} @a_options) {
+    unless (grep { /eval:scriptdir=/} @a_options) {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
@@ -944,7 +944,7 @@ INSTALL
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS");
     unless (defined($configure_flags)) {
-        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.8.9") ) {
+        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.15.6") ) {
             $configure_flags = '-de -Duserelocatableinc';
         }
         else {
