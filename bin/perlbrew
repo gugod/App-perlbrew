@@ -465,6 +465,8 @@ C<perlbrew list>.
 
 =head1 COMMAND: UPGRADE-PERL
 
+Usage: perlbrew upgrade-perl
+
 Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so this
 command offers you the ability to upgrade older perlbrew environments in place.
 
@@ -483,6 +485,8 @@ Download the specified version of perl distribution tarball under C<<
 $PERLBREW_ROOT/dists/ >> directory.
 
 =head1 COMMAND: INSTALL-ACK
+
+Usage: perlbrew install-ack
 
 Install the stanalone version of C<ack> program under C<$PERLBREW_ROOT/bin>.
 
