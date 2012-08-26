@@ -944,7 +944,7 @@ INSTALL
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS");
     unless (defined($configure_flags)) {
-        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.15.6") ) {
+        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.15.5") ) {
             $configure_flags = '-de -Duserelocatableinc';
         }
         else {
