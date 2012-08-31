@@ -488,15 +488,15 @@ $PERLBREW_ROOT/dists/ >> directory.
 
 Usage: perlbrew install-ack
 
-Install the stanalone version of C<ack> program under C<$PERLBREW_ROOT/bin>.
+Install the standalone version of C<ack> program under C<$PERLBREW_ROOT/bin>.
 
 =head1 COMMAND: LIST-MODULES
 
 List all installed cpan modules for the current perl.
 
-This command can be used in conjuntion with `perlbrew exec` to migrate
+This command can be used in conjunction with `perlbrew exec` to migrate
 your module installation to different perl. The following command
-re-install all modules under perl-5.16.0:
+re-installs all modules under perl-5.16.0:
 
     perlbrew list-modules | perlbrew exec --with perl-5.16.0 cpanm
 
