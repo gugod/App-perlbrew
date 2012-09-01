@@ -122,7 +122,13 @@ snippet for the given senario.
 =item PERLBREW_CONFIGURE_FLAGS
 
 This environment variable specify the list of command like flags to pass through
-to 'sh Configure'. By default it is '-de'.
+to 'sh Configure'. By default it is '-de -Duserelocatableinc' for versions newer
+then or equal to 5.15.5, or '-de' otherwise.
+
+Notice: userelocatableinc is a nice-to-have feature that allows to move
+PERLBREW_ROOT around. This building flag was introduced since perl 5.8.9, but
+does not play well with perlbrew's path-switching function, not until 5.15.5.
+Therefore it is only enabled by default for post-5.15.5.
 
 =back
 
@@ -465,6 +471,8 @@ C<perlbrew list>.
 
 =head1 COMMAND: UPGRADE-PERL
 
+Usage: perlbrew upgrade-perl
+
 Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so this
 command offers you the ability to upgrade older perlbrew environments in place.
 
@@ -484,15 +492,17 @@ $PERLBREW_ROOT/dists/ >> directory.
 
 =head1 COMMAND: INSTALL-ACK
 
-Install the stanalone version of C<ack> program under C<$PERLBREW_ROOT/bin>.
+Usage: perlbrew install-ack
+
+Install the standalone version of C<ack> program under C<$PERLBREW_ROOT/bin>.
 
 =head1 COMMAND: LIST-MODULES
 
 List all installed cpan modules for the current perl.
 
-This command can be used in conjuntion with `perlbrew exec` to migrate
+This command can be used in conjunction with `perlbrew exec` to migrate
 your module installation to different perl. The following command
-re-install all modules under perl-5.16.0:
+re-installs all modules under perl-5.16.0:
 
     perlbrew list-modules | perlbrew exec --with perl-5.16.0 cpanm
 

@@ -1,3 +1,7 @@
+0.50: # 2012-09-01T11:25:41+0200
+- properly remove perlbrew-related PERL5LIB entries. GH #197
+- minor documentation tweak.
+
 0.49: # 2012-08-25T22:32:22+0200
 - Fix the build for perl-5.12 and 5.14 -- userelocatableinc are not working properly. https://github.com/gugod/App-perlbrew/issues/232
 

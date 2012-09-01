@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.49";
+our $VERSION = "0.50";
 
 use Config;
 use Capture::Tiny;
@@ -944,7 +944,7 @@ INSTALL
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS");
     unless (defined($configure_flags)) {
-        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.15.6") ) {
+        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.15.5") ) {
             $configure_flags = '-de -Duserelocatableinc';
         }
         else {
@@ -1146,7 +1146,17 @@ sub is_installed {
 
 # Return a hash of PERLBREW_* variables
 sub perlbrew_env {
+    require local::lib;
     my ($self, $name) = @_;
+    my ($perl_name, $lib_name);
+
+    if ($name) {
+        ($perl_name, $lib_name) = $self->resolve_installation_name($name);
+
+        unless ($perl_name) {
+            die "\nERROR: The installation \"$name\" is unknown.\n\n";
+        }
+    }
 
     my %env = (
         PERLBREW_VERSION => $VERSION,
@@ -1155,13 +1165,7 @@ sub perlbrew_env {
         PERLBREW_ROOT => $self->root
     );
 
-    if ($name) {
-        my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
-
-        unless ($perl_name) {
-            die "\nERROR: The installation \"$name\" is unknown.\n\n";
-        }
-
+    if ($perl_name) {
         if(-d  "@{[ $self->root ]}/perls/$perl_name/bin") {
             $env{PERLBREW_PERL}    = $perl_name;
             $env{PERLBREW_PATH}   .= ":" . catdir($self->root, "perls", $perl_name, "bin");
@@ -1169,8 +1173,6 @@ sub perlbrew_env {
         }
 
         if ($lib_name) {
-            require local::lib;
-
             if (
                 $ENV{PERL_LOCAL_LIB_ROOT}
                 && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^$PERLBREW_HOME/
@@ -1198,21 +1200,19 @@ sub perlbrew_env {
         }
         else {
             if ($self->env("PERLBREW_LIB")) {
-                $env{PERLBREW_LIB}        = "";
-                $env{PERL_MM_OPT}         = "";
-                $env{PERL_MB_OPT}         = "";
-                $env{PERL5LIB}            = "";
-                $env{PERL_LOCAL_LIB_ROOT} = "";
+                my $base = "$PERLBREW_HOME/libs/${perl_name}\@" . $self->env("PERLBREW_LIB");
+                my %deactivate_env = local::lib->build_deact_all_environment_vars_for($base);
+                @env{keys %deactivate_env} = values %deactivate_env;
+                $env{PERLBREW_LIB} = "";
             }
         }
     }
     else {
+        my %deactivate_env = local::lib->build_deact_all_environment_vars_for("");
+        @env{keys %deactivate_env} = values %deactivate_env;
+
         $env{PERLBREW_PERL} = "";
         $env{PERLBREW_LIB}  = "";
-        $env{PERL_MM_OPT}   = "";
-        $env{PERL_MB_OPT}   = "";
-        $env{PERL5LIB}      = "";
-        $env{PERL_LOCAL_LIB_ROOT} = "";
     }
 
     return %env;
@@ -1863,6 +1863,13 @@ sub resolve_installation_name {
     return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
 
+sub run_command_info {
+    my ($self) = @_;
+    for (grep { /^PERL/ } keys %{ $self->env }) {
+        print $_ . ": " . $self->env($_) . "\n";
+    }
+}
+
 
 sub config {
     my($self) = @_;
@@ -1997,6 +2004,7 @@ perlbrew () {
 
         (off)
             unset PERLBREW_PERL
+            unset PERLBREW_LIB
             __perlbrew_activate
             echo "perlbrew is turned off."
             ;;
