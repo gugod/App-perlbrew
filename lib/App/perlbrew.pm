@@ -1232,8 +1232,9 @@ sub run_command_list {
                 $lib->{name}, "\n"
         }
     }
-}
 
+    return 0;
+}
 
 sub launch_sub_shell {
     my ($self, $name) = @_;
@@ -1954,10 +1955,14 @@ __perlbrew_activate() {
         perlbrew_command="perlbrew"
     fi
 
-    if [[ -z "$PERLBREW_LIB" ]]; then
-        eval "$($perlbrew_command env $PERLBREW_PERL)"
+    if [[ -z "$PERLBREW_PERL" ]]; then
+        # Nothing to activate...
     else
-        eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
+        if [[ -z "$PERLBREW_LIB" ]]; then
+            eval "$($perlbrew_command env $PERLBREW_PERL)"
+        else
+            eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
+        fi
     fi
 
     __perlbrew_set_path
