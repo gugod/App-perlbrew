@@ -1932,7 +1932,7 @@ __perlbrew_reinit() {
 }
 
 __perlbrew_set_path () {
-    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath -q);'`
+    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath);'`
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
     else
