@@ -1940,7 +1940,13 @@ __perlbrew_set_path () {
     fi
 
     export PATH_WITHOUT_PERLBREW=` perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};' `
-    export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+
+    if [ -n "$PERLBREW_PATH" ]; then 
+          export PATH=${PERLBREW_PATH}/bin:${PATH_WITHOUT_PERLBREW}
+      else
+          export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+    fi
+
     hash -r
 }
 
