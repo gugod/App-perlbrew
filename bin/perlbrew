@@ -67,7 +67,7 @@ C<$ENV{HOME}/perl5/perlbrew> directory. To use a different directory,
 set this environment variable in your C<bashrc> to the directory
 in your shell RC before sourcing perlbrew's RC.
 
-It is possible to share one perlbrew root with multilpe user account
+It is possible to share one perlbrew root with multiple user account
 on the same machine. Therefore people do not have to install the same
 version of perl over an over. Let's say C</opt/perl5> is the directory
 we want to share. All users should be able append this snippet to their
