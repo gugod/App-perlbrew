@@ -1957,6 +1957,7 @@ __perlbrew_activate() {
 
     if [[ -z "$PERLBREW_PERL" ]]; then
         # Nothing to activate...
+        true
     else
         if [[ -z "$PERLBREW_LIB" ]]; then
             eval "$($perlbrew_command env $PERLBREW_PERL)"
