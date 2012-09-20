@@ -94,13 +94,13 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       fi
   
       export PATH_WITHOUT_PERLBREW=` perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};' `
-      
+  
       if [ -n "$PERLBREW_PATH" ]; then 
-          export PATH=${PERLBREW_PATH}/bin:${PATH_WITHOUT_PERLBREW}
-      else
-          export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+            export PATH=${PERLBREW_PATH}/bin:${PATH_WITHOUT_PERLBREW}
+        else
+            export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
       fi
-
+  
       hash -r
   }
   
@@ -115,14 +115,7 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
           perlbrew_command="perlbrew"
       fi
   
-<<<<<<< HEAD
-      if [[ -z "$PERLBREW_PERL" ]]; then
-          # Nothing to activate...
-          true
-      else
-=======
       if [[ -n "$PERLBREW_PERL" ]]; then
->>>>>>> djgoku/control_flow_fix_perlbrew_perl
           if [[ -z "$PERLBREW_LIB" ]]; then
               eval "$($perlbrew_command env $PERLBREW_PERL)"
           else
