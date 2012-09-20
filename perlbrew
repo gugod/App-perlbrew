@@ -115,10 +115,14 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
           perlbrew_command="perlbrew"
       fi
   
+<<<<<<< HEAD
       if [[ -z "$PERLBREW_PERL" ]]; then
           # Nothing to activate...
           true
       else
+=======
+      if [[ -n "$PERLBREW_PERL" ]]; then
+>>>>>>> djgoku/control_flow_fix_perlbrew_perl
           if [[ -z "$PERLBREW_LIB" ]]; then
               eval "$($perlbrew_command env $PERLBREW_PERL)"
           else
