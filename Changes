@@ -1,3 +1,7 @@
+0.51: # 2012-09-29T09:17:14+0200
+- Fix a start-up warning message from bashrc when perlbrew is not active
+- Fix a breakage on CentOS due to the use of `manpath` command.
+
 0.50: # 2012-09-01T11:25:41+0200
 - properly remove perlbrew-related PERL5LIB entries. GH #197
 - minor documentation tweak.

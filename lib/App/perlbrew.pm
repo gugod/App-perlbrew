@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.50";
+our $VERSION = "0.51";
 
 use Config;
 use Capture::Tiny;
@@ -1232,8 +1232,9 @@ sub run_command_list {
                 $lib->{name}, "\n"
         }
     }
-}
 
+    return 0;
+}
 
 sub launch_sub_shell {
     my ($self, $name) = @_;
@@ -1931,7 +1932,7 @@ __perlbrew_reinit() {
 }
 
 __perlbrew_set_path () {
-    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath -q);'`
+    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath);'`
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
     else
@@ -1939,7 +1940,13 @@ __perlbrew_set_path () {
     fi
 
     export PATH_WITHOUT_PERLBREW=` perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};' `
-    export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+
+    if [ -n "$PERLBREW_PATH" ]; then
+        export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}  
+    else
+        export PATH=${PERLBREW_ROOT}/bin:${PATH_WITHOUT_PERLBREW}
+    fi
+
     hash -r
 }
 
@@ -1954,10 +1961,12 @@ __perlbrew_activate() {
         perlbrew_command="perlbrew"
     fi
 
-    if [[ -z "$PERLBREW_LIB" ]]; then
-        eval "$($perlbrew_command env $PERLBREW_PERL)"
-    else
-        eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
+    if [[ -n "$PERLBREW_PERL" ]]; then
+        if [[ -z "$PERLBREW_LIB" ]]; then
+            eval "$($perlbrew_command env $PERLBREW_PERL)"
+        else
+            eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
+        fi
     fi
 
     __perlbrew_set_path
