@@ -942,15 +942,7 @@ INSTALL
         $patchperl,
     );
 
-    my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS");
-    unless (defined($configure_flags)) {
-        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.15.5") ) {
-            $configure_flags = '-de -Duserelocatableinc';
-        }
-        else {
-            $configure_flags = '-de';
-        }
-    }
+    my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
     my @configure_commands = (
         "sh Configure $configure_flags " .
