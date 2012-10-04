@@ -1,3 +1,8 @@
+0.52: # 2012-10-04T21:30:40+0200
+- userelocatableinc is no longer default. Meanwhile PERLBREW_CONFIGURE_FLAGS can still be used.
+- Fix GH #197 again. Also make sure perlbrew-unrelated PERL5LIB values are preserved.
+- Fix an issue that MANPATH contains unwanted values even after switch/use/off.
+
 0.51: # 2012-09-29T09:17:14+0200
 - Fix a start-up warning message from bashrc when perlbrew is not active
 - Fix a breakage on CentOS due to the use of `manpath` command.
