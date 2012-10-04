@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.51";
+our $VERSION = "0.52";
 
 use Config;
 use Capture::Tiny;
@@ -942,15 +942,7 @@ INSTALL
         $patchperl,
     );
 
-    my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS");
-    unless (defined($configure_flags)) {
-        if ( perl_version_to_integer($dist_version) >= perl_version_to_integer("5.15.5") ) {
-            $configure_flags = '-de -Duserelocatableinc';
-        }
-        else {
-            $configure_flags = '-de';
-        }
-    }
+    my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
     my @configure_commands = (
         "sh Configure $configure_flags " .
@@ -1146,7 +1138,6 @@ sub is_installed {
 
 # Return a hash of PERLBREW_* variables
 sub perlbrew_env {
-    require local::lib;
     my ($self, $name) = @_;
     my ($perl_name, $lib_name);
 
@@ -1173,6 +1164,8 @@ sub perlbrew_env {
         }
 
         if ($lib_name) {
+            require local::lib;
+
             if (
                 $ENV{PERL_LOCAL_LIB_ROOT}
                 && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^$PERLBREW_HOME/
@@ -1199,20 +1192,25 @@ sub perlbrew_env {
             }
         }
         else {
-            if ($self->env("PERLBREW_LIB")) {
-                my $base = "$PERLBREW_HOME/libs/${perl_name}\@" . $self->env("PERLBREW_LIB");
-                my %deactivate_env = local::lib->build_deact_all_environment_vars_for($base);
+            my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
+            if ($libroot && $libroot =~ /^$PERLBREW_HOME/) {
+                require local::lib;
+                my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
                 @env{keys %deactivate_env} = values %deactivate_env;
-                $env{PERLBREW_LIB} = "";
+                $env{PERLBREW_LIB}  = undef;
             }
         }
     }
     else {
-        my %deactivate_env = local::lib->build_deact_all_environment_vars_for("");
-        @env{keys %deactivate_env} = values %deactivate_env;
+        my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
+        if ($libroot && $libroot =~ /^$PERLBREW_HOME/) {
+            require local::lib;
+            my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
+            @env{keys %deactivate_env} = values %deactivate_env;
+            $env{PERLBREW_LIB}  = undef;
+        }
 
-        $env{PERLBREW_PERL} = "";
-        $env{PERLBREW_LIB}  = "";
+        $env{PERLBREW_PERL} = undef;
     }
 
     return %env;
@@ -1866,7 +1864,7 @@ sub resolve_installation_name {
 
 sub run_command_info {
     my ($self) = @_;
-    for (grep { /^PERL/ } keys %{ $self->env }) {
+    for (sort grep { /^PERL/ } keys %{ $self->env }) {
         print $_ . ": " . $self->env($_) . "\n";
     }
 }
@@ -1932,7 +1930,7 @@ __perlbrew_reinit() {
 }
 
 __perlbrew_set_path () {
-    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath);'`
+    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
     else
@@ -1969,6 +1967,19 @@ __perlbrew_activate() {
         fi
     fi
 
+    __perlbrew_set_path
+}
+
+__perlbrew_deactivate() {
+    if [[ -f $perlbrew_bin_path/perlbrew ]]; then
+        perlbrew_command="$perlbrew_bin_path/perlbrew"
+    else
+        perlbrew_command="perlbrew"
+    fi
+
+    eval "$($perlbrew_command env)"
+    unset PERLBREW_PERL
+    unset PERLBREW_LIB
     __perlbrew_set_path
 }
 
@@ -2012,14 +2023,12 @@ perlbrew () {
               ;;
 
         (off)
-            unset PERLBREW_PERL
-            unset PERLBREW_LIB
-            __perlbrew_activate
+            __perlbrew_deactivate
             echo "perlbrew is turned off."
             ;;
 
         (switch-off)
-            unset PERLBREW_PERL
+            __perlbrew_deactivate
             __perlbrew_reinit
             echo "perlbrew is switched off."
             ;;
@@ -2154,7 +2163,7 @@ endif
 setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
 setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
 
-setenv MANPATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath);'`
+setenv MANPATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath 2> /dev/null);'`
 if ( $?PERLBREW_MANPATH == 1 ) then
     setenv MANPATH ${PERLBREW_MANPATH}:${MANPATH_WITHOUT_PERLBREW}
 else
