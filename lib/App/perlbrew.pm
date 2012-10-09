@@ -546,29 +546,29 @@ sub run_command_init {
         exit 0;
     }
 
-    open BASHRC, ">", catfile($self->root, "etc", "bashrc");
-    print BASHRC BASHRC_CONTENT();
-    close BASHRC;
+    open my $bashrc, ">", catfile($self->root, "etc", "bashrc");
+    print $bashrc BASHRC_CONTENT();
+    close $bashrc;
 
-    open BASH_COMPLETION, ">", catfile($self->root, "etc", "perlbrew-completion.bash");
-    print BASH_COMPLETION BASH_COMPLETION_CONTENT();
-    close BASH_COMPLETION;
+    open my $bash_completion, ">", catfile($self->root, "etc", "perlbrew-completion.bash");
+    print $bash_completion BASH_COMPLETION_CONTENT();
+    close $bash_completion;
 
-    open CSH_WRAPPER, ">", catfile($self->root, "etc", "csh_wrapper");
-    print CSH_WRAPPER CSH_WRAPPER_CONTENT();
-    close CSH_WRAPPER;
+    open my $csh_wrapper, ">", catfile($self->root, "etc", "csh_wrapper");
+    print $csh_wrapper CSH_WRAPPER_CONTENT();
+    close $csh_wrapper;
 
-    open CSH_REINIT, ">", catfile($self->root, "etc", "csh_reinit");
-    print CSH_REINIT CSH_REINIT_CONTENT();
-    close CSH_REINIT;
+    open my $csh_reinit, ">", catfile($self->root, "etc", "csh_reinit");
+    print $csh_reinit CSH_REINIT_CONTENT();
+    close $csh_reinit;
 
-    open CSH_SET_PATH, ">", catfile($self->root, "etc", "csh_set_path");
-    print CSH_SET_PATH CSH_SET_PATH_CONTENT();
-    close CSH_SET_PATH;
+    open my $csh_set_path, ">", catfile($self->root, "etc", "csh_set_path");
+    print $csh_set_path CSH_SET_PATH_CONTENT();
+    close $csh_set_path;
 
-    open CSHRC, ">", catfile($self->root, "etc", "cshrc");
-    print CSHRC CSHRC_CONTENT();
-    close CSHRC;
+    open my $cshrc, ">", catfile($self->root, "etc", "cshrc");
+    print $cshrc CSHRC_CONTENT();
+    close $cshrc;
 
     my ( $shrc, $yourshrc );
     if ( $self->is_shell_csh) {
