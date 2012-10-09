@@ -1254,7 +1254,7 @@ a sub-shell. Effectively nullify the changes required by perlbrew sub-shell. You
 may `echo \$PATH` to examine it and if you see perlbrew related paths are in the
 end, instead of in the beginning, you are unfortunate.
 
-You are advertised to include the following line to your ~/.zshenv as a better
+You are advised to include the following line to your ~/.zshenv as a better
 way to work with perlbrew:
 
     source $root_dir/etc/bashrc
