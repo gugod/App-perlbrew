@@ -797,7 +797,7 @@ sub run_command_install {
 
     my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
+    my ($dist_name, $dist_version) = $dist =~ m/^(perl)-?([\d._]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
             $self->do_install_git($dist);
