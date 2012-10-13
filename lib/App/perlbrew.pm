@@ -1834,8 +1834,8 @@ sub run_command_list_modules {
 
     $self->{quiet} = 1;
     $self->{original_argv} = [
-        "exec", "--with", $ENV{PERLBREW_PERL},
-        'perl', '-MExtUtils::Installed', '-le', 'print for ExtUtils::Installed->new->modules'
+        "exec", "--with", $self->current_perl,
+        'perl', '-MExtUtils::Installed', '-le', 'print for ExtUtils::Installed->new(skip_cwd => 1)->modules'
     ];
 
     $self->run_command_exec();
