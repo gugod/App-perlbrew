@@ -4,7 +4,7 @@ perl:
   - "5.14"
   - "5.12"
   - "5.10"
-env: PERL_CPANM_OPT="--notest --force --skip-satisfied"
+env: PERL_CPANM_OPT="--notest --force --skip-satisfied --verbose"
 before_install:
   - "cpanm Module::Install"
   - "cpanm --installdeps ."
