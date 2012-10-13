@@ -35,12 +35,14 @@ sub root {
 
 sub current_perl {
     my ($self, $v) = @_;
+    $self->{current_perl} = $v if $v;
+    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || '';
+}
 
-    if ($v) {
-        $self->{current_perl} = $v;
-    }
-
-    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || ''
+sub current_lib {
+    my ($self, $v) = @_;
+    $self->{current_lib} = $v if $v;
+    return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
 }
 
 sub mkpath {
@@ -1875,8 +1877,20 @@ sub resolve_installation_name {
 
 sub run_command_info {
     my ($self) = @_;
-    for (sort grep { /^PERL/ } keys %{ $self->env }) {
-        print $_ . ": " . $self->env($_) . "\n";
+
+    local $\ = "\n";
+
+    if ($self->current_perl) {
+        print "activated: " . $self->current_perl . ($self->current_lib && "@".$self->current_lib);
+    }
+    else {
+        print "Using system perl.";
+    }
+
+    print "perlbrew version: " . $self->VERSION;
+    print "\nENV:";
+    for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
+        print "  $_: " . ($self->env($_)||"");
     }
 }
 
