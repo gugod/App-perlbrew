@@ -760,8 +760,7 @@ sub do_install_blead {
 sub do_install_release {
     my $self = shift;
     my $dist = shift;
-
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
+    my ($dist_name, $dist_version) = @_;
 
     my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
@@ -771,12 +770,12 @@ sub do_install_release {
             if $self->{verbose};
     }
     else {
-        print "Fetching $dist as $dist_tarball_path\n" unless $self->{quiet};
+        print "Fetching $dist_name $dist_version as $dist_tarball_path\n" unless $self->{quiet};
         $self->download( $dist_tarball_url, $dist_tarball_path );
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
-    $self->do_install_this($dist_extracted_path,$dist_version, $dist);
+    $self->do_install_this( $dist_extracted_path, $dist_version, $dist );
     return;
 }
 
@@ -797,7 +796,7 @@ sub run_command_install {
 
     my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
+    my ($dist_name, $dist_version) = $dist =~ m/^(perl)-?([\d._]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
             $self->do_install_git($dist);
@@ -816,7 +815,7 @@ sub run_command_install {
         }
     }
     elsif ($dist_name eq 'perl') {
-        $self->do_install_release($dist);
+        $self->do_install_release( $dist, $dist_name, $dist_version );
     }
     else {
         die $help_message;
