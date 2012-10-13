@@ -20,7 +20,7 @@ our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || catdir($ENV{HOME}, ".perlbrew");
 local $SIG{__DIE__} = sub {
     my $message = shift;
     warn $message;
-    exit 1;
+    exit(1);
 };
 
 sub root {
@@ -784,7 +784,7 @@ sub run_command_install {
 
     unless($dist) {
         $self->run_command_help("install");
-        exit -1;
+        exit(-1);
     }
 
     $self->{dist_name} = $dist;
