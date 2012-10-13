@@ -2,7 +2,4 @@ language: perl
 perl:
   - "5.16"
   - "5.14"
-  - "5.12"
   - "5.10"
-before_install:
-  - "cpanm Module::Install"
