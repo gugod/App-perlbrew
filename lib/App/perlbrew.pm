@@ -1926,9 +1926,6 @@ sub _load_config {
 sub BASHRC_CONTENT() {
     return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
 
-[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
-[[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
-
 __perlbrew_reinit() {
     if [[ ! -d "$PERLBREW_HOME" ]]; then
         mkdir -p "$PERLBREW_HOME"
@@ -1949,7 +1946,7 @@ __perlbrew_set_path () {
     fi
     unset MANPATH_WITHOUT_PERLBREW
 
-    PATH_WITHOUT_PERLBREW=`perlbrew display-pristine-path`
+    PATH_WITHOUT_PERLBREW=`$perlbrew_command display-pristine-path`
     if [ -n "$PERLBREW_PATH" ]; then
         export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
     else
@@ -1963,14 +1960,6 @@ __perlbrew_set_path () {
 __perlbrew_activate() {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
-    perlbrew_bin_path="${PERLBREW_ROOT}/bin"
-
-    if [[ -f $perlbrew_bin_path/perlbrew ]]; then
-        perlbrew_command="$perlbrew_bin_path/perlbrew"
-    else
-        perlbrew_command="perlbrew"
-    fi
-
     if [[ -n "$PERLBREW_PERL" ]]; then
         if [[ -z "$PERLBREW_LIB" ]]; then
             eval "$($perlbrew_command env $PERLBREW_PERL)"
@@ -1983,12 +1972,6 @@ __perlbrew_activate() {
 }
 
 __perlbrew_deactivate() {
-    if [[ -f $perlbrew_bin_path/perlbrew ]]; then
-        perlbrew_command="$perlbrew_bin_path/perlbrew"
-    else
-        perlbrew_command="perlbrew"
-    fi
-
     eval "$($perlbrew_command env)"
     unset PERLBREW_PERL
     unset PERLBREW_LIB
@@ -2054,11 +2037,22 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
+[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+[[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
+
 if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
     if [[ -f "$PERLBREW_HOME/init" ]]; then
         . "$PERLBREW_HOME/init"
     fi
 fi
+
+perlbrew_bin_path="${PERLBREW_ROOT}/bin"
+if [[ -f $perlbrew_bin_path/perlbrew ]]; then
+    perlbrew_command="$perlbrew_bin_path/perlbrew"
+else
+    perlbrew_command="command perlbrew"
+fi
+unset perlbrew_bin_path
 
 __perlbrew_activate
 
