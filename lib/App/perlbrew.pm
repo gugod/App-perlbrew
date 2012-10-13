@@ -1929,20 +1929,21 @@ __perlbrew_reinit() {
 }
 
 __perlbrew_set_path () {
-    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
+    MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
     else
         export MANPATH="$MANPATH_WITHOUT_PERLBREW"
     fi
+    unset MANPATH_WITHOUT_PERLBREW
 
-    export PATH_WITHOUT_PERLBREW=` perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};' `
-
+    PATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};'`
     if [ -n "$PERLBREW_PATH" ]; then
-        export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}  
+        export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
     else
         export PATH=${PERLBREW_ROOT}/bin:${PATH_WITHOUT_PERLBREW}
     fi
+    unset PATH_WITHOUT_PERLBREW
 
     hash -r
 }
