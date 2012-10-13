@@ -841,20 +841,17 @@ sub run_command_download {
     }
 }
 
+sub purify {
+    my ($self, $envname) = @_;
+    my @paths = grep { index($_, $PERLBREW_HOME) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
+    return wantarray ? @paths : join(":", @paths);
+}
+
 sub system_perl_path {
     my ($self) = @_;
-    my $path = $self->env("PATH") or return;
-    my $perlbrew_root = $self->root;
-    my $perlbrew_home = $PERLBREW_HOME;
-
-    my @path_without_perlbrew = grep {
-        index($_, $perlbrew_home) < 0
-    } grep {
-        index($_, $perlbrew_root) < 0
-    } split /:/, $path;
 
     my $system_perl_path = do {
-        local $ENV{PATH} = join(":", @path_without_perlbrew);
+        local $ENV{PATH} = $self->pristine_path;
         `perl -MConfig -e 'print \$Config{perlpath}'`
     };
 
@@ -866,15 +863,30 @@ sub system_perl_shebang {
     return $Config{sharpbang}. $self->system_perl_path;
 }
 
-sub run_command_display_system_perl_shebang {
+sub pristine_path {
     my ($self) = @_;
-    print $self->system_perl_shebang . "\n";
+    return $self->purify("PATH");
 }
 
-sub run_command_display_original_path {
+sub pristine_manpath {
     my ($self) = @_;
-    my $path = join ":" =>  grep { index($_, $self->env("PERLBREW_ROOT") ) < 0 } split /:/, $self->env("PATH");
-    print $path . "\n";
+    return $self->purify("MANPATH");
+}
+
+sub run_command_display_system_perl_path {
+    print $_[0]->system_perl_path . "\n";
+}
+
+sub run_command_display_system_perl_shebang {
+    print $_[0]->system_perl_shebang . "\n";
+}
+
+sub run_command_display_pristine_path {
+    print $_[0]->pristine_path . "\n";
+}
+
+sub run_command_display_pristine_manpath {
+    print $_[0]->pristine_manpath . "\n";
 }
 
 sub do_install_archive {
@@ -1937,7 +1949,7 @@ __perlbrew_set_path () {
     fi
     unset MANPATH_WITHOUT_PERLBREW
 
-    PATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};'`
+    PATH_WITHOUT_PERLBREW=`perlbrew display-pristine-path`
     if [ -n "$PERLBREW_PATH" ]; then
         export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
     else
