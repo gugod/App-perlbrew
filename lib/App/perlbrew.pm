@@ -1520,7 +1520,7 @@ sub run_command_uninstall {
 
     unless($target) {
         $self->run_command_help("uninstall");
-        exit -1;
+        exit(-1);
     }
 
     my $dir = "@{[ $self->root ]}/perls/$target";
@@ -1788,7 +1788,7 @@ sub run_command_upgrade_perl {
 
     unless(defined $current) {
         print "no perlbrew environment is currently in use\n";
-        exit 1;
+        exit(1);
     }
 
     my ( $major, $minor, $release );
@@ -1797,7 +1797,7 @@ sub run_command_upgrade_perl {
         ( $major, $minor, $release ) = ( $1, $2, $3 );
     } else {
         print "unable to parse version '$current->{version}'\n";
-        exit 1;
+        exit(1);
     }
 
     my @available = grep {
@@ -1817,7 +1817,7 @@ sub run_command_upgrade_perl {
 
     if($latest_available_perl == $release) {
         print "This perlbrew environment ($current->{name}) is already up-to-date.\n";
-        exit 0;
+        exit(0);
     }
 
     my $dist_version = "$major.$minor.$latest_available_perl";
