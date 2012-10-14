@@ -1,3 +1,9 @@
+0.53: # 2012-10-14T17:41:17+0200
+- New command: `info`.
+- requires CPAN::Perl::Releases 0.76 for 5.14.3 info.
+- Skip "." in @INC to deal with a `list-module` issue. GH #245.
+- Environment variable cleanups and minor bashrc rewrite.
+
 0.52: # 2012-10-04T21:30:40+0200
 - userelocatableinc is no longer default. Meanwhile PERLBREW_CONFIGURE_FLAGS can still be used.
 - Fix GH #197 again. Also make sure perlbrew-unrelated PERL5LIB values are preserved.

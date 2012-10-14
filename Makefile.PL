@@ -11,7 +11,7 @@ requires
     'Devel::PatchPerl'     => '0.76',
     'local::lib'           => '1.008004',
     'Capture::Tiny'        => '0.20',
-    'CPAN::Perl::Releases' => '0.70';
+    'CPAN::Perl::Releases' => '0.76';
 
 test_requires
     'Test::Simple'    => '0.98',

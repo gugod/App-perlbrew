@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.52";
+our $VERSION = "0.53";
 
 use Config;
 use Capture::Tiny;
@@ -20,7 +20,7 @@ our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || catdir($ENV{HOME}, ".perlbrew");
 local $SIG{__DIE__} = sub {
     my $message = shift;
     warn $message;
-    exit 1;
+    exit(1);
 };
 
 sub root {
@@ -35,12 +35,14 @@ sub root {
 
 sub current_perl {
     my ($self, $v) = @_;
+    $self->{current_perl} = $v if $v;
+    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || '';
+}
 
-    if ($v) {
-        $self->{current_perl} = $v;
-    }
-
-    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || ''
+sub current_lib {
+    my ($self, $v) = @_;
+    $self->{current_lib} = $v if $v;
+    return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
 }
 
 sub mkpath {
@@ -546,29 +548,29 @@ sub run_command_init {
         exit 0;
     }
 
-    open BASHRC, ">", catfile($self->root, "etc", "bashrc");
-    print BASHRC BASHRC_CONTENT();
-    close BASHRC;
+    open my $bashrc, ">", catfile($self->root, "etc", "bashrc");
+    print $bashrc BASHRC_CONTENT();
+    close $bashrc;
 
-    open BASH_COMPLETION, ">", catfile($self->root, "etc", "perlbrew-completion.bash");
-    print BASH_COMPLETION BASH_COMPLETION_CONTENT();
-    close BASH_COMPLETION;
+    open my $bash_completion, ">", catfile($self->root, "etc", "perlbrew-completion.bash");
+    print $bash_completion BASH_COMPLETION_CONTENT();
+    close $bash_completion;
 
-    open CSH_WRAPPER, ">", catfile($self->root, "etc", "csh_wrapper");
-    print CSH_WRAPPER CSH_WRAPPER_CONTENT();
-    close CSH_WRAPPER;
+    open my $csh_wrapper, ">", catfile($self->root, "etc", "csh_wrapper");
+    print $csh_wrapper CSH_WRAPPER_CONTENT();
+    close $csh_wrapper;
 
-    open CSH_REINIT, ">", catfile($self->root, "etc", "csh_reinit");
-    print CSH_REINIT CSH_REINIT_CONTENT();
-    close CSH_REINIT;
+    open my $csh_reinit, ">", catfile($self->root, "etc", "csh_reinit");
+    print $csh_reinit CSH_REINIT_CONTENT();
+    close $csh_reinit;
 
-    open CSH_SET_PATH, ">", catfile($self->root, "etc", "csh_set_path");
-    print CSH_SET_PATH CSH_SET_PATH_CONTENT();
-    close CSH_SET_PATH;
+    open my $csh_set_path, ">", catfile($self->root, "etc", "csh_set_path");
+    print $csh_set_path CSH_SET_PATH_CONTENT();
+    close $csh_set_path;
 
-    open CSHRC, ">", catfile($self->root, "etc", "cshrc");
-    print CSHRC CSHRC_CONTENT();
-    close CSHRC;
+    open my $cshrc, ">", catfile($self->root, "etc", "cshrc");
+    print $cshrc CSHRC_CONTENT();
+    close $cshrc;
 
     my ( $shrc, $yourshrc );
     if ( $self->is_shell_csh) {
@@ -760,8 +762,7 @@ sub do_install_blead {
 sub do_install_release {
     my $self = shift;
     my $dist = shift;
-
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
+    my ($dist_name, $dist_version) = @_;
 
     my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
@@ -771,12 +772,12 @@ sub do_install_release {
             if $self->{verbose};
     }
     else {
-        print "Fetching $dist as $dist_tarball_path\n" unless $self->{quiet};
+        print "Fetching $dist_name $dist_version as $dist_tarball_path\n" unless $self->{quiet};
         $self->download( $dist_tarball_url, $dist_tarball_path );
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
-    $self->do_install_this($dist_extracted_path,$dist_version, $dist);
+    $self->do_install_this( $dist_extracted_path, $dist_version, $dist );
     return;
 }
 
@@ -785,7 +786,7 @@ sub run_command_install {
 
     unless($dist) {
         $self->run_command_help("install");
-        exit -1;
+        exit(-1);
     }
 
     $self->{dist_name} = $dist;
@@ -797,7 +798,7 @@ sub run_command_install {
 
     my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
 
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?|git)$/;
+    my ($dist_name, $dist_version) = $dist =~ m/^(perl)-?([\d._]+(?:-RC\d+)?|git)$/;
     if (!$dist_name || !$dist_version) { # some kind of special install
         if (-d "$dist/.git") {
             $self->do_install_git($dist);
@@ -816,7 +817,7 @@ sub run_command_install {
         }
     }
     elsif ($dist_name eq 'perl') {
-        $self->do_install_release($dist);
+        $self->do_install_release( $dist, $dist_name, $dist_version );
     }
     else {
         die $help_message;
@@ -842,20 +843,17 @@ sub run_command_download {
     }
 }
 
+sub purify {
+    my ($self, $envname) = @_;
+    my @paths = grep { index($_, $PERLBREW_HOME) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
+    return wantarray ? @paths : join(":", @paths);
+}
+
 sub system_perl_path {
     my ($self) = @_;
-    my $path = $self->env("PATH") or return;
-    my $perlbrew_root = $self->root;
-    my $perlbrew_home = $PERLBREW_HOME;
-
-    my @path_without_perlbrew = grep {
-        index($_, $perlbrew_home) < 0
-    } grep {
-        index($_, $perlbrew_root) < 0
-    } split /:/, $path;
 
     my $system_perl_path = do {
-        local $ENV{PATH} = join(":", @path_without_perlbrew);
+        local $ENV{PATH} = $self->pristine_path;
         `perl -MConfig -e 'print \$Config{perlpath}'`
     };
 
@@ -867,15 +865,30 @@ sub system_perl_shebang {
     return $Config{sharpbang}. $self->system_perl_path;
 }
 
-sub run_command_display_system_perl_shebang {
+sub pristine_path {
     my ($self) = @_;
-    print $self->system_perl_shebang . "\n";
+    return $self->purify("PATH");
 }
 
-sub run_command_display_original_path {
+sub pristine_manpath {
     my ($self) = @_;
-    my $path = join ":" =>  grep { index($_, $self->env("PERLBREW_ROOT") ) < 0 } split /:/, $self->env("PATH");
-    print $path . "\n";
+    return $self->purify("MANPATH");
+}
+
+sub run_command_display_system_perl_path {
+    print $_[0]->system_perl_path . "\n";
+}
+
+sub run_command_display_system_perl_shebang {
+    print $_[0]->system_perl_shebang . "\n";
+}
+
+sub run_command_display_pristine_path {
+    print $_[0]->pristine_path . "\n";
+}
+
+sub run_command_display_pristine_manpath {
+    print $_[0]->pristine_manpath . "\n";
 }
 
 sub do_install_archive {
@@ -1254,7 +1267,7 @@ a sub-shell. Effectively nullify the changes required by perlbrew sub-shell. You
 may `echo \$PATH` to examine it and if you see perlbrew related paths are in the
 end, instead of in the beginning, you are unfortunate.
 
-You are advertised to include the following line to your ~/.zshenv as a better
+You are advised to include the following line to your ~/.zshenv as a better
 way to work with perlbrew:
 
     source $root_dir/etc/bashrc
@@ -1521,7 +1534,7 @@ sub run_command_uninstall {
 
     unless($target) {
         $self->run_command_help("uninstall");
-        exit -1;
+        exit(-1);
     }
 
     my $dir = "@{[ $self->root ]}/perls/$target";
@@ -1789,7 +1802,7 @@ sub run_command_upgrade_perl {
 
     unless(defined $current) {
         print "no perlbrew environment is currently in use\n";
-        exit 1;
+        exit(1);
     }
 
     my ( $major, $minor, $release );
@@ -1798,7 +1811,7 @@ sub run_command_upgrade_perl {
         ( $major, $minor, $release ) = ( $1, $2, $3 );
     } else {
         print "unable to parse version '$current->{version}'\n";
-        exit 1;
+        exit(1);
     }
 
     my @available = grep {
@@ -1818,7 +1831,7 @@ sub run_command_upgrade_perl {
 
     if($latest_available_perl == $release) {
         print "This perlbrew environment ($current->{name}) is already up-to-date.\n";
-        exit 0;
+        exit(0);
     }
 
     my $dist_version = "$major.$minor.$latest_available_perl";
@@ -1835,8 +1848,8 @@ sub run_command_list_modules {
 
     $self->{quiet} = 1;
     $self->{original_argv} = [
-        "exec", "--with", $ENV{PERLBREW_PERL},
-        'perl', '-MExtUtils::Installed', '-le', 'print for ExtUtils::Installed->new->modules'
+        "exec", "--with", $self->current_perl,
+        'perl', '-MExtUtils::Installed', '-le', 'print for ExtUtils::Installed->new(skip_cwd => 1)->modules'
     ];
 
     $self->run_command_exec();
@@ -1864,8 +1877,20 @@ sub resolve_installation_name {
 
 sub run_command_info {
     my ($self) = @_;
-    for (sort grep { /^PERL/ } keys %{ $self->env }) {
-        print $_ . ": " . $self->env($_) . "\n";
+
+    local $\ = "\n";
+
+    if ($self->current_perl) {
+        print "activated: " . $self->current_perl . ($self->current_lib && "@".$self->current_lib);
+    }
+    else {
+        print "Using system perl.";
+    }
+
+    print "perlbrew version: " . $self->VERSION;
+    print "\nENV:";
+    for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
+        print "  $_: " . ($self->env($_)||"");
     }
 }
 
@@ -1915,9 +1940,6 @@ sub _load_config {
 sub BASHRC_CONTENT() {
     return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
 
-[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
-[[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
-
 __perlbrew_reinit() {
     if [[ ! -d "$PERLBREW_HOME" ]]; then
         mkdir -p "$PERLBREW_HOME"
@@ -1930,34 +1952,27 @@ __perlbrew_reinit() {
 }
 
 __perlbrew_set_path () {
-    export MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
+    MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
     if [ -n "$PERLBREW_MANPATH" ]; then
         export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
     else
         export MANPATH="$MANPATH_WITHOUT_PERLBREW"
     fi
+    unset MANPATH_WITHOUT_PERLBREW
 
-    export PATH_WITHOUT_PERLBREW=` perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,$ENV{PATH};' `
-
+    PATH_WITHOUT_PERLBREW=`$perlbrew_command display-pristine-path`
     if [ -n "$PERLBREW_PATH" ]; then
-        export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}  
+        export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
     else
         export PATH=${PERLBREW_ROOT}/bin:${PATH_WITHOUT_PERLBREW}
     fi
+    unset PATH_WITHOUT_PERLBREW
 
     hash -r
 }
 
 __perlbrew_activate() {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
-
-    perlbrew_bin_path="${PERLBREW_ROOT}/bin"
-
-    if [[ -f $perlbrew_bin_path/perlbrew ]]; then
-        perlbrew_command="$perlbrew_bin_path/perlbrew"
-    else
-        perlbrew_command="perlbrew"
-    fi
 
     if [[ -n "$PERLBREW_PERL" ]]; then
         if [[ -z "$PERLBREW_LIB" ]]; then
@@ -1971,12 +1986,6 @@ __perlbrew_activate() {
 }
 
 __perlbrew_deactivate() {
-    if [[ -f $perlbrew_bin_path/perlbrew ]]; then
-        perlbrew_command="$perlbrew_bin_path/perlbrew"
-    else
-        perlbrew_command="perlbrew"
-    fi
-
     eval "$($perlbrew_command env)"
     unset PERLBREW_PERL
     unset PERLBREW_LIB
@@ -2042,11 +2051,22 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
+[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+[[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
+
 if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
     if [[ -f "$PERLBREW_HOME/init" ]]; then
         . "$PERLBREW_HOME/init"
     fi
 fi
+
+perlbrew_bin_path="${PERLBREW_ROOT}/bin"
+if [[ -f $perlbrew_bin_path/perlbrew ]]; then
+    perlbrew_command="$perlbrew_bin_path/perlbrew"
+else
+    perlbrew_command="command perlbrew"
+fi
+unset perlbrew_bin_path
 
 __perlbrew_activate
 
