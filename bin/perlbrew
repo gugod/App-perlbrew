@@ -134,11 +134,20 @@ Therefore it is only enabled by default for post-5.15.5.
 
 =head1 COMMAND: INIT
 
-The C<init> command should be manually invoked whenever you (the perlbrew user)
-upgrade perlbrew.
+Usage: perlbrew init
 
-However, if the upgrade is done with C<self-upgrade> command, or by running the
+The C<init> command should be manually invoked whenever you (the perlbrew user)
+upgrade or reinstall perlbrew.
+
+If the upgrade is done with C<self-upgrade> command, or by running the
 one-line installer manually, this command is invoked automatically.
+
+=head1 COMMAND: INFO
+
+Usage: perlbrew info
+
+The `info` command dumps a page of handful information for the perlbrew
+installation.
 
 =head1 COMMAND: INSTALL
 
