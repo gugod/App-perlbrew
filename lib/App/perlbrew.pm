@@ -12,6 +12,7 @@ use File::Basename;
 use File::Path::Tiny;
 use FindBin;
 use CPAN::Perl::Releases;
+use version;
 
 our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -901,6 +902,8 @@ sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
     $self->{log_file} ||= catfile($self->root, "build.${installation_name}.log");
 
+    my $version = version->parse( $dist_version );
+
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
@@ -927,6 +930,11 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
+    if ( $version < version->parse( '5.6.0' ) ) { 
+        # ancient perls do not support -A for Configure
+        @a_options = ();
+    }
+
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n\n";
     print <<INSTALL if !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
@@ -950,8 +958,7 @@ INSTALL
                 ( map { qq{'-U$_'} } @u_options ),
                 ( map { qq{'-A$_'} } @a_options ),
             ),
-        $dist_version =~ /^5\.(\d+)\.(\d+)/
-            && ($1 < 8 || $1 == 8 && $2 < 9)
+        $version < version->parse( '5.8.9' )
                 ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                 : ()
     );
