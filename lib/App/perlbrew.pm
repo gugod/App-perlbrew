@@ -912,6 +912,7 @@ sub do_install_archive {
 
 sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
+    $self->{dist_extracted_dir} = $dist_extracted_dir;
     $self->{log_file} ||= catfile($self->root, "build.${installation_name}.log");
 
     my $version = version->parse( $dist_version );
@@ -1011,7 +1012,6 @@ INSTALL
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
     }
 
-
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
     if ($self->do_system($cmd)) {
@@ -1033,20 +1033,7 @@ INSTALL
         print "$installation_name is successfully installed.\n";
     }
     else {
-        die <<FAIL;
-
-Installing $dist_extracted_dir failed. Read $self->{log_file} to spot any
-issues. You might also want to try upgrading patchperl before trying again:
-
-  perlbrew install-patchperl
-
-If some perl tests failed and you want to force install the distribution anyway,
-try:
-
-  perlbrew --force install $self->{dist_name}
-
-FAIL
-
+        die $self->INSTALLATION_FAILURE_MESSAGE;
     }
     return;
 }
@@ -1679,6 +1666,10 @@ sub run_command_display_cshrc {
     print CSHRC_CONTENT();
 }
 
+sub run_command_display_installation_failure_message {
+    my ($self) = @_;
+}
+
 sub lib_usage {
     my $usage = <<'USAGE';
 
@@ -2221,6 +2212,32 @@ endif
 source "$PERLBREW_ROOT/etc/csh_set_path"
 alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
 CSHRC
+
+}
+
+sub INSTALLATION_FAILURE_MESSAGE {
+    my ($self) = @_;
+    return <<FAIL;
+Installation process failed. To spot any issues, check
+
+  $self->{log_file}
+
+If some perl tests failed and you still want install this distribution anyway,
+do:
+
+  (cd $self->{dist_extracted_dir}; make install)
+
+You might also want to try upgrading patchperl before trying again:
+
+  perlbrew install-patchperl
+
+Generally, if you need to install a perl distribution known to has minor test
+failures, do one of these command to avoid seeing this message
+
+  perlbrew --notest install $self->{dist_name}
+  perlbrew --force install $self->{dist_name}
+
+FAIL
 
 }
 
