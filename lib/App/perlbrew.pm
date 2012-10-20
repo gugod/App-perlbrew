@@ -761,9 +761,7 @@ sub do_install_blead {
 }
 
 sub do_install_release {
-    my $self = shift;
-    my $dist = shift;
-    my ($dist_name, $dist_version) = split/-/,$dist;
+    my ($self, $dist, $dist_name, $dist_version) = @_;
 
     my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
@@ -1847,7 +1845,7 @@ sub run_command_upgrade_perl {
     print "Upgrading $current->{name} to $dist_version\n";
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
-    $self->do_install_release($dist);
+    $self->do_install_release($dist, "perl", $dist_version);
 }
 
 sub run_command_list_modules {
