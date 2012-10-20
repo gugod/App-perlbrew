@@ -762,7 +762,7 @@ sub do_install_blead {
 sub do_install_release {
     my $self = shift;
     my $dist = shift;
-    my ($dist_name, $dist_version) = @_;
+    my ($dist_name, $dist_version) = split/-/,$dist;
 
     my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
