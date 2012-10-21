@@ -6,4 +6,10 @@ perl:
   - "5.10"
 before_install:
   - "cpanm Module::Install"
-  - "yes no | cpanm --interactive local::lib"
+  - ./dev-bin/travis-prepare.sh
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.org#chupei.pm"
+    use_notice: true
+
