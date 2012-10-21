@@ -9,7 +9,7 @@ use Capture::Tiny;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Basename;
-use File::Path::Tiny;
+use File::Path ();
 use FindBin;
 use CPAN::Perl::Releases;
 use version;
@@ -47,11 +47,11 @@ sub current_lib {
 }
 
 sub mkpath {
-    File::Path::Tiny::mk(@_);
+    File::Path::mkpath([@_], 0, 0777);
 }
 
 sub rmpath {
-    File::Path::Tiny::rm(@_)
+    File::Path::rmtree([@_], 0, 1);
 }
 
 sub uniq(@) {
