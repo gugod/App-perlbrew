@@ -6,4 +6,4 @@ perl:
   - "5.10"
 before_install:
   - "cpanm Module::Install"
-  - "yes | cpanm local::lib"
+  - "yes no | cpanm --interactive local::lib"
