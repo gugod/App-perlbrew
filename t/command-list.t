@@ -16,7 +16,6 @@ require "test_helpers.pl";
 
 use File::Temp qw( tempdir );
 use File::Spec::Functions qw( catdir );
-use File::Path::Tiny;
 use Test::Spec;
 use Test::Output qw(stdout_is stdout_from);
 

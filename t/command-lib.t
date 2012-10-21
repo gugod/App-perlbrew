@@ -5,7 +5,6 @@ use FindBin;
 use lib $FindBin::Bin;
 
 use File::Spec::Functions qw( catdir );
-use File::Path::Tiny;
 use Test::Spec;
 use Test::Output;
 use Test::Exception;
@@ -114,7 +113,7 @@ describe "lib command," => sub {
 
     describe "`delete` sub-command," => sub {
         before each => sub {
-            File::Path::Tiny::mk(
+            App::perlbrew::mkpath(
                 catdir($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
             );
         };
