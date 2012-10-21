@@ -1845,7 +1845,7 @@ sub run_command_list_modules {
     $self->{quiet} = 1;
     $self->{original_argv} = [
         "exec", "--with", $self->current_perl,
-        'perl', '-MExtUtils::Installed', '-le', 'print for ExtUtils::Installed->new(skip_cwd => 1)->modules'
+        'perl', '-MExtUtils::Installed', '-le', 'BEGIN{@INC=grep(!/^\.$/,@INC)}; print for ExtUtils::Installed->new->modules'
     ];
 
     $self->run_command_exec();
