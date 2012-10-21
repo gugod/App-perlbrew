@@ -1833,7 +1833,7 @@ sub run_command_upgrade_perl {
     my $dist_version = "$major.$minor.$latest_available_perl";
     my $dist         = "perl-$dist_version";
 
-    print "Upgrading $current->{name} to $dist_version\n";
+    print "Upgrading $current->{name} to $dist_version\n" unless $self->{quiet};
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
     $self->do_install_release($dist, "perl", $dist_version);
