@@ -1,3 +1,9 @@
+0.54: # 2012-10-24T21:21:25+0200
+- Now requires perl 5.8.8
+- Fix an issue with list-module command listing extra modules See GH #245
+- Tweak default Configure options for pre-5.6 versions
+- Fix an issue with warning messagse in 'upgrade-perl' command.
+
 0.53: # 2012-10-14T17:41:17+0200
 - New command: `info`.
 - requires CPAN::Perl::Releases 0.76 for 5.14.3 info.
