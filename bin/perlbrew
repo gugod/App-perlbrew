@@ -122,13 +122,7 @@ snippet for the given senario.
 =item PERLBREW_CONFIGURE_FLAGS
 
 This environment variable specify the list of command like flags to pass through
-to 'sh Configure'. By default it is '-de -Duserelocatableinc' for versions newer
-then or equal to 5.15.5, or '-de' otherwise.
-
-Notice: userelocatableinc is a nice-to-have feature that allows to move
-PERLBREW_ROOT around. This building flag was introduced since perl 5.8.9, but
-does not play well with perlbrew's path-switching function, not until 5.15.5.
-Therefore it is only enabled by default for post-5.15.5.
+to 'sh Configure'. By default it is '-de'.
 
 =back
 
@@ -209,7 +203,7 @@ Options for C<install> command:
 
 By default, all installations are configured after their name like this:
 
-    sh Configure -de -Duserelocatableinc -Dprefix=$PERLBREW_ROOT/perls/<name>
+    sh Configure -de -Dprefix=$PERLBREW_ROOT/perls/<name>
 
 =head1 COMMAND: UNINSTALL
 

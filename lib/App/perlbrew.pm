@@ -1,17 +1,18 @@
 package App::perlbrew;
 use strict;
 use warnings;
-use 5.008;
-our $VERSION = "0.53";
+use 5.008008;
+our $VERSION = "0.54";
 
 use Config;
 use Capture::Tiny;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Basename;
-use File::Path::Tiny;
+use File::Path ();
 use FindBin;
 use CPAN::Perl::Releases;
+use version;
 
 our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -46,11 +47,11 @@ sub current_lib {
 }
 
 sub mkpath {
-    File::Path::Tiny::mk(@_);
+    File::Path::mkpath([@_], 0, 0777);
 }
 
 sub rmpath {
-    File::Path::Tiny::rm(@_)
+    File::Path::rmtree([@_], 0, 1);
 }
 
 sub uniq(@) {
@@ -760,9 +761,7 @@ sub do_install_blead {
 }
 
 sub do_install_release {
-    my $self = shift;
-    my $dist = shift;
-    my ($dist_name, $dist_version) = @_;
+    my ($self, $dist, $dist_name, $dist_version) = @_;
 
     my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
@@ -913,7 +912,10 @@ sub do_install_archive {
 
 sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
+    $self->{dist_extracted_dir} = $dist_extracted_dir;
     $self->{log_file} ||= catfile($self->root, "build.${installation_name}.log");
+
+    my $version = version->parse( $dist_version );
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
@@ -941,6 +943,11 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
+    if ( $version < version->parse( '5.6.0' ) ) { 
+        # ancient perls do not support -A for Configure
+        @a_options = ();
+    }
+
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n\n";
     print <<INSTALL if !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
@@ -964,8 +971,7 @@ INSTALL
                 ( map { qq{'-U$_'} } @u_options ),
                 ( map { qq{'-A$_'} } @a_options ),
             ),
-        $dist_version =~ /^5\.(\d+)\.(\d+)/
-            && ($1 < 8 || $1 == 8 && $2 < 9)
+        $version < version->parse( '5.8.9' )
                 ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                 : ()
     );
@@ -1006,7 +1012,6 @@ INSTALL
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
     }
 
-
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
     if ($self->do_system($cmd)) {
@@ -1028,20 +1033,7 @@ INSTALL
         print "$installation_name is successfully installed.\n";
     }
     else {
-        die <<FAIL;
-
-Installing $dist_extracted_dir failed. Read $self->{log_file} to spot any
-issues. You might also want to try upgrading patchperl before trying again:
-
-  perlbrew install-patchperl
-
-If some perl tests failed and you want to force install the distribution anyway,
-try:
-
-  perlbrew --force install $self->{dist_name}
-
-FAIL
-
+        die $self->INSTALLATION_FAILURE_MESSAGE;
     }
     return;
 }
@@ -1674,6 +1666,10 @@ sub run_command_display_cshrc {
     print CSHRC_CONTENT();
 }
 
+sub run_command_display_installation_failure_message {
+    my ($self) = @_;
+}
+
 sub lib_usage {
     my $usage = <<'USAGE';
 
@@ -1837,10 +1833,10 @@ sub run_command_upgrade_perl {
     my $dist_version = "$major.$minor.$latest_available_perl";
     my $dist         = "perl-$dist_version";
 
-    print "Upgrading $current->{name} to $dist_version\n";
+    print "Upgrading $current->{name} to $dist_version\n" unless $self->{quiet};
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
-    $self->do_install_release($dist);
+    $self->do_install_release($dist, "perl", $dist_version);
 }
 
 sub run_command_list_modules {
@@ -1849,7 +1845,7 @@ sub run_command_list_modules {
     $self->{quiet} = 1;
     $self->{original_argv} = [
         "exec", "--with", $self->current_perl,
-        'perl', '-MExtUtils::Installed', '-le', 'print for ExtUtils::Installed->new(skip_cwd => 1)->modules'
+        'perl', '-MExtUtils::Installed', '-le', 'BEGIN{@INC=grep(!/^\.$/,@INC)}; print for ExtUtils::Installed->new->modules'
     ];
 
     $self->run_command_exec();
@@ -2216,6 +2212,32 @@ endif
 source "$PERLBREW_ROOT/etc/csh_set_path"
 alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
 CSHRC
+
+}
+
+sub INSTALLATION_FAILURE_MESSAGE {
+    my ($self) = @_;
+    return <<FAIL;
+Installation process failed. To spot any issues, check
+
+  $self->{log_file}
+
+If some perl tests failed and you still want install this distribution anyway,
+do:
+
+  (cd $self->{dist_extracted_dir}; make install)
+
+You might also want to try upgrading patchperl before trying again:
+
+  perlbrew install-patchperl
+
+Generally, if you need to install a perl distribution known to has minor test
+failures, do one of these command to avoid seeing this message
+
+  perlbrew --notest install $self->{dist_name}
+  perlbrew --force install $self->{dist_name}
+
+FAIL
 
 }
 
