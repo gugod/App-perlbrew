@@ -24,28 +24,6 @@ local $SIG{__DIE__} = sub {
     exit(1);
 };
 
-sub root {
-    my ($self, $new_root) = @_;
-
-    if (defined($new_root)) {
-        $self->{root} = $new_root;
-    }
-
-    return $self->{root} || $PERLBREW_ROOT;
-}
-
-sub current_perl {
-    my ($self, $v) = @_;
-    $self->{current_perl} = $v if $v;
-    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || '';
-}
-
-sub current_lib {
-    my ($self, $v) = @_;
-    $self->{current_lib} = $v if $v;
-    return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
-}
-
 sub mkpath {
     File::Path::mkpath([@_], 0, 0777);
 }
@@ -67,6 +45,7 @@ sub min(@) {
     }
     return $m;
 }
+
 
 {
     my @command;
@@ -188,6 +167,38 @@ sub new {
     }
 
     return bless \%opt, $class;
+}
+
+
+sub root {
+    my ($self, $new_root) = @_;
+
+    if (defined($new_root)) {
+        $self->{root} = $new_root;
+    }
+
+    return $self->{root} || $PERLBREW_ROOT;
+}
+
+sub current_perl {
+    my ($self, $v) = @_;
+    $self->{current_perl} = $v if $v;
+    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || '';
+}
+
+sub current_lib {
+    my ($self, $v) = @_;
+    $self->{current_lib} = $v if $v;
+    return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
+}
+
+sub cpan_mirror {
+    my ($self, $v) = @_;
+    unless($self->{cpan_mirror}) {
+        $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "http://search.cpan.org/CPAN";
+        $self->{cpan_mirror} =~ s{/+$}{};
+    }
+    return $self->{cpan_mirror};
 }
 
 sub env {
@@ -514,7 +525,7 @@ sub perl_release {
 
     if ($x) {
         my $dist_tarball = (split("/", $x))[-1];
-        my $dist_tarball_url = "http://search.cpan.org/CPAN/authors/id/$x";
+        my $dist_tarball_url = $self->cpan_mirror() . "/authors/id/$x";
         return ($dist_tarball, $dist_tarball_url);
     }
 
@@ -837,7 +848,7 @@ sub run_command_download {
         print "$dist_tarball already exists\n";
     }
     else {
-        print "Fetching $dist as $dist_tarball_path\n" unless $self->{quiet};
+        print "Download $dist_tarball_url to $dist_tarball_path\n" unless $self->{quiet};
         $self->download( $dist_tarball_url, $dist_tarball_path );
     }
 }
