@@ -192,6 +192,12 @@ sub current_lib {
     return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
 }
 
+sub current_perl_executable {
+    my ($self) = @_;
+    my $executable = catfile($self->root, $self->current_perl, "bin", "perl");
+    return $executable;
+}
+
 sub cpan_mirror {
     my ($self, $v) = @_;
     unless($self->{cpan_mirror}) {
@@ -1115,7 +1121,8 @@ sub installed_perls {
             name        => $name,
             version     => $self->format_perl_version(`$executable -e 'print \$]'`),
             is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
-            libs => [ $self->local_libs($name) ]
+            libs => [ $self->local_libs($name) ],
+            executable  => $executable
         };
     }
 
@@ -1887,17 +1894,21 @@ sub run_command_info {
 
     local $\ = "\n";
 
+    print "Current perl:";
     if ($self->current_perl) {
-        print "activated: " . $self->current_perl . ($self->current_lib && "@".$self->current_lib);
+        print "  Name: " . $self->current_perl . ($self->current_lib && "@".$self->current_lib);
+        print "  Path: " . $self->current_perl_executable;
     }
     else {
         print "Using system perl.";
+        print "Shebang: " . $self->system_perl_shebang;
     }
 
-    print "perlbrew version: " . $self->VERSION;
-    print "\nENV:";
+    print "\nperlbrew:";
+    print "  version: " . $self->VERSION;
+    print "  ENV:";
     for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
-        print "  $_: " . ($self->env($_)||"");
+        print "    $_: " . ($self->env($_)||"");
     }
 }
 
