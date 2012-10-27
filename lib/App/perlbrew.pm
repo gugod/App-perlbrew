@@ -194,7 +194,13 @@ sub current_lib {
 
 sub current_perl_executable {
     my ($self) = @_;
-    my $executable = catfile($self->root, $self->current_perl, "bin", "perl");
+    return $self->installed_perl_executable($self->current_perl);
+}
+
+sub installed_perl_executable {
+    my ($self, $name) = @_;
+    my $executable = catfile($self->root, "perls", $name, "bin", "perl");
+    die unless -e $executable;
     return $executable;
 }
 
@@ -865,20 +871,20 @@ sub purify {
     return wantarray ? @paths : join(":", @paths);
 }
 
-sub system_perl_path {
+sub system_perl_executable {
     my ($self) = @_;
 
-    my $system_perl_path = do {
+    my $system_perl_executable = do {
         local $ENV{PATH} = $self->pristine_path;
         `perl -MConfig -e 'print \$Config{perlpath}'`
     };
 
-    return $system_perl_path;
+    return $system_perl_executable;
 }
 
 sub system_perl_shebang {
     my ($self) = @_;
-    return $Config{sharpbang}. $self->system_perl_path;
+    return $Config{sharpbang}. $self->system_perl_executable;
 }
 
 sub pristine_path {
@@ -891,8 +897,8 @@ sub pristine_manpath {
     return $self->purify("MANPATH");
 }
 
-sub run_command_display_system_perl_path {
-    print $_[0]->system_perl_path . "\n";
+sub run_command_display_system_perl_executable {
+    print $_[0]->system_perl_executable . "\n";
 }
 
 sub run_command_display_system_perl_shebang {
@@ -1439,9 +1445,15 @@ sub run_command_mirror {
 }
 
 sub run_command_env {
-    my($self, $perl) = @_;
+    my($self, $name) = @_;
+    my($perl_name,$lib_name) = $self->resolve_installation_name($name);
+    my $target_perl_executable = $self->installed_perl_executable($perl_name);
 
-    my %env = $self->perlbrew_env($perl);
+    if ($perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
+        exec($target_perl_executable, $0, "env", $name);
+    }
+
+    my %env = $self->perlbrew_env($name);
 
     if ($self->env('SHELL') =~ /(ba|k|z|\/)sh$/) {
         while (my ($k, $v) = each(%env)) {
