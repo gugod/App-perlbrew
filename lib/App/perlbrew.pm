@@ -560,8 +560,6 @@ sub perl_release {
 sub run_command_init {
     my $self = shift;
     my @args = @_;
-    my $HOME = $self->env('HOME');
-    mkpath($_) for (grep { ! -d $_ } map { catdir($self->root, $_) } qw(perls dists build etc bin));
 
     if (@args && $args[0] eq '-') {
         if ($self->is_shell_csh) {
@@ -572,29 +570,36 @@ sub run_command_init {
         exit 0;
     }
 
-    open my $bashrc, ">", catfile($self->root, "etc", "bashrc");
-    print $bashrc BASHRC_CONTENT();
-    close $bashrc;
+    mkpath($_) for (grep { ! -d $_ } map { catdir($self->root, $_) } qw(perls dists build etc bin));
 
-    open my $bash_completion, ">", catfile($self->root, "etc", "perlbrew-completion.bash");
-    print $bash_completion BASH_COMPLETION_CONTENT();
-    close $bash_completion;
+    my ($f, $fh) = @_;
 
-    open my $csh_wrapper, ">", catfile($self->root, "etc", "csh_wrapper");
-    print $csh_wrapper CSH_WRAPPER_CONTENT();
-    close $csh_wrapper;
+    my $etc_dir = catdir($self->root, "etc");
 
-    open my $csh_reinit, ">", catfile($self->root, "etc", "csh_reinit");
-    print $csh_reinit CSH_REINIT_CONTENT();
-    close $csh_reinit;
-
-    open my $csh_set_path, ">", catfile($self->root, "etc", "csh_set_path");
-    print $csh_set_path CSH_SET_PATH_CONTENT();
-    close $csh_set_path;
-
-    open my $cshrc, ">", catfile($self->root, "etc", "cshrc");
-    print $cshrc CSHRC_CONTENT();
-    close $cshrc;
+    for (["bashrc", "BASHRC_CONTENT"],
+         ["cshrc", "CSHRC_CONTENT"],
+         ["csh_reinit",  "CSH_REINIT_CONTENT"],
+         ["csh_wrapper", "CSH_WRAPPER_CONTENT"],
+         ["csh_set_path", "CSH_SET_PATH_CONTENT"],
+         ["perlbrew-completion.bash", "BASH_COMPLETION_CONTENT"],
+     ) {
+        my ($file_name, $method) = @$_;
+        my $path = catfile($etc_dir, $file_name);
+        if (! -f $path) {
+            open($fh, ">", $path) or die "Fail to create $path. Please check the permission of $etc_dir and try `perlbrew init` again.";
+            print $fh $self->$method;
+            close $fh;
+        }
+        else {
+            if (-w $path && open($fh, ">", $path)) {
+                print $fh $self->$method;
+                close $fh;
+            }
+            else {
+                print "NOTICE: $path already exists and not updated.\n" unless $self->{quiet};
+            }
+        }
+    }
 
     my ( $shrc, $yourshrc );
     if ( $self->is_shell_csh) {
