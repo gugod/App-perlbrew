@@ -100,15 +100,15 @@ sub perl_version_to_integer {
     my $version = shift;
     my @v = split(/[\.\-_]/, $version);
     if ($v[1] <= 5) {
-        $v[2] ||= 9;
+        $v[2] ||= 0;
         $v[3] = 0;
     }
     else {
-        $v[3] ||= 9;
+        $v[3] ||= $v[1] >= 6 ? 9 : 0;
         $v[3] =~ s/[^0-9]//g;
     }
 
-    return $v[0]*10000000 + $v[1]*10000 + $v[2]*10 + $v[3];
+    return $v[1]*1000000 + $v[2]*1000 + $v[3];
 }
 
 sub new {
@@ -168,7 +168,6 @@ sub new {
 
     return bless \%opt, $class;
 }
-
 
 sub root {
     my ($self, $new_root) = @_;
