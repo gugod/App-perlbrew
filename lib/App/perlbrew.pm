@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.54";
+our $VERSION = "0.55";
 
 use Config;
 use Capture::Tiny;
