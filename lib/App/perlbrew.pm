@@ -854,7 +854,9 @@ sub run_command_install {
 sub run_command_download {
     my ($self, $dist) = @_;
 
-    my ($dist_name, $dist_version) = $dist =~ m/^(.*)-([\d.]+(?:-RC\d+)?)$/;
+    my ($dist_version) = $dist =~ /^ (?:perl-?)? (.*) $/xs;
+
+    die "\"$dist\" does not look like a perl distribution name. " unless $dist_version =~ /^\d\./;
 
     my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = catfile($self->root, "dists", $dist_tarball);
