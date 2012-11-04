@@ -12,7 +12,6 @@ use File::Basename;
 use File::Path ();
 use FindBin;
 use CPAN::Perl::Releases;
-use version;
 
 our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -942,7 +941,7 @@ sub do_install_this {
     $self->{dist_extracted_dir} = $dist_extracted_dir;
     $self->{log_file} ||= catfile($self->root, "build.${installation_name}.log");
 
-    my $version = version->parse( $dist_version );
+    my $version = perl_version_to_integer($dist_version);
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
@@ -970,7 +969,7 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
-    if ( $version < version->parse( '5.6.0' ) ) { 
+    if ( $version < perl_version_to_integer( '5.6.0' ) ) {
         # ancient perls do not support -A for Configure
         @a_options = ();
     }
@@ -998,7 +997,7 @@ INSTALL
                 ( map { qq{'-U$_'} } @u_options ),
                 ( map { qq{'-A$_'} } @a_options ),
             ),
-        $version < version->parse( '5.8.9' )
+        $version < perl_version_to_integer( '5.8.9' )
                 ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                 : ()
     );
