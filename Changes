@@ -1,3 +1,8 @@
+0.55:
+- Revert the requirement of 5.8.8. Now require 5.8
+- Add PERLBREW_CPAN_MIRROR environment variable
+- Deal with a minor local::lib path problem. See GH #254.
+
 0.54: # 2012-10-24T21:21:25+0200
 - Now requires perl 5.8.8
 - Fix an issue with list-module command listing extra modules See GH #245

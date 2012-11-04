@@ -124,6 +124,10 @@ snippet for the given senario.
 This environment variable specify the list of command like flags to pass through
 to 'sh Configure'. By default it is '-de'.
 
+=item PERLBREW_CPAN_MIRROR
+
+The CPAN mirror url of your choice.
+
 =back
 
 =head1 COMMAND: INIT
