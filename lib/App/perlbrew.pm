@@ -1451,11 +1451,14 @@ sub run_command_mirror {
 
 sub run_command_env {
     my($self, $name) = @_;
-    my($perl_name,$lib_name) = $self->resolve_installation_name($name);
-    my $target_perl_executable = $self->installed_perl_executable($perl_name);
 
-    if ($perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
-        exec($target_perl_executable, $0, "env", $name);
+    if ($name) {
+        my($perl_name,$lib_name) = $self->resolve_installation_name($name);
+        my $target_perl_executable = $self->installed_perl_executable($perl_name);
+
+        if ($perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
+            exec($target_perl_executable, $0, "env", $name);
+        }
     }
 
     my %env = $self->perlbrew_env($name);
