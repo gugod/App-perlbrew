@@ -16,11 +16,24 @@ if [ ! -f $fatpack_path ]; then
     exit 2
 fi
 
+rm -rf lib/App
 mkdir -p lib/App
 
+./update-fatlib.pl
+
+if [[ -z "$PERLBREW_PERLSTRIP" ]]; then
+    PERLBREW_PERLSTRIP=1
+fi
+
 if type perlstrip >/dev/null 2>&1; then
-    perlstrip -o lib/App/perlbrew.pm ../lib/App/perlbrew.pm
+    if [[ $PERLBREW_PERLSTRIP -eq 1 ]]; then
+        perlstrip -s -o lib/App/perlbrew.pm ../lib/App/perlbrew.pm
+    else
+        cp ../lib/App/perlbrew.pm lib/App/perlbrew.pm
+        echo "... not perlstiripping"
+    fi
 else
+    cp ../lib/App/perlbrew.pm lib/App/perlbrew.pm
     echo "--- perlstrip is not installed. The fatpacked executable will be really big."
 fi
 

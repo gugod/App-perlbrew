@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.55";
+our $VERSION = "0.56";
 
 use Config;
 use Capture::Tiny;
@@ -1199,9 +1199,9 @@ sub perlbrew_env {
 
         if ($lib_name) {
             require local::lib;
+            no warnings 'uninitialized';
 
-            if (
-                $ENV{PERL_LOCAL_LIB_ROOT}
+            if ($ENV{PERL_LOCAL_LIB_ROOT}
                 && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^$PERLBREW_HOME/
             ) {
                 my %deactivate_env = local::lib->build_deact_all_environment_vars_for($ENV{PERL_LOCAL_LIB_ROOT});
@@ -1451,11 +1451,14 @@ sub run_command_mirror {
 
 sub run_command_env {
     my($self, $name) = @_;
-    my($perl_name,$lib_name) = $self->resolve_installation_name($name);
-    my $target_perl_executable = $self->installed_perl_executable($perl_name);
 
-    if ($perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
-        exec($target_perl_executable, $0, "env", $name);
+    if ($name) {
+        my($perl_name,$lib_name) = $self->resolve_installation_name($name);
+        my $target_perl_executable = $self->installed_perl_executable($perl_name);
+
+        if ($perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
+            exec($target_perl_executable, $0, "env", $name);
+        }
     }
 
     my %env = $self->perlbrew_env($name);
