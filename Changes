@@ -1,3 +1,6 @@
+0.57: # 2012-11-13T19:57:03+0100
+- Fix an infinite re-exec loop
+
 0.56: # 2012-11-11T23:10:30+0100
 - Fix GH #261, which breaks `off` and `swich-off` commands.
 
