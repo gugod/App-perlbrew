@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.56";
+our $VERSION = "0.57";
 
 use Config;
 use Capture::Tiny;
@@ -198,8 +198,8 @@ sub current_perl_executable {
 sub installed_perl_executable {
     my ($self, $name) = @_;
     my $executable = catfile($self->root, "perls", $name, "bin", "perl");
-    die unless -e $executable;
-    return $executable;
+    return $executable if -e $executable;
+    return "";
 }
 
 sub cpan_mirror {
@@ -1456,7 +1456,16 @@ sub run_command_env {
         my($perl_name,$lib_name) = $self->resolve_installation_name($name);
         my $target_perl_executable = $self->installed_perl_executable($perl_name);
 
-        if ($perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
+        my $link_count = 1;
+        while (-l $target_perl_executable) {
+            $target_perl_executable = readlink($target_perl_executable);
+            $link_count++;
+            if ($link_count++ > 100) {
+                die "Problematic symlink detected: $target_perl_executable";
+            }
+        }
+
+        if ($target_perl_executable && $perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
             exec($target_perl_executable, $0, "env", $name);
         }
     }
