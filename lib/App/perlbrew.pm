@@ -1215,6 +1215,8 @@ sub perlbrew_env {
                 @ENV{keys %env} = values %env;
                 my %lib_env = local::lib->build_environment_vars_for($base, 0, 1);
 
+                $lib_env{PERL5LIB} = (split($Config{path_sep}, $lib_env{PERL5LIB}, 2))[1];
+
                 $env{PERLBREW_PATH}    = catdir($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = catdir($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
@@ -1451,24 +1453,6 @@ sub run_command_mirror {
 
 sub run_command_env {
     my($self, $name) = @_;
-
-    if ($name) {
-        my($perl_name,$lib_name) = $self->resolve_installation_name($name);
-        my $target_perl_executable = $self->installed_perl_executable($perl_name);
-
-        my $link_count = 1;
-        while (-l $target_perl_executable) {
-            $target_perl_executable = readlink($target_perl_executable);
-            $link_count++;
-            if ($link_count++ > 100) {
-                die "Problematic symlink detected: $target_perl_executable";
-            }
-        }
-
-        if ($target_perl_executable && $perl_name && $^X ne $target_perl_executable && -x $target_perl_executable && -x $0) {
-            exec($target_perl_executable, $0, "env", $name);
-        }
-    }
 
     my %env = $self->perlbrew_env($name);
 
