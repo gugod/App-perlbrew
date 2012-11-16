@@ -1235,6 +1235,16 @@ sub perlbrew_env {
                 @env{keys %deactivate_env} = values %deactivate_env;
                 $env{PERLBREW_LIB}  = undef;
             }
+            if (my $perl5lib = $self->env("PERL5LIB")) {
+                my @perl5libs = split $Config{path_sep} => $perl5lib;
+                my @prestine_perl5libs = grep { !/^$PERLBREW_HOME/ } @perl5libs;
+                if (@prestine_perl5libs) {
+                    $env{PERL5LIB} = join $Config{path_sep}, @prestine_perl5libs;
+                }
+                else {
+                    $env{PERL5LIB} = undef;
+                }
+            }
         }
     }
     else {
