@@ -566,7 +566,7 @@ C<https://>, C<ftp://> and C<file://>.
 Options for C<install> command:
 
     -f --force     Force installation
-    -j $n          Parallel buildng and testing. ex. C<perlbrew install -j 5 perl-5.14.2>
+    -j $n          Parallel building and testing. ex. C<perlbrew install -j 5 perl-5.14.2>
     -n --notest    Skip testing
 
        --as        Install the given version of perl by a name.
@@ -620,7 +620,7 @@ Usage: perlbrew available
 List the recently available versions of perl on CPAN.
 
 The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
-and is not the list of *all* perl versions ever releasesed in the past.
+and is not the list of *all* perl versions ever released in the past.
 
 NOTICE: This command might be gone in the future and becomes an option of 'list' command.
 
