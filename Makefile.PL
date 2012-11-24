@@ -13,14 +13,15 @@ requires
     'CPAN::Perl::Releases' => '0.76';
 
 test_requires
-    'Test::Simple'    => '0.98',
-    'Test::More'      => '0',
-    'Test::Output'    => '0',
-    'Test::Exception' => '0',
-    'Test::Spec'      => '0',
-    'Path::Class'     => '0',
-    'IO::All'         => '0',
-    'File::Temp'      => '0';
+    'Test::Simple'     => '0.98',
+    'Test::More'       => '0',
+    'Test::Output'     => '0',
+    'Test::Exception'  => '0',
+    'Test::NoWarnings' => '0',
+    'Test::Spec'       => '0',
+    'Path::Class'      => '0',
+    'IO::All'          => '0',
+    'File::Temp'       => '0';
 
 install_script 'bin/perlbrew';
 
