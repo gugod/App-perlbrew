@@ -605,7 +605,7 @@ sub run_command_init {
         $self->env("SHELL") =~ m/(t?csh)/;
         $yourshrc = $1 . "rc";
     }
-    elsif ($self->env("SHELL") =~ m/zsh$/) {
+    elsif ($self->env("SHELL") =~ m/zsh\d?$/) {
         $shrc = "bashrc";
         $yourshrc = 'zshenv';
     }
@@ -1286,7 +1286,7 @@ sub launch_sub_shell {
 
     my $shell_opt = "";
 
-    if ($shell =~ /\/zsh$/) {
+    if ($shell =~ /\/zsh\d?$/) {
         $shell_opt = "-d -f";
 
         if ($^O eq 'darwin') {
@@ -1466,7 +1466,7 @@ sub run_command_env {
 
     my %env = $self->perlbrew_env($name);
 
-    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh$/) {
+    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
         while (my ($k, $v) = each(%env)) {
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
