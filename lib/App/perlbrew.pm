@@ -786,6 +786,24 @@ sub do_install_blead {
     return;
 }
 
+sub resolve_stable {
+    my ($self) = @_;
+
+    my ($latest_ver, $latest_minor);
+    for my $cand ($self->available_perls) {
+        my ($ver, $minor) = $cand =~ m/^perl-(5\.(6|8|[0-9]+[02468])\.[0-9]+)$/
+            or next;
+        ($latest_ver, $latest_minor) = ($ver, $minor)
+            if !defined $latest_minor
+            || $latest_minor < $minor;
+    }
+
+    die "Can't determine latest stable Perl release\n"
+        if !defined $latest_ver;
+
+    return "perl-$latest_ver";
+}
+
 sub do_install_release {
     my ($self, $dist, $dist_name, $dist_version) = @_;
 
@@ -813,6 +831,8 @@ sub run_command_install {
         $self->run_command_help("install");
         exit(-1);
     }
+
+    $dist = $self->resolve_stable if $dist =~ m/^(?:perl-?)?stable$/;
 
     $self->{dist_name} = $dist;
 

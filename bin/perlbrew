@@ -165,6 +165,13 @@ mirror site configured before.
 
 To configure mirror site, invoke `mirror` command.
 
+=item B<install> [options]  perl-stable
+
+=item B<install> [options]  stable
+
+A convenient way to install the most recent stable version of Perl, of those
+that are available.
+
 =item B<install> [options]  perl-blead
 
 =item B<install> [options]  blead
