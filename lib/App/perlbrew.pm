@@ -144,6 +144,7 @@ sub new {
         'help|h',
         'version',
         'root=s',
+        'switch',
 
         # options passed directly to Configure
         'D=s@',
@@ -868,6 +869,9 @@ sub run_command_install {
         die $help_message;
     }
 
+    $self->switch_to($installation_name)
+        if $self->{switch};
+
     return;
 }
 
@@ -1381,6 +1385,12 @@ sub run_command_switch {
             ( $current ? "to $current" : 'off' );
         return;
     }
+
+    $self->switch_to($dist, $alias);
+}
+
+sub switch_to {
+    my ( $self, $dist, $alias ) = @_;
 
     die "Cannot use for alias something that starts with 'perl-'\n"
       if $alias && $alias =~ /^perl-/;

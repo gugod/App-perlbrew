@@ -16,12 +16,16 @@ use Test::More;
         return map { "perl-$_" }
             qw<5.8.9 5.17.7 5.16.2 5.14.3 5.12.5 5.10.1>;
     }
+
+    sub App::perlbrew::switch_to {
+        shift->current_perl(shift);
+    }
 }
 
-plan tests => 2;
+plan tests => 3;
 
 {
-    my $app = App::perlbrew->new("install", "perl-stable");
+    my $app = App::perlbrew->new("install", "--switch", "perl-stable");
     $app->run;
 
     my @installed = $app->installed_perls;
@@ -29,6 +33,10 @@ plan tests => 2;
 
     is $installed[0]{name}, "perl-5.16.2",
         "install perl-stable installs correct perl";
+
+    ok $installed[0]{is_current},
+        "install --switch automatically switches to the installed perl"
+            or diag explain $installed[0];
 }
 
 done_testing;

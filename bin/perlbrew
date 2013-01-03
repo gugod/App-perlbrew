@@ -203,6 +203,9 @@ Options for C<install> command:
     -j $n          Parallel building and testing. ex. C<perlbrew install -j 5 perl-5.14.2>
     -n --notest    Skip testing
 
+       --switch    Automatically switch to this Perl once successfully
+                   installed, as if with `perlbrew switch <version>`
+
        --as        Install the given version of perl by a name.
                    ex. C<perlbrew install perl-5.6.2 --as legacy-perl>
 
