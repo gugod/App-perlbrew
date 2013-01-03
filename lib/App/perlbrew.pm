@@ -1237,7 +1237,7 @@ sub perlbrew_env {
             }
             if (my $perl5lib = $self->env("PERL5LIB")) {
                 my @perl5libs = split $Config{path_sep} => $perl5lib;
-                my @prestine_perl5libs = grep { !/^$PERLBREW_HOME/ } @perl5libs;
+                my @prestine_perl5libs = grep { !/^\Q$PERLBREW_HOME/ } @perl5libs;
                 if (@prestine_perl5libs) {
                     $env{PERL5LIB} = join $Config{path_sep}, @prestine_perl5libs;
                 }
