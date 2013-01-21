@@ -1467,7 +1467,8 @@ sub run_command_env {
     my %env = $self->perlbrew_env($name);
 
     if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
-        while (my ($k, $v) = each(%env)) {
+        for my $k (sort keys %env) {
+            my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
                 print "export $k=\"$v\"\n";
@@ -1478,7 +1479,8 @@ sub run_command_env {
         }
     }
     else {
-        while (my ($k, $v) = each(%env)) {
+        for my $k (sort keys %env) {
+            my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
                 print "setenv $k \"$v\"\n";
