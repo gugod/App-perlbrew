@@ -1320,8 +1320,8 @@ WARNINGONMAC
     unless ($ENV{PERLBREW_VERSION}) {
         my $root = $self->root;
         # The user does not source bashrc/csh in their shell initialization.
-        $env{PATH}    = $env{PERLBREW_PATH}    . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
-        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{MANPATH};
+        $env{PATH}    = $env{PERLBREW_PATH}    . ":" . join ":", grep { !/$root\/bin/ } split ":", $ENV{PATH};
+        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root\/man/ } split ":", $ENV{MANPATH};
     }
 
     my $command = "env ";
