@@ -165,6 +165,13 @@ mirror site configured before.
 
 To configure mirror site, invoke `mirror` command.
 
+=item B<install> [options]  perl-stable
+
+=item B<install> [options]  stable
+
+A convenient way to install the most recent stable version of Perl, of those
+that are available.
+
 =item B<install> [options]  perl-blead
 
 =item B<install> [options]  blead
@@ -195,6 +202,9 @@ Options for C<install> command:
     -f --force     Force installation
     -j $n          Parallel building and testing. ex. C<perlbrew install -j 5 perl-5.14.2>
     -n --notest    Skip testing
+
+       --switch    Automatically switch to this Perl once successfully
+                   installed, as if with `perlbrew switch <version>`
 
        --as        Install the given version of perl by a name.
                    ex. C<perlbrew install perl-5.6.2 --as legacy-perl>

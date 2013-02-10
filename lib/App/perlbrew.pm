@@ -124,6 +124,7 @@ sub parse_cmdline {
         'help|h',
         'version',
         'root=s',
+        'switch',
 
         # options passed directly to Configure
         'D=s@',
@@ -795,6 +796,24 @@ sub do_install_blead {
     return;
 }
 
+sub resolve_stable {
+    my ($self) = @_;
+
+    my ($latest_ver, $latest_minor);
+    for my $cand ($self->available_perls) {
+        my ($ver, $minor) = $cand =~ m/^perl-(5\.(6|8|[0-9]+[02468])\.[0-9]+)$/
+            or next;
+        ($latest_ver, $latest_minor) = ($ver, $minor)
+            if !defined $latest_minor
+            || $latest_minor < $minor;
+    }
+
+    die "Can't determine latest stable Perl release\n"
+        if !defined $latest_ver;
+
+    return "perl-$latest_ver";
+}
+
 sub do_install_release {
     my ($self, $dist, $dist_name, $dist_version) = @_;
 
@@ -822,6 +841,8 @@ sub run_command_install {
         $self->run_command_help("install");
         exit(-1);
     }
+
+    $dist = $self->resolve_stable if $dist =~ m/^(?:perl-?)?stable$/;
 
     $self->{dist_name} = $dist;
 
@@ -856,6 +877,9 @@ sub run_command_install {
     else {
         die $help_message;
     }
+
+    $self->switch_to($installation_name)
+        if $self->{switch};
 
     return;
 }
@@ -1370,6 +1394,12 @@ sub run_command_switch {
             ( $current ? "to $current" : 'off' );
         return;
     }
+
+    $self->switch_to($dist, $alias);
+}
+
+sub switch_to {
+    my ( $self, $dist, $alias ) = @_;
 
     die "Cannot use for alias something that starts with 'perl-'\n"
       if $alias && $alias =~ /^perl-/;
