@@ -2,6 +2,10 @@
 use strict;
 use warnings;
 
+BEGIN {
+    delete $ENV{PERLBREW_LIB};
+}
+
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
