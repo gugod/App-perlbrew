@@ -220,7 +220,7 @@ sub env {
 sub path_with_tilde {
     my ($self, $dir) = @_;
     my $home = $self->env('HOME');
-    $dir =~ s/^$home/~/ if $home;
+    $dir =~ s/^\Q$home\E/~/ if $home;
     return $dir;
 }
 
@@ -1202,7 +1202,7 @@ sub perlbrew_env {
             no warnings 'uninitialized';
 
             if ($ENV{PERL_LOCAL_LIB_ROOT}
-                && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^$PERLBREW_HOME/
+                && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^\Q$PERLBREW_HOME\E/
             ) {
                 my %deactivate_env = local::lib->build_deact_all_environment_vars_for($ENV{PERL_LOCAL_LIB_ROOT});
                 @env{keys %deactivate_env} = values %deactivate_env;
@@ -1229,7 +1229,7 @@ sub perlbrew_env {
         }
         else {
             my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
-            if ($libroot && $libroot =~ /^$PERLBREW_HOME/) {
+            if ($libroot && $libroot =~ /^\Q$PERLBREW_HOME\E/) {
                 require local::lib;
                 my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
                 @env{keys %deactivate_env} = values %deactivate_env;
@@ -1237,7 +1237,7 @@ sub perlbrew_env {
             }
             if (my $perl5lib = $self->env("PERL5LIB")) {
                 my @perl5libs = split $Config{path_sep} => $perl5lib;
-                my @prestine_perl5libs = grep { !/^$PERLBREW_HOME/ } @perl5libs;
+                my @prestine_perl5libs = grep { !/^\Q$PERLBREW_HOME\E/ } @perl5libs;
                 if (@prestine_perl5libs) {
                     $env{PERL5LIB} = join $Config{path_sep}, @prestine_perl5libs;
                 }
@@ -1249,7 +1249,7 @@ sub perlbrew_env {
     }
     else {
         my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
-        if ($libroot && $libroot =~ /^$PERLBREW_HOME/) {
+        if ($libroot && $libroot =~ /^\Q$PERLBREW_HOME\E/) {
             require local::lib;
             my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
             @env{keys %deactivate_env} = values %deactivate_env;
