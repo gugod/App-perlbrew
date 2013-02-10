@@ -6,6 +6,7 @@ use Test::More;
 use lib qw(lib);
 
 use App::perlbrew;
+use Test::NoWarnings;
 
 my @test_cases = (
     {
@@ -20,9 +21,13 @@ my @test_cases = (
         raw    => q{5.012002},
         parsed => q{5.12.2},
     },
+    {
+        raw    => q{5.008},
+        parsed => q{5.8.0},
+    },
 );
 
-plan tests => scalar @test_cases;
+plan tests => scalar @test_cases + 1;
 {
     my $app = App::perlbrew->new();
  TEST:
