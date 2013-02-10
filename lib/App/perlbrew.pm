@@ -110,6 +110,35 @@ sub perl_version_to_integer {
     return $v[1]*1000000 + $v[2]*1000 + $v[3];
 }
 
+sub parse_cmdline {
+    my ($self, $params, @ext) = @_;
+
+    Getopt::Long::GetOptions(
+        $params,
+
+        'force|f!',
+        'notest|n!',
+        'quiet|q!',
+        'verbose|v',
+        'as=s',
+        'help|h',
+        'version',
+        'root=s',
+
+        # options passed directly to Configure
+        'D=s@',
+        'U=s@',
+        'A=s@',
+
+        'j=i',
+        # options that affect Configure and customize post-build
+        'sitecustomize=s',
+
+        @ext
+    )
+      or run_command_help(1);
+}
+
 sub new {
     my($class, @argv) = @_;
 
@@ -131,30 +160,10 @@ sub new {
         'pass_through',
         'no_ignore_case',
         'bundling',
+        'permute',                       # default behaviour except 'exec'
     );
 
-    Getopt::Long::GetOptions(
-        \%opt,
-
-        'force|f!',
-        'notest|n!',
-        'quiet|q!',
-        'verbose|v',
-        'as=s',
-        'help|h',
-        'version',
-        'root=s',
-
-        # options passed directly to Configure
-        'D=s@',
-        'U=s@',
-        'A=s@',
-
-        'j=i',
-        # options that affect Configure and customize post-build
-        'sitecustomize=s',
-    )
-      or run_command_help(1);
+    $class->parse_cmdline (\%opt);
 
     $opt{args} = \@ARGV;
 
@@ -1590,12 +1599,12 @@ sub run_command_exec {
 
     local (@ARGV) = @{$self->{original_argv}};
 
-    shift @ARGV; # "exec"
+    Getopt::Long::Configure ('require_order');
+    my @command_options = ('with=s');
 
-    Getopt::Long::GetOptions(
-        \%opts,
-        'with=s',
-    );
+    $self->parse_cmdline (\%opts, @command_options);
+    shift @ARGV; # "exec"
+    $self->parse_cmdline (\%opts, @command_options);
 
     my @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
 
@@ -2336,7 +2345,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew switch perl-5.12.2
 
     # Exec something with all perlbrew-ed perls
-    perlbrew exec perl -E 'say $]'
+    perlbrew exec -- perl -E 'say $]'
 
 =head1 DESCRIPTION
 
