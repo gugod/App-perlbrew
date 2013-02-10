@@ -1123,7 +1123,7 @@ sub format_perl_version {
     return sprintf "%d.%d.%d",
       substr( $version, 0, 1 ),
       substr( $version, 2, 3 ),
-      substr( $version, 5 );
+      substr( $version, 5 ) || 0;
 
 }
 
