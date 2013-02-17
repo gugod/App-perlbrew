@@ -2095,10 +2095,10 @@ perlbrew () {
                     echo "Currently using $PERLBREW_PERL"
                 fi
             else
-                code="$(command perlbrew env $2);"
-                if [ -z "$code" ]; then
-                    exit_status=1
-                else
+                code="$(command perlbrew env $2)"
+                exit_status="$?"
+                if [[ $exit_status -eq 0 ]]
+                then
                     eval $code
                     __perlbrew_set_path
                 fi
@@ -2109,7 +2109,11 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2 && __perlbrew_reinit $2
+                  perlbrew use $2
+                  exit_status=$?
+                  if [[ ${exit_status} -eq 0 ]]; then
+                      __perlbrew_reinit $2
+                  fi
               fi
               ;;
 
