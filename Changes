@@ -1,3 +1,9 @@
+0.59: # 2013-02-17T12:34:10+0100
+- New feature: "perlbrew install --switch $perl"
+- New feature: "perlbrew install stable"
+- Fix "--quiet" options for "exec" command
+- Fix mulitple test failures and warnings
+
 0.58: # 2012-11-16T08:45:18+0100
 - Fix infinite re-exec loop as identified in #263
 - Fix a case where PERL5LIB still contains previous entries after deactivating or activating other ones.
@@ -42,7 +48,7 @@
 - Fix the build for perl-5.12 and 5.14 -- userelocatableinc are not working properly. https://github.com/gugod/App-perlbrew/issues/232
 
 0.48: # 2012-08-24T07:07:52+0200
-- The build log output "build.log" is now named after the installation name for eaiser reference.
+- The build log output "build.log" is now named after the installation name for easier reference.
 - Fix the invokation configure command to actually contains -Duserelocatableinc
 - Experimental: bash/zsh users may put this to shell init instead: eval "$(~/perl5/perlbrew/bin/perlbrew init -)"
 - A few output message updates
@@ -50,7 +56,7 @@
 0.47: # 2012-08-23T07:59:53+0200
 - New command: download.
 - New env var: PERLBREW_CONFIGURE_FLAGS
-- userelocatableinc is enabled by default when the installing perl version is greater than or equals to 5.8.9. It should make some use cases eaiser. In particular, you can move PERLBREW_ROOT directory to another place.
+- userelocatableinc is enabled by default when the installing perl version is greater than or equals to 5.8.9. It should make some use cases easier. In particular, you can move PERLBREW_ROOT directory to another place.
 - fix https://github.com/gugod/App-perlbrew/issues/216 for bash users and zsh users
 
 0.46:

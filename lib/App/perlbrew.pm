@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.58";
+our $VERSION = "0.59";
 
 use Config;
 use Capture::Tiny;
@@ -110,6 +110,36 @@ sub perl_version_to_integer {
     return $v[1]*1000000 + $v[2]*1000 + $v[3];
 }
 
+sub parse_cmdline {
+    my ($self, $params, @ext) = @_;
+
+    Getopt::Long::GetOptions(
+        $params,
+
+        'force|f!',
+        'notest|n!',
+        'quiet|q!',
+        'verbose|v',
+        'as=s',
+        'help|h',
+        'version',
+        'root=s',
+        'switch',
+
+        # options passed directly to Configure
+        'D=s@',
+        'U=s@',
+        'A=s@',
+
+        'j=i',
+        # options that affect Configure and customize post-build
+        'sitecustomize=s',
+
+        @ext
+    )
+      or run_command_help(1);
+}
+
 sub new {
     my($class, @argv) = @_;
 
@@ -131,30 +161,10 @@ sub new {
         'pass_through',
         'no_ignore_case',
         'bundling',
+        'permute',                       # default behaviour except 'exec'
     );
 
-    Getopt::Long::GetOptions(
-        \%opt,
-
-        'force|f!',
-        'notest|n!',
-        'quiet|q!',
-        'verbose|v',
-        'as=s',
-        'help|h',
-        'version',
-        'root=s',
-
-        # options passed directly to Configure
-        'D=s@',
-        'U=s@',
-        'A=s@',
-
-        'j=i',
-        # options that affect Configure and customize post-build
-        'sitecustomize=s',
-    )
-      or run_command_help(1);
+    $class->parse_cmdline (\%opt);
 
     $opt{args} = \@ARGV;
 
@@ -220,7 +230,7 @@ sub env {
 sub path_with_tilde {
     my ($self, $dir) = @_;
     my $home = $self->env('HOME');
-    $dir =~ s/^$home/~/ if $home;
+    $dir =~ s/^\Q$home\E/~/ if $home;
     return $dir;
 }
 
@@ -605,7 +615,7 @@ sub run_command_init {
         $self->env("SHELL") =~ m/(t?csh)/;
         $yourshrc = $1 . "rc";
     }
-    elsif ($self->env("SHELL") =~ m/zsh$/) {
+    elsif ($self->env("SHELL") =~ m/zsh\d?$/) {
         $shrc = "bashrc";
         $yourshrc = 'zshenv';
     }
@@ -786,6 +796,24 @@ sub do_install_blead {
     return;
 }
 
+sub resolve_stable {
+    my ($self) = @_;
+
+    my ($latest_ver, $latest_minor);
+    for my $cand ($self->available_perls) {
+        my ($ver, $minor) = $cand =~ m/^perl-(5\.(6|8|[0-9]+[02468])\.[0-9]+)$/
+            or next;
+        ($latest_ver, $latest_minor) = ($ver, $minor)
+            if !defined $latest_minor
+            || $latest_minor < $minor;
+    }
+
+    die "Can't determine latest stable Perl release\n"
+        if !defined $latest_ver;
+
+    return "perl-$latest_ver";
+}
+
 sub do_install_release {
     my ($self, $dist, $dist_name, $dist_version) = @_;
 
@@ -813,6 +841,8 @@ sub run_command_install {
         $self->run_command_help("install");
         exit(-1);
     }
+
+    $dist = $self->resolve_stable if $dist =~ m/^(?:perl-?)?stable$/;
 
     $self->{dist_name} = $dist;
 
@@ -847,6 +877,9 @@ sub run_command_install {
     else {
         die $help_message;
     }
+
+    $self->switch_to($installation_name)
+        if $self->{switch};
 
     return;
 }
@@ -1114,7 +1147,7 @@ sub format_perl_version {
     return sprintf "%d.%d.%d",
       substr( $version, 0, 1 ),
       substr( $version, 2, 3 ),
-      substr( $version, 5 );
+      substr( $version, 5 ) || 0;
 
 }
 
@@ -1202,7 +1235,7 @@ sub perlbrew_env {
             no warnings 'uninitialized';
 
             if ($ENV{PERL_LOCAL_LIB_ROOT}
-                && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^$PERLBREW_HOME/
+                && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^\Q$PERLBREW_HOME\E/
             ) {
                 my %deactivate_env = local::lib->build_deact_all_environment_vars_for($ENV{PERL_LOCAL_LIB_ROOT});
                 @env{keys %deactivate_env} = values %deactivate_env;
@@ -1229,7 +1262,7 @@ sub perlbrew_env {
         }
         else {
             my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
-            if ($libroot && $libroot =~ /^$PERLBREW_HOME/) {
+            if ($libroot && $libroot =~ /^\Q$PERLBREW_HOME\E/) {
                 require local::lib;
                 my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
                 @env{keys %deactivate_env} = values %deactivate_env;
@@ -1237,7 +1270,7 @@ sub perlbrew_env {
             }
             if (my $perl5lib = $self->env("PERL5LIB")) {
                 my @perl5libs = split $Config{path_sep} => $perl5lib;
-                my @prestine_perl5libs = grep { !/^$PERLBREW_HOME/ } @perl5libs;
+                my @prestine_perl5libs = grep { !/^\Q$PERLBREW_HOME\E/ } @perl5libs;
                 if (@prestine_perl5libs) {
                     $env{PERL5LIB} = join $Config{path_sep}, @prestine_perl5libs;
                 }
@@ -1249,7 +1282,7 @@ sub perlbrew_env {
     }
     else {
         my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
-        if ($libroot && $libroot =~ /^$PERLBREW_HOME/) {
+        if ($libroot && $libroot =~ /^\Q$PERLBREW_HOME\E/) {
             require local::lib;
             my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
             @env{keys %deactivate_env} = values %deactivate_env;
@@ -1286,7 +1319,7 @@ sub launch_sub_shell {
 
     my $shell_opt = "";
 
-    if ($shell =~ /\/zsh$/) {
+    if ($shell =~ /\/zsh\d?$/) {
         $shell_opt = "-d -f";
 
         if ($^O eq 'darwin') {
@@ -1320,8 +1353,8 @@ WARNINGONMAC
     unless ($ENV{PERLBREW_VERSION}) {
         my $root = $self->root;
         # The user does not source bashrc/csh in their shell initialization.
-        $env{PATH}    = $env{PERLBREW_PATH}    . ":" . join ":", grep { !/$root/ } split ":", $ENV{PATH};
-        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root/ } split ":", $ENV{MANPATH};
+        $env{PATH}    = $env{PERLBREW_PATH}    . ":" . join ":", grep { !/$root\/bin/ } split ":", $ENV{PATH};
+        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root\/man/ } split ":", $ENV{MANPATH};
     }
 
     my $command = "env ";
@@ -1361,6 +1394,12 @@ sub run_command_switch {
             ( $current ? "to $current" : 'off' );
         return;
     }
+
+    $self->switch_to($dist, $alias);
+}
+
+sub switch_to {
+    my ( $self, $dist, $alias ) = @_;
 
     die "Cannot use for alias something that starts with 'perl-'\n"
       if $alias && $alias =~ /^perl-/;
@@ -1466,8 +1505,9 @@ sub run_command_env {
 
     my %env = $self->perlbrew_env($name);
 
-    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh$/) {
-        while (my ($k, $v) = each(%env)) {
+    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
+        for my $k (sort keys %env) {
+            my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
                 print "export $k=\"$v\"\n";
@@ -1478,7 +1518,8 @@ sub run_command_env {
         }
     }
     else {
-        while (my ($k, $v) = each(%env)) {
+        for my $k (sort keys %env) {
+            my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
                 print "setenv $k \"$v\"\n";
@@ -1588,12 +1629,12 @@ sub run_command_exec {
 
     local (@ARGV) = @{$self->{original_argv}};
 
-    shift @ARGV; # "exec"
+    Getopt::Long::Configure ('require_order');
+    my @command_options = ('with=s');
 
-    Getopt::Long::GetOptions(
-        \%opts,
-        'with=s',
-    );
+    $self->parse_cmdline (\%opts, @command_options);
+    shift @ARGV; # "exec"
+    $self->parse_cmdline (\%opts, @command_options);
 
     my @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
 
@@ -2334,7 +2375,7 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew switch perl-5.12.2
 
     # Exec something with all perlbrew-ed perls
-    perlbrew exec perl -E 'say $]'
+    perlbrew exec -- perl -E 'say $]'
 
 =head1 DESCRIPTION
 
