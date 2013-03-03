@@ -1364,7 +1364,8 @@ WARNINGONMAC
     }
     $command .= " $shell $shell_opt";
 
-    print "\nA sub-shell is launched with $name as the activated perl. Run 'exit' to finish it.\n\n";
+    my $pretty_name = defined($name) ? $name : "the default perl";
+    print "\nA sub-shell is launched with $pretty_name as the activated perl. Run 'exit' to finish it.\n\n";
     exec($command);
 }
 
@@ -1424,7 +1425,7 @@ sub switch_to {
 
 sub run_command_off {
     my $self = shift;
-    $self->launch_sub_shell("the default perl");
+    $self->launch_sub_shell;
 }
 
 sub run_command_switch_off {
