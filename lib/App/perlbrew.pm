@@ -1359,6 +1359,7 @@ WARNINGONMAC
 
     my $command = "env ";
     while (my ($k, $v) = each(%env)) {
+        no warnings "uninitialized";
         $command .= "$k=\"$v\" ";
     }
     $command .= " $shell $shell_opt";
@@ -1423,7 +1424,7 @@ sub switch_to {
 
 sub run_command_off {
     my $self = shift;
-    $self->launch_sub_shell;
+    $self->launch_sub_shell("the default perl");
 }
 
 sub run_command_switch_off {
