@@ -2044,7 +2044,7 @@ __perlbrew_set_path () {
     fi
     unset MANPATH_WITHOUT_PERLBREW
 
-    PATH_WITHOUT_PERLBREW=`$perlbrew_command display-pristine-path`
+    PATH_WITHOUT_PERLBREW=$(eval $perlbrew_command display-pristine-path)
     if [ -n "$PERLBREW_PATH" ]; then
         export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
     else
@@ -2060,9 +2060,9 @@ __perlbrew_activate() {
 
     if [[ -n "$PERLBREW_PERL" ]]; then
         if [[ -z "$PERLBREW_LIB" ]]; then
-            eval "$($perlbrew_command env $PERLBREW_PERL)"
+            $(eval $perlbrew_command env $PERLBREW_PERL)
         else
-            eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
+            $(eval $perlbrew_command env $PERLBREW_PERL@$PERLBREW_LIB)
         fi
     fi
 
@@ -2070,7 +2070,7 @@ __perlbrew_activate() {
 }
 
 __perlbrew_deactivate() {
-    eval "$($perlbrew_command env)"
+    $(eval $perlbrew_command env)
     unset PERLBREW_PERL
     unset PERLBREW_LIB
     __perlbrew_set_path
