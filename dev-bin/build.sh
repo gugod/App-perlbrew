@@ -1,19 +1,26 @@
 #!/bin/sh
 
-cd `dirname $0`
+eval "$(perlbrew init-in-bash)"
 
-perl_version=`perl -e 'print $]'`
+wanted_perl_installation="perl-5.8.8@perlbrew"
 
-if [ $perl_version != "5.008008" ]; then
-    echo "!!! Must use 5.8.8 to build standalone executable."
-    exit 1;
+perlbrew use ${wanted_perl_installation}
+
+if [ $? -eq 0 ]; then
+   echo "--- Using ${wanted_perl_installation} for building."
+else
+   echo "!!! Fail to use ${wanted_perl_installation} for building. Please prepare it first."
 fi
+
+cd `dirname $0`
 
 fatpack_path=`which fatpack`
 
 if [ ! -f $fatpack_path ]; then
     echo "!!! fatpack is missing"
     exit 2
+else
+    echo "--- Found fatpack at $fatpack_path"
 fi
 
 rm -rf lib/App
@@ -48,5 +55,5 @@ EOF
 chmod +x perlbrew
 mv ./perlbrew ../
 
-echo "+++ DONE"
+echo "+++ DONE: './perlbrew' is built."
 exit 0;
