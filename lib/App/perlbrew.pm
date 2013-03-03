@@ -1359,11 +1359,13 @@ WARNINGONMAC
 
     my $command = "env ";
     while (my ($k, $v) = each(%env)) {
+        no warnings "uninitialized";
         $command .= "$k=\"$v\" ";
     }
     $command .= " $shell $shell_opt";
 
-    print "\nA sub-shell is launched with $name as the activated perl. Run 'exit' to finish it.\n\n";
+    my $pretty_name = defined($name) ? $name : "the default perl";
+    print "\nA sub-shell is launched with $pretty_name as the activated perl. Run 'exit' to finish it.\n\n";
     exec($command);
 }
 
