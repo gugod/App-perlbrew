@@ -5,13 +5,11 @@ use 5.008;
 our $VERSION = "0.59";
 
 use Config;
-use Capture::Tiny;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Basename;
 use File::Path ();
 use FindBin;
-use CPAN::Perl::Releases;
 
 our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -539,6 +537,7 @@ sub available_perls {
 sub perl_release {
     my ($self, $version) = @_;
 
+    require CPAN::Perl::Releases;
     my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
 
     my $x = (values %$tarballs)[0];
@@ -1136,6 +1135,7 @@ sub do_system {
 
 sub do_capture {
   my ($self, $cmd) = @_;
+  require Capture::Tiny;
   return Capture::Tiny::capture {
     $self->do_system($cmd);
   };
