@@ -8,8 +8,6 @@ use Config;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Basename;
-use File::Path ();
-use FindBin;
 
 our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -22,10 +20,12 @@ local $SIG{__DIE__} = sub {
 };
 
 sub mkpath {
+    require File::Path;
     File::Path::mkpath([@_], 0, 0777);
 }
 
 sub rmpath {
+    require File::Path;
     File::Path::rmtree([@_], 0, 1);
 }
 
@@ -1575,6 +1575,7 @@ sub run_command_self_upgrade {
     my $TMPDIR = $ENV{TMPDIR} || "/tmp";
     my $TMP_PERLBREW = catfile($TMPDIR, "perlbrew");
 
+    require FindBin;
     unless(-w $FindBin::Bin) {
         die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
