@@ -1248,8 +1248,6 @@ sub perlbrew_env {
                 @ENV{keys %env} = values %env;
                 my %lib_env = local::lib->build_environment_vars_for($base, 0, 1);
 
-                $lib_env{PERL5LIB} = (split($Config{path_sep}, $lib_env{PERL5LIB}, 2))[-1];
-
                 $env{PERLBREW_PATH}    = catdir($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = catdir($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
