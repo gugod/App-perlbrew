@@ -9,6 +9,7 @@ require "test_helpers.pl";
 use File::Temp qw(tempdir);
 use Test::Spec;
 use Test::Exception;
+use CPAN::Perl::Releases;
 
 describe "App::perlbrew#perl_release method" => sub {
     describe "given a valid perl version" => sub {

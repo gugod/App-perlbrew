@@ -7,10 +7,10 @@ all_from 'lib/App/perlbrew.pm';
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires
-    'Devel::PatchPerl'     => '0.76',
-    'local::lib'           => '1.008004',
-    'Capture::Tiny'        => '0.20',
-    'CPAN::Perl::Releases' => '0.76';
+    'Devel::PatchPerl'     => '0.84',
+    'local::lib'           => '1.008009',
+    'Capture::Tiny'        => '0.21',
+    'CPAN::Perl::Releases' => '1.06';
 
 test_requires
     'Test::Simple'     => '0.98',
@@ -20,7 +20,7 @@ test_requires
     'Test::NoWarnings' => '0',
     'Test::Spec'       => '0',
     'Path::Class'      => '0',
-    'IO::All'          => '0',
+    'IO::All'          => '0.46',
     'File::Temp'       => '0';
 
 install_script 'bin/perlbrew';

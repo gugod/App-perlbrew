@@ -16,7 +16,7 @@ Description:
     want to read.
 
 Installation:
-    It is the simpleist to use the perlbrew installer, just paste this
+    It is the simplest to use the perlbrew installer, just paste this
     statement to your terminal:
 
         curl -kL http://install.perlbrew.pl | bash

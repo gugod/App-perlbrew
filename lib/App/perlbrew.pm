@@ -2,16 +2,12 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.59";
+our $VERSION = "0.60";
 
 use Config;
-use Capture::Tiny;
 use Getopt::Long ();
 use File::Spec::Functions qw( catfile catdir );
 use File::Basename;
-use File::Path ();
-use FindBin;
-use CPAN::Perl::Releases;
 
 our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || catdir($ENV{HOME}, "perl5", "perlbrew");
@@ -24,10 +20,12 @@ local $SIG{__DIE__} = sub {
 };
 
 sub mkpath {
+    require File::Path;
     File::Path::mkpath([@_], 0, 0777);
 }
 
 sub rmpath {
+    require File::Path;
     File::Path::rmtree([@_], 0, 1);
 }
 
@@ -539,6 +537,7 @@ sub available_perls {
 sub perl_release {
     my ($self, $version) = @_;
 
+    require CPAN::Perl::Releases;
     my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
 
     my $x = (values %$tarballs)[0];
@@ -1136,6 +1135,7 @@ sub do_system {
 
 sub do_capture {
   my ($self, $cmd) = @_;
+  require Capture::Tiny;
   return Capture::Tiny::capture {
     $self->do_system($cmd);
   };
@@ -1248,8 +1248,6 @@ sub perlbrew_env {
                 @ENV{keys %env} = values %env;
                 my %lib_env = local::lib->build_environment_vars_for($base, 0, 1);
 
-                $lib_env{PERL5LIB} = (split($Config{path_sep}, $lib_env{PERL5LIB}, 2))[1];
-
                 $env{PERLBREW_PATH}    = catdir($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = catdir($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
@@ -1359,11 +1357,13 @@ WARNINGONMAC
 
     my $command = "env ";
     while (my ($k, $v) = each(%env)) {
+        no warnings "uninitialized";
         $command .= "$k=\"$v\" ";
     }
     $command .= " $shell $shell_opt";
 
-    print "\nA sub-shell is launched with $name as the activated perl. Run 'exit' to finish it.\n\n";
+    my $pretty_name = defined($name) ? $name : "the default perl";
+    print "\nA sub-shell is launched with $pretty_name as the activated perl. Run 'exit' to finish it.\n\n";
     exec($command);
 }
 
@@ -1510,10 +1510,10 @@ sub run_command_env {
             my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
-                print "export $k=\"$v\"\n";
+                print "export $k=\"$v\";\n";
             }
             else {
-                print "unset $k\n";
+                print "unset $k;\n";
             }
         }
     }
@@ -1522,10 +1522,10 @@ sub run_command_env {
             my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
-                print "setenv $k \"$v\"\n";
+                print "setenv $k \"$v\";\n";
             }
             else {
-                print "unsetenv $k\n";
+                print "unsetenv $k;\n";
             }
         }
     }
@@ -1575,6 +1575,7 @@ sub run_command_self_upgrade {
     my $TMPDIR = $ENV{TMPDIR} || "/tmp";
     my $TMP_PERLBREW = catfile($TMPDIR, "perlbrew");
 
+    require FindBin;
     unless(-w $FindBin::Bin) {
         die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
@@ -2042,7 +2043,7 @@ __perlbrew_set_path () {
     fi
     unset MANPATH_WITHOUT_PERLBREW
 
-    PATH_WITHOUT_PERLBREW=`$perlbrew_command display-pristine-path`
+    PATH_WITHOUT_PERLBREW=$(eval $perlbrew_command display-pristine-path)
     if [ -n "$PERLBREW_PATH" ]; then
         export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
     else
@@ -2058,9 +2059,9 @@ __perlbrew_activate() {
 
     if [[ -n "$PERLBREW_PERL" ]]; then
         if [[ -z "$PERLBREW_LIB" ]]; then
-            eval "$($perlbrew_command env $PERLBREW_PERL)"
+            $(eval $perlbrew_command env $PERLBREW_PERL)
         else
-            eval "$(${perlbrew_command} env $PERLBREW_PERL@$PERLBREW_LIB)"
+            $(eval $perlbrew_command env $PERLBREW_PERL@$PERLBREW_LIB)
         fi
     fi
 
@@ -2068,7 +2069,7 @@ __perlbrew_activate() {
 }
 
 __perlbrew_deactivate() {
-    eval "$($perlbrew_command env)"
+    $(eval $perlbrew_command env)
     unset PERLBREW_PERL
     unset PERLBREW_LIB
     __perlbrew_set_path
@@ -2095,10 +2096,10 @@ perlbrew () {
                     echo "Currently using $PERLBREW_PERL"
                 fi
             else
-                code="$(command perlbrew env $2);"
-                if [ -z "$code" ]; then
-                    exit_status=1
-                else
+                code="$(command perlbrew env $2)"
+                exit_status="$?"
+                if [[ $exit_status -eq 0 ]]
+                then
                     eval $code
                     __perlbrew_set_path
                 fi
@@ -2109,7 +2110,11 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2 && __perlbrew_reinit $2
+                  perlbrew use $2
+                  exit_status=$?
+                  if [[ ${exit_status} -eq 0 ]]; then
+                      __perlbrew_reinit $2
+                  fi
               fi
               ;;
 
