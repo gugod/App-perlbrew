@@ -1,3 +1,5 @@
+- Fix compatibility with recent local::lib version.
+
 0.59: # 2013-02-17T12:34:10+0100
 - New feature: "perlbrew install --switch $perl"
 - New feature: "perlbrew install stable"
