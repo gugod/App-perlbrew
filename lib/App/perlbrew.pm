@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.60";
+our $VERSION = "0.61";
 
 use Config;
 use Getopt::Long ();
@@ -1510,10 +1510,10 @@ sub run_command_env {
             my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
-                print "export $k=\"$v\";\n";
+                print "export $k=\"$v\"\n";
             }
             else {
-                print "unset $k;\n";
+                print "unset $k\n";
             }
         }
     }
@@ -1522,10 +1522,10 @@ sub run_command_env {
             my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
-                print "setenv $k \"$v\";\n";
+                print "setenv $k \"$v\"\n";
             }
             else {
-                print "unsetenv $k;\n";
+                print "unsetenv $k\n";
             }
         }
     }
@@ -2054,14 +2054,24 @@ __perlbrew_set_path () {
     hash -r
 }
 
+__perlbrew_set_env() {
+    local code="$($perlbrew_command env $@)"
+    local exit_status="$?"
+    if [[ $exit_status -eq 0 ]] ; then
+        eval "$code"
+    else
+        return $exit_status
+    fi
+}
+
 __perlbrew_activate() {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
     if [[ -n "$PERLBREW_PERL" ]]; then
         if [[ -z "$PERLBREW_LIB" ]]; then
-            $(eval $perlbrew_command env $PERLBREW_PERL)
+            __perlbrew_set_env $PERLBREW_PERL
         else
-            $(eval $perlbrew_command env $PERLBREW_PERL@$PERLBREW_LIB)
+            __perlbrew_set_env $PERLBREW_PERL@$PERLBREW_LIB
         fi
     fi
 
@@ -2069,7 +2079,7 @@ __perlbrew_activate() {
 }
 
 __perlbrew_deactivate() {
-    $(eval $perlbrew_command env)
+    __perlbrew_set_env
     unset PERLBREW_PERL
     unset PERLBREW_LIB
     __perlbrew_set_path
@@ -2096,11 +2106,10 @@ perlbrew () {
                     echo "Currently using $PERLBREW_PERL"
                 fi
             else
-                code="$(command perlbrew env $2)"
+                __perlbrew_set_env "$2"
                 exit_status="$?"
                 if [[ $exit_status -eq 0 ]]
                 then
-                    eval $code
                     __perlbrew_set_path
                 fi
             fi
