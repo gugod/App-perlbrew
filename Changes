@@ -1,3 +1,6 @@
+0.61:
+- Fix bashrc on various OS/shell. See GH #302
+
 0.60: # 2013-03-17T21:44:12+0100
 - Exit status handling in bash function. See ed29288ab50a15d7df86d69cfcbddf108674eb07 for more details.
 - Fix compatibility with recent local::lib version.
