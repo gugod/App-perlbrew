@@ -1510,10 +1510,10 @@ sub run_command_env {
             my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
-                print "export $k=\"$v\";\n";
+                print "export $k=\"$v\"\n";
             }
             else {
-                print "unset $k;\n";
+                print "unset $k\n";
             }
         }
     }
@@ -1522,10 +1522,10 @@ sub run_command_env {
             my $v = $env{$k};
             if (defined $v) {
                 $v =~ s/(\\")/\\$1/g;
-                print "setenv $k \"$v\";\n";
+                print "setenv $k \"$v\"\n";
             }
             else {
-                print "unsetenv $k;\n";
+                print "unsetenv $k\n";
             }
         }
     }
