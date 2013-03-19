@@ -2055,21 +2055,13 @@ __perlbrew_set_path () {
 }
 
 __perlbrew_set_env() {
-
-  local code=$($perlbrew_command env "$@")
-
-  local exit_status="$?" 
-
-  if [[ $exit_status -eq 0 ]] ; then
-
-    eval "$code"
-
-  else
-
-   return $exit_status
-
-  fi
-
+    local code="$($perlbrew_command env $@)"
+    local exit_status="$?"
+    if [[ $exit_status -eq 0 ]] ; then
+        eval "$code"
+    else
+        return $exit_status
+    fi
 }
 
 __perlbrew_activate() {
