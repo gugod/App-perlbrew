@@ -1203,6 +1203,12 @@ sub is_installed {
     return grep { $name eq $_->{name} } $self->installed_perls;
 }
 
+sub assert_installation {
+    my ($self, $name) = @_;
+    return 1 if $self->is_installed($name);
+    die "ERROR: The installation \"$name\" is unknown\n\n";
+}
+
 # Return a hash of PERLBREW_* variables
 sub perlbrew_env {
     my ($self, $name) = @_;
@@ -1698,10 +1704,6 @@ USAGE
         return;
     }
 
-    unless ( $self->is_installed($name) ) {
-        die "\nABORT: The installation `${name}` does not exist.\n\n";
-    }
-
     my $path_name  = catfile($self->root, "perls", $name);
     my $path_alias = catfile($self->root, "perls", $alias) if $alias;
 
@@ -1710,6 +1712,8 @@ USAGE
     }
 
     if ($cmd eq 'create') {
+        $self->assert_known_installation($name);
+
         if ( $self->is_installed($alias) && !$self->{force} ) {
             die "\nABORT: The installation `${alias}` already exists. Cannot override.\n\n";
         }
@@ -1719,6 +1723,8 @@ USAGE
         symlink($path_name, $path_alias);
     }
     elsif($cmd eq 'delete') {
+        $self->assert_known_installation($name);
+
         unless (-l $path_name) {
             die "\nABORT: The installation name `$name` is not an alias, cannot remove.\n\n";
         }
@@ -1726,6 +1732,8 @@ USAGE
         unlink($path_name);
     }
     elsif($cmd eq 'rename') {
+        $self->assert_known_installation($name);
+
         unless (-l $path_name) {
             die "\nABORT: The installation name `$name` is not an alias, cannot rename.\n\n";
         }
@@ -1735,6 +1743,9 @@ USAGE
         }
 
         rename($path_name, $path_alias);
+    }
+    elsif($cmd eq 'help') {
+        $self->run_command_help("alias");
     }
     else {
         die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
