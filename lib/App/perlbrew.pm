@@ -29,15 +29,6 @@ sub rmpath {
     File::Path::rmtree([@_], 0, 1);
 }
 
-sub uniq(@) {
-    my %a;
-    my @b;
-    for (@_) {
-        push(@b, $_) unless ++$a{$_};
-    }
-    return @b;
-}
-
 sub min(@) {
     my @a = @_;
     my $m = $a[0];
