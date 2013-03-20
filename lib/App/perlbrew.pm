@@ -31,7 +31,11 @@ sub rmpath {
 
 sub uniq(@) {
     my %a;
-    grep { ++$a{$_} == 1 } @_;
+    my @b;
+    for (@_) {
+        push(@b, $_) unless ++$a{$_};
+    }
+    return @b;
 }
 
 sub min(@) {
@@ -1643,16 +1647,24 @@ sub run_command_exec {
     shift @ARGV; # "exec"
     $self->parse_cmdline (\%opts, @command_options);
 
-    my @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
-
+    my @exec_with;
     if ($opts{with}) {
+        my %installed = map { $_->{name} => $_ } map { ($_, @{$_->{libs}}) } $self->installed_perls;
+
         my $d = ($opts{with} =~ / /) ? qr( +) : qr(,+);
-        my %x = map { $_ => 1 } grep { $_ } map {
+        my @with = grep { $_ } map {
             my ($p,$l) = $self->resolve_installation_name($_);
             $p .= "\@$l" if $l;
             $p;
         } split $d, $opts{with};
-        @exec_with = grep { $x{ $_->{name} } } @exec_with;
+
+        @exec_with = map { $installed{$_} } @with;
+
+        use YAML;
+        print YAML::Dump(\@exec_with);
+    }
+    else {
+        @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
     }
 
     if (0 == @exec_with) {
