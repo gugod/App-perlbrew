@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.60";
+our $VERSION = "0.61";
 
 use Config;
 use Getopt::Long ();
