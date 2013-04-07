@@ -1,3 +1,9 @@
+0.62: # 2013-04-07T17:43:58+0800
+- Fix `list-modules` under lib env. It lists all modules in the lib, and in the base.
+- Use the original grep command to prevent aliases from breaking the content of init. GH #307
+- `perlbrew alias help` is now the same as `perlbrew help alias`
+- `perlbrew exec --with ...` now preserve the order of specified names.
+
 0.61:
 - Fix bashrc on various OS/shell. See GH #302
 

@@ -10,7 +10,7 @@ requires
     'Devel::PatchPerl'     => '0.84',
     'local::lib'           => '1.008009',
     'Capture::Tiny'        => '0.21',
-    'CPAN::Perl::Releases' => '1.06';
+    'CPAN::Perl::Releases' => '1.08';
 
 test_requires
     'Test::Simple'     => '0.98',
