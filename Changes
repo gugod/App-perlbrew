@@ -1,3 +1,9 @@
+
+- Fix `list-modules` under lib env. It lists all modules in the lib, and in the base.
+- Use the original grep command to prevent aliases from breaking the content of init. GH #307
+- `perlbrew alias help` is now the same as `perlbrew help alias`
+- `perlbrew exec --with ...` now preserve the order of specified names.
+
 0.60: # 2013-03-17T21:44:12+0100
 - Exit status handling in bash function. See ed29288ab50a15d7df86d69cfcbddf108674eb07 for more details.
 - Fix compatibility with recent local::lib version.
