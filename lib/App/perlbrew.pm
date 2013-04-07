@@ -198,6 +198,13 @@ sub current_perl_executable {
     return $self->installed_perl_executable($self->current_perl);
 }
 
+sub current_env {
+    my ($self) = @_;
+    my $l = $self->current_lib;
+    $l = "@" . $l if $l;
+    return $self->current_perl . $l;
+}
+
 sub installed_perl_executable {
     my ($self, $name) = @_;
     my $executable = catfile($self->root, "perls", $name, "bin", "perl");
@@ -1667,6 +1674,7 @@ sub run_command_exec {
         local @ENV{ keys %env } = values %env;
         local $ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
         local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
+        local $ENV{PERL5LIB} = $env{PERL5LIB} || "";
 
         print "$i->{name}\n==========\n" unless $self->{quiet};
         $self->do_system(@ARGV);
@@ -1935,14 +1943,14 @@ sub run_command_upgrade_perl {
 
 sub run_command_list_modules {
     my ($self) = @_;
-
-    $self->{quiet} = 1;
-    $self->{original_argv} = [
-        "exec", "--with", $self->current_perl,
-        'perl', '-MExtUtils::Installed', '-le', 'BEGIN{@INC=grep(!/^\.$/,@INC)}; print for ExtUtils::Installed->new->modules'
-    ];
-
-    $self->run_command_exec();
+    my $class = ref($self) || __PACKAGE__;
+    my $app = $class->new(
+        qw(--quiet exec --with),
+        $self->current_env,
+        'perl', '-MExtUtils::Installed', '-le',
+        'BEGIN{@INC=grep {$_ ne q!.!} @INC}; print for ExtUtils::Installed->new->modules;'
+    );
+    $app->run;
 }
 
 sub resolve_installation_name {
@@ -1972,7 +1980,7 @@ sub run_command_info {
 
     print "Current perl:";
     if ($self->current_perl) {
-        print "  Name: " . $self->current_perl . ($self->current_lib && "@".$self->current_lib);
+        print "  Name: " . $self->current_env;
         print "  Path: " . $self->current_perl_executable;
     }
     else {
