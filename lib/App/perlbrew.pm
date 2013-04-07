@@ -1650,9 +1650,6 @@ sub run_command_exec {
         } split $d, $opts{with};
 
         @exec_with = map { $installed{$_} } @with;
-
-        use YAML;
-        print YAML::Dump(\@exec_with);
     }
     else {
         @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
