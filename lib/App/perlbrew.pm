@@ -4,17 +4,23 @@ use warnings;
 use 5.008;
 our $VERSION = "0.62";
 
+sub joinpath { join "/", @_ }
 use Config;
-use Getopt::Long ();
-use File::Basename;
-
-sub joinpath {
-    join "/", @_
-}
 
 our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
+
+BEGIN {
+    if (my $perl5lib = $ENV{PERL5LIB}) {
+        local $ENV{PERL5LIB} = undef;
+        require Cwd;
+        $ENV{PERL5LIB} = $perl5lib;
+    }
+}
+
+use Getopt::Long ();
+use File::Basename;
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
