@@ -698,15 +698,19 @@ sub do_install_git {
     my $dist_name;
     my $dist_git_describe;
     my $dist_version;
-    require Cwd;
-    my $cwd = Cwd::cwd();
+
+    opendir my $cwd_orig, ".";
+
     chdir $dist;
+
     if (`git describe` =~ /v((5\.\d+\.\d+(?:-RC\d)?)(-\d+-\w+)?)$/) {
         $dist_name = 'perl';
         $dist_git_describe = "v$1";
         $dist_version = $2;
     }
-    chdir $cwd;
+
+    chdir $cwd_orig;
+
     my $dist_extracted_dir = File::Spec->rel2abs( $dist );
     $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
     return;
