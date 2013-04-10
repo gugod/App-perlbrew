@@ -1230,7 +1230,7 @@ sub is_installed {
     return grep { $name eq $_->{name} } $self->installed_perls;
 }
 
-sub assert_installation {
+sub assert_known_installation {
     my ($self, $name) = @_;
     return 1 if $self->is_installed($name);
     die "ERROR: The installation \"$name\" is unknown\n\n";
