@@ -1598,11 +1598,6 @@ sub run_command_install_cpanm {
     $self->do_install_program_from_url('https://github.com/miyagawa/cpanminus/raw/master/cpanm' => 'cpanm');
 }
 
-sub run_command_install_ack {
-    my ($self) = @_;
-    $self->do_install_program_from_url('http://betterthangrep.com/ack-standalone' => 'ack');
-}
-
 sub run_command_self_upgrade {
     my ($self) = @_;
     my $TMPDIR = $ENV{TMPDIR} || "/tmp";
