@@ -1163,9 +1163,9 @@ sub do_system {
 sub do_capture {
   my ($self, $cmd) = @_;
   require Capture::Tiny;
-  return Capture::Tiny::capture {
+  return Capture::Tiny::capture( sub {
     $self->do_system($cmd);
-  };
+  });
 }
 
 sub format_perl_version {
