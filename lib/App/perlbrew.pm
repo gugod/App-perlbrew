@@ -55,7 +55,7 @@ sub files_are_the_same {
 
     my $stats0 = join " ", @{$stats[0]}[0,1];
     for (@stats) {
-        return 0 if $_->[1] == 0;
+        return 0 if ((! defined($_->[1])) || $_->[1] == 0);
         unless ($stats0 eq join(" ", $_->[0], $_->[1])) {
             return 0;
         }
