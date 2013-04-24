@@ -20,7 +20,6 @@ BEGIN {
 }
 
 use Getopt::Long ();
-use File::Basename;
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
@@ -978,12 +977,14 @@ sub run_command_display_pristine_manpath {
 }
 
 sub do_install_archive {
+    require File::Basename;
+
     my $self = shift;
     my $dist_tarball_path = shift;
     my $dist_version;
     my $installation_name;
 
-    if (basename($dist_tarball_path) =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
+    if (File::Basename::basename($dist_tarball_path) =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
         $dist_version = $1;
         $installation_name = "perl-${dist_version}";
     }
