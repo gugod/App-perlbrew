@@ -738,6 +738,7 @@ sub do_install_git {
 
     chdir $cwd_orig;
 
+    require File::Spec;
     my $dist_extracted_dir = File::Spec->rel2abs( $dist );
     $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
     return;
