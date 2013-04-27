@@ -4,14 +4,8 @@ use warnings;
 use 5.008;
 our $VERSION = "0.62";
 
-sub joinpath { join "/", @_ }
-use Config;
-
-our $CONFIG;
-our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
-our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
-
 BEGIN {
+    ### Special treat for Cwd to prevent it to be loaded from a local::lib dir that is not binary-compatible with system perl.
     if (my $perl5lib = $ENV{PERL5LIB}) {
         local $ENV{PERL5LIB} = undef;
         require Cwd;
@@ -19,13 +13,24 @@ BEGIN {
     }
 }
 
+use Config;
 use Getopt::Long ();
+
+### global variables
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
     warn $message;
     exit(1);
 };
+
+our $CONFIG;
+our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
+our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
+
+### functions
+
+sub joinpath { join "/", @_ }
 
 sub mkpath {
     require File::Path;
@@ -127,35 +132,28 @@ sub perl_version_to_integer {
     return $v[1]*1000000 + $v[2]*1000 + $v[3];
 }
 
-sub parse_cmdline {
-    my ($self, $params, @ext) = @_;
+# straight copy of Wikipedia's "Levenshtein Distance"
+sub editdist {
+    my @a = split //, shift;
+    my @b = split //, shift;
 
-    Getopt::Long::GetOptions(
-        $params,
+    # There is an extra row and column in the matrix. This is the
+    # distance from the empty string to a substring of the target.
+    my @d;
+    $d[$_][0] = $_ for (0 .. @a);
+    $d[0][$_] = $_ for (0 .. @b);
 
-        'force|f!',
-        'notest|n!',
-        'quiet|q!',
-        'verbose|v',
-        'as=s',
-        'help|h',
-        'version',
-        'root=s',
-        'switch',
+    for my $i (1 .. @a) {
+        for my $j (1 .. @b) {
+            $d[$i][$j] = ($a[$i-1] eq $b[$j-1] ? $d[$i-1][$j-1]
+                : 1 + min($d[$i-1][$j], $d[$i][$j-1], $d[$i-1][$j-1]));
+        }
+    }
 
-        # options passed directly to Configure
-        'D=s@',
-        'U=s@',
-        'A=s@',
-
-        'j=i',
-        # options that affect Configure and customize post-build
-        'sitecustomize=s',
-
-        @ext
-    )
-      or run_command_help(1);
+    return $d[@a][@b];
 }
+
+### methods
 
 sub new {
     my($class, @argv) = @_;
@@ -193,6 +191,36 @@ sub new {
     }
 
     return bless \%opt, $class;
+}
+
+sub parse_cmdline {
+    my ($self, $params, @ext) = @_;
+
+    Getopt::Long::GetOptions(
+        $params,
+
+        'force|f!',
+        'notest|n!',
+        'quiet|q!',
+        'verbose|v',
+        'as=s',
+        'help|h',
+        'version',
+        'root=s',
+        'switch',
+
+        # options passed directly to Configure
+        'D=s@',
+        'U=s@',
+        'A=s@',
+
+        'j=i',
+        # options that affect Configure and customize post-build
+        'sitecustomize=s',
+
+        @ext
+    )
+      or run_command_help(1);
 }
 
 sub root {
@@ -297,27 +325,6 @@ sub commands {
     }
 
     return @commands;
-}
-
-# straight copy of Wikipedia's "Levenshtein Distance"
-sub editdist {
-    my @a = split //, shift;
-    my @b = split //, shift;
-
-    # There is an extra row and column in the matrix. This is the
-    # distance from the empty string to a substring of the target.
-    my @d;
-    $d[$_][0] = $_ for (0 .. @a);
-    $d[0][$_] = $_ for (0 .. @b);
-
-    for my $i (1 .. @a) {
-        for my $j (1 .. @b) {
-            $d[$i][$j] = ($a[$i-1] eq $b[$j-1] ? $d[$i-1][$j-1]
-                : 1 + min($d[$i-1][$j], $d[$i][$j-1], $d[$i-1][$j-1]));
-        }
-    }
-
-    return $d[@a][@b];
 }
 
 sub find_similar_commands {
