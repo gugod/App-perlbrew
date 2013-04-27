@@ -259,9 +259,32 @@ sub current_env {
 
 sub installed_perl_executable {
     my ($self, $name) = @_;
+    die unless $name;
+
     my $executable = joinpath($self->root, "perls", $name, "bin", "perl");
     return $executable if -e $executable;
     return "";
+}
+
+sub configure_args {
+    my ($self, $name) = @_;
+
+    my $perl_cmd = $self->installed_perl_executable( $name );
+    my $code = 'while(($_,$v)=each(%Config)){print"$_ $v" if /config_arg/}';
+
+    my @output = split "\n" => $self->do_capture($perl_cmd, '-MConfig', '-wle', $code);
+
+    my %arg;
+    for(@output) {
+        my ($k,$v) = split " ", $_, 2;
+        $arg{$k} = $v;
+    }
+
+    if (wantarray) {
+        return map { $arg{"config_arg$_"} } (1 .. $arg{config_argc})
+    }
+
+    return $arg{config_args}
 }
 
 sub cpan_mirror {
@@ -1170,10 +1193,10 @@ sub do_system {
 }
 
 sub do_capture {
-  my ($self, $cmd) = @_;
+  my ($self, @cmd) = @_;
   require Capture::Tiny;
   return Capture::Tiny::capture( sub {
-    $self->do_system($cmd);
+    $self->do_system(@cmd);
   });
 }
 
@@ -2011,6 +2034,7 @@ sub run_command_info {
     if ($self->current_perl) {
         print "  Name: " . $self->current_env;
         print "  Path: " . $self->current_perl_executable;
+        print "  Config: " . $self->configure_args( $self->current_perl );
     }
     else {
         print "Using system perl.";
