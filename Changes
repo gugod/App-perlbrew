@@ -1,3 +1,11 @@
+0.63: # 2013-05-06T16:53:48+0200
+
+- Remove `install-ack` command.
+  - Due to the new architecture of ack2, it does not make sense
+    to install the standalone executable anymore. Thus it's better not
+    to do the installation with perlbrew.
+- Fix the `use` and `switch` command when switching between binary incompatible perl installations. See GH #297
+
 0.62: # 2013-04-07T17:43:58+0800
 - Fix `list-modules` under lib env. It lists all modules in the lib, and in the base.
 - Use the original grep command to prevent aliases from breaking the content of init. GH #307
