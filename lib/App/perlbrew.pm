@@ -2479,7 +2479,7 @@ close to what your want to read.
 
 =head1 INSTALLATION
 
-It is the simpleist to use the perlbrew installer, just paste this statement to
+It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
 
     curl -kL http://install.perlbrew.pl | bash
@@ -2493,7 +2493,7 @@ should follow the instruction on screen to modify your shell rc file to put it
 in your PATH.
 
 The installed perlbrew command is a standalone executable that can be run with
-system perl. The minimun system perl version requirement is 5.8.0, which should
+system perl. The minimum system perl version requirement is 5.8.0, which should
 be good enough for most of the OSes these days.
 
 A packed version of C<patchperl> to C<~/perl5/perlbrew/bin>, which is required
