@@ -7,7 +7,7 @@ our $VERSION = "0.63";
 BEGIN {
     ### Special treat for Cwd to prevent it to be loaded from a local::lib dir that is not binary-compatible with system perl.
     if (my $perl5lib = $ENV{PERL5LIB}) {
-        local $ENV{PERL5LIB} = undef;
+        delete $ENV{PERL5LIB};
         require Cwd;
         $ENV{PERL5LIB} = $perl5lib;
     }
@@ -1297,7 +1297,6 @@ sub perlbrew_env {
 
         if ($lib_name) {
             require local::lib;
-            no warnings 'uninitialized';
 
             if ($ENV{PERL_LOCAL_LIB_ROOT}
                 && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^\Q$PERLBREW_HOME\E/
@@ -1311,8 +1310,10 @@ sub perlbrew_env {
             if (-d $base) {
                 delete $ENV{PERL_LOCAL_LIB_ROOT};
                 @ENV{keys %env} = values %env;
+                while (my ($k,$v) = each %ENV) {
+                    delete $ENV{$k} unless defined($v);
+                }
                 my %lib_env = local::lib->build_environment_vars_for($base, 0, 1);
-
                 $env{PERLBREW_PATH}    = joinpath($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = joinpath($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
