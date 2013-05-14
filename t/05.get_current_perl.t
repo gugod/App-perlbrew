@@ -18,12 +18,12 @@ mock_perlbrew_install("perl-5.14.2");
 subtest "perlbrew version" => sub {
 
     my $version = $App::perlbrew::VERSION;
-    stdout_is(
+    stdout_like(
         sub {
             my $app = App::perlbrew->new("version");
             $app->run;
-        },
-        "t/05.get_current_perl.t  - App::perlbrew/$version\n"
+        } =>
+        qr{(?:\./)?\Qt/05.get_current_perl.t  - App::perlbrew/$version\E\n}
     );
 };
 
