@@ -167,6 +167,7 @@ sub new {
         A => [],
         sitecustomize => '',
         noman => '',
+        threads => '',
     );
 
     # build a local @ARGV to allow us to use an older
@@ -220,6 +221,7 @@ sub parse_cmdline {
         # options that affect Configure and customize post-build
         'sitecustomize=s',
         'noman',
+        'threads',
 
         @ext
     )
@@ -1076,6 +1078,9 @@ sub do_install_this {
 
     if ( $self->{noman} ) {
         push @d_options, qw/man1dir=none man3dir=none/;
+    }
+    if ( $self->{threads} ) {
+        push @d_options, 'usethreads';
     }
 
     my $perlpath = $self->root . "/perls/$installation_name";
