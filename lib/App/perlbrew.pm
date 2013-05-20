@@ -166,6 +166,7 @@ sub new {
         U => [],
         A => [],
         sitecustomize => '',
+        threads => '',
     );
 
     # build a local @ARGV to allow us to use an older
@@ -217,6 +218,7 @@ sub parse_cmdline {
         'j=i',
         # options that affect Configure and customize post-build
         'sitecustomize=s',
+        'threads',
 
         @ext
     )
@@ -1046,6 +1048,10 @@ sub do_install_this {
         die "Could not read sitecustomize file '$sitecustomize'\n"
             unless -r $sitecustomize;
         push @d_options, "usesitecustomize";
+    }
+
+    if ( $self->{threads} ) {
+        push @d_options, 'usethreads';
     }
 
     my $perlpath = $self->root . "/perls/$installation_name";
