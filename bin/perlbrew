@@ -43,6 +43,7 @@ Commands:
 
     download       Download the specified perl distribution tarball.
     mirror         Pick a preferred mirror site
+    clean          Purge tarballs and build directories
     version        Display version
     help           Read more detailed instructions
 
@@ -438,6 +439,12 @@ re-install only the C<perlbrew> executable:
 
 It is slightly different from running the perlbrew installer because
 C<patchperl> is not installed in this case.
+
+=head1 COMMAND: CLEAN
+
+Usage: perlbrew clean
+
+Removes downloaded Perl tarballs and build directories.
 
 =head1 COMMAND: VERSION
 

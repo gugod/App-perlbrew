@@ -1743,12 +1743,19 @@ sub run_command_exec {
 
 sub run_command_clean {
     my ($self) = @_;
+    require File::Path;
     my $root = $self->root;
     my @build_dirs = <$root/build/*>;
 
     for my $dir (@build_dirs) {
-        print "Remove $dir\n";
-        rmpath($dir);
+        print "Removing $dir\n";
+        File::Path::rmtree($dir);
+    }
+
+    my @tarballs = <$root/dists/*>;
+    for my $file ( @tarballs ) {
+        print "Removing $file\n";
+        unlink($file);
     }
 
     print "\nDone\n";
