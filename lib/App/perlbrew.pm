@@ -166,6 +166,7 @@ sub new {
         U => [],
         A => [],
         sitecustomize => '',
+        noman => '',
     );
 
     # build a local @ARGV to allow us to use an older
@@ -217,6 +218,7 @@ sub parse_cmdline {
         'j=i',
         # options that affect Configure and customize post-build
         'sitecustomize=s',
+        'noman',
 
         @ext
     )
@@ -1046,6 +1048,10 @@ sub do_install_this {
         die "Could not read sitecustomize file '$sitecustomize'\n"
             unless -r $sitecustomize;
         push @d_options, "usesitecustomize";
+    }
+
+    if ( $self->{noman} ) {
+        push @d_options, qw/man1dir=none man3dir=none/;
     }
 
     my $perlpath = $self->root . "/perls/$installation_name";
