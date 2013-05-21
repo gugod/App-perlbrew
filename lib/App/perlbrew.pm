@@ -804,7 +804,7 @@ sub do_extract_tarball {
     my $tarx =
         ($^O eq 'solaris' ? 'gtar ' : 'tar ') .
         ( $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
-    my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball";
+    my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball --recursive-unlink";
     die "Failed to extract $dist_tarball" if system($extract_command);
     $dist_tarball =~ s{.*/([^/]+)\.tar\.(?:gz|bz2)$}{$1};
     return "@{[ $self->root ]}/build/$dist_tarball"; # Note that this is incorrect for blead
