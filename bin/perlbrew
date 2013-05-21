@@ -208,6 +208,8 @@ Options for C<install> command:
        --as        Install the given version of perl by a name.
                    ex. C<perlbrew install perl-5.6.2 --as legacy-perl>
 
+       --noman     Skip installation of manpages
+
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
 
