@@ -208,6 +208,7 @@ sub parse_cmdline {
         'version',
         'root=s',
         'switch',
+        'all',
 
         # options passed directly to Configure
         'D=s@',
@@ -572,7 +573,9 @@ sub run_command_available {
 sub available_perls {
     my ( $self, $dist, $opts ) = @_;
 
-    my $url = "http://www.cpan.org/src/README.html";
+    my $url = $self->{all}  ? "http://www.cpan.org/src/5.0/"
+                            : "http://www.cpan.org/src/README.html" ;
+
     my $html = http_get( $url, undef, undef );
 
     unless($html) {
@@ -582,8 +585,14 @@ sub available_perls {
     my @available_versions;
 
     for ( split "\n", $html ) {
-        push @available_versions, $1
-          if m|<td><a href="http://www.cpan.org/src/.+?">(.+?)</a></td>|;
+        if ( $self->{all} ) {
+            push @available_versions, $1
+                if m|<a href="perl.*?\.tar\.gz">(.+?)</a>|;
+        }
+        else {
+            push @available_versions, $1
+                if m|<td><a href="http://www.cpan.org/src/.+?">(.+?)</a></td>|;
+        }
     }
     s/\.tar\.gz// for @available_versions;
 
@@ -593,6 +602,20 @@ sub available_perls {
 sub perl_release {
     my ($self, $version) = @_;
 
+    # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
+    my $index = http_get("http://www.cpan.org/src/5.0/");
+    if ($index) {
+        for my $prefix ( "perl-", "perl" ){
+            for my $suffix ( ".tar.bz2", ".tar.gz" ) {
+                my $dist_tarball = "$prefix$version$suffix";
+                my $dist_tarball_url = $self->cpan_mirror() . "/src/5.0/$dist_tarball";
+                return ( $dist_tarball, $dist_tarball_url )
+                    if ( $index =~ /href\s*=\s*"\Q$dist_tarball\E"/ms );
+            }
+        }
+    }
+
+    # try CPAN::Perl::Releases
     require CPAN::Perl::Releases;
     my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
 
@@ -604,12 +627,13 @@ sub perl_release {
         return ($dist_tarball, $dist_tarball_url);
     }
 
+    # try to find it on search.cpan.org
     my $mirror = $self->config->{mirror};
     my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
     my $html = http_get("http://search.cpan.org/dist/perl-${version}", $header);
 
     unless ($html) {
-        die "ERROR: Failed to download perl-${version} tarball.";
+        die "ERROR: Failed to locate perl-${version} tarball.";
     }
 
     my ($dist_path, $dist_tarball) =

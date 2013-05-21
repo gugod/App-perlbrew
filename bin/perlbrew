@@ -251,12 +251,14 @@ List the installed versions of perl.
 
 =head1 COMMAND: AVAILABLE
 
-Usage: perlbrew available
+Usage: perlbrew available [--all]
 
 List the recently available versions of perl on CPAN.
 
 The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
 and is not the list of *all* perl versions ever released in the past.
+
+To get a list of all perls ever released, use the C<--all> option.
 
 NOTICE: This command might be gone in the future and becomes an option of 'list' command.
 
