@@ -290,7 +290,7 @@ sub configure_args {
 sub cpan_mirror {
     my ($self, $v) = @_;
     unless($self->{cpan_mirror}) {
-        $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "http://search.cpan.org/CPAN";
+        $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "http://www.cpan.org";
         $self->{cpan_mirror} =~ s{/+$}{};
     }
     return $self->{cpan_mirror};
