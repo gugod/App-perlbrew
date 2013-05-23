@@ -210,7 +210,18 @@ Options for C<install> command:
                    ex. C<perlbrew install perl-5.6.2 --as legacy-perl>
 
        --noman     Skip installation of manpages
-       --threads   Build perl with threads enabled
+       --thread    Build perl with usethreads enabled
+       --multi     Build perl with usemultiplicity enabled
+       --64int     Build perl with use64bitint enabled
+       --64all     Build perl with use64bitall enabled
+       --ld        Build perl with uselongdouble enabled
+       --debug     Build perl with DEBUGGING enabled
+
+    -b --both $variation
+                   Where $variation is one of thread, multi, 64int, 64all, ld or debug.
+                   Installs two perls, one compiled with the given flag set and the
+                   other without. Can be used repeatedly.
+                   ex. C<perlbrew install --both 64int --both ld perl-5.18.0>
 
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
