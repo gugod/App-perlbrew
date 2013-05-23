@@ -948,6 +948,7 @@ sub check_and_calculate_variations {
         $word eq '64int' and $self->{'64all'} and die "variation 64int does not make sense when flag 64all is set.\n\n";
         $word eq 'multi' and $self->{'thread'} and die "variation multi does not make sense when flag thread is set.\n\n";
     }
+    # FIXME: 64int and 64all do not make sense if the host is already 64bits, add a check for this condition
 
     # make variations
     my @var = '';
