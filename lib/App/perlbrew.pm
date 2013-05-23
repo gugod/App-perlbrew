@@ -167,7 +167,12 @@ sub new {
         A => [],
         sitecustomize => '',
         noman => '',
-        threads => '',
+        thread => '',
+        ld => '',
+        '64int' => '',
+        '64all' => '',
+        debug => '',
+        both => []
     );
 
     # build a local @ARGV to allow us to use an older
@@ -211,6 +216,7 @@ sub parse_cmdline {
         'root=s',
         'switch',
         'all',
+        'both|b=s@',
 
         # options passed directly to Configure
         'D=s@',
@@ -221,7 +227,12 @@ sub parse_cmdline {
         # options that affect Configure and customize post-build
         'sitecustomize=s',
         'noman',
-        'threads',
+        'thread|threads',
+        'multi',
+        '64int',
+        '64all',
+        'ld',
+        'debug',
 
         @ext
     )
@@ -918,6 +929,44 @@ sub do_install_release {
     return;
 }
 
+my @supported_variations = qw(thread multi 64int 64all ld debug);
+# Order matters here as we use it to sort the tags inside the
+# variation name. The idea is to generate names similar to those used
+# as the architecture name ($Config::Config{archname}).
+
+
+sub check_and_calculate_variations {
+    my $self = shift;
+    my @both = @{$self->{both}};
+
+    # check the validity of the varitions given via 'for'
+    my %wix = ('' => 0);
+    @wix{@supported_variations} = (1..@supported_variations);
+    for my $word (map { split /-+/ } @both) {
+        $wix{$word} or die "$word is not a supported variation.\n\n";
+        $self->{$word} and die "$word can not be used both as a flag and as a variation.\n\n";
+        $word eq '64int' and $self->{'64all'} and die "variation 64int does not make sense when flag 64all is set.\n\n";
+        $word eq 'multi' and $self->{'thread'} and die "variation multi does not make sense when flag thread is set.\n\n";
+    }
+
+    # make variations
+    my @var = '';
+    for my $both (@both) {
+        push @var, map { "$_-$both" } @var;
+    }
+
+    s/\bthread\b/thread-multi/ for @var; # "thread" implies "multi"
+    s/\b64all\b/64all-64int/   for @var; # "64all" implies "64int"
+
+    # normalize the variation names
+    @var = map { join "-", sort { $wix{$a} <=> $wix{$b} } split /-+/, $_ } @var;
+    s/(\b\w+\b)(?:-\1)+/$1/g for @var; # remove duplicate words
+
+    # remove duplicated variations
+    my %var = map { $_ => 1 } @var;
+    sort keys %var;
+}
+
 sub run_command_install {
     my ( $self, $dist, $opts ) = @_;
 
@@ -930,40 +979,65 @@ sub run_command_install {
 
     $self->{dist_name} = $dist;
 
-    my $installation_name = $self->{as} || $dist;
-    if ($self->is_installed( $installation_name ) && !$self->{force}) {
-        die "\nABORT: $installation_name is already installed.\n\n";
+    my $base_installation_name = $self->{as} || $dist;
+    my @variations = $self->check_and_calculate_variations;
+
+    my %skip;
+    unless ($self->{force}) {
+        for my $variation (@variations) {
+            my $installation_name = "$base_installation_name$variation";
+            if ($self->is_installed( $installation_name )) {
+                if (@variations > 1) {
+                    warn "$installation_name is already installed, skipping!\n";
+                    $skip{$variation} = 1;
+                }
+                else {
+                    die "\nABORT: $installation_name is already installed.\n\n";
+                }
+            }
+        }
     }
 
-    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
+    if (@variations > 1) {
+        die "Can't switch when several variations have been selected\n\n" if $self->{switch};
 
-    my ($dist_name, $dist_version) = $dist =~ m/^(perl)-?([\d._]+(?:-RC\d+)?|git)$/;
-    if (!$dist_name || !$dist_version) { # some kind of special install
-        if (-d "$dist/.git") {
-            $self->do_install_git($dist);
+        print "The following perls are going to be installed:\n";
+        print "$base_installation_name$_\n" for @variations;
+        print "\n";
+    }
+
+    for my $variation (@variations) {
+        next if $skip{$variation};
+        $self->{variation} = $variation;
+        my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
+
+        my ($dist_name, $dist_version) = $dist =~ m/^(perl)-?([\d._]+(?:-RC\d+)?|git)$/;
+        if (!$dist_name || !$dist_version) { # some kind of special install
+            if (-d "$dist/.git") {
+                $self->do_install_git($dist);
+            }
+            if (-f $dist) {
+                $self->do_install_archive($dist);
+            }
+            elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
+                $self->do_install_url($dist);
+            }
+            elsif ($dist =~ m/(?:perl-)?blead$/) {
+                $self->do_install_blead($dist);
+            }
+            else {
+                die $help_message;
+            }
         }
-        if (-f $dist) {
-            $self->do_install_archive($dist);
-        }
-        elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
-            $self->do_install_url($dist);
-        }
-        elsif ($dist =~ m/(?:perl-)?blead$/) {
-            $self->do_install_blead($dist);
+        elsif ($dist_name eq 'perl') {
+            $self->do_install_release( $dist, $dist_name, $dist_version );
         }
         else {
             die $help_message;
         }
     }
-    elsif ($dist_name eq 'perl') {
-        $self->do_install_release( $dist, $dist_name, $dist_version );
-    }
-    else {
-        die $help_message;
-    }
 
-    $self->switch_to($installation_name)
-        if $self->{switch};
+    $self->switch_to($base_installation_name) if $self->{switch};
 
     return;
 }
@@ -1060,15 +1134,18 @@ sub do_install_archive {
 sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
     $self->{dist_extracted_dir} = $dist_extracted_dir;
-    $self->{log_file} ||= joinpath($self->root, "build.${installation_name}.log");
+    my $variation = $self->{variation};
+    $installation_name .= $variation;
+    $self->{log_file} = joinpath($self->root, "build.${installation_name}.log");
 
     my $version = perl_version_to_integer($dist_version);
+
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
-    $installation_name = $self->{as} if $self->{as};
+    $installation_name = "$self->{as}$variation" if $self->{as};
 
     if ( $sitecustomize ) {
         die "Could not read sitecustomize file '$sitecustomize'\n"
@@ -1079,8 +1156,29 @@ sub do_install_this {
     if ( $self->{noman} ) {
         push @d_options, qw/man1dir=none man3dir=none/;
     }
-    if ( $self->{threads} ) {
+
+    if ( $self->{threads} || $variation =~ /\bthreads\b/) {
         push @d_options, 'usethreads';
+    }
+
+    if ( $self->{multi} || $variation =~ /\bmulti\b/) {
+        push @d_options, 'usemultiplicity';
+    }
+
+    if ( $self->{ld} || $variation =~ /\bld\b/) {
+        push @d_options, 'uselongdouble';
+    }
+
+    if ( $self->{'64int'} || $variation =~ /\b64int\b/) {
+        push @d_options, 'use64bitint';
+    }
+
+    if ( $self->{'64all'} || $variation =~ /\b64all\b/) {
+        push @d_options, 'use64bitall';
+    }
+
+    if ( $self->{'debug'} || $variation =~ /\bdebug\b/) {
+        push @d_options, 'DEBUGGING';
     }
 
     my $perlpath = $self->root . "/perls/$installation_name";
