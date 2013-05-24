@@ -1049,7 +1049,7 @@ sub check_and_calculate_variations {
 
     # normalize the variation names
     @var = map { join '-', '', sort { $flavor{$a}{ix} <=> $flavor{$b}{ix} } grep length, split /-+/, $_ } @var;
-    s/(\b\w+\b)(?:-\1)+/$1/g for @var; # remove duplicate words
+    s/(\b\w+\b)(?:-\1)+/$1/g for @var; # remove duplicate flavors
 
     if ($Config::Config{archname64} eq '') {
         # this is a 64bit platform. 64int and 64all are always set but
