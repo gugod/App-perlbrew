@@ -24,7 +24,7 @@ sub App::perlbrew::http_get {
         $cb = $header;
         $header = undef;
     }
-    $cb->(undef);
+    $cb ? $cb->(undef) : undef
 }
 
 throws_ok(

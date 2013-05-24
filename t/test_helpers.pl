@@ -36,6 +36,9 @@ sub App::perlbrew::do_install_release {
 
     my $root = dir($App::perlbrew::PERLBREW_ROOT);
     my $installation_dir = $root->subdir("perls", $name);
+
+    $self->{installation_name} = $name;
+
     App::perlbrew::mkpath($installation_dir);
     App::perlbrew::mkpath($root->subdir("perls", $name, "bin"));
 

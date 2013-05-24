@@ -28,6 +28,45 @@ our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
 
+my @flavors = ( { d_option => 'usethreads',
+                  implies  => 'multi',
+                  common   => 1,
+                  opt      => 'thread|threads' }, # threads is for backward compatibility
+
+                { d_option => 'usemultiplicity',
+                  opt      => 'multi' },
+
+                { d_option => 'uselongdouble',
+                  common   => 1,
+                  opt      => 'ld' },
+
+                { d_option => 'use64bitint',
+                  common   => 1,
+                  opt      => '64int' },
+
+                { d_option => 'use64bitall',
+                  implies  => '64int',
+                  opt      => '64all' },
+
+                { d_option => 'DEBUGGING',
+                  opt      => 'debug' }
+              );
+
+
+my %flavor;
+my $flavor_ix = 0;
+for (@flavors) {
+    my ($name) = $_->{opt} =~ /([^|]+)/;
+    $_->{name} = $name;
+    $_->{ix} = ++$flavor_ix;
+    $flavor{$name} = $_;
+}
+for (@flavors) {
+    if (my $implies = $_->{implies}) {
+        $flavor{$implies}{implied_by} = $_->{name};
+    }
+}
+
 ### functions
 
 sub joinpath { join "/", @_ }
@@ -120,6 +159,7 @@ sub files_are_the_same {
 sub perl_version_to_integer {
     my $version = shift;
     my @v = split(/[\.\-_]/, $version);
+    return undef if @v < 2;
     if ($v[1] <= 5) {
         $v[2] ||= 0;
         $v[3] = 0;
@@ -167,8 +207,11 @@ sub new {
         A => [],
         sitecustomize => '',
         noman => '',
-        threads => '',
+        variation => '',
+        both => [],
     );
+
+    $opt{$_} = '' for keys %flavor;
 
     # build a local @ARGV to allow us to use an older
     # Getopt::Long API in case we are building on an older system
@@ -198,6 +241,8 @@ sub new {
 sub parse_cmdline {
     my ($self, $params, @ext) = @_;
 
+    my @f = map { $flavor{$_}{opt} || $_ } keys %flavor;
+
     Getopt::Long::GetOptions(
         $params,
 
@@ -221,7 +266,12 @@ sub parse_cmdline {
         # options that affect Configure and customize post-build
         'sitecustomize=s',
         'noman',
-        'threads',
+
+        # flavors support
+        'both|b=s@',
+        'all-variations',
+        'common-variations',
+        @f,
 
         @ext
     )
@@ -440,12 +490,6 @@ sub run_command {
         } else {
             die "Unknown command: `$command`. Typo?\n";
         }
-    }
-
-    if ($x eq 'install') {
-        # prepend "perl-" to version number, but only if there is an argument
-        $args[0] =~ s/\A((?:\d+\.)*\d+)\Z/perl-$1/
-            if @args;
     }
 
     $self->$s(@args);
@@ -880,7 +924,7 @@ sub do_install_blead {
     return;
 }
 
-sub resolve_stable {
+sub resolve_stable_version {
     my ($self) = @_;
 
     my ($latest_ver, $latest_minor);
@@ -895,11 +939,11 @@ sub resolve_stable {
     die "Can't determine latest stable Perl release\n"
         if !defined $latest_ver;
 
-    return "perl-$latest_ver";
+    return $latest_ver;
 }
 
 sub do_install_release {
-    my ($self, $dist, $dist_name, $dist_version) = @_;
+    my ($self, $dist, $dist_version) = @_;
 
     my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
@@ -909,7 +953,7 @@ sub do_install_release {
             if $self->{verbose};
     }
     else {
-        print "Fetching $dist_name $dist_version as $dist_tarball_path\n" unless $self->{quiet};
+        print "Fetching perl $dist_version as $dist_tarball_path\n" unless $self->{quiet};
         $self->download( $dist_tarball_url, $dist_tarball_path );
     }
 
@@ -926,46 +970,145 @@ sub run_command_install {
         exit(-1);
     }
 
-    $dist = $self->resolve_stable if $dist =~ m/^(?:perl-?)?stable$/;
+    $self->{dist_name} = $dist; # for help msg generation, set to non
+                                # normalized name
 
-    $self->{dist_name} = $dist;
+    if ($dist =~ /^(?:perl-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/) {
+        my $version = ($1 eq 'stable' ? $self->resolve_stable_version : $1);
+        $dist = "perl-$version"; # normalize dist name
 
-    my $installation_name = $self->{as} || $dist;
-    if ($self->is_installed( $installation_name ) && !$self->{force}) {
-        die "\nABORT: $installation_name is already installed.\n\n";
-    }
-
-    my $help_message = "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` for the instruction on using the install command.\n\n";
-
-    my ($dist_name, $dist_version) = $dist =~ m/^(perl)-?([\d._]+(?:-RC\d+)?|git)$/;
-    if (!$dist_name || !$dist_version) { # some kind of special install
-        if (-d "$dist/.git") {
-            $self->do_install_git($dist);
+        my $installation_name = ($self->{as} || $dist) . $self->{variation};
+        if (not $self->{force} and $self->is_installed( $installation_name )) {
+            die "\nABORT: $installation_name is already installed.\n\n";
         }
-        if (-f $dist) {
-            $self->do_install_archive($dist);
-        }
-        elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
-            $self->do_install_url($dist);
-        }
-        elsif ($dist =~ m/(?:perl-)?blead$/) {
+
+        if ($version eq 'blead') {
             $self->do_install_blead($dist);
         }
         else {
-            die $help_message;
+            $self->do_install_release( $dist, $version );
         }
+
     }
-    elsif ($dist_name eq 'perl') {
-        $self->do_install_release( $dist, $dist_name, $dist_version );
+    # else it is some kind of special install:
+    elsif (-d "$dist/.git") {
+        $self->do_install_git($dist);
+    }
+    elsif (-f $dist) {
+        $self->do_install_archive($dist);
+    }
+    elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
+        $self->do_install_url($dist);
     }
     else {
-        die $help_message;
+        die "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` " .
+            "for the instruction on using the install command.\n\n";
     }
 
-    $self->switch_to($installation_name)
-        if $self->{switch};
-
+    if ($self->{switch}) {
+        if (defined(my $installation_name = $self->{installation_name})) {
+            $self->switch_to($installation_name)
+        }
+        else {
+            warn "can't switch, unable to infer final destination name.\n\n";
+        }
+    }
     return;
+}
+
+sub check_and_calculate_variations {
+    my $self = shift;
+    my @both = @{$self->{both}};
+
+    if ($self->{'all-variations'}) {
+        @both = keys %flavor;
+    }
+    elsif ($self->{'common-variations'}) {
+        push @both, grep $flavor{$_}{common}, keys %flavor;
+    }
+
+    # check the validity of the varitions given via 'both'
+    for my $both (@both) {
+        $flavor{$both} or die "$both is not a supported flavor.\n\n";
+        $self->{$both} and die "options --both $both and --$both can not be used together";
+        if (my $implied_by = $flavor{$both}{implied_by}) {
+            $self->{$implied_by} and die "options --both $both and --$implied_by can not be used together";
+        }
+    }
+
+    # flavors selected always
+    my $start = '';
+    $start .= "-$_" for grep $self->{$_}, keys %flavor;
+
+    # make variations
+    my @var = $start;
+    for my $both (@both) {
+        my $append = join('-', $both, grep defined, $flavor{$both}{implies});
+        push @var, map "$_-$append", @var;
+    }
+
+    # normalize the variation names
+    @var = map { join '-', '', sort { $flavor{$a}{ix} <=> $flavor{$b}{ix} } grep length, split /-+/, $_ } @var;
+    s/(\b\w+\b)(?:-\1)+/$1/g for @var; # remove duplicate flavors
+
+    if ($Config::Config{archname64} eq '') {
+        # this is a 64bit platform. 64int and 64all are always set but
+        # we don't want them to appear on the final perl name
+        s/-64\w+//g for @var;
+    }
+
+    # remove duplicated variations
+    my %var = map { $_ => 1 } @var;
+    sort keys %var;
+}
+
+sub run_command_install_multiple {
+    my ( $self, @dists) = @_;
+
+    unless(@dists) {
+        $self->run_command_help("install-multiple");
+        exit(-1);
+    }
+
+    die "--switch can not be used with command install-multiple.\n\n"
+        if $self->{switch};
+    die "--as can not be used when more than one distribution is given.\n\n"
+        if $self->{as} and @dists > 1;
+
+    my @variations = $self->check_and_calculate_variations;
+    print join("\n",
+               "Compiling the following distributions:",
+               map("    $_", @dists),
+               "  with the following variations:",
+               map((/-(.*)/ ? "    $1" : "    default"), @variations),
+               "", "");
+
+    my @ok;
+    for my $dist (@dists) {
+        for my $variation (@variations) {
+            local $@;
+            eval {
+                $self->{$_} = '' for keys %flavor;
+                $self->{$_} = 1 for split /-/, $variation;
+                $self->{variation} = $variation;
+                $self->{installation_name} = undef;
+
+                $self->run_command_install($dist);
+                push @ok, $self->{installation_name};
+            };
+            if ($@) {
+                $@ =~ s/\n+$/\n/;
+                print "Installation of $dist$variation failed: $@";
+            }
+        }
+    }
+
+    print join("\n",
+               "",
+               "The following perls have been installed:",
+               map ("    $_", grep defined, @ok),
+               "", "");
+    return
 }
 
 sub run_command_download {
@@ -1059,16 +1202,20 @@ sub do_install_archive {
 
 sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
-    $self->{dist_extracted_dir} = $dist_extracted_dir;
-    $self->{log_file} ||= joinpath($self->root, "build.${installation_name}.log");
 
-    my $version = perl_version_to_integer($dist_version);
+    my $variation = $self->{variation};
+
+    $self->{dist_extracted_dir} = $dist_extracted_dir;
+    $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}.log");
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
     $installation_name = $self->{as} if $self->{as};
+    $installation_name .= $variation;
+
+    $self->{installation_name} = $installation_name;
 
     if ( $sitecustomize ) {
         die "Could not read sitecustomize file '$sitecustomize'\n"
@@ -1079,8 +1226,9 @@ sub do_install_this {
     if ( $self->{noman} ) {
         push @d_options, qw/man1dir=none man3dir=none/;
     }
-    if ( $self->{threads} ) {
-        push @d_options, 'usethreads';
+
+    for my $flavor (keys %flavor) {
+        $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
     }
 
     my $perlpath = $self->root . "/perls/$installation_name";
@@ -1097,7 +1245,8 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
-    if ( $version < perl_version_to_integer( '5.6.0' ) ) {
+    my $version = perl_version_to_integer($dist_version);
+    if (defined $version and $version < perl_version_to_integer( '5.6.0' ) ) {
         # ancient perls do not support -A for Configure
         @a_options = ();
     }
@@ -1125,7 +1274,7 @@ INSTALL
                 ( map { qq{'-U$_'} } @u_options ),
                 ( map { qq{'-A$_'} } @a_options ),
             ),
-        $version < perl_version_to_integer( '5.8.9' )
+        (defined $version and $version < perl_version_to_integer( '5.8.9' ))
                 ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                 : ()
     );
@@ -2033,7 +2182,7 @@ sub run_command_upgrade_perl {
     print "Upgrading $current->{name} to $dist_version\n" unless $self->{quiet};
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
-    $self->do_install_release($dist, "perl", $dist_version);
+    $self->do_install_release($dist, $dist_version);
 }
 
 sub run_command_list_modules {
