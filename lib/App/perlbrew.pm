@@ -28,6 +28,35 @@ our $CONFIG;
 our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
 
+my @flavors = ( { d_option => 'usethreads',
+                  implies  => 'multi',
+                  opt      => 'thread|threads' }, # threads is for backward compatibility
+
+                { d_option => 'usemultiplicity',
+                  opt      => 'multi' },
+
+                { d_option => 'uselongdouble',
+                  opt      => 'ld' },
+
+                { d_option => 'use64bitint',
+                  opt      => '64int' },
+
+                { d_option => 'use64bitall',
+                  implies  => '64int',
+                  opt      => '64all' },
+
+                { d_option => 'DEBUGGING',
+                  opt      => 'debug' }
+              );
+
+my %flavor;
+for (@flavors) {
+    my ($name) = $_->{opt} =~ /([^\|]+)/;
+    $flavor{$name} = $_;
+}
+use Data::Dumper;
+warn Dumper \%flavor;
+
 ### functions
 
 sub joinpath { join "/", @_ }
@@ -167,8 +196,9 @@ sub new {
         A => [],
         sitecustomize => '',
         noman => '',
-        threads => '',
     );
+
+    $opt{$_} = '' for keys %flavor;
 
     # build a local @ARGV to allow us to use an older
     # Getopt::Long API in case we are building on an older system
@@ -198,6 +228,8 @@ sub new {
 sub parse_cmdline {
     my ($self, $params, @ext) = @_;
 
+    my @f = map { $flavor{$_}{opt} || $_ } keys %flavor;
+
     Getopt::Long::GetOptions(
         $params,
 
@@ -221,7 +253,8 @@ sub parse_cmdline {
         # options that affect Configure and customize post-build
         'sitecustomize=s',
         'noman',
-        'threads',
+
+        @f,
 
         @ext
     )
@@ -1079,8 +1112,9 @@ sub do_install_this {
     if ( $self->{noman} ) {
         push @d_options, qw/man1dir=none man3dir=none/;
     }
-    if ( $self->{threads} ) {
-        push @d_options, 'usethreads';
+
+    for my $flavor (keys %flavor) {
+        $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
     }
 
     my $perlpath = $self->root . "/perls/$installation_name";
