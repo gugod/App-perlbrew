@@ -1051,6 +1051,12 @@ sub check_and_calculate_variations {
     @var = map { join '-', '', sort { $flavor{$a}{ix} <=> $flavor{$b}{ix} } grep length, split /-+/, $_ } @var;
     s/(\b\w+\b)(?:-\1)+/$1/g for @var; # remove duplicate words
 
+    if ($Config::Config{archname64} eq '') {
+        # this is a 64bit platform. 64int and 64all are always set but
+        # we don't want them to appear on the final perl name
+        s/-64\w+//g for @var;
+    }
+
     # remove duplicated variations
     my %var = map { $_ => 1 } @var;
     sort keys %var;
