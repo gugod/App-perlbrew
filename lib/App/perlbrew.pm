@@ -1082,7 +1082,8 @@ sub run_command_install_multiple {
         for my $variation (@variations) {
             local $@;
             eval {
-                local $self->{$_} = 1 for split /-/, $variation;
+                $self->{$_} = '' for keys %flavor;
+                $self->{$_} = 1 for split /-/, $variation;
                 $self->{variation} = $variation;
                 $self->{installation_name} = undef;
 
