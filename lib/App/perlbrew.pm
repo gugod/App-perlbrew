@@ -159,6 +159,7 @@ sub files_are_the_same {
 sub perl_version_to_integer {
     my $version = shift;
     my @v = split(/[\.\-_]/, $version);
+    return undef if @v < 3;
     if ($v[1] <= 5) {
         $v[2] ||= 0;
         $v[3] = 0;
@@ -1200,8 +1201,6 @@ sub do_install_this {
     $self->{dist_extracted_dir} = $dist_extracted_dir;
     $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}.log");
 
-    my $version = perl_version_to_integer($dist_version);
-
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
@@ -1239,7 +1238,8 @@ sub do_install_this {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
 
-    if ( $version < perl_version_to_integer( '5.6.0' ) ) {
+    my $version = perl_version_to_integer($dist_version);
+    if (defined $version and $version < perl_version_to_integer( '5.6.0' ) ) {
         # ancient perls do not support -A for Configure
         @a_options = ();
     }
@@ -1267,7 +1267,7 @@ INSTALL
                 ( map { qq{'-U$_'} } @u_options ),
                 ( map { qq{'-A$_'} } @a_options ),
             ),
-        $version < perl_version_to_integer( '5.8.9' )
+        (defined $version and $version < perl_version_to_integer( '5.8.9' ))
                 ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                 : ()
     );
