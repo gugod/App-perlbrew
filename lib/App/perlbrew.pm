@@ -871,15 +871,26 @@ sub do_extract_tarball {
     my $self = shift;
     my $dist_tarball = shift;
 
+    # Assuming the dir extracted from the tarball is named after the tarball.
+    my $dist_tarball_basename = $dist_tarball;
+    $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2)$}{$1};
+
+    # Note that this is incorrect for blead.
+    my $extracted_dir = "@{[ $self->root ]}/build/$dist_tarball_basename";
+
     # Was broken on Solaris, where GNU tar is probably
     # installed as 'gtar' - RT #61042
     my $tarx =
         ($^O eq 'solaris' ? 'gtar ' : 'tar ') .
         ( $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
-    my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball --recursive-unlink";
+
+    if (-d $extracted_dir) {
+        rmpath($extracted_dir);
+    }
+
+    my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball";
     die "Failed to extract $dist_tarball" if system($extract_command);
-    $dist_tarball =~ s{.*/([^/]+)\.tar\.(?:gz|bz2)$}{$1};
-    return "@{[ $self->root ]}/build/$dist_tarball"; # Note that this is incorrect for blead
+    return $extracted_dir;
 }
 
 sub do_install_blead {
