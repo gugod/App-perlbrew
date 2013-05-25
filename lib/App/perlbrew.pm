@@ -1932,13 +1932,12 @@ sub run_command_exec {
 
 sub run_command_clean {
     my ($self) = @_;
-    require File::Path;
     my $root = $self->root;
     my @build_dirs = <$root/build/*>;
 
     for my $dir (@build_dirs) {
         print "Removing $dir\n";
-        File::Path::rmtree($dir);
+        rmpath($dir);
     }
 
     my @tarballs = <$root/dists/*>;
