@@ -22,7 +22,6 @@ Commands:
     init           Initialize perlbrew environment.
 
     install        Install perl
-    install-multiple    Install multiple versions and flavors of perl
     uninstall      Uninstall the given installation
     available      List perls available to install
     lib            Manage local::lib directories.
@@ -41,6 +40,7 @@ Commands:
 
     install-patchperl  Install patchperl
     install-cpanm      Install cpanm, a friendly companion.
+    install-multiple   Install multiple versions and flavors of perl
 
     download       Download the specified perl distribution tarball.
     mirror         Pick a preferred mirror site
@@ -231,8 +231,6 @@ By default, all installations are configured after their name like this:
 
 =head1 COMMAND: INSTALL-MULTIPLE
 
-=over 4
-
 Usage: perlbrew install-multiple [options] <perl-version-1> <perl-version-2> ...
 
 Build and install the given versions of perl.
@@ -256,18 +254,18 @@ C<install> plus the following ones:
 
 For instance:
 
-  perlbrew 5.18.0 blead --both thread --both debug
+    perlbrew install-multiple 5.18.0 blead --both thread --both debug
 
 Installs the following perls:
 
-  perl-blead
-  perl-blead-debug
-  perl-blead-thread-multi
-  perl-blead-thread-multi-debug
-  perl-5.18.0
-  perl-5.18.0-debug
-  perl-5.18.0-thread-multi
-  perl-5.18.0-thread-multi-debug
+    perl-blead
+    perl-blead-debug
+    perl-blead-thread-multi
+    perl-blead-thread-multi-debug
+    perl-5.18.0
+    perl-5.18.0-debug
+    perl-5.18.0-thread-multi
+    perl-5.18.0-thread-multi-debug
 
 (note that the C<multi> flavor is selected automatically because
 C<thread> requires it)
