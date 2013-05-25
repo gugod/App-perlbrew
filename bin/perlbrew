@@ -22,6 +22,7 @@ Commands:
     init           Initialize perlbrew environment.
 
     install        Install perl
+    install-multiple    Install multiple versions and flavors of perl
     uninstall      Uninstall the given installation
     available      List perls available to install
     lib            Manage local::lib directories.
@@ -210,7 +211,13 @@ Options for C<install> command:
                    ex. C<perlbrew install perl-5.6.2 --as legacy-perl>
 
        --noman     Skip installation of manpages
-       --threads   Build perl with threads enabled
+
+       --thread    Build perl with usethreads enabled
+       --multi     Build perl with usemultiplicity enabled
+       --64int     Build perl with use64bitint enabled
+       --64all     Build perl with use64bitall enabled
+       --ld        Build perl with uselongdouble enabled
+       --debug     Build perl with DEBUGGING enabled
 
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
@@ -221,6 +228,49 @@ Options for C<install> command:
 By default, all installations are configured after their name like this:
 
     sh Configure -de -Dprefix=$PERLBREW_ROOT/perls/<name>
+
+=head1 COMMAND: INSTALL-MULTIPLE
+
+=over 4
+
+Usage: perlbrew install-multiple [options] <perl-version-1> <perl-version-2> ...
+
+Build and install the given versions of perl.
+
+C<install-multiple> accepts the same set of options as the command
+C<install> plus the following ones:
+
+    --both $flavor       Where $flavor is one of C<thread>, C<multi>, C<ld>,
+                         C<64int>, C<64all> and C<debug>.
+
+                         For every given perl version, install two
+                         flavors, one with the flag C<--$flavor> set
+                         and the other with out. C<--both> can be
+                         passed multiple times with different values
+                         and in that case, all the possible
+                         combinations are generated.
+
+    --common-variations  equivalent to C<--both thread --both ld --both 64int>
+
+    --all-variations     generates all the possible flavor combinations
+
+For instance:
+
+  perlbrew 5.18.0 blead --both thread --both debug
+
+Installs the following perls:
+
+  perl-blead
+  perl-blead-debug
+  perl-blead-thread-multi
+  perl-blead-thread-multi-debug
+  perl-5.18.0
+  perl-5.18.0-debug
+  perl-5.18.0-thread-multi
+  perl-5.18.0-thread-multi-debug
+
+(note that the C<multi> flavor is selected automatically because
+C<thread> requires it)
 
 =head1 COMMAND: UNINSTALL
 
