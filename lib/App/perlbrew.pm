@@ -78,7 +78,7 @@ sub mkpath {
 
 sub rmpath {
     require File::Path;
-    File::Path::rmtree([@_], 0, 1);
+    File::Path::rmtree([@_], 0, 0);
 }
 
 sub min(@) {
