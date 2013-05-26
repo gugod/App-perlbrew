@@ -1370,6 +1370,20 @@ sub do_install_program_from_url {
 
     my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
 
+    unless ($body =~ m{\A#!/}s) {
+        my $x = joinpath($ENV{TMPDIR} || "/tmp", "${program_name}.downloaded.$$");
+        my $message = "\nERROR: The downloaded $program_name program seem to be invalid. Please check if the following URL can be reached correctly\n\n\t$url\n\n...and try again latter.";
+
+        unless (-f $x) {
+            open my $OUT, ">", $x;
+            print $OUT $body;
+            close($OUT);
+            $message .= "\n\nThe previously downloaded file is saved at $x for manual inspection.\n\n";
+        }
+
+        die $message;
+    }
+
     if ($body_filter && ref($body_filter) eq "CODE") {
         $body = $body_filter->($body);
     }
@@ -1823,7 +1837,7 @@ sub run_command_install_patchperl {
 
 sub run_command_install_cpanm {
     my ($self) = @_;
-    $self->do_install_program_from_url('https://github.com/miyagawa/cpanminus/raw/master/cpanm' => 'cpanm');
+    $self->do_install_program_from_url('https://raw.github.com/miyagawa/cpanminus/master/cpanm' => 'cpanm');
 }
 
 sub run_command_self_upgrade {

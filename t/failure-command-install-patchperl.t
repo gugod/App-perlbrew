@@ -15,18 +15,26 @@ $App::perlbrew::PERLBREW_HOME = my $perlbrew_home = tempdir( CLEANUP => 1 );
     sub App::perlbrew::http_get {
         my ($url) = @_;
         like $url, qr/patchperl$/, "GET patchperl url: $url";
-        return "#!/usr/bin/env perl\n# The content of patchperl";
+        return "Some invalid piece of text";
     }
 }
 
 describe "App::perlbrew->install_patchperl" => sub {
-    it "should produce 'patchperl' in the bin dir" => sub {
-        my $app = App::perlbrew->new("install-patchperl", "-q");
-        $app->run();
-
+    it "should not produce 'patchperl' in the bin dir, if the downloaded content does not seem to be valid." => sub {
         my $patchperl = file($perlbrew_root, "bin", "patchperl")->absolute;
-        ok -f $patchperl, "patchperl is produced. $patchperl";
-        ok -x $patchperl, "patchperl should be an executable.";
+
+        my $error;
+        my $produced_error = 0;
+        eval {
+            my $app = App::perlbrew->new("install-patchperl", "-q");
+            $app->run();
+        } or do {
+            $error = $@;
+            $produced_error = 1;
+        };
+
+        ok $produced_error, "generated an error: $error";
+        ok !(-f $patchperl), "patchperl is *not* installed: $patchperl";
     };
 };
 

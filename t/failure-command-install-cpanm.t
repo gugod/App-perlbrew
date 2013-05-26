@@ -15,18 +15,25 @@ $App::perlbrew::PERLBREW_HOME = my $perlbrew_home = tempdir( CLEANUP => 1 );
     sub App::perlbrew::http_get {
         my ($url) = @_;
         like $url, qr/cpanm$/, "GET cpanm url: $url";
-        return "#!/usr/bin/env perl\n# The content of cpanm";
+        return "404 not found.";
     }
 }
 
 describe "App::perlbrew->install_cpanm" => sub {
-    it "should produce 'cpanm' in the bin dir" => sub {
-        my $app = App::perlbrew->new("install-cpanm", "-q");
-        $app->run();
+    it "should no produced 'cpanm' in the bin dir, if the downloaded content seems to be invalid." => sub {
+        my $error;
+        my $error_produced = 0;
+        eval {
+            my $app = App::perlbrew->new("install-cpanm", "-q");
+            $app->run();
+        } or do {
+            $error = $@;
+            $error_produced = 1;
+        };
 
         my $cpanm = file($perlbrew_root, "bin", "cpanm")->absolute;
-        ok -f $cpanm, "cpanm is produced. $cpanm";
-        ok -x $cpanm, "cpanm should be an executable.";
+        ok $error_produced, "generated an error: $error";
+        ok !(-f $cpanm), "cpanm is not produced. $cpanm";
     };
 };
 
