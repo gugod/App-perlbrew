@@ -120,9 +120,9 @@ sub files_are_the_same {
         if (! @command) {
             my @commands = (
                 # curl's --fail option makes the exit code meaningful
-                [qw( curl --silent --location --fail --insecure )],
+                [qw( curl --silent --location --fail )],
+                [qw( wget --quiet -O - )],
                 [qw( fetch -o - )],
-                [qw( wget --no-check-certificate --quiet -O - )],
             );
             for my $command (@commands) {
                 my $program = $command->[0];
