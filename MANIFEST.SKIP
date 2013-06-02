@@ -8,7 +8,6 @@
 ^blib/
 ^pm_to_blib
 ^MakeMaker-\d
-\.gz$
 \.cvsignore
 ^xt/9\d_.*\.t
 ^xt/perlcritic

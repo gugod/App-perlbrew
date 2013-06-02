@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.63";
+our $VERSION = "0.64";
 
 BEGIN {
     ### Special treat for Cwd to prevent it to be loaded from a local::lib dir that is not binary-compatible with system perl.
