@@ -1,3 +1,4 @@
+0.64: # 2013-06-02T09:44:59+0200
 - The build directory is removed before a new build.
 - New command: `install-multiple`
 - `clean` command now also removes tarballs
