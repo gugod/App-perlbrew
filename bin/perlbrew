@@ -40,9 +40,11 @@ Commands:
 
     install-patchperl  Install patchperl
     install-cpanm      Install cpanm, a friendly companion.
+    install-multiple   Install multiple versions and flavors of perl
 
     download       Download the specified perl distribution tarball.
     mirror         Pick a preferred mirror site
+    clean          Purge tarballs and build directories
     version        Display version
     help           Read more detailed instructions
 
@@ -75,7 +77,7 @@ bashrc to make it effective:
     export PERLBREW_ROOT=/opt/perl5
     source ${PERLBREW_ROOT}/etc/bashrc
 
-After doing so, everone's PATH should include C</opt/perl5/bin> and
+After doing so, everyone's PATH should include C</opt/perl5/bin> and
 C</opt/perl5/perls/${PERLBREW_PERL}/bin>. Each user can invoke C<perlbrew
 switch> and C<perlbrew use> to independently switch to different perl
 environment of their choice. However, only the user with write permission to
@@ -108,7 +110,7 @@ In some cases, say, your home directory is on NFS and shared across multiple
 machines, you may wish to have several different perlbrew setting
 per-machine. To do so, you can use the C<PERLBREW_HOME> environment variable to
 tell perlbrew where to look for the initialization file. Here's a brief bash
-snippet for the given senario.
+snippet for the given scenario.
 
     if [ "$(hostname)" == "machine-a" ]; then
         export PERLBREW_HOME=~/.perlbrew-a
@@ -159,7 +161,7 @@ Build and install the given version of perl.
 Version numbers usually look like "5.x.xx", or
 "perl-5.xx.x-RCx" for release candidates.
 
-The specified perl is downloaded from the offical CPAN website or from the
+The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
 To configure mirror site, invoke `mirror` command.
@@ -208,6 +210,15 @@ Options for C<install> command:
        --as        Install the given version of perl by a name.
                    ex. C<perlbrew install perl-5.6.2 --as legacy-perl>
 
+       --noman     Skip installation of manpages
+
+       --thread    Build perl with usethreads enabled
+       --multi     Build perl with usemultiplicity enabled
+       --64int     Build perl with use64bitint enabled
+       --64all     Build perl with use64bitall enabled
+       --ld        Build perl with uselongdouble enabled
+       --debug     Build perl with DEBUGGING enabled
+
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
 
@@ -217,6 +228,47 @@ Options for C<install> command:
 By default, all installations are configured after their name like this:
 
     sh Configure -de -Dprefix=$PERLBREW_ROOT/perls/<name>
+
+=head1 COMMAND: INSTALL-MULTIPLE
+
+Usage: perlbrew install-multiple [options] <perl-version-1> <perl-version-2> ...
+
+Build and install the given versions of perl.
+
+C<install-multiple> accepts the same set of options as the command
+C<install> plus the following ones:
+
+    --both $flavor       Where $flavor is one of C<thread>, C<multi>, C<ld>,
+                         C<64int>, C<64all> and C<debug>.
+
+                         For every given perl version, install two
+                         flavors, one with the flag C<--$flavor> set
+                         and the other with out. C<--both> can be
+                         passed multiple times with different values
+                         and in that case, all the possible
+                         combinations are generated.
+
+    --common-variations  equivalent to C<--both thread --both ld --both 64int>
+
+    --all-variations     generates all the possible flavor combinations
+
+For instance:
+
+    perlbrew install-multiple 5.18.0 blead --both thread --both debug
+
+Installs the following perls:
+
+    perl-blead
+    perl-blead-debug
+    perl-blead-thread-multi
+    perl-blead-thread-multi-debug
+    perl-5.18.0
+    perl-5.18.0-debug
+    perl-5.18.0-thread-multi
+    perl-5.18.0-thread-multi-debug
+
+(note that the C<multi> flavor is selected automatically because
+C<thread> requires it)
 
 =head1 COMMAND: UNINSTALL
 
@@ -251,12 +303,14 @@ List the installed versions of perl.
 
 =head1 COMMAND: AVAILABLE
 
-Usage: perlbrew available
+Usage: perlbrew available [--all]
 
 List the recently available versions of perl on CPAN.
 
 The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
 and is not the list of *all* perl versions ever released in the past.
+
+To get a list of all perls ever released, use the C<--all> option.
 
 NOTICE: This command might be gone in the future and becomes an option of 'list' command.
 
@@ -327,7 +381,7 @@ The output looks like this:
 
 Notice that the command is not executed in parallel.
 
-When C<--with> arugemnt is provided, the command will be only executed with the
+When C<--with> argument is provided, the command will be only executed with the
 specified perl installations. The following command install Moose module into
 perl-5.12, regardless the current perl:
 
@@ -337,8 +391,8 @@ Multiple installation names can be provided:
 
     perlbrew exec --with perl-5.12,perl-5.12-debug,perl-5.14.2 cpanm Moo
 
-The are splited by either spaces or commas. When spaces are used, it is required
-to quote the whole specifiacion as one argument, but then commas can be used in
+They are split by either spaces or commas. When spaces are used, it is required
+to quote the whole specification as one argument, but then commas can be used in
 the installation names:
 
     perlbrew exec --with '5.12 5.12,debug 5.14.2@nobita @shizuka' cpanm Moo
@@ -365,7 +419,7 @@ The output is something similar to this (if your shell is bash/zsh):
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
     export PERLBREW_PERL=perl-5.14.1
 
-tcsh / csh users shall seens lines of 'setenv' statements instead of `export`.
+tcsh / csh users should use 'setenv' statements instead of `export`.
 
 =head1 COMMAND: SYMLINK-EXECUTABLES
 
@@ -376,9 +430,9 @@ symbolic link to, say, C<perl5.13.6>. This is only required for
 development version of perls.
 
 You don't need to do this unless you have been using old perlbrew to install
-perls, and you find youself confused because the perl that you just installed
-appears to be missing after invoking `use` or `switch`. perbrew changes its
-installation layout since version 0.11, which generades symlinks to executables
+perls, and you find yourself confused because the perl that you just installed
+appears to be missing after invoking `use` or `switch`. perlbrew changes its
+installation layout since version 0.11, which generates symlinks to executables
 in a better way.
 
 If you just upgraded perlbrew (from 0.11 or earlier versions) and C<perlbrew
@@ -409,7 +463,7 @@ For more rationale about the existence of this command, read
 Usage: perlbrew install-patchperl
 
 Install the C<patchperl> standalone executable in C<$PERLBREW_ROOT/bin>.  This
-is automaticall invoked if your perlbrew installation is done with the
+is automatically invoked if your perlbrew installation is done with the
 installer, but not with cpan.
 
 For more rationale about the existence of this command, read
@@ -436,6 +490,12 @@ re-install only the C<perlbrew> executable:
 
 It is slightly different from running the perlbrew installer because
 C<patchperl> is not installed in this case.
+
+=head1 COMMAND: CLEAN
+
+Usage: perlbrew clean
+
+Removes downloaded Perl tarballs and build directories.
 
 =head1 COMMAND: VERSION
 
@@ -518,7 +578,7 @@ re-installs all modules under perl-5.16.0:
 
 =head1 UPGRADE NOTES
 
-If you are upgrading C<perlbrew> from 0.16 or ealier versions to a recent
+If you are upgrading C<perlbrew> from 0.16 or earlier versions to a recent
 one (0.40-ish), you should do these steps to adjust your perl installations
 afterwards (you might need to change the value of PERLBREW_ROOT):
 

@@ -1,5 +1,12 @@
-0.63: # 2013-05-06T16:53:48+0200
+0.64: # 2013-06-02T09:44:59+0200
+- The build directory is removed before a new build.
+- New command: `install-multiple`
+- `clean` command now also removes tarballs
+- `install` command has many extra convienent flags.
+- Use "http://www.cpan.org" as the default CPAN mirror instead of "http://search.cpan.org/CPAN"
+- Remove the --insecure/--no-check-certificate command bflags when invoking curl/wget.
 
+0.63: # 2013-05-06T16:53:48+0200
 - Remove `install-ack` command.
   - Due to the new architecture of ack2, it does not make sense
     to install the standalone executable anymore. Thus it's better not
