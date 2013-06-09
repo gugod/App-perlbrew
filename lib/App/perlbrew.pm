@@ -2448,7 +2448,7 @@ perlbrew_bin_path="${PERLBREW_ROOT}/bin"
 if [[ -f $perlbrew_bin_path/perlbrew ]]; then
     perlbrew_command="$perlbrew_bin_path/perlbrew"
 else
-    perlbrew_command="command perlbrew"
+    perlbrew_command="perlbrew"
 fi
 unset perlbrew_bin_path
 
