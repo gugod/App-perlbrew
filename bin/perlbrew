@@ -252,6 +252,8 @@ C<install> plus the following ones:
 
     --all-variations     generates all the possible flavor combinations
 
+    --append $string     Appends the given string to the generated names
+
 For instance:
 
     perlbrew install-multiple 5.18.0 blead --both thread --both debug
@@ -269,6 +271,11 @@ Installs the following perls:
 
 (note that the C<multi> flavor is selected automatically because
 C<thread> requires it)
+
+Another example using custom compilation flags:
+
+    perlbrew install-multiple 5.18.0 --both thread -Doptimize='-O3' --append='-O3'
+
 
 =head1 COMMAND: UNINSTALL
 
