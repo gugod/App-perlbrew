@@ -209,6 +209,7 @@ sub new {
         noman => '',
         variation => '',
         both => [],
+	append => '',
     );
 
     $opt{$_} = '' for keys %flavor;
@@ -251,6 +252,7 @@ sub parse_cmdline {
         'quiet|q!',
         'verbose|v',
         'as=s',
+	'append=s',
         'help|h',
         'version',
         'root=s',
@@ -988,7 +990,7 @@ sub run_command_install {
         my $version = ($1 eq 'stable' ? $self->resolve_stable_version : $1);
         $dist = "perl-$version"; # normalize dist name
 
-        my $installation_name = ($self->{as} || $dist) . $self->{variation};
+        my $installation_name = ($self->{as} || $dist) . $self->{variation} . $self->{append};
         if (not $self->{force} and $self->is_installed( $installation_name )) {
             die "\nABORT: $installation_name is already installed.\n\n";
         }
@@ -1062,8 +1064,11 @@ sub check_and_calculate_variations {
     @var = map { join '-', '', sort { $flavor{$a}{ix} <=> $flavor{$b}{ix} } grep length, split /-+/, $_ } @var;
     s/(\b\w+\b)(?:-\1)+/$1/g for @var; # remove duplicate flavors
 
-    if ($Config::Config{archname64} eq '') {
-        # this is a 64bit platform. 64int and 64all are always set but
+    # After inspecting perl Configure script this seems to be the most
+    # reliable heuristic to determine if perl would have 64bit IVs by
+    # default or not:
+    if ($Config::Config{longsize} >= 8) {
+        # We are in a 64bit platform. 64int and 64all are always set but
         # we don't want them to appear on the final perl name
         s/-64\w+//g for @var;
     }
@@ -1089,7 +1094,7 @@ sub run_command_install_multiple {
     my @variations = $self->check_and_calculate_variations;
     print join("\n",
                "Compiling the following distributions:",
-               map("    $_", @dists),
+               map("    $_$self->{append}", @dists),
                "  with the following variations:",
                map((/-(.*)/ ? "    $1" : "    default"), @variations),
                "", "");
@@ -1215,16 +1220,17 @@ sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
 
     my $variation = $self->{variation};
+    my $append = $self->{append};
 
     $self->{dist_extracted_dir} = $dist_extracted_dir;
-    $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}.log");
+    $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}${append}.log");
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
     $installation_name = $self->{as} if $self->{as};
-    $installation_name .= $variation;
+    $installation_name .= "$variation$append";
 
     $self->{installation_name} = $installation_name;
 
