@@ -22,7 +22,7 @@ If ~/.perlbrew/init is missing, it is the same as perlbrew is not in effect.
     perl version 5.14.2, installed at $PERLBREW_ROOT/perls/perl-5.14.2
 
     #Show the platform section of `perl -V`
-    #Show the value of `Compiled at` from `perl -V`
+    [x] Show the value of `Compiled at` from `perl -V`
 
 * When it is installed with cpan
   - `which perlbrew` is, most likely, not equal to "$PERLBREW_ROOT/bin/perlbrew"

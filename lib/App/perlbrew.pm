@@ -2257,6 +2257,9 @@ sub run_command_info {
         print "  Name: " . $self->current_env;
         print "  Path: " . $self->current_perl_executable;
         print "  Config: " . $self->configure_args( $self->current_perl );
+        print "  Compiled at: ", map {
+            /  Compiled at (.+)\n/ ? $1 : ()
+        } `@{[ $self->current_perl_executable ]} -V`;
     }
     else {
         print "Using system perl.";
