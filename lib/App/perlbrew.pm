@@ -1910,7 +1910,7 @@ sub run_command_exec {
     local (@ARGV) = @{$self->{original_argv}};
 
     Getopt::Long::Configure ('require_order');
-    my @command_options = ('with=s');
+    my @command_options = ('with=s', 'halt-on-error');
 
     $self->parse_cmdline (\%opts, @command_options);
     shift @ARGV; # "exec"
@@ -1937,6 +1937,7 @@ sub run_command_exec {
         print "No perl installation found.\n" unless $self->{quiet};
     }
 
+    my $overall_success = 1;
     for my $i ( @exec_with ) {
         next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
@@ -1948,12 +1949,25 @@ sub run_command_exec {
         local $ENV{PERL5LIB} = $env{PERL5LIB} || "";
 
         print "$i->{name}\n==========\n" unless $self->{quiet};
+
+
         if (my $err = $self->do_system_with_exit_code(@ARGV)) {
+            my $exit_code = $err >> 8;
+            # return 255 for case when process was terminated with signal, in that case real exit code is useless and weird
+            $exit_code = 255 if $exit_code > 255;
+            $overall_success = 0;
             print "Command terminated with non-zero status.\n" unless $self->{quiet};
-            $self->do_exit_with_error_code($err);
+
+            print STDERR "Command [" .
+                join(' ', map { /\s/ ? "'$_'" : $_ } @ARGV) . # trying reverse shell escapes - quote arguments containing spaces
+                "] terminated with exit code $exit_code (\$? = $err) under the following perl environment:\n";
+            print STDERR $self->format_info_output;
+
+            $self->do_exit_with_error_code($exit_code) if ($opts{'halt-on-error'});
         }
         print "\n\n" unless $self->{quiet};
     }
+    $self->do_exit_with_error_code(1) unless $overall_success;
 }
 
 sub run_command_clean {
@@ -2253,31 +2267,38 @@ sub resolve_installation_name {
     return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
 
-sub run_command_info {
+sub format_info_output
+{
     my ($self) = @_;
 
-    local $\ = "\n";
+    my $out = '';
 
-    print "Current perl:";
+    $out .= "Current perl:\n";
     if ($self->current_perl) {
-        print "  Name: " . $self->current_env;
-        print "  Path: " . $self->current_perl_executable;
-        print "  Config: " . $self->configure_args( $self->current_perl );
-        print "  Compiled at: ", map {
+        $out .= "  Name: " . $self->current_env . "\n";
+        $out .= "  Path: " . $self->current_perl_executable . "\n";
+        $out .= "  Config: " . $self->configure_args( $self->current_perl ) . "\n";
+        $out .= join('', "  Compiled at: ", (map {
             /  Compiled at (.+)\n/ ? $1 : ()
-        } `@{[ $self->current_perl_executable ]} -V`;
+        } `@{[ $self->current_perl_executable ]} -V`), "\n");
     }
     else {
-        print "Using system perl.";
-        print "Shebang: " . $self->system_perl_shebang;
+        $out .= "Using system perl." . "\n";
+        $out .= "Shebang: " . $self->system_perl_shebang . "\n";
     }
 
-    print "\nperlbrew:";
-    print "  version: " . $self->VERSION;
-    print "  ENV:";
+    $out .= "\nperlbrew:\n";
+    $out .= "  version: " . $self->VERSION . "\n";
+    $out .= "  ENV:\n";
     for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
-        print "    $_: " . ($self->env($_)||"");
+        $out .= "    $_: " . ($self->env($_)||"") . "\n";
     }
+    $out;
+}
+
+sub run_command_info {
+    my ($self) = @_;
+    print $self->format_info_output;
 }
 
 
