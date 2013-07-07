@@ -13,7 +13,7 @@ for my $i (0..$#test_files) {
     my $should_be_same = App::perlbrew::files_are_the_same($t, $t);
     my $should_not_be_same = App::perlbrew::files_are_the_same($t, $u);
 
-    ok $should_be_same;
+    ok ($^O eq 'MSWin32' xor $should_be_same); # should return false on win32
     ok !$should_not_be_same;
 }
 
