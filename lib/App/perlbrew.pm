@@ -13,6 +13,7 @@ BEGIN {
     }
 }
 
+use List::Util qw/min/;
 use Config;
 use Getopt::Long ();
 
@@ -79,15 +80,6 @@ sub mkpath {
 sub rmpath {
     require File::Path;
     File::Path::rmtree([@_], 0, 0);
-}
-
-sub min(@) {
-    my @a = @_;
-    my $m = $a[0];
-    for my $x (@a) {
-        $m = $x if $x < $m
-    }
-    return $m;
 }
 
 sub files_are_the_same {
