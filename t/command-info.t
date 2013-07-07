@@ -29,7 +29,7 @@ Current perl:
   Name: perl-5.8.9
   Path: \Q$perl_path\E
   Config: config_args_value
-  Compiled at: ... \\d{2} \\d{4} \\d{1,2}:\\d{2}:\\d{2}
+  Compiled at: ... \\d{1,2} \\d{4} \\d{1,2}:\\d{2}:\\d{2}
 
 perlbrew:
   version: \Q$App::perlbrew::VERSION\E
