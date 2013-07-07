@@ -2266,31 +2266,38 @@ sub resolve_installation_name {
     return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
 
-sub run_command_info {
+sub format_info_output
+{
     my ($self) = @_;
 
-    local $\ = "\n";
+    my $out = '';
 
-    print "Current perl:";
+    $out .= "Current perl:\n";
     if ($self->current_perl) {
-        print "  Name: " . $self->current_env;
-        print "  Path: " . $self->current_perl_executable;
-        print "  Config: " . $self->configure_args( $self->current_perl );
-        print "  Compiled at: ", map {
+        $out .= "  Name: " . $self->current_env . "\n";
+        $out .= "  Path: " . $self->current_perl_executable . "\n";
+        $out .= "  Config: " . $self->configure_args( $self->current_perl ) . "\n";
+        $out .= join('', "  Compiled at: ", (map {
             /  Compiled at (.+)\n/ ? $1 : ()
-        } `@{[ $self->current_perl_executable ]} -V`;
+        } `@{[ $self->current_perl_executable ]} -V`), "\n");
     }
     else {
-        print "Using system perl.";
-        print "Shebang: " . $self->system_perl_shebang;
+        $out .= "Using system perl." . "\n";
+        $out .= "Shebang: " . $self->system_perl_shebang . "\n";
     }
 
-    print "\nperlbrew:";
-    print "  version: " . $self->VERSION;
-    print "  ENV:";
+    $out .= "\nperlbrew:\n";
+    $out .= "  version: " . $self->VERSION . "\n";
+    $out .= "  ENV:\n";
     for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
-        print "    $_: " . ($self->env($_)||"");
+        $out .= "    $_: " . ($self->env($_)||"") . "\n";
     }
+    $out;
+}
+
+sub run_command_info {
+    my ($self) = @_;
+    print $self->format_info_output;
 }
 
 
