@@ -1960,15 +1960,18 @@ sub run_command_exec {
 
 
         if (my $err = $self->do_system_with_exit_code(@ARGV)) {
+            my $exit_code = $err >> 8;
+            # return 255 for case when process was terminated with signal, in that case real exit code is useless and weird
+            $exit_code = 255 if $exit_code > 255;
             $overall_success = 0;
             print "Command terminated with non-zero status.\n" unless $self->{quiet};
 
             print STDERR "Command [" .
                 join(' ', map { /\s/ ? "'$_'" : $_ } @ARGV) . # trying reverse shell escapes - quote arguments containing spaces
-                "] terminated with exit code $err under the following perl environment:\n";
+                "] terminated with exit code $exit_code (\$? = $err) under the following perl environment:\n";
             print STDERR $self->format_info_output;
 
-            $self->do_exit_with_error_code($err) if ($opts{'halt-on-error'});
+            $self->do_exit_with_error_code($exit_code) if ($opts{'halt-on-error'});
         }
         print "\n\n" unless $self->{quiet};
     }

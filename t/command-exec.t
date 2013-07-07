@@ -140,11 +140,11 @@ describe 'exec exit code' => sub {
         App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
             die "simulate exit\n";
         });
-        $app->expects("do_system_with_exit_code")->exactly(1)->returns(7);
+        $app->expects("do_system_with_exit_code")->exactly(1)->returns(7<<8);
         stderr_is sub {
             eval { $app->run; 1; };
         }, <<"OUT";
-Command [perl -E 'somesub 42'] terminated with exit code 7 under the following perl environment:
+Command [perl -E 'somesub 42'] terminated with exit code 7 (\$? = 1792) under the following perl environment:
 format_info_output_value
 OUT
     };
@@ -163,7 +163,7 @@ OUT
                 is $code, 1; # exit with error, but don't propogate exact failure codes
                 die "simulate exit\n";
             });
-            $app->expects("do_system_with_exit_code")->exactly(1)->returns(3);
+            $app->expects("do_system_with_exit_code")->exactly(1)->returns(3<<8);
             ok !eval { $app->run; 1; };
             is $@, "simulate exit\n";
         };
@@ -179,7 +179,7 @@ OUT
                 $app->expects("do_system_with_exit_code")->exactly(1)->returns(sub { # make sure second call to exec is made
                     0; # second call is success
                 });
-                3; # first exec failed
+                3<<8; # first exec failed
             });
             ok !eval { $app->run; 1; };
             is $@, "simulate exit\n";
@@ -200,7 +200,20 @@ OUT
                 is $code, 3;
                 die "simulate exit\n";
             });
-            $app->expects("do_system_with_exit_code")->exactly(1)->returns(3);
+            $app->expects("do_system_with_exit_code")->exactly(1)->returns(3<<8);
+            ok !eval { $app->run; 1; };
+            is $@, "simulate exit\n";
+
+        };
+        it "should exit with code 255 if program terminated with signal or something" => sub {
+            my $app = App::perlbrew->new(qw(exec --halt-on-error --with), "perl-5.14.1", qw(perl -E), "say 42");
+            $app->expects("format_info_output")->exactly(1)->returns('');
+            App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
+                my ($self, $code) = @_;
+                is $code, 255;
+                die "simulate exit\n";
+            });
+            $app->expects("do_system_with_exit_code")->exactly(1)->returns(-1);
             ok !eval { $app->run; 1; };
             is $@, "simulate exit\n";
 
@@ -215,7 +228,7 @@ OUT
             });
             $app->expects("do_system_with_exit_code")->exactly(1)->returns(sub {
                 $app->expects("do_system_with_exit_code")->exactly(1)->returns(sub {
-                    7;
+                    7<<8;
                 });
                 0;
             });
