@@ -1918,7 +1918,7 @@ sub run_command_exec {
     local (@ARGV) = @{$self->{original_argv}};
 
     Getopt::Long::Configure ('require_order');
-    my @command_options = ('with=s');
+    my @command_options = ('with=s', 'halt-on-error');
 
     $self->parse_cmdline (\%opts, @command_options);
     shift @ARGV; # "exec"
@@ -1945,6 +1945,7 @@ sub run_command_exec {
         print "No perl installation found.\n" unless $self->{quiet};
     }
 
+    my $overall_success = 1;
     for my $i ( @exec_with ) {
         next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
@@ -1956,12 +1957,16 @@ sub run_command_exec {
         local $ENV{PERL5LIB} = $env{PERL5LIB} || "";
 
         print "$i->{name}\n==========\n" unless $self->{quiet};
+
+
         if (my $err = $self->do_system_with_exit_code(@ARGV)) {
+            $overall_success = 0;
             print "Command terminated with non-zero status.\n" unless $self->{quiet};
-            $self->do_exit_with_error_code($err);
+            $self->do_exit_with_error_code($err) if ($opts{'halt-on-error'});
         }
         print "\n\n" unless $self->{quiet};
     }
+    $self->do_exit_with_error_code(1) unless $overall_success;
 }
 
 sub run_command_clean {
