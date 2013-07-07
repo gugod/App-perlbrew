@@ -1402,9 +1402,19 @@ sub do_install_program_from_url {
     print "\n$program_name is installed to\n\n    $out\n\n" unless $self->{quiet};
 }
 
+sub do_exit_with_error_code {
+  my ($self, $code) = @_;
+  exit($code);
+}
+
+sub do_system_with_exit_code {
+  my ($self, @cmd) = @_;
+  return system(@cmd);
+}
+
 sub do_system {
   my ($self, @cmd) = @_;
-  return ! system(@cmd);
+  return ! $self->do_system_with_exit_code(@cmd);
 }
 
 sub do_capture {
@@ -1946,7 +1956,10 @@ sub run_command_exec {
         local $ENV{PERL5LIB} = $env{PERL5LIB} || "";
 
         print "$i->{name}\n==========\n" unless $self->{quiet};
-        $self->do_system(@ARGV);
+        if (my $err = $self->do_system_with_exit_code(@ARGV)) {
+            print "Command terminated with non-zero status.\n" unless $self->{quiet};
+            $self->do_exit_with_error_code($err);
+        }
         print "\n\n" unless $self->{quiet};
     }
 }

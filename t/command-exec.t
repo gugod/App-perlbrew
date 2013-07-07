@@ -19,7 +19,7 @@ describe 'perlbrew exec perl -E "say 42"' => sub {
 
         my @perls = $app->installed_perls;
 
-        $app->expects("do_system")->exactly(4)->returns(
+        $app->expects("do_system_with_exit_code")->exactly(4)->returns(
             sub {
                 my ($self, @args) = @_;
 
@@ -44,7 +44,7 @@ describe 'perlbrew exec --with perl-5.12.3 perl -E "say 42"' => sub {
     it "invokes perl-5.12.3/bin/perl" => sub {
         my $app = App::perlbrew->new(qw(exec --with perl-5.12.3 perl -E), "say 42");
 
-        $app->expects("do_system")->returns(
+        $app->expects("do_system_with_exit_code")->returns(
             sub {
                 my ($self, @args) = @_;
 
@@ -68,7 +68,7 @@ describe 'perlbrew exec --with perl-5.14.1,perl-5.12.3,perl-5.14.2 perl -E "say 
         my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 perl-5.12.3 perl-5.14.2", qw(perl -E), "say 42");
 
         my @perl_paths;
-        $app->expects("do_system")->exactly(3)->returns(
+        $app->expects("do_system_with_exit_code")->exactly(3)->returns(
             sub {
                 my ($self, @args) = @_;
                 my ($perlbrew_bin_path, $perlbrew_perl_bin_path, @paths) = split(":", $ENV{PATH});
@@ -92,7 +92,7 @@ describe 'perlbrew exec --with perl-5.14.1,perl-foobarbaz, ' => sub {
         my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 perl-foobarbaz", qw(perl -E), "say 42");
 
         my @perl_paths;
-        $app->expects("do_system")->returns(
+        $app->expects("do_system_with_exit_code")->returns(
             sub {
                 my ($self, @args) = @_;
                 my ($perlbrew_bin_path, $perlbrew_perl_bin_path, @paths) = split(":", $ENV{PATH});
@@ -114,7 +114,7 @@ describe 'perlbrew exec --with perl-5.14.1,5.14.1 ' => sub {
         my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 5.14.1", qw(perl -E), "say 42");
 
         my @perl_paths;
-        $app->expects("do_system")->exactly(2)->returns(
+        $app->expects("do_system_with_exit_code")->exactly(2)->returns(
             sub {
                 my ($self, @args) = @_;
                 my ($perlbrew_bin_path, $perlbrew_perl_bin_path, @paths) = split(":", $ENV{PATH});
@@ -129,6 +129,39 @@ describe 'perlbrew exec --with perl-5.14.1,5.14.1 ' => sub {
             file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
             file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
         ];
+    };
+};
+
+describe 'exec exit code' => sub {
+    it "should exit with error code " => sub {
+        my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1", qw(perl -E), "say 42");
+        my @perl_paths;
+        App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
+            my ($self, $code) = @_;
+            is $code, 3;
+            die "simulate exit\n";
+        });
+        $app->expects("do_system_with_exit_code")->exactly(1)->returns(3);
+        ok !eval { $app->run; 1; };
+        is $@, "simulate exit\n";
+
+    };
+    it "should exit with error code when several perls ran" => sub {
+        my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 perl-5.14.1", qw(perl -E), "say 42");
+        App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
+            my ($self, $code) = @_;
+            is $code, 7;
+            die "simulate exit\n";
+        });
+        $app->expects("do_system_with_exit_code")->exactly(1)->returns(sub {
+            $app->expects("do_system_with_exit_code")->exactly(1)->returns(sub {
+                7;
+            });
+            0;
+        });
+        ok !eval { $app->run; 1; };
+        is $@, "simulate exit\n";
+
     };
 };
 
