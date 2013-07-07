@@ -7,13 +7,14 @@ use App::perlbrew;
 require 'test_helpers.pl';
 
 use Test::Spec;
+use Test::Output;
 
 mock_perlbrew_install("perl-5.12.3");
 mock_perlbrew_install("perl-5.12.4");
 mock_perlbrew_install("perl-5.14.1");
 mock_perlbrew_install("perl-5.14.2");
 
-xdescribe 'perlbrew exec perl -E "say 42"' => sub {
+describe 'perlbrew exec perl -E "say 42"' => sub {
     it "invokes all perls" => sub {
         my $app = App::perlbrew->new(qw(exec perl -E), "say 42");
 
@@ -40,7 +41,7 @@ xdescribe 'perlbrew exec perl -E "say 42"' => sub {
     };
 };
 
-xdescribe 'perlbrew exec --with perl-5.12.3 perl -E "say 42"' => sub {
+describe 'perlbrew exec --with perl-5.12.3 perl -E "say 42"' => sub {
     it "invokes perl-5.12.3/bin/perl" => sub {
         my $app = App::perlbrew->new(qw(exec --with perl-5.12.3 perl -E), "say 42");
 
@@ -63,7 +64,7 @@ xdescribe 'perlbrew exec --with perl-5.12.3 perl -E "say 42"' => sub {
     };
 };
 
-xdescribe 'perlbrew exec --with perl-5.14.1,perl-5.12.3,perl-5.14.2 perl -E "say 42"' => sub {
+describe 'perlbrew exec --with perl-5.14.1,perl-5.12.3,perl-5.14.2 perl -E "say 42"' => sub {
     it "invokes each perl in the specified order" => sub {
         my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 perl-5.12.3 perl-5.14.2", qw(perl -E), "say 42");
 
@@ -87,7 +88,7 @@ xdescribe 'perlbrew exec --with perl-5.14.1,perl-5.12.3,perl-5.14.2 perl -E "say
     };
 };
 
-xdescribe 'perlbrew exec --with perl-5.14.1,perl-foobarbaz, ' => sub {
+describe 'perlbrew exec --with perl-5.14.1,perl-foobarbaz, ' => sub {
     it "ignore the unrecognized 'perl-foobarbaz'" => sub {
         my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 perl-foobarbaz", qw(perl -E), "say 42");
 
@@ -109,7 +110,7 @@ xdescribe 'perlbrew exec --with perl-5.14.1,perl-foobarbaz, ' => sub {
     };
 };
 
-xdescribe 'perlbrew exec --with perl-5.14.1,5.14.1 ' => sub {
+describe 'perlbrew exec --with perl-5.14.1,5.14.1 ' => sub {
     it "exec 5.14.1 twice, since that is what is specified" => sub {
         my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 5.14.1", qw(perl -E), "say 42");
 
@@ -133,17 +134,30 @@ xdescribe 'perlbrew exec --with perl-5.14.1,5.14.1 ' => sub {
 };
 
 describe 'exec exit code' => sub {
+    describe "logging" => sub {
+        my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1", qw(perl -E), "somesub 42");
+        $app->expects("format_info_output")->exactly(1)->returns("format_info_output_value\n");
+        App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
+            die "simulate exit\n";
+        });
+        $app->expects("do_system_with_exit_code")->exactly(1)->returns(7);
+        stderr_is sub {
+            eval { $app->run; 1; };
+        }, <<"OUT";
+Command [perl -E 'somesub 42'] terminated with exit code 7 under the following perl environment:
+format_info_output_value
+OUT
+    };
     describe "no halt-on-error" => sub {
         it "should exit with success code when several perls ran" => sub {
             my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 perl-5.14.1", qw(perl -E), "say 42");
-            my @perl_paths;
             App::perlbrew->expects("do_exit_with_error_code")->never;
             $app->expects("do_system_with_exit_code")->exactly(2)->returns(0);
             $app->run;
         };
         it "should exit with error code " => sub {
             my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1", qw(perl -E), "say 42");
-            my @perl_paths;
+            $app->expects("format_info_output")->exactly(1)->returns('');
             App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
                 my ($self, $code) = @_;
                 is $code, 1; # exit with error, but don't propogate exact failure codes
@@ -152,10 +166,10 @@ describe 'exec exit code' => sub {
             $app->expects("do_system_with_exit_code")->exactly(1)->returns(3);
             ok !eval { $app->run; 1; };
             is $@, "simulate exit\n";
-
         };
         it "should exit with error code when several perls ran" => sub {
             my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1 perl-5.14.1", qw(perl -E), "say 42");
+            $app->expects("format_info_output")->exactly(1)->returns('');
             App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
                 my ($self, $code) = @_;
                 is $code, 1; # exit with error, but don't propogate exact failure codes
@@ -174,14 +188,13 @@ describe 'exec exit code' => sub {
     describe "halt-on-error" => sub {
         it "should exit with success code " => sub {
             my $app = App::perlbrew->new(qw(exec --halt-on-error --with), "perl-5.14.1", qw(perl -E), "say 42");
-            my @perl_paths;
             App::perlbrew->expects("do_exit_with_error_code")->never;
             $app->expects("do_system_with_exit_code")->exactly(1)->returns(0);
             $app->run;
         };
         it "should exit with error code " => sub {
             my $app = App::perlbrew->new(qw(exec --halt-on-error --with), "perl-5.14.1", qw(perl -E), "say 42");
-            my @perl_paths;
+            $app->expects("format_info_output")->exactly(1)->returns('');
             App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
                 my ($self, $code) = @_;
                 is $code, 3;
@@ -194,6 +207,7 @@ describe 'exec exit code' => sub {
         };
         it "should exit with error code when several perls ran" => sub {
             my $app = App::perlbrew->new(qw(exec --halt-on-error --with), "perl-5.14.1 perl-5.14.1", qw(perl -E), "say 42");
+            $app->expects("format_info_output")->exactly(1)->returns('');
             App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
                 my ($self, $code) = @_;
                 is $code, 7;
