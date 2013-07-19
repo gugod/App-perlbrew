@@ -1436,17 +1436,19 @@ sub installed_perls {
     for (<$root/perls/*>) {
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         my $executable = joinpath($_, 'bin', 'perl');
+        my $orig_version = `$executable -e 'print \$]'`;
 
         push @result, {
             name        => $name,
-            version     => $self->format_perl_version(`$executable -e 'print \$]'`),
+            orig_version=> $orig_version,
+            version     => $self->format_perl_version($orig_version),
             is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
             libs => [ $self->local_libs($name) ],
             executable  => $executable
         };
     }
 
-    return @result;
+    return sort { $a->{orig_version} <=> $b->{orig_version} or $a->{name} cmp $b->{name}  } @result;
 }
 
 sub local_libs {
