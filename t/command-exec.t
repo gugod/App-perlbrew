@@ -135,18 +135,20 @@ describe 'perlbrew exec --with perl-5.14.1,5.14.1 ' => sub {
 
 describe 'exec exit code' => sub {
     describe "logging" => sub {
-        my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1", qw(perl -E), "somesub 42");
-        $app->expects("format_info_output")->exactly(1)->returns("format_info_output_value\n");
-        App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
-            die "simulate exit\n";
-        });
-        $app->expects("do_system_with_exit_code")->exactly(1)->returns(7<<8);
-        stderr_is sub {
-            eval { $app->run; 1; };
-        }, <<"OUT";
+        it "should work" => sub {
+            my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1", qw(perl -E), "somesub 42");
+            $app->expects("format_info_output")->exactly(1)->returns("format_info_output_value\n");
+            App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
+                die "simulate exit\n";
+            });
+            $app->expects("do_system_with_exit_code")->exactly(1)->returns(7<<8);
+            stderr_is sub {
+                eval { $app->run; 1; };
+            }, <<"OUT";
 Command [perl -E 'somesub 42'] terminated with exit code 7 (\$? = 1792) under the following perl environment:
 format_info_output_value
 OUT
+        }
     };
     describe "no halt-on-error" => sub {
         it "should exit with success code when several perls ran" => sub {
