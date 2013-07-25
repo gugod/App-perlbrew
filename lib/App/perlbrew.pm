@@ -50,7 +50,10 @@ my @flavors = ( { d_option => 'usethreads',
                   opt      => '64all' },
 
                 { d_option => 'DEBUGGING',
-                  opt      => 'debug' }
+                  opt      => 'debug' },
+
+                { d_option => 'cc=clang',
+                  opt      => 'clang' },
               );
 
 
