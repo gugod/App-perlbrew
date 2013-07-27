@@ -3,18 +3,23 @@ use strict;
 use warnings;
 use 5.008;
 our $VERSION = "0.64";
+use Config;
 
 BEGIN {
-    ### Special treat for Cwd to prevent it to be loaded from a local::lib dir that is not binary-compatible with system perl.
-    if (my $perl5lib = $ENV{PERL5LIB}) {
-        delete $ENV{PERL5LIB};
-        require Cwd;
-        $ENV{PERL5LIB} = $perl5lib;
-    }
+    # Special treat for Cwd to prevent it to be loaded from somewhere binary-incompatible with system perl.
+    my @oldinc = @INC;
+
+    @INC = (
+        $Config{sitelibexp}."/".$Config{archname},
+        $Config{sitelibexp},
+        @Config{qw<archlibexp privlibexp>},
+    );
+
+    require Cwd;
+    @INC = @oldinc;
 }
 
 use List::Util qw/min/;
-use Config;
 use Getopt::Long ();
 
 ### global variables
