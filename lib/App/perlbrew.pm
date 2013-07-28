@@ -146,11 +146,12 @@ sub files_are_the_same {
     sub http_user_agent_command {
         my ($purpose, $params) = @_;
         my $ua = http_user_agent_program;
-        my $tmpl = $ua . " " . $commands{ $ua }->{ $purpose };
+        my $cmd = $ua . " " . $commands{ $ua }->{ $purpose };
         for (keys %$params) {
-            $tmpl =~ s!{$_}!$params->{$_}!g;
+            $cmd =~ s!{$_}!$params->{$_}!g;
         }
-        return $tmpl;
+        return ($ua, $cmd) if wantarray;
+        return $cmd;
     }
 
     sub http_download {
@@ -170,7 +171,6 @@ sub files_are_the_same {
         return 1;
     }
 
-    my @command;
     sub http_get {
         my ($url, $header, $cb) = @_;
 
@@ -179,26 +179,7 @@ sub files_are_the_same {
             $header = undef;
         }
 
-        if (! @command) {
-            my @commands = (
-                # curl's --fail option makes the exit code meaningful
-                [qw( curl --silent --location --fail )],
-                [qw( wget --quiet -O - )],
-                [qw( fetch -o - )],
-            );
-            for my $command (@commands) {
-                my $program = $command->[0];
-                my $code = system("$program --version >/dev/null 2>&1") >> 8;
-                if ($code != 127) {
-                    @command = @$command;
-                    last;
-                }
-            }
-            die "You have to install either curl or wget\n"
-                unless @command;
-        }
-
-        my $command = http_user_agent_command( get => { url =>  $url } );
+        my ($program, $command) = http_user_agent_command( get => { url =>  $url } );
 
         open my $fh, '-|', $command
             or die "open() for '$command': $!";
@@ -206,14 +187,15 @@ sub files_are_the_same {
         local $/;
         my $body = <$fh>;
         close $fh;
+
         die 'Page not retrieved; HTTP error code 400 or above.'
-            if $command[0] eq 'curl' # Exit code is 22 on 404s etc
+            if $program eq 'curl' # Exit code is 22 on 404s etc
             and $? >> 8 == 22; # exit code is packed into $?; see perlvar
         die 'Page not retrieved: fetch failed.'
-            if $command[0] eq 'fetch' # Exit code is not 0 on error
+            if $program eq 'fetch' # Exit code is not 0 on error
             and $?;
         die 'Server issued an error response.'
-            if $command[0] eq 'wget' # Exit code is 8 on 404s etc
+            if $program eq 'wget' # Exit code is 8 on 404s etc
             and $? >> 8 == 8;
 
         return $cb ? $cb->($body) : $body;

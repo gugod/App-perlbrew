@@ -17,6 +17,26 @@ REASON
 my $ua = App::perlbrew::http_user_agent_program();
 note "User agent program = $ua";
 
+describe "App::perlbrew::http_get function" => sub {
+    my ($output);
+
+    before all => sub {
+        App::perlbrew::http_get(
+            "http://get.perlbrew.pl",
+            undef,
+            sub { $output = $_[0]; }
+        );
+    };
+
+    it "calls the callback to assign content to \$output", sub {
+       ok defined($output) && length($output) > 0;
+    };
+
+    it "seems to download the correct content", sub {
+        ok $output =~ m<\A #!/usr/bin/perl\n >x;
+        ok $output =~ m< \$fatpacked{"App/perlbrew.pm"} >x;
+    };
+};
 
 describe "App::perlbrew::http_download function, downloading the perlbrew-installer." => sub {
     my ($dir, $output);
