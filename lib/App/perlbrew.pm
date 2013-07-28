@@ -108,6 +108,68 @@ sub files_are_the_same {
 }
 
 {
+    my %commands = (
+        curl => {
+            test     => '--version >/dev/null 2>&1',
+            get      => 'curl --silent --location --fail',
+            download => 'curl --silent --location --fail -o {output} {url}'
+        },
+        wget => {
+            test     => '--version >/dev/null 2>&1',
+            get      => '--quiet -O - {url}',
+            download => '--quiet -O {output} {url}',
+        },
+        fetch => {
+            fetch    => '--version >/dev/null 2>&1',
+            get      => '-o - {url}',
+            download => '{url}'
+        }
+    );
+
+    sub http_user_agent_program {
+        my $program;
+        for my $p (keys %commands) {
+            my $code = system("$p $commands{$p}->{test}") >> 8;
+            if ($code != 127) {
+                $program = $p;
+                last;
+            }
+        }
+
+        unless($program) {
+            die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
+        }
+
+        return $program;
+    }
+
+    sub http_user_agent_command {
+        my ($purpose, $params) = @_;
+        my $ua = http_user_agent_program;
+        my $tmpl = $ua . " " . $commands{ $ua }->{ $purpose };
+        for (keys %$params) {
+            $tmpl =~ s!{$_}!$params->{$_}!g;
+        }
+        return $tmpl;
+    }
+
+    sub http_download {
+        my ($url, $header, $path) = @_;
+
+        if (-e $path) {
+            die "ERROR: The download target < $path > already exists.\n";
+        }
+
+        my $download_command = http_user_agent_command( download => { url => $url, output => $path } );
+
+        my $status = system($download_command);
+        unless ($status == 0) {
+            die "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
+        }
+
+        return 1;
+    }
+
     my @command;
     sub http_get {
         my ($url, $header, $cb) = @_;
@@ -136,8 +198,10 @@ sub files_are_the_same {
                 unless @command;
         }
 
-        open my $fh, '-|', @command, $url
-            or die "open() for '@command $url': $!";
+        my $command = http_user_agent_command( get => { url =>  $url } );
+
+        open my $fh, '-|', $command
+            or die "open() for '$command': $!";
 
         local $/;
         my $body = <$fh>;
