@@ -218,6 +218,7 @@ Options for C<install> command:
        --64all     Build perl with use64bitall enabled
        --ld        Build perl with uselongdouble enabled
        --debug     Build perl with DEBUGGING enabled
+       --clang     Build perl using the clang compiler
 
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
@@ -239,7 +240,7 @@ C<install-multiple> accepts the same set of options as the command
 C<install> plus the following ones:
 
     --both $flavor       Where $flavor is one of C<thread>, C<multi>, C<ld>,
-                         C<64int>, C<64all> and C<debug>.
+                         C<64int>, C<64all>, C<debug> and C<clang>.
 
                          For every given perl version, install two
                          flavors, one with the flag C<--$flavor> set
@@ -251,6 +252,8 @@ C<install> plus the following ones:
     --common-variations  equivalent to C<--both thread --both ld --both 64int>
 
     --all-variations     generates all the possible flavor combinations
+
+    --append $string     Appends the given string to the generated names
 
 For instance:
 
@@ -269,6 +272,11 @@ Installs the following perls:
 
 (note that the C<multi> flavor is selected automatically because
 C<thread> requires it)
+
+Another example using custom compilation flags:
+
+    perlbrew install-multiple 5.18.0 --both thread -Doptimize='-O3' --append='-O3'
+
 
 =head1 COMMAND: UNINSTALL
 

@@ -1,3 +1,8 @@
+0.65: # 2013-08-01T07:19:03+0200
+- exec command: error hadndling improvements. Thanks to @vsespb.
+- install command: add "--clang" option. Thanks to @salva
+- various bug fixes. thanks to @ironcamel and @gottreu
+
 0.64: # 2013-06-02T09:44:59+0200
 - The build directory is removed before a new build.
 - New command: `install-multiple`

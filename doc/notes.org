@@ -22,66 +22,7 @@ If ~/.perlbrew/init is missing, it is the same as perlbrew is not in effect.
     perl version 5.14.2, installed at $PERLBREW_ROOT/perls/perl-5.14.2
 
     #Show the platform section of `perl -V`
-    #Show the value of `Compiled at` from `perl -V`
-
-* local::lib integration
-
-  perlbrew users, who might not have permissions to write $PERLBREW_ROOT, should
-  be able to use local::lib integration just fine.
-
-  The command name of choice is `lib` (instead of something like `locallib` or
-  `local-lib`, because I like it shorter.)
-
-  Synopsis
-
-    $ perlbrew use 5.14.2
-
-    $ perlbrew lib create nobita shizuka
-    lib 'perl-5.14.2@nobita' is created.
-    lib 'perl-5.14.2@shizuka' is created.
-
-    $ perlbrew lib create perl-5.14.1@nobita  perl-5.12.3@shizuka
-    lib 'perl-5.14.1@nobita' is created.
-    lib 'perl-5.12.3@shizuka' is created.
-
-    $ perlbrew lib delete nobita 5.12.3@shizuka
-    lib `perl-5.14.2@nobita` deleted
-    lib `perl-5.12.3@shizuka` deleted
-
-    $ perlbrew use perl-5.14.2@nobita
-    $ cpan Acme::Bleach     # installs moduels to nobita
-    $ cpan App::Ack         # installs executables to nobita
-
-    $ perlbrew switch perl-5.14.2@shizuka
-    $ cpan Acme::Bleach     # installs moduels to shizuka
-
-    $ perlbrew use 5.14.2   # A local::lib-less base state.
-
-Notice that you can give those libs the same name under different perl
-installations, but that does not mean they are automatically related. The name
-is merely a token for you to memorize for whatever you'll likely be installing
-into it. You may named it after your project name for that's a good convention.
-
-** Under
-
-After doing this:
-
-    $ perlbrew use 5.14.2
-    $ perlbrew lib create nobita
-
-A local::lib root is create at:
-
-    $PERLBREW_HOME/libs/perl-5.14.2@nobita
-
-After doing `perlbrew use 5.14.2@nobita` (or `switch`), env vars are altered to
-have the same value as the output of:
-
-    perl -Mlocal::lib=$PERLBREW_HOME/libs/perl-5.14.2@nobita
-
-which should alter PERL_LOCAL_LIB_ROOT, PERL_MB_OPT, PERL_MM_OPT, PERL5LIB, and PATH.
-
-The old value of PERL5LIB and PATH should be kept at the end of new value, like
-what local::lib did.
+    [x] Show the value of `Compiled at` from `perl -V`
 
 * When it is installed with cpan
   - `which perlbrew` is, most likely, not equal to "$PERLBREW_ROOT/bin/perlbrew"

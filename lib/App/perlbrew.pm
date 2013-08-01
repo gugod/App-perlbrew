@@ -2,18 +2,24 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.64";
+our $VERSION = "0.65";
+use Config;
 
 BEGIN {
-    ### Special treat for Cwd to prevent it to be loaded from a local::lib dir that is not binary-compatible with system perl.
-    if (my $perl5lib = $ENV{PERL5LIB}) {
-        delete $ENV{PERL5LIB};
-        require Cwd;
-        $ENV{PERL5LIB} = $perl5lib;
-    }
+    # Special treat for Cwd to prevent it to be loaded from somewhere binary-incompatible with system perl.
+    my @oldinc = @INC;
+
+    @INC = (
+        $Config{sitelibexp}."/".$Config{archname},
+        $Config{sitelibexp},
+        @Config{qw<archlibexp privlibexp>},
+    );
+
+    require Cwd;
+    @INC = @oldinc;
 }
 
-use Config;
+use List::Util qw/min/;
 use Getopt::Long ();
 
 ### global variables
@@ -49,7 +55,10 @@ my @flavors = ( { d_option => 'usethreads',
                   opt      => '64all' },
 
                 { d_option => 'DEBUGGING',
-                  opt      => 'debug' }
+                  opt      => 'debug' },
+
+                { d_option => 'cc=clang',
+                  opt      => 'clang' },
               );
 
 
@@ -81,15 +90,6 @@ sub rmpath {
     File::Path::rmtree([@_], 0, 0);
 }
 
-sub min(@) {
-    my @a = @_;
-    my $m = $a[0];
-    for my $x (@a) {
-        $m = $x if $x < $m
-    }
-    return $m;
-}
-
 sub files_are_the_same {
     ## Check dev and inode num. Not useful on Win32.
     ## The for loop should always return false on Win32, as a result.
@@ -108,7 +108,69 @@ sub files_are_the_same {
 }
 
 {
-    my @command;
+    my %commands = (
+        curl => {
+            test     => '--version >/dev/null 2>&1',
+            get      => 'curl --silent --location --fail',
+            download => 'curl --silent --location --fail -o {output} {url}'
+        },
+        wget => {
+            test     => '--version >/dev/null 2>&1',
+            get      => '--quiet -O - {url}',
+            download => '--quiet -O {output} {url}',
+        },
+        fetch => {
+            fetch    => '--version >/dev/null 2>&1',
+            get      => '-o - {url}',
+            download => '{url}'
+        }
+    );
+
+    sub http_user_agent_program {
+        my $program;
+        for my $p (keys %commands) {
+            my $code = system("$p $commands{$p}->{test}") >> 8;
+            if ($code != 127) {
+                $program = $p;
+                last;
+            }
+        }
+
+        unless($program) {
+            die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
+        }
+
+        return $program;
+    }
+
+    sub http_user_agent_command {
+        my ($purpose, $params) = @_;
+        my $ua = http_user_agent_program;
+        my $cmd = $ua . " " . $commands{ $ua }->{ $purpose };
+        for (keys %$params) {
+            $cmd =~ s!{$_}!$params->{$_}!g;
+        }
+        return ($ua, $cmd) if wantarray;
+        return $cmd;
+    }
+
+    sub http_download {
+        my ($url, $header, $path) = @_;
+
+        if (-e $path) {
+            die "ERROR: The download target < $path > already exists.\n";
+        }
+
+        my $download_command = http_user_agent_command( download => { url => $url, output => $path } );
+
+        my $status = system($download_command);
+        unless ($status == 0) {
+            die "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
+        }
+
+        return 1;
+    }
+
     sub http_get {
         my ($url, $header, $cb) = @_;
 
@@ -117,39 +179,23 @@ sub files_are_the_same {
             $header = undef;
         }
 
-        if (! @command) {
-            my @commands = (
-                # curl's --fail option makes the exit code meaningful
-                [qw( curl --silent --location --fail )],
-                [qw( wget --quiet -O - )],
-                [qw( fetch -o - )],
-            );
-            for my $command (@commands) {
-                my $program = $command->[0];
-                my $code = system("$program --version >/dev/null 2>&1") >> 8;
-                if ($code != 127) {
-                    @command = @$command;
-                    last;
-                }
-            }
-            die "You have to install either curl or wget\n"
-                unless @command;
-        }
+        my ($program, $command) = http_user_agent_command( get => { url =>  $url } );
 
-        open my $fh, '-|', @command, $url
-            or die "open() for '@command $url': $!";
+        open my $fh, '-|', $command
+            or die "open() for '$command': $!";
 
         local $/;
         my $body = <$fh>;
         close $fh;
+
         die 'Page not retrieved; HTTP error code 400 or above.'
-            if $command[0] eq 'curl' # Exit code is 22 on 404s etc
+            if $program eq 'curl' # Exit code is 22 on 404s etc
             and $? >> 8 == 22; # exit code is packed into $?; see perlvar
         die 'Page not retrieved: fetch failed.'
-            if $command[0] eq 'fetch' # Exit code is not 0 on error
+            if $program eq 'fetch' # Exit code is not 0 on error
             and $?;
         die 'Server issued an error response.'
-            if $command[0] eq 'wget' # Exit code is 8 on 404s etc
+            if $program eq 'wget' # Exit code is 8 on 404s etc
             and $? >> 8 == 8;
 
         return $cb ? $cb->($body) : $body;
@@ -209,6 +255,7 @@ sub new {
         noman => '',
         variation => '',
         both => [],
+	append => '',
     );
 
     $opt{$_} = '' for keys %flavor;
@@ -251,6 +298,7 @@ sub parse_cmdline {
         'quiet|q!',
         'verbose|v',
         'as=s',
+	'append=s',
         'help|h',
         'version',
         'root=s',
@@ -988,7 +1036,7 @@ sub run_command_install {
         my $version = ($1 eq 'stable' ? $self->resolve_stable_version : $1);
         $dist = "perl-$version"; # normalize dist name
 
-        my $installation_name = ($self->{as} || $dist) . $self->{variation};
+        my $installation_name = ($self->{as} || $dist) . $self->{variation} . $self->{append};
         if (not $self->{force} and $self->is_installed( $installation_name )) {
             die "\nABORT: $installation_name is already installed.\n\n";
         }
@@ -1062,8 +1110,11 @@ sub check_and_calculate_variations {
     @var = map { join '-', '', sort { $flavor{$a}{ix} <=> $flavor{$b}{ix} } grep length, split /-+/, $_ } @var;
     s/(\b\w+\b)(?:-\1)+/$1/g for @var; # remove duplicate flavors
 
-    if ($Config::Config{archname64} eq '') {
-        # this is a 64bit platform. 64int and 64all are always set but
+    # After inspecting perl Configure script this seems to be the most
+    # reliable heuristic to determine if perl would have 64bit IVs by
+    # default or not:
+    if ($Config::Config{longsize} >= 8) {
+        # We are in a 64bit platform. 64int and 64all are always set but
         # we don't want them to appear on the final perl name
         s/-64\w+//g for @var;
     }
@@ -1089,7 +1140,7 @@ sub run_command_install_multiple {
     my @variations = $self->check_and_calculate_variations;
     print join("\n",
                "Compiling the following distributions:",
-               map("    $_", @dists),
+               map("    $_$self->{append}", @dists),
                "  with the following variations:",
                map((/-(.*)/ ? "    $1" : "    default"), @variations),
                "", "");
@@ -1215,16 +1266,17 @@ sub do_install_this {
     my ($self, $dist_extracted_dir, $dist_version, $installation_name) = @_;
 
     my $variation = $self->{variation};
+    my $append = $self->{append};
 
     $self->{dist_extracted_dir} = $dist_extracted_dir;
-    $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}.log");
+    $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}${append}.log");
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
     $installation_name = $self->{as} if $self->{as};
-    $installation_name .= $variation;
+    $installation_name .= "$variation$append";
 
     $self->{installation_name} = $installation_name;
 
@@ -1396,9 +1448,19 @@ sub do_install_program_from_url {
     print "\n$program_name is installed to\n\n    $out\n\n" unless $self->{quiet};
 }
 
+sub do_exit_with_error_code {
+  my ($self, $code) = @_;
+  exit($code);
+}
+
+sub do_system_with_exit_code {
+  my ($self, @cmd) = @_;
+  return system(@cmd);
+}
+
 sub do_system {
   my ($self, @cmd) = @_;
-  return ! system(@cmd);
+  return ! $self->do_system_with_exit_code(@cmd);
 }
 
 sub do_capture {
@@ -1428,17 +1490,19 @@ sub installed_perls {
     for (<$root/perls/*>) {
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         my $executable = joinpath($_, 'bin', 'perl');
+        my $orig_version = `$executable -e 'print \$]'`;
 
         push @result, {
             name        => $name,
-            version     => $self->format_perl_version(`$executable -e 'print \$]'`),
+            orig_version=> $orig_version,
+            version     => $self->format_perl_version($orig_version),
             is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
             libs => [ $self->local_libs($name) ],
             executable  => $executable
         };
     }
 
-    return @result;
+    return sort { $a->{orig_version} <=> $b->{orig_version} or $a->{name} cmp $b->{name}  } @result;
 }
 
 sub local_libs {
@@ -1627,7 +1691,8 @@ WARNINGONMAC
         my $root = $self->root;
         # The user does not source bashrc/csh in their shell initialization.
         $env{PATH}    = $env{PERLBREW_PATH}    . ":" . join ":", grep { !/$root\/bin/ } split ":", $ENV{PATH};
-        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root\/man/ } split ":", $ENV{MANPATH};
+        $env{MANPATH} = $env{PERLBREW_MANPATH} . ":" . join ":", grep { !/$root\/man/ }
+            ( defined($ENV{MANPATH}) ? split(":", $ENV{MANPATH}) : () );
     }
 
     my $command = "env ";
@@ -1901,7 +1966,7 @@ sub run_command_exec {
     local (@ARGV) = @{$self->{original_argv}};
 
     Getopt::Long::Configure ('require_order');
-    my @command_options = ('with=s');
+    my @command_options = ('with=s', 'halt-on-error');
 
     $self->parse_cmdline (\%opts, @command_options);
     shift @ARGV; # "exec"
@@ -1928,6 +1993,7 @@ sub run_command_exec {
         print "No perl installation found.\n" unless $self->{quiet};
     }
 
+    my $overall_success = 1;
     for my $i ( @exec_with ) {
         next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
@@ -1939,9 +2005,25 @@ sub run_command_exec {
         local $ENV{PERL5LIB} = $env{PERL5LIB} || "";
 
         print "$i->{name}\n==========\n" unless $self->{quiet};
-        $self->do_system(@ARGV);
+
+
+        if (my $err = $self->do_system_with_exit_code(@ARGV)) {
+            my $exit_code = $err >> 8;
+            # return 255 for case when process was terminated with signal, in that case real exit code is useless and weird
+            $exit_code = 255 if $exit_code > 255;
+            $overall_success = 0;
+            print "Command terminated with non-zero status.\n" unless $self->{quiet};
+
+            print STDERR "Command [" .
+                join(' ', map { /\s/ ? "'$_'" : $_ } @ARGV) . # trying reverse shell escapes - quote arguments containing spaces
+                "] terminated with exit code $exit_code (\$? = $err) under the following perl environment:\n";
+            print STDERR $self->format_info_output;
+
+            $self->do_exit_with_error_code($exit_code) if ($opts{'halt-on-error'});
+        }
         print "\n\n" unless $self->{quiet};
     }
+    $self->do_exit_with_error_code(1) unless $overall_success;
 }
 
 sub run_command_clean {
@@ -2241,28 +2323,38 @@ sub resolve_installation_name {
     return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
 
-sub run_command_info {
+sub format_info_output
+{
     my ($self) = @_;
 
-    local $\ = "\n";
+    my $out = '';
 
-    print "Current perl:";
+    $out .= "Current perl:\n";
     if ($self->current_perl) {
-        print "  Name: " . $self->current_env;
-        print "  Path: " . $self->current_perl_executable;
-        print "  Config: " . $self->configure_args( $self->current_perl );
+        $out .= "  Name: " . $self->current_env . "\n";
+        $out .= "  Path: " . $self->current_perl_executable . "\n";
+        $out .= "  Config: " . $self->configure_args( $self->current_perl ) . "\n";
+        $out .= join('', "  Compiled at: ", (map {
+            /  Compiled at (.+)\n/ ? $1 : ()
+        } `@{[ $self->current_perl_executable ]} -V`), "\n");
     }
     else {
-        print "Using system perl.";
-        print "Shebang: " . $self->system_perl_shebang;
+        $out .= "Using system perl." . "\n";
+        $out .= "Shebang: " . $self->system_perl_shebang . "\n";
     }
 
-    print "\nperlbrew:";
-    print "  version: " . $self->VERSION;
-    print "  ENV:";
+    $out .= "\nperlbrew:\n";
+    $out .= "  version: " . $self->VERSION . "\n";
+    $out .= "  ENV:\n";
     for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
-        print "    $_: " . ($self->env($_)||"");
+        $out .= "    $_: " . ($self->env($_)||"") . "\n";
     }
+    $out;
+}
+
+sub run_command_info {
+    my ($self) = @_;
+    print $self->format_info_output;
 }
 
 
@@ -2448,7 +2540,7 @@ perlbrew_bin_path="${PERLBREW_ROOT}/bin"
 if [[ -f $perlbrew_bin_path/perlbrew ]]; then
     perlbrew_command="$perlbrew_bin_path/perlbrew"
 else
-    perlbrew_command="command perlbrew"
+    perlbrew_command="perlbrew"
 fi
 unset perlbrew_bin_path
 
