@@ -111,8 +111,8 @@ sub files_are_the_same {
     my %commands = (
         curl => {
             test     => '--version >/dev/null 2>&1',
-            get      => 'curl --silent --location --fail',
-            download => 'curl --silent --location --fail -o {output} {url}'
+            get      => '--silent --location --fail -o - {url}',
+            download => '--silent --location --fail -o {output} {url}'
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
@@ -120,7 +120,7 @@ sub files_are_the_same {
             download => '--quiet -O {output} {url}',
         },
         fetch => {
-            fetch    => '--version >/dev/null 2>&1',
+            test     => '--version >/dev/null 2>&1',
             get      => '-o - {url}',
             download => '{url}'
         }
