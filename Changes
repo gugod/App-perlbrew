@@ -1,3 +1,6 @@
+0.66: # 2013-08-03T00:22:29+0200
+- fix a bug the made download failed with curl program.
+
 0.65: # 2013-08-01T07:19:03+0200
 - exec command: error hadndling improvements. Thanks to @vsespb.
 - install command: add "--clang" option. Thanks to @salva

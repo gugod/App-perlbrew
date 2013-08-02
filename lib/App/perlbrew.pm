@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.65";
+our $VERSION = "0.66";
 use Config;
 
 BEGIN {
@@ -111,8 +111,8 @@ sub files_are_the_same {
     my %commands = (
         curl => {
             test     => '--version >/dev/null 2>&1',
-            get      => 'curl --silent --location --fail',
-            download => 'curl --silent --location --fail -o {output} {url}'
+            get      => '--silent --location --fail -o - {url}',
+            download => '--silent --location --fail -o {output} {url}'
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
@@ -120,7 +120,7 @@ sub files_are_the_same {
             download => '--quiet -O {output} {url}',
         },
         fetch => {
-            fetch    => '--version >/dev/null 2>&1',
+            test     => '--version >/dev/null 2>&1',
             get      => '-o - {url}',
             download => '{url}'
         }
@@ -155,7 +155,7 @@ sub files_are_the_same {
     }
 
     sub http_download {
-        my ($url, $header, $path) = @_;
+        my ($url, $path) = @_;
 
         if (-e $path) {
             die "ERROR: The download target < $path > already exists.\n";
@@ -165,10 +165,9 @@ sub files_are_the_same {
 
         my $status = system($download_command);
         unless ($status == 0) {
-            die "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
+            return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
         }
-
-        return 1;
+        return 0;
     }
 
     sub http_get {
@@ -473,37 +472,6 @@ sub find_similar_commands {
     }
 
     return @commands;
-}
-
-sub download {
-    my ($self, $url, $path, $on_error) = @_;
-
-    my $mirror = $self->config->{mirror};
-    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-
-    open my $BALL, ">", $path or die "Failed to open $path for writing.\n";
-
-    http_get(
-        $url,
-        $header,
-        sub {
-            my ($body) = @_;
-
-            unless ($body) {
-                if (ref($on_error) eq 'CODE') {
-                    $on_error->($url);
-                }
-                else {
-                    die "ERROR: Failed to download $url.\n"
-                }
-            }
-
-
-            print $BALL $body;
-        }
-    );
-
-    close $BALL;
 }
 
 sub run_command {
@@ -907,7 +875,8 @@ sub do_install_url {
     }
     else {
         print "Fetching $dist as $dist_tarball_path\n";
-        $self->download($dist_tarball_url, $dist_tarball_path);
+        my $error = http_download($dist_tarball_url, $dist_tarball_path);
+        die "ERROR: Failed to download $dist_tarball_url\n" if $error;
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -955,13 +924,11 @@ sub do_install_blead {
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
 
-    $self->download(
-        "http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path,
-        sub {
-            die "\nERROR: Failed to download perl-blead tarball.\n\n";
-        }
-    );
+    my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
 
+    if ($error) {
+        die "\nERROR: Failed to download perl-blead tarball.\n\n";
+    }
 
     # Returns the wrong extracted dir for blead
     $self->do_extract_tarball($dist_tarball_path);
@@ -1013,7 +980,7 @@ sub do_install_release {
     }
     else {
         print "Fetching perl $dist_version as $dist_tarball_path\n" unless $self->{quiet};
-        $self->download( $dist_tarball_url, $dist_tarball_path );
+        $self->run_command_download($dist);
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -1188,7 +1155,10 @@ sub run_command_download {
     }
     else {
         print "Download $dist_tarball_url to $dist_tarball_path\n" unless $self->{quiet};
-        $self->download( $dist_tarball_url, $dist_tarball_path );
+        my $error = http_download($dist_tarball_url, $dist_tarball_path);
+        if ($error) {
+            die "ERROR: Failed to download $dist_tarball_url\n";
+        }
     }
 }
 
