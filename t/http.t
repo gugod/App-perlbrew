@@ -39,7 +39,7 @@ describe "App::perlbrew::http_get function" => sub {
 };
 
 describe "App::perlbrew::http_download function, downloading the perlbrew-installer." => sub {
-    my ($dir, $output);
+    my ($dir, $output, $download_error);
 
     before all => sub {
         $dir = tempdir( CLEANUP => 1 );
@@ -55,11 +55,7 @@ Therefore we cannot proceed the test.
 REASON
         }
 
-        App::perlbrew::http_download(
-            "http://install.perlbrew.pl",
-            undef,
-            $output,
-        );
+        my $download_error = App::perlbrew::http_download("http://install.perlbrew.pl", $output);
     };
 
     it "downloads to the wanted path" => sub {

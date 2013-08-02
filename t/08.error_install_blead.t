@@ -14,10 +14,7 @@ use Path::Class;
 use App::perlbrew;
 {
     no warnings 'redefine';
-    sub App::perlbrew::http_get {
-        my ($url, undef, $cb) = @_;
-        $cb->("");
-    }
+    sub App::perlbrew::http_download { return "ERROR" }
 }
 
 throws_ok(

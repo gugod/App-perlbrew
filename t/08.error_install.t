@@ -18,14 +18,7 @@ App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("build") );
 App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("dists") );
 
 no warnings 'redefine';
-sub App::perlbrew::http_get {
-    my ($url, $header, $cb) = @_;
-    if (ref($header) eq 'CODE') {
-        $cb = $header;
-        $header = undef;
-    }
-    $cb ? $cb->(undef) : undef
-}
+sub App::perlbrew::http_download { return "ERROR" }
 
 throws_ok(
     sub {

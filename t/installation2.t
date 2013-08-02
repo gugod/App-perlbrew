@@ -21,7 +21,7 @@ describe "App::perlbrew" => sub {
             my $app = App::perlbrew->new;
 
             my @expectations;
-            push @expectations, App::perlbrew->expects("http_get")->returns("Not going to GET it!");
+            push @expectations, App::perlbrew->expects("http_download")->returns(0);
             push @expectations, $app->expects("do_extract_tarball")->returns("");
             push @expectations, $app->expects("do_install_this")->returns("");
 
