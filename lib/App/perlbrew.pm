@@ -12,7 +12,7 @@ BEGIN {
     @INC = (
         $Config{sitelibexp}."/".$Config{archname},
         $Config{sitelibexp},
-        @Config{qw<archlibexp privlibexp>},
+        @Config{qw<vendorlibexp vendorarchexp archlibexp privlibexp>},
     );
 
     require Cwd;
