@@ -2161,9 +2161,6 @@ sub run_command_lib_delete {
 
     my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
-    if (!$perl_name) {
-    }
-
     my $fullname = $perl_name . '@' . $lib_name;
 
     my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
