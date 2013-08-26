@@ -245,6 +245,7 @@ sub new {
 
     my %opt = (
         original_argv  => \@argv,
+        args => [],
         force => 0,
         quiet => 0,
         D => [],
@@ -259,25 +260,27 @@ sub new {
 
     $opt{$_} = '' for keys %flavor;
 
-    # build a local @ARGV to allow us to use an older
-    # Getopt::Long API in case we are building on an older system
-    local (@ARGV) = @argv;
+    if (@argv) {
+        # build a local @ARGV to allow us to use an older
+        # Getopt::Long API in case we are building on an older system
+        local (@ARGV) = @argv;
 
-    Getopt::Long::Configure(
-        'pass_through',
-        'no_ignore_case',
-        'bundling',
-        'permute',                       # default behaviour except 'exec'
-    );
+        Getopt::Long::Configure(
+            'pass_through',
+            'no_ignore_case',
+            'bundling',
+            'permute',          # default behaviour except 'exec'
+        );
 
-    $class->parse_cmdline (\%opt);
+        $class->parse_cmdline(\%opt);
 
-    $opt{args} = \@ARGV;
+        $opt{args} = \@ARGV;
 
-    # fix up the effect of 'bundling'
-    foreach my $flags (@opt{qw(D U A)}) {
-        foreach my $value(@{$flags}) {
-            $value =~ s/^=//;
+        # fix up the effect of 'bundling'
+        foreach my $flags (@opt{qw(D U A)}) {
+            foreach my $value (@{$flags}) {
+                $value =~ s/^=//;
+            }
         }
     }
 
@@ -289,7 +292,7 @@ sub parse_cmdline {
 
     my @f = map { $flavor{$_}{opt} || $_ } keys %flavor;
 
-    Getopt::Long::GetOptions(
+    return Getopt::Long::GetOptions(
         $params,
 
         'force|f!',
@@ -322,7 +325,6 @@ sub parse_cmdline {
 
         @ext
     )
-      or run_command_help(1);
 }
 
 sub root {
