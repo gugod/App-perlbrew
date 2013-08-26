@@ -16,7 +16,7 @@ describe "info command" => sub {
 
         $app->expects("current_perl")->returns($mock_perl)->at_least_once();
         $app->expects("current_env")->returns('perl-5.8.9');
-        $app->expects("current_perl_executable")->returns($perl_path)->at_least_once(); # actaully real perl path
+        $app->expects("installed_perl_executable")->with($mock_perl)->returns($perl_path)->at_least_once();
         $app->expects("configure_args")->with($mock_perl)->returns('config_args_value');
         $app->expects("system_perl_shebang")->never;
         local $ENV{PERLBREW_ROOT} = 'perlbrew_root_value';
@@ -49,7 +49,7 @@ OUT
 
         $app->expects("current_perl")->returns('');
         $app->expects("current_env")->never;
-        $app->expects("current_perl_executable")->never;
+        $app->expects("installed_perl_executable")->never;
         $app->expects("configure_args")->never;
         $app->expects("system_perl_shebang")->returns("system_perl_shebang_value")->once;
         local $ENV{PERLBREW_ROOT} = 'perlbrew_root_value';

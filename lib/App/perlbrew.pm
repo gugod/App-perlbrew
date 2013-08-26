@@ -347,11 +347,6 @@ sub current_lib {
     return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
 }
 
-sub current_perl_executable {
-    my ($self) = @_;
-    return $self->installed_perl_executable($self->current_perl);
-}
-
 sub current_env {
     my ($self) = @_;
     my $l = $self->current_lib;
@@ -2302,11 +2297,11 @@ sub format_info_output
     $out .= "Current perl:\n";
     if ($self->current_perl) {
         $out .= "  Name: " . $self->current_env . "\n";
-        $out .= "  Path: " . $self->current_perl_executable . "\n";
+        $out .= "  Path: " . $self->installed_perl_executable($self->current_perl) . "\n";
         $out .= "  Config: " . $self->configure_args( $self->current_perl ) . "\n";
         $out .= join('', "  Compiled at: ", (map {
             /  Compiled at (.+)\n/ ? $1 : ()
-        } `@{[ $self->current_perl_executable ]} -V`), "\n");
+        } `@{[ $self->installed_perl_executable($self->current_perl) ]} -V`), "\n");
     }
     else {
         $out .= "Using system perl." . "\n";
