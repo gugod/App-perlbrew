@@ -2365,7 +2365,7 @@ sub _load_config {
 }
 
 sub BASHRC_CONTENT() {
-    return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
+    return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . sprintf <<'RC', $PERLBREW_ROOT;
 
 __perlbrew_reinit() {
     if [[ ! -d "$PERLBREW_HOME" ]]; then
@@ -2491,7 +2491,7 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
-[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="%s"
 [[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
 if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
