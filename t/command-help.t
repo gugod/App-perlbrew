@@ -39,5 +39,14 @@ describe "`perlbrew help`" => sub {
     };
 };
 
+describe "`help install`" => sub {
+    it "should show the options for install command" => sub {
+        my $out = `$perl -Ilib $bin_perlbrew help install`;
+        like $out, qr/^Options for "install" command:/msi;
+        like $out, qr/--force/si;
+        like $out, qr/--notest/si;
+    };
+};
+
 runtests unless caller;
 
