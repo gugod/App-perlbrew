@@ -1,3 +1,8 @@
+0.67: # 2013-11-20T08:40:52+0100
+- Support fish shell. Thanks to @yenzie++
+- `info` command now takes an optional module name and show information for it. Thanks to @trcjr++
+- doc/bug fixes from @mmcclimon++, @mperry2++, and markstos++
+
 0.66: # 2013-08-03T00:22:29+0200
 - fix a bug the made download failed with curl program.
 

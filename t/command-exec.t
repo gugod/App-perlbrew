@@ -154,7 +154,7 @@ OUT
             $app->expects("format_info_output")->exactly(1)->returns(sub {
                 my ($self) = @_;
                 is $self->current_env, 'perl-5.14.1';
-                like $self->current_perl_executable, qr/perl-5.14.1/;
+                like $self->installed_perl_executable('perl-5.14.1'), qr/perl-5.14.1/;
                 "format_info_output_value\n";
             });
             App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {

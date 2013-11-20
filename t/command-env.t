@@ -62,7 +62,7 @@ export PERLBREW_PERL="perl-5.14.1"
 export PERLBREW_ROOT="$App::perlbrew::PERLBREW_ROOT"
 export PERLBREW_VERSION="$App::perlbrew::VERSION"
 export PERL_LOCAL_LIB_ROOT="$lib_dir"
-export PERL_MB_OPT="--install_base $lib_dir"
+export PERL_MB_OPT="--install_base "$lib_dir""
 export PERL_MM_OPT="INSTALL_BASE=$lib_dir"
 OUT
         }

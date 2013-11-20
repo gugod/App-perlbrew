@@ -20,6 +20,7 @@ perlbrew command syntax:
 Commands:
 
     init           Initialize perlbrew environment.
+    info           Show usefull information about the perlbrew installation
 
     install        Install perl
     uninstall      Uninstall the given installation
@@ -143,10 +144,15 @@ one-line installer manually, this command is invoked automatically.
 
 =head1 COMMAND: INFO
 
-Usage: perlbrew info
+=over 4
 
-The `info` command dumps a page of handful information for the perlbrew
-installation.
+=item B<info> [module]
+
+Usage: perlbrew info [ <module> ]
+
+Display usefull information about the perlbrew installation.
+
+If a module is given the version and location of the module is displayed.
 
 =head1 COMMAND: INSTALL
 
@@ -583,6 +589,9 @@ your module installation to different perl. The following command
 re-installs all modules under perl-5.16.0:
 
     perlbrew list-modules | perlbrew exec --with perl-5.16.0 cpanm
+    
+Note that this installs the I<latest> versions of the Perl modules on the new perl,
+which are not necessarily the I<same> module versions you had installed previously.
 
 =head1 UPGRADE NOTES
 

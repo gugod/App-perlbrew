@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.66";
+our $VERSION = "0.67";
 use Config;
 
 BEGIN {
@@ -12,7 +12,7 @@ BEGIN {
     @INC = (
         $Config{sitelibexp}."/".$Config{archname},
         $Config{sitelibexp},
-        @Config{qw<archlibexp privlibexp>},
+        @Config{qw<vendorlibexp vendorarchexp archlibexp privlibexp>},
     );
 
     require Cwd;
@@ -245,6 +245,7 @@ sub new {
 
     my %opt = (
         original_argv  => \@argv,
+        args => [],
         force => 0,
         quiet => 0,
         D => [],
@@ -259,25 +260,27 @@ sub new {
 
     $opt{$_} = '' for keys %flavor;
 
-    # build a local @ARGV to allow us to use an older
-    # Getopt::Long API in case we are building on an older system
-    local (@ARGV) = @argv;
+    if (@argv) {
+        # build a local @ARGV to allow us to use an older
+        # Getopt::Long API in case we are building on an older system
+        local (@ARGV) = @argv;
 
-    Getopt::Long::Configure(
-        'pass_through',
-        'no_ignore_case',
-        'bundling',
-        'permute',                       # default behaviour except 'exec'
-    );
+        Getopt::Long::Configure(
+            'pass_through',
+            'no_ignore_case',
+            'bundling',
+            'permute',          # default behaviour except 'exec'
+        );
 
-    $class->parse_cmdline (\%opt);
+        $class->parse_cmdline(\%opt);
 
-    $opt{args} = \@ARGV;
+        $opt{args} = \@ARGV;
 
-    # fix up the effect of 'bundling'
-    foreach my $flags (@opt{qw(D U A)}) {
-        foreach my $value(@{$flags}) {
-            $value =~ s/^=//;
+        # fix up the effect of 'bundling'
+        foreach my $flags (@opt{qw(D U A)}) {
+            foreach my $value (@{$flags}) {
+                $value =~ s/^=//;
+            }
         }
     }
 
@@ -289,7 +292,7 @@ sub parse_cmdline {
 
     my @f = map { $flavor{$_}{opt} || $_ } keys %flavor;
 
-    Getopt::Long::GetOptions(
+    return Getopt::Long::GetOptions(
         $params,
 
         'force|f!',
@@ -322,7 +325,6 @@ sub parse_cmdline {
 
         @ext
     )
-      or run_command_help(1);
 }
 
 sub root {
@@ -345,11 +347,6 @@ sub current_lib {
     my ($self, $v) = @_;
     $self->{current_lib} = $v if $v;
     return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
-}
-
-sub current_perl_executable {
-    my ($self) = @_;
-    return $self->installed_perl_executable($self->current_perl);
 }
 
 sub current_env {
@@ -733,6 +730,7 @@ sub run_command_init {
          ["csh_wrapper", "CSH_WRAPPER_CONTENT"],
          ["csh_set_path", "CSH_SET_PATH_CONTENT"],
          ["perlbrew-completion.bash", "BASH_COMPLETION_CONTENT"],
+         ["perlbrew.fish", "PERLBREW_FISH_CONTENT" ],
      ) {
         my ($file_name, $method) = @$_;
         my $path = joinpath($etc_dir, $file_name);
@@ -762,6 +760,10 @@ sub run_command_init {
         $shrc = "bashrc";
         $yourshrc = 'zshenv';
     }
+    elsif( $self->env('SHELL') =~ m/fish/ ) {
+        $shrc = "perlbrew.fish";
+        $yourshrc = 'config/fish/config.fish';
+    }
     else {
         $shrc = "bashrc";
         $yourshrc = "bash_profile";
@@ -773,6 +775,11 @@ sub run_command_init {
     my $code = qq(    source $root_dir/etc/${shrc});
     if ($PERLBREW_HOME ne joinpath($ENV{HOME}, ".perlbrew")) {
         $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
+    }
+
+    if ( $self->env('SHELL') =~ m/fish/ ) {
+        $code =~ s/source/./;
+        $code =~ s/export (\S+)=(\S+)/set -x $1 $2/;
     }
 
     print <<INSTRUCTION;
@@ -2164,9 +2171,6 @@ sub run_command_lib_delete {
 
     my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
-    if (!$perl_name) {
-    }
-
     my $fullname = $perl_name . '@' . $lib_name;
 
     my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
@@ -2295,18 +2299,18 @@ sub resolve_installation_name {
 
 sub format_info_output
 {
-    my ($self) = @_;
+    my ($self, $module) = @_;
 
     my $out = '';
 
     $out .= "Current perl:\n";
     if ($self->current_perl) {
         $out .= "  Name: " . $self->current_env . "\n";
-        $out .= "  Path: " . $self->current_perl_executable . "\n";
+        $out .= "  Path: " . $self->installed_perl_executable($self->current_perl) . "\n";
         $out .= "  Config: " . $self->configure_args( $self->current_perl ) . "\n";
         $out .= join('', "  Compiled at: ", (map {
             /  Compiled at (.+)\n/ ? $1 : ()
-        } `@{[ $self->current_perl_executable ]} -V`), "\n");
+        } `@{[ $self->installed_perl_executable($self->current_perl) ]} -V`), "\n");
     }
     else {
         $out .= "Using system perl." . "\n";
@@ -2319,12 +2323,18 @@ sub format_info_output
     for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
         $out .= "    $_: " . ($self->env($_)||"") . "\n";
     }
+
+    if ( $module ) {
+        my $code = qq{eval "require $module" and do { (my \$f = "$module") =~ s<::></>g; \$f .= ".pm"; print "$module\n  Location: \$INC{\$f}\n  Version: " . ($module->VERSION ? $module->VERSION : "no VERSION specified" ) } or do { print "$module could not be found, is it installed?" } };
+        $out .= "\nModule: ".$self->do_capture( $self->installed_perl_executable($self->current_perl), "-le", $code );
+    }
+
     $out;
 }
 
 sub run_command_info {
-    my ($self) = @_;
-    print $self->format_info_output;
+    my ($self) = shift;
+    print $self->format_info_output(@_);
 }
 
 
@@ -2371,7 +2381,7 @@ sub _load_config {
 }
 
 sub BASHRC_CONTENT() {
-    return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . <<'RC';
+    return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . sprintf <<'RC', $PERLBREW_ROOT;
 
 __perlbrew_reinit() {
     if [[ ! -d "$PERLBREW_HOME" ]]; then
@@ -2497,7 +2507,7 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
-[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="%s"
 [[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
 if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
@@ -2533,6 +2543,173 @@ _perlbrew_compgen()
 }
 complete -F _perlbrew_compgen perlbrew
 COMPLETION
+}
+
+sub PERLBREW_FISH_CONTENT {
+    return "set -x PERLBREW_FISH_VERSION $VERSION\n" . <<'END';
+
+function __perlbrew_reinit;
+    if not test -d "$PERLBREW_HOME"
+        mkdir-p "$PERLBREW_HOME"
+    end
+
+    echo '# DO NOT EDIT THIS FILE' > "$PERLBREW_HOME/init"
+    command perlbrew env $argv[1] | \grep PERLBREW_ >> "$PERLBREW_HOME/init"
+    __source_init
+    __perlbrew_set_path
+end
+
+function __perlbrew_set_path;
+    set -l MANPATH_WITHOUT_PERLBREW (perl -e 'print join " ", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);')
+
+    if test -n "$PERLBREW_MANPATH" 
+        set -x MANPATH $PERLBREW_MANPATH $MANPATH_WITHOUT_PERLBREW
+    else
+        set -x MANPATH $MANPATH_WITHOUT_PERLBREW
+    end
+
+    set -l PATH_WITHOUT_PERLBREW (eval $perlbrew_command display-pristine-path | perl -pe'y/:/ /')
+
+    if test -n "$PERLBREW_PATH"
+        set -x PERLBREW_PATH (echo $PERLBREW_PATH | perl -pe 'y/:/ /' )
+        eval set -x PATH $PERLBREW_PATH $PATH_WITHOUT_PERLBREW
+    else
+        eval set -x PATH $PERLBREW_ROOT/bin $PATH_WITHOUT_PERLBREW
+    end
+end
+
+function __perlbrew_set_env;
+    set -l code (eval $perlbrew_command env $argv | perl -pe 's/export\s+(\S+)="(\S*)"/set -x $1 $2;/g; y/:/ /')
+
+    if test -z "$code"
+        return 0;
+    else
+        eval $code
+    end
+
+end
+
+function __perlbrew_activate;
+    functions -e perl
+
+    if test -n "$PERLBREW_PERL"
+        if test -z "$PERLBREW_LIB"
+            __perlbrew_set_env $PERLBREW_PERL
+        else
+            __perlbrew_set_env $PERLBREW_PERL@$PERLBREW_LIB
+        end
+    end
+
+    __perlbrew_set_path
+end
+
+function __perlbrew_deactivate
+    __perlbrew_set_env
+    set -r PERLBREW_PERL
+    set -r PERLBREW_LIB
+    __perlbrew_set_path
+end
+
+function perlbrew;
+
+    switch $argv[1]
+        case use
+            if test ( count $argv ) -eq 1 
+                if test -x "$PERLBREW_PERL" 
+                    echo "Currently using system perl"
+                else
+                    echo "Currently using $PERLBREW_PERL"
+                end
+            else
+                __perlbrew_set_env $argv[2]
+                if test "$status" -eq 0
+                    __perlbrew_set_path
+                end
+            end
+
+        case switch
+            if test ( count $argv ) -eq 1
+                command perlbrew switch
+            else
+                perlbrew use $argv[2]
+                if test "$status" -eq 0
+                    __perlbrew_reinit $argv[2]
+                end
+            end
+
+        case off
+            __perlbrew_deactivate
+            echo "perlbrew is turned off."
+
+        case switch-off
+            __perlbrew_deactivate
+            __perlbrew_reinit
+            echo "perlbrew is switched off."
+
+        case '*'
+            command perlbrew $argv
+            
+
+    end
+end
+
+function __source_init
+    eval (perl -pe's/^export/set -x/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init")
+end
+
+if test -z "$PERLBREW_ROOT"
+    set -x PERLBREW_ROOT "$HOME/perl5/perlbrew"
+end
+
+if test -x "$PERLBREW_HOME" 
+    set -x PERLBREW_HOME "$HOME/.perlbrew"
+end
+
+if test -z "$PERLBREW_SKIP_INIT" -a -f "$PERLBREW_HOME/init"
+    __source_init
+end
+
+set perlbrew_bin_path "$PERLBREW_ROOT/bin"
+
+if test -f "$perlbrew_bin_path/perlbrew"
+    set perlbrew_command "$perlbrew_bin_path/perlbrew"
+else
+    set perlbrew_command perlbrew
+end
+
+set -e perlbrew_bin_path
+
+__perlbrew_activate
+
+## autocomplete stuff #############################################
+
+function __fish_perlbrew_needs_command
+  set cmd (commandline -opc)
+  if test (count $cmd) -eq 1 -a $cmd[1] = 'perlbrew'
+    return 0
+  end
+  return 1
+end
+
+function __fish_perlbrew_using_command
+  set cmd (commandline -opc)
+  if test (count $cmd) -gt 1
+    if [ $argv[1] = $cmd[2] ]
+      return 0
+    end
+  end
+end
+
+for com in (perlbrew help | perl -ne'print lc if s/^COMMAND:\s+//') 
+    complete -f -c perlbrew -n '__fish_perlbrew_needs_command' -a $com 
+end
+
+for com in switch use;
+    complete -f -c perlbrew -n "__fish_perlbrew_using_command $com" \
+        -a '(perlbrew list | perl -pe\'s/\*?\s*(\S+).*/$1/\')'
+end
+
+END
 }
 
 sub CSH_WRAPPER_CONTENT {
