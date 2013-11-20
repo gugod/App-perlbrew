@@ -2315,17 +2315,10 @@ sub format_info_output
     }
 
     if ( $module ) {
-        $out .= "\nModule: $module";
-        if ( eval qq|require $module| ) {
-            (my $f = $module) =~ s@::@/@g;
-            $f .= ".pm";
-            $out .= "\n";
-            $out .= "  Location: $INC{$f}\n";
-            $out .= "  Version: " . ($module->VERSION ? $module->VERSION : "no VERSION specified" ). "\n";
-        } else {
-            $out .= " could not be found, is it installed?\n";
-        }
+        my $code = qq{eval "require $module" and do { (my \$f = "$module") =~ s<::></>g; \$f .= ".pm"; print "$module\n  Location: \$INC{\$f}\n  Version: " . ($module->VERSION ? $module->VERSION : "no VERSION specified" ) } or do { print "$module could not be found, is it installed?" } };
+        $out .= "\nModule: ".$self->do_capture( $self->installed_perl_executable($self->current_perl), "-le", $code );
     }
+
     $out;
 }
 
