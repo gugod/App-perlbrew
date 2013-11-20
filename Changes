@@ -1,3 +1,6 @@
+- Support fish shell. Thanks to @yenzie++
+- doc/bug fixes from @mmcclimon++, @mperry2++, and markstos++
+
 0.66: # 2013-08-03T00:22:29+0200
 - fix a bug the made download failed with curl program.
 
