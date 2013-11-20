@@ -2299,7 +2299,7 @@ sub resolve_installation_name {
 
 sub format_info_output
 {
-    my ($self) = @_;
+    my ($self, $module) = @_;
 
     my $out = '';
 
@@ -2323,12 +2323,18 @@ sub format_info_output
     for(map{"PERLBREW_$_"}qw(ROOT HOME PATH MANPATH)) {
         $out .= "    $_: " . ($self->env($_)||"") . "\n";
     }
+
+    if ( $module ) {
+        my $code = qq{eval "require $module" and do { (my \$f = "$module") =~ s<::></>g; \$f .= ".pm"; print "$module\n  Location: \$INC{\$f}\n  Version: " . ($module->VERSION ? $module->VERSION : "no VERSION specified" ) } or do { print "$module could not be found, is it installed?" } };
+        $out .= "\nModule: ".$self->do_capture( $self->installed_perl_executable($self->current_perl), "-le", $code );
+    }
+
     $out;
 }
 
 sub run_command_info {
-    my ($self) = @_;
-    print $self->format_info_output;
+    my ($self) = shift;
+    print $self->format_info_output(@_);
 }
 
 
