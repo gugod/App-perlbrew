@@ -22,7 +22,7 @@ use File::Temp qw( tempdir );
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
-
+delete $ENV{PERLBREW_LIB};
 App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("perls") );
 App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("build") );
 App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("dists") );
