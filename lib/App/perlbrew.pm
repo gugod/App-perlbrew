@@ -2615,7 +2615,7 @@ function perlbrew;
     switch $argv[1]
         case use
             if test ( count $argv ) -eq 1 
-                if test -x "$PERLBREW_PERL" 
+                if test -z "$PERLBREW_PERL" 
                     echo "Currently using system perl"
                 else
                     echo "Currently using $PERLBREW_PERL"
