@@ -154,6 +154,8 @@ Display usefull information about the perlbrew installation.
 
 If a module is given the version and location of the module is displayed.
 
+=back
+
 =head1 COMMAND: INSTALL
 
 =over 4
