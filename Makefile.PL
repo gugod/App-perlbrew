@@ -29,4 +29,10 @@ install_script 'bin/perlbrew';
 
 tests 't/*.t';
 
+makemaker_args(
+    dist => {
+        COMPRESS => "zopfli -i50",
+    }
+);
+
 WriteAll;
