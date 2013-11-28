@@ -126,21 +126,29 @@ sub files_are_the_same {
         }
     );
 
+    our $HTTP_USER_AGENT_PROGRAM;
     sub http_user_agent_program {
-        my $program;
-        for my $p (keys %commands) {
-            my $code = system("$p $commands{$p}->{test}") >> 8;
-            if ($code != 127) {
-                $program = $p;
-                last;
+        $HTTP_USER_AGENT_PROGRAM ||= do {
+            my $program;
+
+            for my $p (keys %commands) {
+                my $code = system("$p $commands{$p}->{test}") >> 8;
+                if ($code != 127) {
+                    $program = $p;
+                    last;
+                }
             }
-        }
 
-        unless($program) {
-            die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
-        }
+            unless($program) {
+                die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
+            }
 
-        return $program;
+            $program;
+        };
+
+        die "[ERROR] Unrecognized http user agent program: $HTTP_USER_AGENT_PROGRAM. It can only be one of: ".join(",", keys %commands)."\n" unless $commands{$HTTP_USER_AGENT_PROGRAM};
+
+        return $HTTP_USER_AGENT_PROGRAM;
     }
 
     sub http_user_agent_command {
