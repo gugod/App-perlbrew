@@ -2959,8 +2959,8 @@ The installed perlbrew command is a standalone executable that can be run with
 system perl. The minimum system perl version requirement is 5.8.0, which should
 be good enough for most of the OSes these days.
 
-A packed version of C<patchperl> to C<~/perl5/perlbrew/bin>, which is required
-to build old perls.
+A fat-packed version of C<patchperl> is also installed to
+C<~/perl5/perlbrew/bin>, which is required to build old perls.
 
 The directory C<~/perl5/perlbrew> will contain all install perl executables,
 libraries, documentations, lib, site_libs. In the documentation, that directory
@@ -2970,6 +2970,10 @@ environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
     curl -kL http://install.perlbrew.pl | bash
+
+As a result, different users on the same machine can all share the same perlbrew
+root directory (although only original user that made the installation would
+have the permission to perform perl installations.)
 
 You may also install perlbrew from CPAN:
 
