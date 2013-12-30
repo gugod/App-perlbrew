@@ -2556,7 +2556,7 @@ COMPLETION
 sub PERLBREW_FISH_CONTENT {
     return "set -x PERLBREW_FISH_VERSION $VERSION\n" . <<'END';
 
-function __perlbrew_reinit;
+function __perlbrew_reinit
     if not test -d "$PERLBREW_HOME"
         mkdir-p "$PERLBREW_HOME"
     end
@@ -2567,10 +2567,10 @@ function __perlbrew_reinit;
     __perlbrew_set_path
 end
 
-function __perlbrew_set_path;
+function __perlbrew_set_path
     set -l MANPATH_WITHOUT_PERLBREW (perl -e 'print join " ", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);')
 
-    if test -n "$PERLBREW_MANPATH" 
+    if test -n "$PERLBREW_MANPATH"
         set -x MANPATH $PERLBREW_MANPATH $MANPATH_WITHOUT_PERLBREW
     else
         set -x MANPATH $MANPATH_WITHOUT_PERLBREW
@@ -2586,7 +2586,7 @@ function __perlbrew_set_path;
     end
 end
 
-function __perlbrew_set_env;
+function __perlbrew_set_env
     set -l code (eval $perlbrew_command env $argv | perl -pe 's/export\s+(\S+)="(\S*)"/set -x $1 $2;/g; y/:/ /')
 
     if test -z "$code"
@@ -2594,10 +2594,9 @@ function __perlbrew_set_env;
     else
         eval $code
     end
-
 end
 
-function __perlbrew_activate;
+function __perlbrew_activate
     functions -e perl
 
     if test -n "$PERLBREW_PERL"
@@ -2618,12 +2617,17 @@ function __perlbrew_deactivate
     __perlbrew_set_path
 end
 
-function perlbrew;
+function perlbrew
+
+    test -z $argv
+    and echo "    Usage: perlbrew <command> [options] [arguments]"
+    and echo "       or: perlbrew help"
+    and return 1
 
     switch $argv[1]
         case use
-            if test ( count $argv ) -eq 1 
-                if test -z "$PERLBREW_PERL" 
+            if test ( count $argv ) -eq 1
+                if test -z "$PERLBREW_PERL"
                     echo "Currently using system perl"
                 else
                     echo "Currently using $PERLBREW_PERL"
@@ -2656,8 +2660,6 @@ function perlbrew;
 
         case '*'
             command perlbrew $argv
-            
-
     end
 end
 
@@ -2669,7 +2671,7 @@ if test -z "$PERLBREW_ROOT"
     set -x PERLBREW_ROOT "$HOME/perl5/perlbrew"
 end
 
-if test -x "$PERLBREW_HOME" 
+if test -x "$PERLBREW_HOME"
     set -x PERLBREW_HOME "$HOME/.perlbrew"
 end
 
@@ -2708,8 +2710,8 @@ function __fish_perlbrew_using_command
   end
 end
 
-for com in (perlbrew help | perl -ne'print lc if s/^COMMAND:\s+//') 
-    complete -f -c perlbrew -n '__fish_perlbrew_needs_command' -a $com 
+for com in (perlbrew help | perl -ne'print lc if s/^COMMAND:\s+//')
+    complete -f -c perlbrew -n '__fish_perlbrew_needs_command' -a $com
 end
 
 for com in switch use;
