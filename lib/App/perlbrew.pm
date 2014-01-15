@@ -2671,7 +2671,7 @@ if test -z "$PERLBREW_ROOT"
     set -x PERLBREW_ROOT "$HOME/perl5/perlbrew"
 end
 
-if test -x "$PERLBREW_HOME"
+if test -z "$PERLBREW_HOME"
     set -x PERLBREW_HOME "$HOME/.perlbrew"
 end
 
