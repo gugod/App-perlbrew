@@ -2619,7 +2619,7 @@ end
 
 function perlbrew
 
-    test -z $argv
+    test -z "$argv"
     and echo "    Usage: perlbrew <command> [options] [arguments]"
     and echo "       or: perlbrew help"
     and return 1
