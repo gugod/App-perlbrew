@@ -1484,6 +1484,10 @@ sub installed_perls {
             chomp $orig_version;
         } else {
             $orig_version = `$executable -e 'print \$]'`;
+            if ( defined $orig_version and length $orig_version ){
+                open my $fh, '>', $version_file;
+                print {$fh} $orig_version;
+            }
         }
 
         push @result, {
