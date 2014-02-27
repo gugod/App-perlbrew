@@ -1,3 +1,6 @@
+- "perlbrew download stable" works as on expects. GH #383
+- Many fish shell fixes. GH #376 #378 #379
+
 0.67: # 2013-11-20T08:40:52+0100
 - Support fish shell. Thanks to @yenzie++
 - `info` command now takes an optional module name and show information for it. Thanks to @trcjr++
@@ -105,7 +108,7 @@
 
 0.46:
 - fix: The deprecation warning when running `self-upgrde`
-- fix: system MANPATH detection 
+- fix: system MANPATH detection
 - improvement: Specifying multiple perl: `exec --with perl-5.14.2,perl-5.16.0`
 
 0.45:
@@ -208,7 +211,7 @@
 - Hotfix for `perlbrew install` command
 
 0.26:
-- Fix GH #119 
+- Fix GH #119
 - Fix t/08.exit_status.t for cpantesters
 - Fix several bugs in `exec` command
 - Implement GH #103 - install -v shows build.log
@@ -355,5 +358,3 @@
 
 0.01:
 - First release. Installs perl-5.11.[12345] on my mac.
-
-
