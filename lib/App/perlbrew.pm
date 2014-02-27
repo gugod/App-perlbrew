@@ -1158,6 +1158,9 @@ sub run_command_install_multiple {
 sub run_command_download {
     my ($self, $dist) = @_;
 
+    $dist = $self->resolve_stable_version
+        if $dist && $dist eq 'stable';
+
     my ($dist_version) = $dist =~ /^ (?:perl-?)? (.*) $/xs;
 
     die "\"$dist\" does not look like a perl distribution name. " unless $dist_version =~ /^\d\./;
