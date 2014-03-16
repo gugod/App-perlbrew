@@ -116,8 +116,8 @@ sub files_are_the_same {
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--quiet -O - {url}',
-            download => '--quiet -O {output} {url}',
+            get      => '--no-check-certificate --quiet -O - {url}',
+            download => '--no-check-certificate --quiet -O {output} {url}',
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
