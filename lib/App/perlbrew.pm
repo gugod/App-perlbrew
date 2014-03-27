@@ -112,17 +112,20 @@ sub files_are_the_same {
         curl => {
             test     => '--version >/dev/null 2>&1',
             get      => '--silent --location --fail -o - {url}',
-            download => '--silent --location --fail -o {output} {url}'
+            download => '--silent --location --fail -o {output} {url}',
+            order    => 1,
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
             get      => '--quiet -O - {url}',
             download => '--quiet -O {output} {url}',
+            order    => 2,
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
             get      => '-o - {url}',
-            download => '{url}'
+            download => '{url}',
+            order    => 3,
         }
     );
 
@@ -131,7 +134,7 @@ sub files_are_the_same {
         $HTTP_USER_AGENT_PROGRAM ||= do {
             my $program;
 
-            for my $p (keys %commands) {
+            for my $p (sort {$commands{$a}<=>$commands{$b}} keys %commands) {
                 my $code = system("$p $commands{$p}->{test}") >> 8;
                 if ($code != 127) {
                     $program = $p;
