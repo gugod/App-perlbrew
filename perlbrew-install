@@ -18,7 +18,7 @@ echo
 if type curl >/dev/null 2>&1; then
   PERLBREWDOWNLOAD="curl -f -sS -Lo $LOCALINSTALLER $PERLBREWURL"
 elif type fetch >/dev/null 2>&1; then
-  PERLBREWDOWNLOAD="fetch -o $LOCALINSTALLER $PERLBREWURL"
+  PERLBREWDOWNLOAD="fetch --no-verify-peer -o $LOCALINSTALLER $PERLBREWURL"
 elif type wget >/dev/null 2>&1; then
   PERLBREWDOWNLOAD="wget -nv -O $LOCALINSTALLER $PERLBREWURL"
 else
