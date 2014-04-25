@@ -121,7 +121,7 @@ sub files_are_the_same {
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
-            get      => '-o - {url}',
+            get      => '--no-verify-peer -o - {url}',
             download => '{url}'
         }
     );
