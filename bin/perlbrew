@@ -20,7 +20,7 @@ perlbrew command syntax:
 Commands:
 
     init           Initialize perlbrew environment.
-    info           Show usefull information about the perlbrew installation
+    info           Show useful information about the perlbrew installation
 
     install        Install perl
     uninstall      Uninstall the given installation
@@ -150,7 +150,7 @@ one-line installer manually, this command is invoked automatically.
 
 Usage: perlbrew info [ <module> ]
 
-Display usefull information about the perlbrew installation.
+Display useful information about the perlbrew installation.
 
 If a module is given the version and location of the module is displayed.
 
