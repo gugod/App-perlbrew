@@ -1878,7 +1878,7 @@ sub run_command_symlink_executables {
 sub run_command_install_patchperl {
     my ($self) = @_;
     $self->do_install_program_from_url(
-        'https://raw.github.com/gugod/patchperl-packing/master/patchperl',
+        'https://raw.githubusercontent.com/gugod/patchperl-packing/master/patchperl',
         'patchperl',
         sub {
             my ($body) = @_;
@@ -1890,7 +1890,7 @@ sub run_command_install_patchperl {
 
 sub run_command_install_cpanm {
     my ($self) = @_;
-    $self->do_install_program_from_url('https://raw.github.com/miyagawa/cpanminus/master/cpanm' => 'cpanm');
+    $self->do_install_program_from_url('https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm' => 'cpanm');
 }
 
 sub run_command_self_upgrade {
