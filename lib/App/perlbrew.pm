@@ -993,7 +993,7 @@ sub do_install_release {
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path) {
-        print "Use the previously fetched ${dist_tarball}\n"
+        print "Using the previously fetched ${dist_tarball}\n"
             if $self->{verbose};
     }
     else {
