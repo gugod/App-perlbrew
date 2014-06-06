@@ -1481,7 +1481,20 @@ sub installed_perls {
     for (<$root/perls/*>) {
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         my $executable = joinpath($_, 'bin', 'perl');
-        my $orig_version = `$executable -e 'print \$]'`;
+        my $version_file = joinpath($_,'.version');
+        my $orig_version;
+        if ( -e $version_file ){
+            open my $fh, '<', $version_file;
+            local $/;
+            $orig_version = <$fh>;
+            chomp $orig_version;
+        } else {
+            $orig_version = `$executable -e 'print \$]'`;
+            if ( defined $orig_version and length $orig_version ){
+                open my $fh, '>', $version_file;
+                print {$fh} $orig_version;
+            }
+        }
 
         push @result, {
             name        => $name,
