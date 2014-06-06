@@ -1293,7 +1293,7 @@ sub do_install_this {
     }
 
     unshift @d_options, qq(prefix=$perlpath);
-    push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
+    push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
 
     unless (grep { /eval:scriptdir=/} @a_options) {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
