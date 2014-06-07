@@ -1,45 +1,7 @@
-NAME
+Name:
     App::perlbrew - Manage perl installations in your $HOME
 
-SYNOPSIS
-        # Installation
-        curl -kL http://install.perlbrew.pl | bash
-
-        # Initialize
-        perlbrew init
-
-        # Pick a preferred CPAN mirror
-        perlbrew mirror
-
-        # See what is available
-        perlbrew available
-
-        # Install some Perls
-        perlbrew install 5.18.2
-        perlbrew install perl-5.8.1
-        perlbrew install perl-5.19.9
-
-        # See what were installed
-        perlbrew list
-
-        # Swith to an installation and set it as default
-        perlbrew switch perl-5.18.2
-
-        # Temporarily use another version only in current shell.
-        perlbrew use perl-5.8.1
-        perl -v
-
-        # Or turn it off completely. Useful when you messed up too deep.
-        # Or want to go back to the system Perl.
-        perlbrew off
-
-        # Use 'switch' command to turn it back on.
-        perlbrew switch perl-5.12.2
-
-        # Exec something with all perlbrew-ed perls
-        perlbrew exec -- perl -E 'say $]'
-
-DESCRIPTION
+Description:
     perlbrew is a program to automate the building and installation of perl
     in an easy way. It provides multiple isolated perl environments, and a
     mechanism for you to switch between them.
@@ -54,7 +16,7 @@ DESCRIPTION
     of "App::perlbrew" module, and may not be remotely close to what your
     want to read.
 
-INSTALLATION
+Installation:
     It is the simplest to use the perlbrew installer, just paste this
     statement to your terminal:
 
@@ -112,15 +74,78 @@ INSTALLATION
     cpan command, but it is also easy to upgrade perlbrew by running `cpan
     App::perlbrew` again.
 
-METHODS
-    (Str) current_perl
-        Return the "current perl" object attribute string, or, if absent,
-        the value of PERLBREW_PERL environment variable.
+Configuration:
+    PERLBREW_ROOT
+        By default, perlbrew builds and installs perls into
+        "$ENV{HOME}/perl5/perlbrew" directory. To use a different directory,
+        set this environment variable in your "bashrc" to the directory in
+        your shell RC before sourcing perlbrew's RC.
 
-    (Str) current_perl (Str)
-        Set the "current_perl" object attribute to the given value.
+        It is possible to share one perlbrew root with multiple user account
+        on the same machine. Therefore people do not have to install the
+        same version of perl over an over. Let's say "/opt/perl5" is the
+        directory we want to share. All users should be able append this
+        snippet to their bashrc to make it effective:
 
-PROJECT DEVELOPMENT
+            export PERLBREW_ROOT=/opt/perl5
+            source ${PERLBREW_ROOT}/etc/bashrc
+
+        After doing so, everyone's PATH should include "/opt/perl5/bin" and
+        "/opt/perl5/perls/${PERLBREW_PERL}/bin". Each user can invoke
+        "perlbrew switch" and "perlbrew use" to independently switch to
+        different perl environment of their choice. However, only the user
+        with write permission to $PERLBREW_ROOT may install CPAN modules.
+        This is both good and bad depending on the working convention of
+        your team.
+
+        If you wish to install CPAN modules only for yourself, you should
+        use the "lib" command to construct a personal local::lib
+        environment. local::lib environments are personal, and are not
+        shared between different users. For more detail, read "perlbrew help
+        lib" and the documentation of local::lib.
+
+        If you want even a cooler module isolation and wish to install CPAN
+        modules used for just one project, you should use carton for this
+        purpose.
+
+        It is also possible to set this variable before installing perlbrew
+        to make perlbrew install itself under the given PERLBREW_ROOT:
+
+            export PERLBREW_ROOT=/opt/perl5
+            curl -kL http://install.perlbrew.pl | bash
+
+        After doing this, the perlbrew executable is installed as
+        "/opt/perl5/bin/perlbrew"
+
+    PERLBREW_HOME
+        By default, perlbrew stores per-user setting to
+        "$ENV{HOME}/.perlbrew" directory. To use a different directory, set
+        this environment variable in your shell RC before sourcing
+        perlbrew's RC.
+
+        In some cases, say, your home directory is on NFS and shared across
+        multiple machines, you may wish to have several different perlbrew
+        setting per-machine. To do so, you can use the "PERLBREW_HOME"
+        environment variable to tell perlbrew where to look for the
+        initialization file. Here's a brief bash snippet for the given
+        scenario.
+
+            if [ "$(hostname)" == "machine-a" ]; then
+                export PERLBREW_HOME=~/.perlbrew-a
+            elif [ "$(hostname)" == "machine-b" ]; then
+                export PERLBREW_HOME=~/.perlbrew-b
+            fi
+
+            source ~/perl5/perlbrew/etc/bashrc
+
+    PERLBREW_CONFIGURE_FLAGS
+        This environment variable specify the list of command like flags to
+        pass through to 'sh Configure'. By default it is '-de'.
+
+    PERLBREW_CPAN_MIRROR
+        The CPAN mirror url of your choice.
+
+Project Development:
     perlbrew project uses github
     <http://github.com/gugod/App-perlbrew/issues> and RT
     <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
@@ -130,16 +155,13 @@ PROJECT DEVELOPMENT
     See <https://github.com/gugod/App-perlbrew/contributors> for a list of
     project contributors.
 
-AUTHOR
+Author:
     Kang-min Liu "<gugod@gugod.org>"
 
-COPYRIGHT
+Copyright:
     Copyright (c) 2010,2011,2012,2013,2014 Kang-min Liu "<gugod@gugod.org>".
 
-LICENCE
-    The MIT License
-
-DISCLAIMER OF WARRANTY
+Disclaimer of Warranty:
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
     FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
     OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
