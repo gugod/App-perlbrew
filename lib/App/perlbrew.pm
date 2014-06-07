@@ -111,20 +111,20 @@ sub files_are_the_same {
     my %commands = (
         curl => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--silent --location --fail -o - {url}',
-            download => '--silent --location --fail -o {output} {url}',
+            get      => '--insecure --silent --location --fail -o - {url}',
+            download => '--insecure --silent --location --fail -o {output} {url}',
             order    => 1,
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--quiet -O - {url}',
-            download => '--quiet -O {output} {url}',
+            get      => '--no-check-certificate --quiet -O - {url}',
+            download => '--no-check-certificate --quiet -O {output} {url}',
             order    => 2,
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
-            get      => '-o - {url}',
-            download => '{url}',
+            get      => '--no-verify-peer -o - {url}',
+            download => '--no-verify-peer {url}',
             order    => 3,
         }
     );
