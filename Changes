@@ -1,3 +1,4 @@
+0.68: # 2014-06-07T15:08:00+0200
 - disable SSL cert checks. GH #385.
 - "perlbrew download stable" works as on expects. GH #383
 - Many fish shell fixes. GH #376 #378 #379
