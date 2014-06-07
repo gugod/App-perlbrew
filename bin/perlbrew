@@ -20,7 +20,7 @@ perlbrew command syntax:
 Commands:
 
     init           Initialize perlbrew environment.
-    info           Show usefull information about the perlbrew installation
+    info           Show useful information about the perlbrew installation
 
     install        Install perl
     uninstall      Uninstall the given installation
@@ -150,9 +150,11 @@ one-line installer manually, this command is invoked automatically.
 
 Usage: perlbrew info [ <module> ]
 
-Display usefull information about the perlbrew installation.
+Display useful information about the perlbrew installation.
 
 If a module is given the version and location of the module is displayed.
+
+=back
 
 =head1 COMMAND: INSTALL
 
@@ -313,7 +315,12 @@ Without a parameter, shows the version of perl currently selected.
 
 Usage: perlbrew list
 
-List the installed versions of perl.
+List all perl installations inside perlbrew root specifed by C<$PERLBREW_ROOT>
+environment variable. By default, the value is C<~/perl5/perlbrew>.
+
+If there are libs associated to some perl installations, they will be included
+as part of the name. The output items in this list can be the argument in
+various other commands.
 
 =head1 COMMAND: AVAILABLE
 
@@ -433,7 +440,7 @@ The output is something similar to this (if your shell is bash/zsh):
     export PERLBREW_PATH=/Users/gugod/perl5/perlbrew/bin:/Users/gugod/perl5/perlbrew/perls/current/bin
     export PERLBREW_PERL=perl-5.14.1
 
-tcsh / csh users should use 'setenv' statements instead of `export`.
+tcsh / csh users should see 'setenv' statements instead of `export`.
 
 =head1 COMMAND: SYMLINK-EXECUTABLES
 
@@ -495,9 +502,9 @@ Usage: perlbrew self-install
 
 NOTICE: You should not need to run this command in your daily routine.
 
-This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended
-used by the perlbrew installer. However, you may manually do the following to
-re-install only the C<perlbrew> executable:
+This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
+be used by the perlbrew installer. However, you could manually do the following
+to re-install only the C<perlbrew> executable:
 
     curl -kL http://get.perlbrew.pl -o perlbrew
     perl ./perlbrew self-install
@@ -509,7 +516,7 @@ C<patchperl> is not installed in this case.
 
 Usage: perlbrew clean
 
-Removes downloaded Perl tarballs and build directories.
+Removes all previously downloaded Perl tarballs and build directories.
 
 =head1 COMMAND: VERSION
 

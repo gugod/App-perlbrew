@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.67";
+our $VERSION = "0.68";
 use Config;
 
 BEGIN {
@@ -111,36 +111,47 @@ sub files_are_the_same {
     my %commands = (
         curl => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--silent --location --fail -o - {url}',
-            download => '--silent --location --fail -o {output} {url}'
+            get      => '--insecure --silent --location --fail -o - {url}',
+            download => '--insecure --silent --location --fail -o {output} {url}',
+            order    => 1,
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--quiet -O - {url}',
-            download => '--quiet -O {output} {url}',
+            get      => '--no-check-certificate --quiet -O - {url}',
+            download => '--no-check-certificate --quiet -O {output} {url}',
+            order    => 2,
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
-            get      => '-o - {url}',
-            download => '{url}'
+            get      => '--no-verify-peer -o - {url}',
+            download => '--no-verify-peer {url}',
+            order    => 3,
         }
     );
 
+    our $HTTP_USER_AGENT_PROGRAM;
     sub http_user_agent_program {
-        my $program;
-        for my $p (keys %commands) {
-            my $code = system("$p $commands{$p}->{test}") >> 8;
-            if ($code != 127) {
-                $program = $p;
-                last;
+        $HTTP_USER_AGENT_PROGRAM ||= do {
+            my $program;
+
+            for my $p (sort {$commands{$a}<=>$commands{$b}} keys %commands) {
+                my $code = system("$p $commands{$p}->{test}") >> 8;
+                if ($code != 127) {
+                    $program = $p;
+                    last;
+                }
             }
-        }
 
-        unless($program) {
-            die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
-        }
+            unless($program) {
+                die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
+            }
 
-        return $program;
+            $program;
+        };
+
+        die "[ERROR] Unrecognized http user agent program: $HTTP_USER_AGENT_PROGRAM. It can only be one of: ".join(",", keys %commands)."\n" unless $commands{$HTTP_USER_AGENT_PROGRAM};
+
+        return $HTTP_USER_AGENT_PROGRAM;
     }
 
     sub http_user_agent_command {
@@ -300,7 +311,7 @@ sub parse_cmdline {
         'quiet|q!',
         'verbose|v',
         'as=s',
-	'append=s',
+      	'append=s',
         'help|h',
         'version',
         'root=s',
@@ -982,7 +993,7 @@ sub do_install_release {
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path) {
-        print "Use the previously fetched ${dist_tarball}\n"
+        print "Using the previously fetched ${dist_tarball}\n"
             if $self->{verbose};
     }
     else {
@@ -1150,6 +1161,9 @@ sub run_command_install_multiple {
 sub run_command_download {
     my ($self, $dist) = @_;
 
+    $dist = $self->resolve_stable_version
+        if $dist && $dist eq 'stable';
+
     my ($dist_version) = $dist =~ /^ (?:perl-?)? (.*) $/xs;
 
     die "\"$dist\" does not look like a perl distribution name. " unless $dist_version =~ /^\d\./;
@@ -1279,7 +1293,7 @@ sub do_install_this {
     }
 
     unshift @d_options, qq(prefix=$perlpath);
-    push @d_options, "usedevel" if $dist_version =~ /5\.1[13579]|git|blead/;
+    push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
 
     unless (grep { /eval:scriptdir=/} @a_options) {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
@@ -1467,7 +1481,20 @@ sub installed_perls {
     for (<$root/perls/*>) {
         my ($name) = $_ =~ m/\/([^\/]+$)/;
         my $executable = joinpath($_, 'bin', 'perl');
-        my $orig_version = `$executable -e 'print \$]'`;
+        my $version_file = joinpath($_,'.version');
+        my $orig_version;
+        if ( -e $version_file ){
+            open my $fh, '<', $version_file;
+            local $/;
+            $orig_version = <$fh>;
+            chomp $orig_version;
+        } else {
+            $orig_version = `$executable -e 'print \$]'`;
+            if ( defined $orig_version and length $orig_version ){
+                open my $fh, '>', $version_file;
+                print {$fh} $orig_version;
+            }
+        }
 
         push @result, {
             name        => $name,
@@ -1867,7 +1894,7 @@ sub run_command_symlink_executables {
 sub run_command_install_patchperl {
     my ($self) = @_;
     $self->do_install_program_from_url(
-        'https://raw.github.com/gugod/patchperl-packing/master/patchperl',
+        'https://raw.githubusercontent.com/gugod/patchperl-packing/master/patchperl',
         'patchperl',
         sub {
             my ($body) = @_;
@@ -1879,7 +1906,7 @@ sub run_command_install_patchperl {
 
 sub run_command_install_cpanm {
     my ($self) = @_;
-    $self->do_install_program_from_url('https://raw.github.com/miyagawa/cpanminus/master/cpanm' => 'cpanm');
+    $self->do_install_program_from_url('https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm' => 'cpanm');
 }
 
 sub run_command_self_upgrade {
@@ -2548,9 +2575,9 @@ COMPLETION
 sub PERLBREW_FISH_CONTENT {
     return "set -x PERLBREW_FISH_VERSION $VERSION\n" . <<'END';
 
-function __perlbrew_reinit;
+function __perlbrew_reinit
     if not test -d "$PERLBREW_HOME"
-        mkdir-p "$PERLBREW_HOME"
+        mkdir -p "$PERLBREW_HOME"
     end
 
     echo '# DO NOT EDIT THIS FILE' > "$PERLBREW_HOME/init"
@@ -2559,10 +2586,10 @@ function __perlbrew_reinit;
     __perlbrew_set_path
 end
 
-function __perlbrew_set_path;
+function __perlbrew_set_path
     set -l MANPATH_WITHOUT_PERLBREW (perl -e 'print join " ", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);')
 
-    if test -n "$PERLBREW_MANPATH" 
+    if test -n "$PERLBREW_MANPATH"
         set -x MANPATH $PERLBREW_MANPATH $MANPATH_WITHOUT_PERLBREW
     else
         set -x MANPATH $MANPATH_WITHOUT_PERLBREW
@@ -2578,7 +2605,7 @@ function __perlbrew_set_path;
     end
 end
 
-function __perlbrew_set_env;
+function __perlbrew_set_env
     set -l code (eval $perlbrew_command env $argv | perl -pe 's/export\s+(\S+)="(\S*)"/set -x $1 $2;/g; y/:/ /')
 
     if test -z "$code"
@@ -2586,10 +2613,9 @@ function __perlbrew_set_env;
     else
         eval $code
     end
-
 end
 
-function __perlbrew_activate;
+function __perlbrew_activate
     functions -e perl
 
     if test -n "$PERLBREW_PERL"
@@ -2605,17 +2631,23 @@ end
 
 function __perlbrew_deactivate
     __perlbrew_set_env
-    set -r PERLBREW_PERL
-    set -r PERLBREW_LIB
+    set -x PERLBREW_PERL
+    set -x PERLBREW_LIB
+    set -x PERLBREW_PATH
     __perlbrew_set_path
 end
 
-function perlbrew;
+function perlbrew
+
+    test -z "$argv"
+    and echo "    Usage: perlbrew <command> [options] [arguments]"
+    and echo "       or: perlbrew help"
+    and return 1
 
     switch $argv[1]
         case use
-            if test ( count $argv ) -eq 1 
-                if test -x "$PERLBREW_PERL" 
+            if test ( count $argv ) -eq 1
+                if test -z "$PERLBREW_PERL"
                     echo "Currently using system perl"
                 else
                     echo "Currently using $PERLBREW_PERL"
@@ -2648,20 +2680,18 @@ function perlbrew;
 
         case '*'
             command perlbrew $argv
-            
-
     end
 end
 
 function __source_init
-    eval (perl -pe's/^export/set -x/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init")
+    perl -pe's/^export/set -x/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
 end
 
 if test -z "$PERLBREW_ROOT"
     set -x PERLBREW_ROOT "$HOME/perl5/perlbrew"
 end
 
-if test -x "$PERLBREW_HOME" 
+if test -z "$PERLBREW_HOME"
     set -x PERLBREW_HOME "$HOME/.perlbrew"
 end
 
@@ -2700,8 +2730,8 @@ function __fish_perlbrew_using_command
   end
 end
 
-for com in (perlbrew help | perl -ne'print lc if s/^COMMAND:\s+//') 
-    complete -f -c perlbrew -n '__fish_perlbrew_needs_command' -a $com 
+for com in (perlbrew help | perl -ne'print lc if s/^COMMAND:\s+//')
+    complete -f -c perlbrew -n '__fish_perlbrew_needs_command' -a $com
 end
 
 for com in switch use;
@@ -2893,16 +2923,15 @@ App::perlbrew - Manage perl installations in your $HOME
     perlbrew available
 
     # Install some Perls
-    perlbrew install 5.14.0
+    perlbrew install 5.18.2
     perlbrew install perl-5.8.1
-    perlbrew install perl-5.13.6
+    perlbrew install perl-5.19.9
 
     # See what were installed
     perlbrew list
 
-    # Switch perl in the $PATH
-    perlbrew switch perl-5.12.2
-    perl -v
+    # Swith to an installation and set it as default
+    perlbrew switch perl-5.18.2
 
     # Temporarily use another version only in current shell.
     perlbrew use perl-5.8.1
@@ -2921,11 +2950,13 @@ App::perlbrew - Manage perl installations in your $HOME
 =head1 DESCRIPTION
 
 perlbrew is a program to automate the building and installation of perl in an
-easy way. It installs everything to C<~/perl5/perlbrew>, and requires you to
-tweak your PATH by including a bashrc/cshrc file it provides. You then can
-benefit from not having to run 'sudo' commands to install cpan modules because
-those are installed inside your HOME too. It provides multiple isolated perl
-environments, and a mechanism for you to switch between them.
+easy way. It provides multiple isolated perl environments, and a mechanism
+for you to switch between them.
+
+Everything are installed unter C<~/perl5/perlbrew>. You then need to include a
+bashrc/cshrc provided by perlbrew to tweak the PATH for you. You then can
+benefit from not having to run 'sudo' commands to install
+cpan modules because those are installed inside your HOME too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
 on CPAN, or by running C<perlbrew help>. The following documentation
@@ -2951,8 +2982,8 @@ The installed perlbrew command is a standalone executable that can be run with
 system perl. The minimum system perl version requirement is 5.8.0, which should
 be good enough for most of the OSes these days.
 
-A packed version of C<patchperl> to C<~/perl5/perlbrew/bin>, which is required
-to build old perls.
+A fat-packed version of C<patchperl> is also installed to
+C<~/perl5/perlbrew/bin>, which is required to build old perls.
 
 The directory C<~/perl5/perlbrew> will contain all install perl executables,
 libraries, documentations, lib, site_libs. In the documentation, that directory
@@ -2962,6 +2993,10 @@ environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
     curl -kL http://install.perlbrew.pl | bash
+
+As a result, different users on the same machine can all share the same perlbrew
+root directory (although only original user that made the installation would
+have the permission to perform perl installations.)
 
 You may also install perlbrew from CPAN:
 
@@ -3018,7 +3053,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010, 2011, 2012 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010,2011,2012,2013,2014 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 

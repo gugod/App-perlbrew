@@ -8,11 +8,12 @@ perl:
   - "5.10"
   - "5.8"
 before_install:
-  - "cpanm Module::Install"
   - ./dev-bin/travis-prepare.sh
+script:
+  perl ./Makefile.PL && make && cover -test -report coveralls
+
 notifications:
   irc:
     channels:
       - "irc.freenode.org#chupei.pm"
     use_notice: true
-

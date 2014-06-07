@@ -3,12 +3,13 @@ Name:
 
 Description:
     perlbrew is a program to automate the building and installation of perl
-    in an easy way. It installs everything to "~/perl5/perlbrew", and
-    requires you to tweak your PATH by including a bashrc/cshrc file it
-    provides. You then can benefit from not having to run 'sudo' commands to
-    install cpan modules because those are installed inside your HOME too.
-    It provides multiple isolated perl environments, and a mechanism for you
-    to switch between them.
+    in an easy way. It provides multiple isolated perl environments, and a
+    mechanism for you to switch between them.
+
+    Everything are installed unter "~/perl5/perlbrew". You then need to
+    include a bashrc/cshrc provided by perlbrew to tweak the PATH for you.
+    You then can benefit from not having to run 'sudo' commands to install
+    cpan modules because those are installed inside your HOME too.
 
     For the documentation of perlbrew usage see perlbrew command on CPAN, or
     by running "perlbrew help". The following documentation features the API
@@ -30,11 +31,11 @@ Installation:
     to put it in your PATH.
 
     The installed perlbrew command is a standalone executable that can be
-    run with system perl. The minimun system perl version requirement is
+    run with system perl. The minimum system perl version requirement is
     5.8.0, which should be good enough for most of the OSes these days.
 
-    A packed version of "patchperl" to "~/perl5/perlbrew/bin", which is
-    required to build old perls.
+    A fat-packed version of "patchperl" is also installed to
+    "~/perl5/perlbrew/bin", which is required to build old perls.
 
     The directory "~/perl5/perlbrew" will contain all install perl
     executables, libraries, documentations, lib, site_libs. In the
@@ -45,6 +46,10 @@ Installation:
 
         export PERLBREW_ROOT=/opt/perl5
         curl -kL http://install.perlbrew.pl | bash
+
+    As a result, different users on the same machine can all share the same
+    perlbrew root directory (although only original user that made the
+    installation would have the permission to perform perl installations.)
 
     You may also install perlbrew from CPAN:
 
@@ -76,7 +81,7 @@ Configuration:
         set this environment variable in your "bashrc" to the directory in
         your shell RC before sourcing perlbrew's RC.
 
-        It is possible to share one perlbrew root with multilpe user account
+        It is possible to share one perlbrew root with multiple user account
         on the same machine. Therefore people do not have to install the
         same version of perl over an over. Let's say "/opt/perl5" is the
         directory we want to share. All users should be able append this
@@ -85,7 +90,7 @@ Configuration:
             export PERLBREW_ROOT=/opt/perl5
             source ${PERLBREW_ROOT}/etc/bashrc
 
-        After doing so, everone's PATH should include "/opt/perl5/bin" and
+        After doing so, everyone's PATH should include "/opt/perl5/bin" and
         "/opt/perl5/perls/${PERLBREW_PERL}/bin". Each user can invoke
         "perlbrew switch" and "perlbrew use" to independently switch to
         different perl environment of their choice. However, only the user
@@ -123,7 +128,7 @@ Configuration:
         setting per-machine. To do so, you can use the "PERLBREW_HOME"
         environment variable to tell perlbrew where to look for the
         initialization file. Here's a brief bash snippet for the given
-        senario.
+        scenario.
 
             if [ "$(hostname)" == "machine-a" ]; then
                 export PERLBREW_HOME=~/.perlbrew-a
@@ -132,6 +137,13 @@ Configuration:
             fi
 
             source ~/perl5/perlbrew/etc/bashrc
+
+    PERLBREW_CONFIGURE_FLAGS
+        This environment variable specify the list of command like flags to
+        pass through to 'sh Configure'. By default it is '-de'.
+
+    PERLBREW_CPAN_MIRROR
+        The CPAN mirror url of your choice.
 
 Project Development:
     perlbrew project uses github
@@ -147,7 +159,7 @@ Author:
     Kang-min Liu "<gugod@gugod.org>"
 
 Copyright:
-    Copyright (c) 2010, 2011, 2012 Kang-min Liu "<gugod@gugod.org>".
+    Copyright (c) 2010,2011,2012,2013,2014 Kang-min Liu "<gugod@gugod.org>".
 
 Disclaimer of Warranty:
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
