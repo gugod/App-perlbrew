@@ -7,12 +7,12 @@ all_from 'lib/App/perlbrew.pm';
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires
-    'CPAN::Perl::Releases' => '1.58',
-    'Capture::Tiny'        => '0.23',
-    'Devel::PatchPerl'     => '1.14',
-    'Pod::Parser'          => '1.61',
+    'CPAN::Perl::Releases' => '1.74',
+    'Capture::Tiny'        => '0.24',
+    'Devel::PatchPerl'     => '1.24',
+    'Pod::Parser'          => '1.62',
     'Pod::Usage'           => '1.63',
-    'local::lib'           => '2.000004';
+    'local::lib'           => '2.000012';
 
 test_requires
     'ExtUtils::MakeMaker'  => '6.86',
