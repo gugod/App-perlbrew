@@ -1,3 +1,6 @@
+0.69: # 2014-06-10T23:32:05+0200
+- fix 'perlbrew env' breakage by just avoiding bad local::lib versions.
+
 0.68: # 2014-06-07T15:08:00+0200
 - disable SSL cert checks. GH #385.
 - "perlbrew download stable" works as on expects. GH #383
