@@ -1,6 +1,6 @@
 #!/bin/sh
 
-PERLBREWURL=https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew
+PERLBREWURL=http://gugod.github.io/App-perlbrew/perlbrew
 
 if [ -z "$TMPDIR" ]; then
     if [ -d "/tmp" ]; then
