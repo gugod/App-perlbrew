@@ -1491,8 +1491,9 @@ sub installed_perls {
         } else {
             $orig_version = `$executable -e 'print \$]'`;
             if ( defined $orig_version and length $orig_version ){
-                open my $fh, '>', $version_file;
-                print {$fh} $orig_version;
+                if (open my $fh, '>', $version_file ){
+                    print {$fh} $orig_version;
+		}
             }
         }
 
