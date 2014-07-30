@@ -24,6 +24,10 @@ use Getopt::Long ();
 
 ### global variables
 
+# set $ENV{SHELL} to executable path of parent process (= shell) if it's missing
+# (e.g. if this script was executed by a daemon started with "service xxx start")
+$ENV{SHELL} ||= readlink joinpath("/proc", getppid, "exe");
+
 local $SIG{__DIE__} = sub {
     my $message = shift;
     warn $message;
