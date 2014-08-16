@@ -12,7 +12,7 @@ perl:
 before_install:
   - ./dev-bin/travis-prepare.sh
 script:
-  perl ./Makefile.PL && make && cover -test -report coveralls
+  PERL5OPT=-MDevel::Cover prove -lv t && cover -report coveralls
 
 notifications:
   irc:
