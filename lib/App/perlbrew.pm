@@ -26,7 +26,8 @@ use Getopt::Long ();
 
 # set $ENV{SHELL} to executable path of parent process (= shell) if it's missing
 # (e.g. if this script was executed by a daemon started with "service xxx start")
-$ENV{SHELL} ||= readlink joinpath("/proc", getppid, "exe");
+# ref: https://github.com/gugod/App-perlbrew/pull/404
+$ENV{SHELL} ||= readlink joinpath("/proc", getppid, "exe") if -d "/proc";
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
