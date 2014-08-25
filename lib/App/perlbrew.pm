@@ -139,7 +139,7 @@ sub files_are_the_same {
         $HTTP_USER_AGENT_PROGRAM ||= do {
             my $program;
 
-            for my $p (sort {$commands{$a}<=>$commands{$b}} keys %commands) {
+            for my $p (sort {$commands{$a}{order}<=>$commands{$b}{order}} keys %commands) {
                 my $code = system("$p $commands{$p}->{test}") >> 8;
                 if ($code != 127) {
                     $program = $p;
