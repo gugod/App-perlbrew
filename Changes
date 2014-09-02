@@ -1,3 +1,4 @@
+0.70: # 2014-09-02T20:41:15+0900
 - download the fatpacked perlbrew from an http:// url.
 - protect fatpacked perlbrew from PERL5LIB, thanks to dagolden++
 - avoid several warnings, thanks to DabeDotCom++
