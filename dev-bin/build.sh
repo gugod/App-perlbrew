@@ -48,6 +48,9 @@ export PERL5LIB="lib":$PERL5LIB
 
 cat - <<"EOF" > perlbrew
 #!/usr/bin/perl
+
+BEGIN { use Config; @INC = @Config{qw(privlibexp archlibexp sitelibexp sitearchexp)} };
+
 EOF
 
 (fatpack file; cat ../bin/perlbrew) >> perlbrew

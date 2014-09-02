@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.69";
+our $VERSION = "0.70";
 use Config;
 
 BEGIN {
@@ -23,6 +23,11 @@ use List::Util qw/min/;
 use Getopt::Long ();
 
 ### global variables
+
+# set $ENV{SHELL} to executable path of parent process (= shell) if it's missing
+# (e.g. if this script was executed by a daemon started with "service xxx start")
+# ref: https://github.com/gugod/App-perlbrew/pull/404
+$ENV{SHELL} ||= readlink joinpath("/proc", getppid, "exe") if -d "/proc";
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
@@ -134,7 +139,7 @@ sub files_are_the_same {
         $HTTP_USER_AGENT_PROGRAM ||= do {
             my $program;
 
-            for my $p (sort {$commands{$a}<=>$commands{$b}} keys %commands) {
+            for my $p (sort {$commands{$a}{order}<=>$commands{$b}{order}} keys %commands) {
                 my $code = system("$p $commands{$p}->{test}") >> 8;
                 if ($code != 127) {
                     $program = $p;
@@ -1491,8 +1496,9 @@ sub installed_perls {
         } else {
             $orig_version = `$executable -e 'print \$]'`;
             if ( defined $orig_version and length $orig_version ){
-                open my $fh, '>', $version_file;
-                print {$fh} $orig_version;
+                if (open my $fh, '>', $version_file ){
+                    print {$fh} $orig_version;
+		}
             }
         }
 
