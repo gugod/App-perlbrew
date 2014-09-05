@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ "${PERLBREWURL}" == "" ]; then
+if [ "x${PERLBREWURL}" == "x" ]; then
     PERLBREWURL=http://gugod.github.io/App-perlbrew/perlbrew
 fi
 
