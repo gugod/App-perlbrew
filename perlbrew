@@ -1622,6 +1622,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
               $env{$key} = $ll_env{$key};
           }
       } else {
+          $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
+  
           my %ll_env = $current_local_lib_context->build_environment_vars;
           for my $key (keys %ll_env) {
               $env{$key} = $ll_env{$key};
@@ -3084,7 +3086,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '1.82';
+  $CPAN::Perl::Releases::VERSION = '1.84';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -3232,6 +3234,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.21.2" => { id => 'ABIGAIL' },
   "5.21.3" => { id => 'PCM' },
   "5.20.1-RC1" => { id => 'SHAY' },
+  "5.20.1-RC2" => { id => 'SHAY' },
   };
   
   sub perl_tarballs {
@@ -3288,7 +3291,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 1.82
+  version 1.84
   
   =head1 SYNOPSIS
   
