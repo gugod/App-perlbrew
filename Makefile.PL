@@ -12,7 +12,7 @@ requires
     'Devel::PatchPerl'     => '1.24',
     'Pod::Parser'          => '1.62',
     'Pod::Usage'           => '1.64',
-    'local::lib'           => '2.000013';
+    'local::lib'           => '2.000014';
 
 test_requires
     'ExtUtils::MakeMaker'  => '6.86',
