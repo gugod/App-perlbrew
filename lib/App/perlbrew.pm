@@ -1611,6 +1611,8 @@ sub perlbrew_env {
             $env{$key} = $ll_env{$key};
         }
     } else {
+        $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
+
         my %ll_env = $current_local_lib_context->build_environment_vars;
         for my $key (keys %ll_env) {
             $env{$key} = $ll_env{$key};
