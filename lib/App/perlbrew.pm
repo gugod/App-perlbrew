@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.70";
+our $VERSION = "0.71";
 use Config;
 
 BEGIN {
@@ -21,6 +21,10 @@ BEGIN {
 
 use List::Util qw/min/;
 use Getopt::Long ();
+
+sub uniq {
+    my %seen; grep { !$seen{$_}++ } @_;
+}
 
 ### global variables
 
@@ -1571,6 +1575,14 @@ sub perlbrew_env {
         PERLBREW_ROOT => $self->root
     );
 
+    require local::lib;
+    my $current_local_lib_root = $self->env("PERL_LOCAL_LIB_ROOT") || "";
+    my $current_local_lib_context = local::lib->new;
+    my @perlbrew_local_lib_root =  uniq(grep { /\Q${PERLBREW_HOME}\E/ } split(/:/, $current_local_lib_root));
+    if ($current_local_lib_root =~ /^\Q$PERLBREW_HOME\E/) {
+        $current_local_lib_context = $current_local_lib_context->activate($_) for @perlbrew_local_lib_root;
+    }
+
     if ($perl_name) {
         if(-d  "@{[ $self->root ]}/perls/$perl_name/bin") {
             $env{PERLBREW_PERL}    = $perl_name;
@@ -1579,63 +1591,35 @@ sub perlbrew_env {
         }
 
         if ($lib_name) {
-            require local::lib;
-
-            if ($ENV{PERL_LOCAL_LIB_ROOT}
-                && $ENV{PERL_LOCAL_LIB_ROOT} =~ /^\Q$PERLBREW_HOME\E/
-            ) {
-                my %deactivate_env = local::lib->build_deact_all_environment_vars_for($ENV{PERL_LOCAL_LIB_ROOT});
-                @env{keys %deactivate_env} = values %deactivate_env;
-            }
+            $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
 
             my $base = "$PERLBREW_HOME/libs/${perl_name}\@${lib_name}";
 
             if (-d $base) {
-                delete $ENV{PERL_LOCAL_LIB_ROOT};
-                @ENV{keys %env} = values %env;
-                while (my ($k,$v) = each %ENV) {
-                    delete $ENV{$k} unless defined($v);
-                }
-                my %lib_env = local::lib->build_environment_vars_for($base, 0, 1);
+                $current_local_lib_context = $current_local_lib_context->activate($base);
                 $env{PERLBREW_PATH}    = joinpath($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = joinpath($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
-
-                $env{PERL_MM_OPT}   = $lib_env{PERL_MM_OPT};
-                $env{PERL_MB_OPT}   = $lib_env{PERL_MB_OPT};
-                $env{PERL5LIB}      = $lib_env{PERL5LIB};
-                $env{PERL_LOCAL_LIB_ROOT} = $lib_env{PERL_LOCAL_LIB_ROOT};
             }
-        }
-        else {
-            my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
-            if ($libroot && $libroot =~ /^\Q$PERLBREW_HOME\E/) {
-                require local::lib;
-                my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
-                @env{keys %deactivate_env} = values %deactivate_env;
-                $env{PERLBREW_LIB}  = undef;
-            }
-            if (my $perl5lib = $self->env("PERL5LIB")) {
-                my @perl5libs = split $Config{path_sep} => $perl5lib;
-                my @pristine_perl5libs = grep { !/^\Q$PERLBREW_HOME\E/ } @perl5libs;
-                if (@pristine_perl5libs) {
-                    $env{PERL5LIB} = join $Config{path_sep}, @pristine_perl5libs;
-                }
-                else {
-                    $env{PERL5LIB} = undef;
-                }
-            }
-        }
-    }
-    else {
-        my $libroot = $self->env("PERL_LOCAL_LIB_ROOT");
-        if ($libroot && $libroot =~ /^\Q$PERLBREW_HOME\E/) {
-            require local::lib;
-            my %deactivate_env = local::lib->build_deact_all_environment_vars_for($libroot);
-            @env{keys %deactivate_env} = values %deactivate_env;
-            $env{PERLBREW_LIB}  = undef;
+        } else {
+            $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
+            $env{PERLBREW_LIB} = undef;
         }
 
+        my %ll_env = $current_local_lib_context->build_environment_vars;
+        delete $ll_env{PATH};
+        for my $key (keys %ll_env) {
+            $env{$key} = $ll_env{$key};
+        }
+    } else {
+        $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
+
+        my %ll_env = $current_local_lib_context->build_environment_vars;
+        delete $ll_env{PATH};
+        for my $key (keys %ll_env) {
+            $env{$key} = $ll_env{$key};
+        }
+        $env{PERLBREW_LIB} = undef;
         $env{PERLBREW_PERL} = undef;
     }
 
@@ -1859,11 +1843,15 @@ sub run_command_env {
         for my $k (sort keys %env) {
             my $v = $env{$k};
             if (defined $v) {
-                $v =~ s/(\\")/\\$1/g;
-                print "export $k=\"$v\"\n";
+                if ($v || ($v && exists($ENV{$k}))) {
+                    $v =~ s/(\\")/\\$1/g;
+                    print "export $k=\"$v\"\n";
+                }
             }
             else {
-                print "unset $k\n";
+                if (exists $ENV{$k}) {
+                    print "unset $k\n";
+                }
             }
         }
     }
@@ -1871,11 +1859,15 @@ sub run_command_env {
         for my $k (sort keys %env) {
             my $v = $env{$k};
             if (defined $v) {
-                $v =~ s/(\\")/\\$1/g;
-                print "setenv $k \"$v\"\n";
+                if ($v || ($v && exists($ENV{$k}))) {
+                    $v =~ s/(\\")/\\$1/g;
+                    print "setenv $k \"$v\"\n";
+                }
             }
             else {
-                print "unsetenv $k\n";
+                if (exists $ENV{$k}) {
+                    print "unsetenv $k\n";
+                }
             }
         }
     }

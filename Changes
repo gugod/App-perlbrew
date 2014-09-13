@@ -1,8 +1,11 @@
+0.71: # 2014-09-13T19:59:15+0200
+- Fix a few bugs of having unwanted values in PERL5LIB when switching between libs
+
 0.70: # 2014-09-02T20:41:15+0900
 - download the fatpacked perlbrew from an http:// url.
 - protect fatpacked perlbrew from PERL5LIB, thanks to dagolden++
 - avoid several warnings, thanks to DabeDotCom++
-- making perlbrew a bit friedlier to init.d script, thanks to maxhq++ . see also https://github.com/gugod/App-perlbrew/pull/404
+- making perlbrew a bit friendlier to init.d script, thanks to maxhq++ . see also https://github.com/gugod/App-perlbrew/pull/404
 - make it possible to override PERLBREWURL before invoking installers
 
 0.69: # 2014-06-10T23:32:05+0200
