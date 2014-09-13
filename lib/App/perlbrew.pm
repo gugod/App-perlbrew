@@ -1607,6 +1607,7 @@ sub perlbrew_env {
         }
 
         my %ll_env = $current_local_lib_context->build_environment_vars;
+        delete $ll_env{PATH};
         for my $key (keys %ll_env) {
             $env{$key} = $ll_env{$key};
         }
@@ -1614,6 +1615,7 @@ sub perlbrew_env {
         $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
 
         my %ll_env = $current_local_lib_context->build_environment_vars;
+        delete $ll_env{PATH};
         for my $key (keys %ll_env) {
             $env{$key} = $ll_env{$key};
         }
@@ -1841,11 +1843,15 @@ sub run_command_env {
         for my $k (sort keys %env) {
             my $v = $env{$k};
             if (defined $v) {
-                $v =~ s/(\\")/\\$1/g;
-                print "export $k=\"$v\"\n";
+                if ($v || ($v && exists($ENV{$k}))) {
+                    $v =~ s/(\\")/\\$1/g;
+                    print "export $k=\"$v\"\n";
+                }
             }
             else {
-                print "unset $k\n";
+                if (exists $ENV{$k}) {
+                    print "unset $k\n";
+                }
             }
         }
     }
@@ -1853,11 +1859,15 @@ sub run_command_env {
         for my $k (sort keys %env) {
             my $v = $env{$k};
             if (defined $v) {
-                $v =~ s/(\\")/\\$1/g;
-                print "setenv $k \"$v\"\n";
+                if ($v || ($v && exists($ENV{$k}))) {
+                    $v =~ s/(\\")/\\$1/g;
+                    print "setenv $k \"$v\"\n";
+                }
             }
             else {
-                print "unsetenv $k\n";
+                if (exists $ENV{$k}) {
+                    print "unsetenv $k\n";
+                }
             }
         }
     }
