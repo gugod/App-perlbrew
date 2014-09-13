@@ -7,7 +7,7 @@ all_from 'lib/App/perlbrew.pm';
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires
-    'CPAN::Perl::Releases' => '1.82',
+    'CPAN::Perl::Releases' => '1.84',
     'Capture::Tiny'        => '0.25',
     'Devel::PatchPerl'     => '1.24',
     'Pod::Parser'          => '1.62',
