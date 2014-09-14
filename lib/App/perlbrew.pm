@@ -1839,35 +1839,36 @@ sub run_command_env {
 
     my %env = $self->perlbrew_env($name);
 
-    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
-        for my $k (sort keys %env) {
-            my $v = $env{$k};
-            if (defined $v) {
-                if ($v || ($v && exists($ENV{$k}))) {
-                    $v =~ s/(\\")/\\$1/g;
-                    print "export $k=\"$v\"\n";
-                }
-            }
-            else {
-                if (exists $ENV{$k}) {
-                    print "unset $k\n";
-                }
+    my @statements;
+    for my $k (sort keys %env) {
+        my $v = $env{$k};
+        if (defined($v) && $v ne '') {
+            $v =~ s/(\\")/\\$1/g;
+            push @statements, ["set", $k, $v];
+        } else {
+            if (exists $ENV{$k}) {
+                push @statements, ["unset", $k];
             }
         }
     }
-    else {
-        for my $k (sort keys %env) {
-            my $v = $env{$k};
-            if (defined $v) {
-                if ($v || ($v && exists($ENV{$k}))) {
-                    $v =~ s/(\\")/\\$1/g;
-                    print "setenv $k \"$v\"\n";
-                }
+
+    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
+        for (@statements) {
+            my ($o,$k,$v) = @$_;
+            if ($o eq 'unset') {
+                print "unset $k\n";
+            } else {
+                $v =~ s/(\\")/\\$1/g;
+                print "export $k=\"$v\"\n";
             }
-            else {
-                if (exists $ENV{$k}) {
-                    print "unsetenv $k\n";
-                }
+        }
+    } else {
+        for (@statements) {
+            my ($o,$k,$v) = @$_;
+            if ($o eq 'unset') {
+                print "unsetenv $k\n";
+            } else {
+                print "setenv $k \"$v\"\n";
             }
         }
     }
