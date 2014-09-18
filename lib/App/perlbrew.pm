@@ -1396,6 +1396,15 @@ INSTALL
                 or die "Could not open '$sitecustomize' for reading: $!\n";
             print {$dst} do { local $/; <$src> };
         }
+
+        my $version_file =
+          joinpath( $self->root, 'perls', $installation_name, '.version' );
+
+        if ( -e $version_file ) {
+            unlink($version_file)
+              or die "Could not unlink $version_file file: $!\n";
+        }
+
         print "$installation_name is successfully installed.\n";
     }
     else {
