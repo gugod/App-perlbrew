@@ -1510,7 +1510,7 @@ sub installed_perls {
             name        => $name,
             orig_version=> $orig_version,
             version     => $self->format_perl_version($orig_version),
-            is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
+            is_current  => ($self->current_perl eq $name) && !($self->current_lib),
             libs => [ $self->local_libs($name) ],
             executable  => $executable
         };
@@ -2199,7 +2199,7 @@ sub run_command_lib_delete {
 
     my $fullname = $perl_name . '@' . $lib_name;
 
-    my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
+    my $current  = $self->current_perl . '@' . $self->current_lib;
 
     my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
 
@@ -2223,18 +2223,13 @@ sub run_command_lib_delete {
 
 sub run_command_lib_list {
     my ($self) = @_;
-
-    my $current = "";
-    if ($self->current_perl && $self->env("PERLBREW_LIB")) {
-        $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
-    }
-
     my $dir = joinpath($PERLBREW_HOME,  "libs");
     return unless -d $dir;
 
     opendir my $dh, $dir or die "open $dir failed: $!";
     my @libs = grep { !/^\./ && /\@/ } readdir($dh);
 
+    my $current = $self->current_env;
     for (@libs) {
         print $current eq $_ ? "* " : "  ";
         print "$_\n";
