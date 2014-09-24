@@ -19,8 +19,15 @@ BEGIN {
     @INC = @oldinc;
 }
 
-use List::Util qw/min/;
 use Getopt::Long ();
+
+sub min(@) {
+    my $m = $_[0];
+    for(@_) {
+        $m = $_ if $_ < $m;
+    }
+    return $m;
+}
 
 sub uniq {
     my %seen; grep { !$seen{$_}++ } @_;
