@@ -793,7 +793,7 @@ sub run_command_init {
     my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
 
     my $code = qq(    source $root_dir/etc/${shrc});
-    if ($PERLBREW_HOME ne joinpath($ENV{HOME}, ".perlbrew")) {
+    if ($PERLBREW_HOME ne joinpath($self->env('HOME'), ".perlbrew")) {
         $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
     }
 
@@ -1423,7 +1423,7 @@ sub do_install_program_from_url {
     my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
 
     unless ($body =~ m{\A#!/}s) {
-        my $x = joinpath($ENV{TMPDIR} || "/tmp", "${program_name}.downloaded.$$");
+        my $x = joinpath($self->env('TMPDIR') || "/tmp", "${program_name}.downloaded.$$");
         my $message = "\nERROR: The downloaded $program_name program seem to be invalid. Please check if the following URL can be reached correctly\n\n\t$url\n\n...and try again latter.";
 
         unless (-f $x) {
