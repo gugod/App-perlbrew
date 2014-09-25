@@ -19,8 +19,15 @@ BEGIN {
     @INC = @oldinc;
 }
 
-use List::Util qw/min/;
 use Getopt::Long ();
+
+sub min(@) {
+    my $m = $_[0];
+    for(@_) {
+        $m = $_ if $_ < $m;
+    }
+    return $m;
+}
 
 sub uniq {
     my %seen; grep { !$seen{$_}++ } @_;
@@ -793,7 +800,7 @@ sub run_command_init {
     my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
 
     my $code = qq(    source $root_dir/etc/${shrc});
-    if ($PERLBREW_HOME ne joinpath($ENV{HOME}, ".perlbrew")) {
+    if ($PERLBREW_HOME ne joinpath($self->env('HOME'), ".perlbrew")) {
         $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
     }
 
@@ -1432,7 +1439,7 @@ sub do_install_program_from_url {
     my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
 
     unless ($body =~ m{\A#!/}s) {
-        my $x = joinpath($ENV{TMPDIR} || "/tmp", "${program_name}.downloaded.$$");
+        my $x = joinpath($self->env('TMPDIR') || "/tmp", "${program_name}.downloaded.$$");
         my $message = "\nERROR: The downloaded $program_name program seem to be invalid. Please check if the following URL can be reached correctly\n\n\t$url\n\n...and try again latter.";
 
         unless (-f $x) {
@@ -1519,7 +1526,7 @@ sub installed_perls {
             name        => $name,
             orig_version=> $orig_version,
             version     => $self->format_perl_version($orig_version),
-            is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
+            is_current  => ($self->current_perl eq $name) && !($self->current_lib),
             libs => [ $self->local_libs($name) ],
             executable  => $executable
         };
@@ -2208,7 +2215,7 @@ sub run_command_lib_delete {
 
     my $fullname = $perl_name . '@' . $lib_name;
 
-    my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
+    my $current  = $self->current_perl . '@' . $self->current_lib;
 
     my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
 
@@ -2232,18 +2239,13 @@ sub run_command_lib_delete {
 
 sub run_command_lib_list {
     my ($self) = @_;
-
-    my $current = "";
-    if ($self->current_perl && $self->env("PERLBREW_LIB")) {
-        $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
-    }
-
     my $dir = joinpath($PERLBREW_HOME,  "libs");
     return unless -d $dir;
 
     opendir my $dh, $dir or die "open $dir failed: $!";
     my @libs = grep { !/^\./ && /\@/ } readdir($dh);
 
+    my $current = $self->current_env;
     for (@libs) {
         print $current eq $_ ? "* " : "  ";
         print "$_\n";
