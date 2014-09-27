@@ -2422,15 +2422,21 @@ __perlbrew_reinit() {
     __perlbrew_set_path
 }
 
+__perlbrew_purify () {
+    local path patharray outsep
+    IFS=: read -ra patharray <<< "$1"
+    for path in "${patharray[@]}" ; do
+        case "$path" in
+            *"$PERLBREW_HOME"*) ;;
+            *"$PERLBREW_ROOT"*) ;;
+            *) printf '%s' "$outsep$path" ; outsep=: ;;
+        esac
+    done
+}
+
 __perlbrew_set_path () {
-    MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
-    export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$MANPATH_WITHOUT_PERLBREW
-    unset MANPATH_WITHOUT_PERLBREW
-
-    PATH_WITHOUT_PERLBREW=$(eval $perlbrew_command display-pristine-path)
-    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$PATH_WITHOUT_PERLBREW
-    unset PATH_WITHOUT_PERLBREW
-
+    export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath)")
+    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
     hash -r
 }
 
