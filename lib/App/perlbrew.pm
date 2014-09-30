@@ -2422,45 +2422,35 @@ __perlbrew_reinit() {
     __perlbrew_set_path
 }
 
+__perlbrew_purify () {
+    local path patharray outsep
+    IFS=: read -ra patharray <<< "$1"
+    for path in "${patharray[@]}" ; do
+        case "$path" in
+            *"$PERLBREW_HOME"*) ;;
+            *"$PERLBREW_ROOT"*) ;;
+            *) printf '%s' "$outsep$path" ; outsep=: ;;
+        esac
+    done
+}
+
 __perlbrew_set_path () {
-    MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
-    if [ -n "$PERLBREW_MANPATH" ]; then
-        export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
-    else
-        export MANPATH="$MANPATH_WITHOUT_PERLBREW"
-    fi
-    unset MANPATH_WITHOUT_PERLBREW
-
-    PATH_WITHOUT_PERLBREW=$(eval $perlbrew_command display-pristine-path)
-    if [ -n "$PERLBREW_PATH" ]; then
-        export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
-    else
-        export PATH=${PERLBREW_ROOT}/bin:${PATH_WITHOUT_PERLBREW}
-    fi
-    unset PATH_WITHOUT_PERLBREW
-
+    export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath)")
+    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
     hash -r
 }
 
 __perlbrew_set_env() {
-    local code="$($perlbrew_command env $@)"
-    local exit_status="$?"
-    if [[ $exit_status -eq 0 ]] ; then
-        eval "$code"
-    else
-        return $exit_status
-    fi
+    local code
+    code="$($perlbrew_command env $@)" || return $?
+    eval "$code"
 }
 
 __perlbrew_activate() {
-    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
+    [[ $(type -t perl) == alias ]] && unalias perl 2> /dev/null
 
     if [[ -n "$PERLBREW_PERL" ]]; then
-        if [[ -z "$PERLBREW_LIB" ]]; then
-            __perlbrew_set_env $PERLBREW_PERL
-        else
-            __perlbrew_set_env $PERLBREW_PERL@$PERLBREW_LIB
-        fi
+        __perlbrew_set_env "$PERLBREW_PERL${PERLBREW_LIB:+@}$PERLBREW_LIB"
     fi
 
     __perlbrew_set_path
