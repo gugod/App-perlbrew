@@ -315,7 +315,7 @@ Without a parameter, shows the version of perl currently selected.
 
 Usage: perlbrew list
 
-List all perl installations inside perlbrew root specifed by C<$PERLBREW_ROOT>
+List all perl installations inside perlbrew root specified by C<$PERLBREW_ROOT>
 environment variable. By default, the value is C<~/perl5/perlbrew>.
 
 If there are libs associated to some perl installations, they will be included
