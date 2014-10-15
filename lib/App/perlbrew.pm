@@ -2445,7 +2445,8 @@ __perlbrew_purify () {
 
 __perlbrew_set_path () {
     export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath)")
-    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
+    PATH_WITHOUT_PERLBREW=$(eval $perlbrew_command display-pristine-path)
+    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$PATH_WITHOUT_PERLBREW
     hash -r
 }
 
