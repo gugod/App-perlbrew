@@ -2443,7 +2443,7 @@ __perlbrew_purify () {
         case "$path" in
             (*"$PERLBREW_HOME"*) ;;
             (*"$PERLBREW_ROOT"*) ;;
-            (*) printf '%s' "$outsep$path" ; outsep=: ;;
+            (*) printf '%%s' "$outsep$path" ; outsep=: ;;
         esac
     done
 }
