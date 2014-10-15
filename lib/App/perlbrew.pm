@@ -2433,20 +2433,24 @@ __perlbrew_reinit() {
 
 __perlbrew_purify () {
     local path patharray outsep
-    IFS=: read -ra patharray <<< "$1"
-    for path in "${patharray[@]}" ; do
+    if [[ -n "$BASH_VERSION" ]]; then
+        IFS=: read -ra patharray <<< "$1"
+    fi
+    if [[ -n "$ZSH_VERSION" ]]; then
+        IFS=: read -rA patharray <<< "$1"
+    fi
+    for path in ${patharray[@]} ; do
         case "$path" in
-            *"$PERLBREW_HOME"*) ;;
-            *"$PERLBREW_ROOT"*) ;;
-            *) printf '%s' "$outsep$path" ; outsep=: ;;
+            (*"$PERLBREW_HOME"*) ;;
+            (*"$PERLBREW_ROOT"*) ;;
+            (*) printf '%s' "$outsep$path" ; outsep=: ;;
         esac
     done
 }
 
 __perlbrew_set_path () {
     export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath)")
-    PATH_WITHOUT_PERLBREW=$(eval $perlbrew_command display-pristine-path)
-    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$PATH_WITHOUT_PERLBREW
+    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify $PATH)
     hash -r
 }
 
