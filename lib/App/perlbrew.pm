@@ -2461,7 +2461,12 @@ __perlbrew_set_env() {
 }
 
 __perlbrew_activate() {
-    [[ $(type -t perl) == alias ]] && unalias perl 2> /dev/null
+    if [[ -n "$BASH_VERSION" ]]; then
+        [[ $(type -t perl) == alias ]] && unalias perl 2> /dev/null
+    fi
+    if [[ -n "$ZSH_VERSION" ]]; then
+        [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
+    fi
 
     if [[ -n "$PERLBREW_PERL" ]]; then
         __perlbrew_set_env "$PERLBREW_PERL${PERLBREW_LIB:+@}$PERLBREW_LIB"
