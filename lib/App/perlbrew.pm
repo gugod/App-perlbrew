@@ -95,6 +95,7 @@ for (@flavors) {
 ### functions
 
 sub joinpath { join "/", @_ }
+sub splitpath { split "/", $_[0] }
 
 sub mkpath {
     require File::Path;
@@ -333,6 +334,7 @@ sub parse_cmdline {
         'root=s',
         'switch',
         'all',
+        'shell=s',
 
         # options passed directly to Configure
         'D=s@',
@@ -374,6 +376,16 @@ sub current_lib {
     my ($self, $v) = @_;
     $self->{current_lib} = $v if $v;
     return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
+}
+
+sub current_shell {
+    my ($self, $x) = @_;
+    $self->{current_shell} = $x if $x;
+    return $self->{current_shell} ||= do {
+        my $shell_name = (splitpath($self->{shell} || $self->env('SHELL')))[-1];
+        $shell_name =~ s/\d+$//;
+        $shell_name;
+    };
 }
 
 sub current_env {
