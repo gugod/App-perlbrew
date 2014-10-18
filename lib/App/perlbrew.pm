@@ -749,9 +749,7 @@ sub run_command_init {
     my @args = @_;
 
     if (@args && $args[0] eq '-') {
-        if ($self->is_shell_csh) {
-        }
-        else {
+        if ($self->current_shell =~ /(ba|z)?sh/) {
             $self->run_command_init_in_bash;
         }
         exit 0;
@@ -790,16 +788,15 @@ sub run_command_init {
     }
 
     my ( $shrc, $yourshrc );
-    if ( $self->is_shell_csh) {
+    if ( $self->current_shell =~ m/(t?csh)/ ) {
         $shrc     = 'cshrc';
-        $self->env("SHELL") =~ m/(t?csh)/;
         $yourshrc = $1 . "rc";
     }
-    elsif ($self->env("SHELL") =~ m/zsh\d?$/) {
+    elsif ($self->current_shell =~ m/zsh\d?$/) {
         $shrc = "bashrc";
         $yourshrc = 'zshenv';
     }
-    elsif( $self->env('SHELL') =~ m/fish/ ) {
+    elsif( $self->current_shell eq 'fish' ) {
         $shrc = "perlbrew.fish";
         $yourshrc = 'config/fish/config.fish';
     }
