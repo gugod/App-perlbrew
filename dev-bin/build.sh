@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# eval "$(perlbrew init-in-bash)"
+eval "$(perlbrew init-in-bash)"
 # source $HOME/perl5/perlbrew/etc/bashrc
 
 wanted_perl_installation="perl-5.8.8@perlbrew"
