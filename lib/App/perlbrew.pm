@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.71";
+our $VERSION = "0.72";
 use Config;
 
 BEGIN {
@@ -19,8 +19,15 @@ BEGIN {
     @INC = @oldinc;
 }
 
-use List::Util qw/min/;
 use Getopt::Long ();
+
+sub min(@) {
+    my $m = $_[0];
+    for(@_) {
+        $m = $_ if $_ < $m;
+    }
+    return $m;
+}
 
 sub uniq {
     my %seen; grep { !$seen{$_}++ } @_;
@@ -88,6 +95,7 @@ for (@flavors) {
 ### functions
 
 sub joinpath { join "/", @_ }
+sub splitpath { split "/", $_[0] }
 
 sub mkpath {
     require File::Path;
@@ -326,6 +334,7 @@ sub parse_cmdline {
         'root=s',
         'switch',
         'all',
+        'shell=s',
 
         # options passed directly to Configure
         'D=s@',
@@ -367,6 +376,16 @@ sub current_lib {
     my ($self, $v) = @_;
     $self->{current_lib} = $v if $v;
     return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
+}
+
+sub current_shell {
+    my ($self, $x) = @_;
+    $self->{current_shell} = $x if $x;
+    return $self->{current_shell} ||= do {
+        my $shell_name = (splitpath($self->{shell} || $self->env('SHELL')))[-1];
+        $shell_name =~ s/\d+$//;
+        $shell_name;
+    };
 }
 
 sub current_env {
@@ -730,9 +749,7 @@ sub run_command_init {
     my @args = @_;
 
     if (@args && $args[0] eq '-') {
-        if ($self->is_shell_csh) {
-        }
-        else {
+        if ($self->current_shell =~ /(ba|z)?sh/) {
             $self->run_command_init_in_bash;
         }
         exit 0;
@@ -771,16 +788,15 @@ sub run_command_init {
     }
 
     my ( $shrc, $yourshrc );
-    if ( $self->is_shell_csh) {
+    if ( $self->current_shell =~ m/(t?csh)/ ) {
         $shrc     = 'cshrc';
-        $self->env("SHELL") =~ m/(t?csh)/;
         $yourshrc = $1 . "rc";
     }
-    elsif ($self->env("SHELL") =~ m/zsh\d?$/) {
+    elsif ($self->current_shell =~ m/zsh\d?$/) {
         $shrc = "bashrc";
         $yourshrc = 'zshenv';
     }
-    elsif( $self->env('SHELL') =~ m/fish/ ) {
+    elsif( $self->current_shell eq 'fish' ) {
         $shrc = "perlbrew.fish";
         $yourshrc = 'config/fish/config.fish';
     }
@@ -793,7 +809,7 @@ sub run_command_init {
     my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
 
     my $code = qq(    source $root_dir/etc/${shrc});
-    if ($PERLBREW_HOME ne joinpath($ENV{HOME}, ".perlbrew")) {
+    if ($PERLBREW_HOME ne joinpath($self->env('HOME'), ".perlbrew")) {
         $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
     }
 
@@ -1396,6 +1412,15 @@ INSTALL
                 or die "Could not open '$sitecustomize' for reading: $!\n";
             print {$dst} do { local $/; <$src> };
         }
+
+        my $version_file =
+          joinpath( $self->root, 'perls', $installation_name, '.version' );
+
+        if ( -e $version_file ) {
+            unlink($version_file)
+              or die "Could not unlink $version_file file: $!\n";
+        }
+
         print "$installation_name is successfully installed.\n";
     }
     else {
@@ -1423,7 +1448,7 @@ sub do_install_program_from_url {
     my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
 
     unless ($body =~ m{\A#!/}s) {
-        my $x = joinpath($ENV{TMPDIR} || "/tmp", "${program_name}.downloaded.$$");
+        my $x = joinpath($self->env('TMPDIR') || "/tmp", "${program_name}.downloaded.$$");
         my $message = "\nERROR: The downloaded $program_name program seem to be invalid. Please check if the following URL can be reached correctly\n\n\t$url\n\n...and try again latter.";
 
         unless (-f $x) {
@@ -1510,7 +1535,7 @@ sub installed_perls {
             name        => $name,
             orig_version=> $orig_version,
             version     => $self->format_perl_version($orig_version),
-            is_current  => ($self->current_perl eq $name) && !$self->env("PERLBREW_LIB"),
+            is_current  => ($self->current_perl eq $name) && !($self->current_lib),
             libs => [ $self->local_libs($name) ],
             executable  => $executable
         };
@@ -1839,35 +1864,36 @@ sub run_command_env {
 
     my %env = $self->perlbrew_env($name);
 
-    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
-        for my $k (sort keys %env) {
-            my $v = $env{$k};
-            if (defined $v) {
-                if ($v || ($v && exists($ENV{$k}))) {
-                    $v =~ s/(\\")/\\$1/g;
-                    print "export $k=\"$v\"\n";
-                }
-            }
-            else {
-                if (exists $ENV{$k}) {
-                    print "unset $k\n";
-                }
+    my @statements;
+    for my $k (sort keys %env) {
+        my $v = $env{$k};
+        if (defined($v) && $v ne '') {
+            $v =~ s/(\\")/\\$1/g;
+            push @statements, ["set", $k, $v];
+        } else {
+            if (exists $ENV{$k}) {
+                push @statements, ["unset", $k];
             }
         }
     }
-    else {
-        for my $k (sort keys %env) {
-            my $v = $env{$k};
-            if (defined $v) {
-                if ($v || ($v && exists($ENV{$k}))) {
-                    $v =~ s/(\\")/\\$1/g;
-                    print "setenv $k \"$v\"\n";
-                }
+
+    if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
+        for (@statements) {
+            my ($o,$k,$v) = @$_;
+            if ($o eq 'unset') {
+                print "unset $k\n";
+            } else {
+                $v =~ s/(\\")/\\$1/g;
+                print "export $k=\"$v\"\n";
             }
-            else {
-                if (exists $ENV{$k}) {
-                    print "unsetenv $k\n";
-                }
+        }
+    } else {
+        for (@statements) {
+            my ($o,$k,$v) = @$_;
+            if ($o eq 'unset') {
+                print "unsetenv $k\n";
+            } else {
+                print "setenv $k \"$v\"\n";
             }
         }
     }
@@ -2198,7 +2224,7 @@ sub run_command_lib_delete {
 
     my $fullname = $perl_name . '@' . $lib_name;
 
-    my $current  = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || "");
+    my $current  = $self->current_perl . '@' . $self->current_lib;
 
     my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
 
@@ -2222,18 +2248,13 @@ sub run_command_lib_delete {
 
 sub run_command_lib_list {
     my ($self) = @_;
-
-    my $current = "";
-    if ($self->current_perl && $self->env("PERLBREW_LIB")) {
-        $current = $self->current_perl . "@" . $self->env("PERLBREW_LIB");
-    }
-
     my $dir = joinpath($PERLBREW_HOME,  "libs");
     return unless -d $dir;
 
     opendir my $dh, $dir or die "open $dir failed: $!";
     my @libs = grep { !/^\./ && /\@/ } readdir($dh);
 
+    my $current = $self->current_env;
     for (@libs) {
         print $current eq $_ ? "* " : "  ";
         print "$_\n";
@@ -2406,7 +2427,8 @@ sub _load_config {
 }
 
 sub BASHRC_CONTENT() {
-    return "export PERLBREW_BASHRC_VERSION=$VERSION\n\n" . sprintf <<'RC', $PERLBREW_ROOT;
+    return "export PERLBREW_BASHRC_VERSION=$VERSION\n" .
+           (exists $ENV{PERLBREW_ROOT} ? "export PERLBREW_ROOT=$PERLBREW_ROOT\n" : "") . "\n" . <<'RC';
 
 __perlbrew_reinit() {
     if [[ ! -d "$PERLBREW_HOME" ]]; then
@@ -2419,45 +2441,45 @@ __perlbrew_reinit() {
     __perlbrew_set_path
 }
 
+__perlbrew_purify () {
+    local path patharray outsep
+    if [[ -n "$BASH_VERSION" ]]; then
+        IFS=: read -ra patharray <<< "$1"
+    fi
+    if [[ -n "$ZSH_VERSION" ]]; then
+        IFS=: read -rA patharray <<< "$1"
+    fi
+    for path in ${patharray[@]} ; do
+        case "$path" in
+            (*"$PERLBREW_HOME"*) ;;
+            (*"$PERLBREW_ROOT"*) ;;
+            (*) printf '%s' "$outsep$path" ; outsep=: ;;
+        esac
+    done
+}
+
 __perlbrew_set_path () {
-    MANPATH_WITHOUT_PERLBREW=`perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);'`
-    if [ -n "$PERLBREW_MANPATH" ]; then
-        export MANPATH="$PERLBREW_MANPATH:$MANPATH_WITHOUT_PERLBREW"
-    else
-        export MANPATH="$MANPATH_WITHOUT_PERLBREW"
-    fi
-    unset MANPATH_WITHOUT_PERLBREW
-
-    PATH_WITHOUT_PERLBREW=$(eval $perlbrew_command display-pristine-path)
-    if [ -n "$PERLBREW_PATH" ]; then
-        export PATH=${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
-    else
-        export PATH=${PERLBREW_ROOT}/bin:${PATH_WITHOUT_PERLBREW}
-    fi
-    unset PATH_WITHOUT_PERLBREW
-
+    export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath)")
+    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify $PATH)
     hash -r
 }
 
 __perlbrew_set_env() {
-    local code="$($perlbrew_command env $@)"
-    local exit_status="$?"
-    if [[ $exit_status -eq 0 ]] ; then
-        eval "$code"
-    else
-        return $exit_status
-    fi
+    local code
+    code="$($perlbrew_command env $@)" || return $?
+    eval "$code"
 }
 
 __perlbrew_activate() {
-    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
+    if [[ -n "$BASH_VERSION" ]]; then
+        [[ $(type -t perl) == alias ]] && unalias perl 2> /dev/null
+    fi
+    if [[ -n "$ZSH_VERSION" ]]; then
+        [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
+    fi
 
     if [[ -n "$PERLBREW_PERL" ]]; then
-        if [[ -z "$PERLBREW_LIB" ]]; then
-            __perlbrew_set_env $PERLBREW_PERL
-        else
-            __perlbrew_set_env $PERLBREW_PERL@$PERLBREW_LIB
-        fi
+        __perlbrew_set_env "$PERLBREW_PERL${PERLBREW_LIB:+@}$PERLBREW_LIB"
     fi
 
     __perlbrew_set_path
@@ -2532,7 +2554,7 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
-[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="%s"
+[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
 [[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
 if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
@@ -2585,10 +2607,11 @@ function __perlbrew_reinit
 end
 
 function __perlbrew_set_path
-    set -l MANPATH_WITHOUT_PERLBREW (perl -e 'print join " ", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);')
+    set -l MANPATH_WITHOUT_PERLBREW (perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_HOME}) < 0 } grep { index($_, $ENV{PERLBREW_ROOT}) < 0 } split/:/,qx(manpath 2> /dev/null);')
 
     if test -n "$PERLBREW_MANPATH"
-        set -x MANPATH $PERLBREW_MANPATH $MANPATH_WITHOUT_PERLBREW
+        set -l PERLBREW_MANPATH $PERLBREW_MANPATH":"
+        set -x MANPATH {$PERLBREW_MANPATH}{$MANPATH_WITHOUT_PERLBREW}
     else
         set -x MANPATH $MANPATH_WITHOUT_PERLBREW
     end

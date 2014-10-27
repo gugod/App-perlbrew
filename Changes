@@ -1,3 +1,7 @@
+0.72: # 2014-10-27T21:38:19+0100
+- Fix 0.71 breakage on MacOSX when the shell is bash or zsh
+- Fix spelling mistake. by @gregoa++
+
 0.71: # 2014-09-13T19:59:15+0200
 - Fix a few bugs of having unwanted values in PERL5LIB when switching between libs
 
