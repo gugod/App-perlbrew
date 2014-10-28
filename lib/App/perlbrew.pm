@@ -2443,12 +2443,7 @@ __perlbrew_reinit() {
 
 __perlbrew_purify () {
     local path patharray outsep
-    if [[ -n "$BASH_VERSION" ]]; then
-        IFS=: read -ra patharray <<< "$1"
-    fi
-    if [[ -n "$ZSH_VERSION" ]]; then
-        IFS=: read -rA patharray <<< "$1"
-    fi
+    IFS=: read -r${BASH_VERSION+a}${ZSH_VERSION+A} patharray <<< "$1"
     for path in ${patharray[@]} ; do
         case "$path" in
             (*"$PERLBREW_HOME"*) ;;
