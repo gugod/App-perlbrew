@@ -2449,7 +2449,7 @@ __perlbrew_purify () {
     if [[ -n "$ZSH_VERSION" ]]; then
         IFS=: read -rA patharray <<< "$1"
     fi
-    for path in ${patharray[@]} ; do
+    for path in "${patharray[@]}" ; do
         case "$path" in
             (*"$PERLBREW_HOME"*) ;;
             (*"$PERLBREW_ROOT"*) ;;
@@ -2460,7 +2460,7 @@ __perlbrew_purify () {
 
 __perlbrew_set_path () {
     export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath)")
-    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify $PATH)
+    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
     hash -r
 }
 
