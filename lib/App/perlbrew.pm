@@ -2443,12 +2443,7 @@ __perlbrew_reinit() {
 
 __perlbrew_purify () {
     local path patharray outsep
-    if [[ -n "$BASH_VERSION" ]]; then
-        IFS=: read -ra patharray <<< "$1"
-    fi
-    if [[ -n "$ZSH_VERSION" ]]; then
-        IFS=: read -rA patharray <<< "$1"
-    fi
+    IFS=: read -r${BASH_VERSION+a}${ZSH_VERSION+A} patharray <<< "$1"
     for path in ${patharray[@]} ; do
         case "$path" in
             (*"$PERLBREW_HOME"*) ;;
@@ -2471,12 +2466,7 @@ __perlbrew_set_env() {
 }
 
 __perlbrew_activate() {
-    if [[ -n "$BASH_VERSION" ]]; then
-        [[ $(type -t perl) == alias ]] && unalias perl 2> /dev/null
-    fi
-    if [[ -n "$ZSH_VERSION" ]]; then
-        [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
-    fi
+    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
     if [[ -n "$PERLBREW_PERL" ]]; then
         __perlbrew_set_env "$PERLBREW_PERL${PERLBREW_LIB:+@}$PERLBREW_LIB"
@@ -2507,11 +2497,7 @@ perlbrew () {
     case $1 in
         (use)
             if [[ -z "$2" ]] ; then
-                if [[ -z "$PERLBREW_PERL" ]] ; then
-                    echo "Currently using system perl"
-                else
-                    echo "Currently using $PERLBREW_PERL"
-                fi
+                echo "Currently using ${PERLBREW_PERL:-system perl}"
             else
                 __perlbrew_set_env "$2"
                 exit_status="$?"
