@@ -443,7 +443,7 @@ sub env {
 sub path_with_tilde {
     my ($self, $dir) = @_;
     my $home = $self->env('HOME');
-    $dir =~ s/^\Q$home\E/~/ if $home;
+    $dir =~ s!\Q$home/\E!~/! if $home;
     return $dir;
 }
 
