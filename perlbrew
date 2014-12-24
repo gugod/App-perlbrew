@@ -1711,9 +1711,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
           }
       }
-      elsif  ($shell =~ /\/bash$/)  {
-          $shell_opt = "--noprofile --norc";
-      }
   
       my %env = ($self->perlbrew_env($name), PERLBREW_SKIP_INIT => 1);
   
