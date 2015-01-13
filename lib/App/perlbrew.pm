@@ -555,7 +555,7 @@ sub run_command_version {
 }
 
 sub run_command_help {
-    my ($self, $status, $verbose) = @_;
+    my ($self, $status, $verbose, $return_text) = @_;
 
     require Pod::Usage;
 
@@ -581,6 +581,7 @@ sub run_command_help {
                 $out = "Cannot find documentation for '$status'\n\n";
             }
 
+            return "\n$out" if ($return_text);
             print "\n$out";
             close $fh;
         }
@@ -2079,18 +2080,9 @@ sub run_command_clean {
 sub run_command_alias {
     my ($self, $cmd, $name, $alias) = @_;
 
-    if (!$cmd) {
-        print <<USAGE;
-
-Usage: perlbrew alias [-f] <action> <name> [<alias>]
-
-    perlbrew alias create <name> <alias>
-    perlbrew alias delete <alias>
-    perlbrew alias rename <old_alias> <new_alias>
-
-USAGE
-
-        return;
+    unless($cmd) {
+        $self->run_command_help("alias");
+        exit(-1);
     }
 
     my $path_name  = joinpath($self->root, "perls", $name);
@@ -2153,29 +2145,12 @@ sub run_command_display_installation_failure_message {
     my ($self) = @_;
 }
 
-sub lib_usage {
-    my $usage = <<'USAGE';
-
-Usage: perlbrew lib <action> <name> [<name> <name> ...]
-
-    perlbrew lib list
-    perlbrew lib create nobita
-    perlbrew lib create perl-5.14.2@nobita
-
-    perlbrew use perl-5.14.2@nobita
-    perlbrew lib delete perl-5.12.3@nobita shizuka
-
-USAGE
-
-
-    return $usage;
-}
-
 sub run_command_lib {
     my ($self, $subcommand, @args) = @_;
+
     unless ($subcommand) {
-        print lib_usage;
-        return;
+        $self->run_command_help("lib");
+        exit(-1);
     }
 
     my $sub = "run_command_lib_$subcommand";
@@ -2190,7 +2165,7 @@ sub run_command_lib {
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
-    die "ERROR: No lib name\n", lib_usage unless $name;
+    die "ERROR: No lib name\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
@@ -2219,7 +2194,7 @@ sub run_command_lib_create {
 sub run_command_lib_delete {
     my ($self, $name) = @_;
 
-    die "ERROR: No lib to delete\n", lib_usage unless $name;
+    die "ERROR: No lib to delete\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
