@@ -1732,10 +1732,9 @@ sub run_command_use {
 
     if ( !$perl ) {
         my $current = $self->current_perl;
+        $current .= '@' . $self->current_lib if ($self->current_lib);
         if ($current) {
-            print "Currently using $current";
-            print '@', $self->current_lib if ($self->current_lib);
-            print "\n";
+            print "Currently using $current\n";
         } else {
             print "No version in use; defaulting to system\n";
         }
@@ -1751,6 +1750,7 @@ sub run_command_switch {
 
     unless ( $dist ) {
         my $current = $self->current_perl;
+        $current .= '@' . $self->current_lib if ($self->current_lib);
         printf "Currently switched %s\n",
             ( $current ? "to $current" : 'off' );
         return;
