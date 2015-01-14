@@ -1733,7 +1733,9 @@ sub run_command_use {
     if ( !$perl ) {
         my $current = $self->current_perl;
         if ($current) {
-            print "Currently using $current\n";
+            print "Currently using $current";
+            print '@', $self->current_lib if ($self->current_lib);
+            print "\n";
         } else {
             print "No version in use; defaulting to system\n";
         }
