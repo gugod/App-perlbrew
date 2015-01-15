@@ -2616,7 +2616,7 @@ function __perlbrew_set_path
 end
 
 function __perlbrew_set_env
-    set -l code (eval $perlbrew_command env $argv | perl -pe 's/export\s+(\S+)="(\S*)"/set -x $1 $2;/g; y/:/ /')
+    set -l code (eval $perlbrew_command env $argv | perl -pe 's/^(export|setenv)/set -xg/; s/^unset[env]*/set -eug/; s/$/;/; y/:/ /')
 
     if test -z "$code"
         return 0;
@@ -2694,7 +2694,7 @@ function perlbrew
 end
 
 function __source_init
-    perl -pe's/^export/set -x/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
+    perl -pe's/^\(export|setenv\)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
 end
 
 if test -z "$PERLBREW_ROOT"
