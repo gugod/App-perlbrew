@@ -38,11 +38,20 @@ $PERLBREWDOWNLOAD || clean_exit 1
 
 echo
 echo "## Installing perlbrew"
+
+PERL="/usr/bin/perl"
+[ ! -x "$PERL" ] && PERL="/usr/local/bin/perl"
+
+if [ ! -x "$PERL" ]; then
+  echo "Need /usr/bin/perl or /usr/local/bin/perl to use $0"
+  clean_exit 1
+fi
+
 chmod +x $LOCALINSTALLER
-/usr/bin/perl $LOCALINSTALLER self-install || clean_exit 1
+$PERL $LOCALINSTALLER self-install || clean_exit 1
 
 echo "## Installing patchperl"
-/usr/bin/perl $LOCALINSTALLER -f -q install-patchperl || clean_exit 1
+$PERL $LOCALINSTALLER -f -q install-patchperl || clean_exit 1
 
 echo
 echo "## Done."
