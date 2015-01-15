@@ -2502,7 +2502,9 @@ perlbrew () {
     case $1 in
         (use)
             if [[ -z "$2" ]] ; then
-                echo "Currently using ${PERLBREW_PERL:-system perl}"
+                echo -n "Currently using ${PERLBREW_PERL:-system perl}"
+                [ -n "$PERLBREW_LIB" ] && echo -n "@$PERLBREW_LIB"
+                echo
             else
                 __perlbrew_set_env "$2"
                 exit_status="$?"
