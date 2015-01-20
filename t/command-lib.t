@@ -16,11 +16,20 @@ mock_perlbrew_install("perl-5.14.2");
 mock_perlbrew_install("perl-5.14.3");
 
 describe "lib command," => sub {
-    it "shows a page of usage synopsis when no sub-command are given." => sub {
-        stdout_like {
-            App::perlbrew->new("lib")->run;
-
-        } qr/usage/i;
+    describe "when invoked with unknown action name,", sub {
+        it "should display error" => sub {
+            my $x   = "correcthorsebatterystaple";
+            my $app = App::perlbrew->new("lib", $x);
+            stdout_like {
+                eval {
+                    $app->run;
+                    1;
+                }
+                or do {
+                    print STDERR $@;
+                };
+            } qr/Unknown command: $x/;
+        }
     };
 
     describe "without lib name" => sub {
