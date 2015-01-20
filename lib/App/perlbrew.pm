@@ -1701,9 +1701,6 @@ WARNINGONMAC
 
         }
     }
-    elsif  ($shell =~ /\/bash$/)  {
-        $shell_opt = "--noprofile --norc";
-    }
 
     my %env = ($self->perlbrew_env($name), PERLBREW_SKIP_INIT => 1);
 
