@@ -542,21 +542,33 @@ full name, prefixed by a perl installation name and a '@' sign, for example,
 
 Here are some a brief examples to invoke the `lib` command:
 
-    # Create libs by name
-    perlbrew lib create nobita
+    # Create lib perl-5.12.3@shizuka
     perlbrew lib create perl-5.12.3@shizuka
 
-    perlbrew list     # See the list of use/switch targets.
+    # Create lib perl-5.14.2@nobita and perl-5.14.2@shizuka
+    perlbrew use perl-5.14.2
+    perlbrew lib create nobita
+    perlbrew lib create shizuka
 
-    # Activate a lib in current shell.
-    perlbrew use perl-5.12.3@nobita
+    # See the list of use/switch targets
+    perlbrew list
+
+    # Activate a lib in current shell
+    perlbrew use perl-5.12.3@shizuka
     perlbrew use perl-5.14.2@nobita
+    perlbrew use perl-5.14.2@shizuka
 
-    # Activate a lib as default.
+    # Activate a lib as default
+    perlbrew switch perl-5.12.3@shizuka
     perlbrew switch perl-5.14.2@nobita
+    perlbrew switch perl-5.14.2@shizuka
 
-    # Delete the lib
+    # Delete lib perl-5.14.2@nobita and perl-5.14.2@shizuka
+    perlbrew use perl-5.14.2
     perlbrew lib delete nobita
+    perlbrew lib delete shizuka
+
+    # Delete lib perl-5.12.3@shizuka
     perlbrew lib delete perl-5.12.3@shizuka
 
 Short lib names are local to current perl. A lib name 'nobita' can refer to
