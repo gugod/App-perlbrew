@@ -428,7 +428,7 @@ status are not populated back.
 
 =head1 COMMAND: ENV
 
-Usage: perlbrew env <name>
+Usage: perlbrew env [ <name> ]
 
 Low-level command. Invoke this command to see the list of environment
 variables that are set by C<perlbrew> itself for shell integration.
@@ -444,7 +444,7 @@ tcsh / csh users should see 'setenv' statements instead of `export`.
 
 =head1 COMMAND: SYMLINK-EXECUTABLES
 
-Usage: perlbrew symlink-executables <name>
+Usage: perlbrew symlink-executables [ <name> ]
 
 Low-level command. This command is used to create the C<perl> executable
 symbolic link to, say, C<perl5.13.6>. This is only required for
@@ -526,7 +526,7 @@ Show the version of perlbrew.
 
 =head1 COMMAND: LIB
 
-Usage:
+Usage: perlbrew lib <action> <lib-name>
 
     perlbrew lib list
     perlbrew lib create <lib-name>
@@ -542,21 +542,33 @@ full name, prefixed by a perl installation name and a '@' sign, for example,
 
 Here are some a brief examples to invoke the `lib` command:
 
-    # Create libs by name
-    perlbrew lib create nobita
+    # Create lib perl-5.12.3@shizuka
     perlbrew lib create perl-5.12.3@shizuka
 
-    perlbrew list     # See the list of use/switch targets.
+    # Create lib perl-5.14.2@nobita and perl-5.14.2@shizuka
+    perlbrew use perl-5.14.2
+    perlbrew lib create nobita
+    perlbrew lib create shizuka
 
-    # Activate a lib in current shell.
-    perlbrew use perl-5.12.3@nobita
+    # See the list of use/switch targets
+    perlbrew list
+
+    # Activate a lib in current shell
+    perlbrew use perl-5.12.3@shizuka
     perlbrew use perl-5.14.2@nobita
+    perlbrew use perl-5.14.2@shizuka
 
-    # Activate a lib as default.
+    # Activate a lib as default
+    perlbrew switch perl-5.12.3@shizuka
     perlbrew switch perl-5.14.2@nobita
+    perlbrew switch perl-5.14.2@shizuka
 
-    # Delete the lib
+    # Delete lib perl-5.14.2@nobita and perl-5.14.2@shizuka
+    perlbrew use perl-5.14.2
     perlbrew lib delete nobita
+    perlbrew lib delete shizuka
+
+    # Delete lib perl-5.12.3@shizuka
     perlbrew lib delete perl-5.12.3@shizuka
 
 Short lib names are local to current perl. A lib name 'nobita' can refer to

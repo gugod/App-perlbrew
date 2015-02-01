@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.72";
+our $VERSION = "0.73";
 use Config;
 
 BEGIN {
@@ -443,7 +443,7 @@ sub env {
 sub path_with_tilde {
     my ($self, $dir) = @_;
     my $home = $self->env('HOME');
-    $dir =~ s/^\Q$home\E/~/ if $home;
+    $dir =~ s!\Q$home/\E!~/! if $home;
     return $dir;
 }
 
@@ -555,7 +555,7 @@ sub run_command_version {
 }
 
 sub run_command_help {
-    my ($self, $status, $verbose) = @_;
+    my ($self, $status, $verbose, $return_text) = @_;
 
     require Pod::Usage;
 
@@ -581,6 +581,7 @@ sub run_command_help {
                 $out = "Cannot find documentation for '$status'\n\n";
             }
 
+            return "\n$out" if ($return_text);
             print "\n$out";
             close $fh;
         }
@@ -1700,9 +1701,6 @@ WARNINGONMAC
 
         }
     }
-    elsif  ($shell =~ /\/bash$/)  {
-        $shell_opt = "--noprofile --norc";
-    }
 
     my %env = ($self->perlbrew_env($name), PERLBREW_SKIP_INIT => 1);
 
@@ -1732,6 +1730,7 @@ sub run_command_use {
 
     if ( !$perl ) {
         my $current = $self->current_perl;
+        $current .= '@' . $self->current_lib if ($self->current_lib);
         if ($current) {
             print "Currently using $current\n";
         } else {
@@ -1749,6 +1748,7 @@ sub run_command_switch {
 
     unless ( $dist ) {
         my $current = $self->current_perl;
+        $current .= '@' . $self->current_lib if ($self->current_lib);
         printf "Currently switched %s\n",
             ( $current ? "to $current" : 'off' );
         return;
@@ -2040,12 +2040,15 @@ sub run_command_exec {
             # return 255 for case when process was terminated with signal, in that case real exit code is useless and weird
             $exit_code = 255 if $exit_code > 255;
             $overall_success = 0;
-            print "Command terminated with non-zero status.\n" unless $self->{quiet};
 
-            print STDERR "Command [" .
-                join(' ', map { /\s/ ? "'$_'" : $_ } @ARGV) . # trying reverse shell escapes - quote arguments containing spaces
-                "] terminated with exit code $exit_code (\$? = $err) under the following perl environment:\n";
-            print STDERR $self->format_info_output;
+            unless ($self->{quiet}) {
+                print "Command terminated with non-zero status.\n";
+
+                print STDERR "Command [" .
+                    join(' ', map { /\s/ ? "'$_'" : $_ } @ARGV) . # trying reverse shell escapes - quote arguments containing spaces
+                    "] terminated with exit code $exit_code (\$? = $err) under the following perl environment:\n";
+                print STDERR $self->format_info_output;
+            }
 
             $self->do_exit_with_error_code($exit_code) if ($opts{'halt-on-error'});
         }
@@ -2076,18 +2079,9 @@ sub run_command_clean {
 sub run_command_alias {
     my ($self, $cmd, $name, $alias) = @_;
 
-    if (!$cmd) {
-        print <<USAGE;
-
-Usage: perlbrew alias [-f] <action> <name> [<alias>]
-
-    perlbrew alias create <name> <alias>
-    perlbrew alias delete <alias>
-    perlbrew alias rename <old_alias> <new_alias>
-
-USAGE
-
-        return;
+    unless($cmd) {
+        $self->run_command_help("alias");
+        exit(-1);
     }
 
     my $path_name  = joinpath($self->root, "perls", $name);
@@ -2150,29 +2144,12 @@ sub run_command_display_installation_failure_message {
     my ($self) = @_;
 }
 
-sub lib_usage {
-    my $usage = <<'USAGE';
-
-Usage: perlbrew lib <action> <name> [<name> <name> ...]
-
-    perlbrew lib list
-    perlbrew lib create nobita
-    perlbrew lib create perl-5.14.2@nobita
-
-    perlbrew use perl-5.14.2@nobita
-    perlbrew lib delete perl-5.12.3@nobita shizuka
-
-USAGE
-
-
-    return $usage;
-}
-
 sub run_command_lib {
     my ($self, $subcommand, @args) = @_;
+
     unless ($subcommand) {
-        print lib_usage;
-        return;
+        $self->run_command_help("lib");
+        exit(-1);
     }
 
     my $sub = "run_command_lib_$subcommand";
@@ -2187,7 +2164,7 @@ sub run_command_lib {
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
-    die "ERROR: No lib name\n", lib_usage unless $name;
+    die "ERROR: No lib name\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
@@ -2216,7 +2193,7 @@ sub run_command_lib_create {
 sub run_command_lib_delete {
     my ($self, $name) = @_;
 
-    die "ERROR: No lib to delete\n", lib_usage unless $name;
+    die "ERROR: No lib to delete\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
@@ -2443,13 +2420,8 @@ __perlbrew_reinit() {
 
 __perlbrew_purify () {
     local path patharray outsep
-    if [[ -n "$BASH_VERSION" ]]; then
-        IFS=: read -ra patharray <<< "$1"
-    fi
-    if [[ -n "$ZSH_VERSION" ]]; then
-        IFS=: read -rA patharray <<< "$1"
-    fi
-    for path in ${patharray[@]} ; do
+    IFS=: read -r${BASH_VERSION+a}${ZSH_VERSION+A} patharray <<< "$1"
+    for path in "${patharray[@]}" ; do
         case "$path" in
             (*"$PERLBREW_HOME"*) ;;
             (*"$PERLBREW_ROOT"*) ;;
@@ -2459,8 +2431,8 @@ __perlbrew_purify () {
 }
 
 __perlbrew_set_path () {
-    export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath)")
-    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify $PATH)
+    export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath 2>/dev/null)")
+    export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
     hash -r
 }
 
@@ -2471,12 +2443,7 @@ __perlbrew_set_env() {
 }
 
 __perlbrew_activate() {
-    if [[ -n "$BASH_VERSION" ]]; then
-        [[ $(type -t perl) == alias ]] && unalias perl 2> /dev/null
-    fi
-    if [[ -n "$ZSH_VERSION" ]]; then
-        [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
-    fi
+    [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
     if [[ -n "$PERLBREW_PERL" ]]; then
         __perlbrew_set_env "$PERLBREW_PERL${PERLBREW_LIB:+@}$PERLBREW_LIB"
@@ -2507,11 +2474,9 @@ perlbrew () {
     case $1 in
         (use)
             if [[ -z "$2" ]] ; then
-                if [[ -z "$PERLBREW_PERL" ]] ; then
-                    echo "Currently using system perl"
-                else
-                    echo "Currently using $PERLBREW_PERL"
-                fi
+                echo -n "Currently using ${PERLBREW_PERL:-system perl}"
+                [ -n "$PERLBREW_LIB" ] && echo -n "@$PERLBREW_LIB"
+                echo
             else
                 __perlbrew_set_env "$2"
                 exit_status="$?"
@@ -2627,7 +2592,7 @@ function __perlbrew_set_path
 end
 
 function __perlbrew_set_env
-    set -l code (eval $perlbrew_command env $argv | perl -pe 's/export\s+(\S+)="(\S*)"/set -x $1 $2;/g; y/:/ /')
+    set -l code (eval $perlbrew_command env $argv | perl -pe 's/^(export|setenv)/set -xg/; s/^unset[env]*/set -eug/; s/$/;/; y/:/ /')
 
     if test -z "$code"
         return 0;
@@ -2705,7 +2670,7 @@ function perlbrew
 end
 
 function __source_init
-    perl -pe's/^export/set -x/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
+    perl -pe's/^\(export|setenv\)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
 end
 
 if test -z "$PERLBREW_ROOT"
@@ -3074,7 +3039,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010,2011,2012,2013,2014 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010,2011,2012,2013,2014,2015 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 

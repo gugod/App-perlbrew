@@ -149,6 +149,17 @@ Command [perl -E 'somesub 42'] terminated with exit code 7 (\$? = 1792) under th
 format_info_output_value
 OUT
         };
+        it "should be quiet if asked" => sub {
+            my $app = App::perlbrew->new(qw(exec --quiet --with), "perl-5.14.1", qw(perl -E), "somesub 42");
+            $app->expects("format_info_output")->exactly(0)->returns('should not be called!');
+            App::perlbrew->expects("do_exit_with_error_code")->exactly(1)->returns(sub {
+                die "simulate exit\n";
+            });
+            $app->expects("do_system_with_exit_code")->exactly(1)->returns(7<<8);
+            stderr_is sub {
+                eval { $app->run; 1; };
+            }, '';
+        };
         it "should format info output for right perl" => sub {
             my $app = App::perlbrew->new(qw(exec --with), "perl-5.14.1", qw(perl -E), "somesub 42");
             $app->expects("format_info_output")->exactly(1)->returns(sub {
