@@ -1,3 +1,11 @@
+0.73: # 2015-02-01T09:59:45+0100
+- fixes and improvements from Manuel Streuhofer, Aristotle Pagaltzis, Sebastian Willert, David Hand, Eric Enns,
+  Peter Roberts, Thomas Sibley, Ivan Baidakou, thanks!
+- fix 'perlbrew user' for fish users https://github.com/gugod/App-perlbrew/pull/429
+- fix sub-shell for bash users https://github.com/gugod/App-perlbrew/pull/435
+- clarify the 'perlbrew use' output: https://github.com/gugod/App-perlbrew/issues/439
+
+
 0.72: # 2014-10-27T21:38:19+0100
 - Fix 0.71 breakage on MacOSX when the shell is bash or zsh
 - Fix spelling mistake. by @gregoa++
