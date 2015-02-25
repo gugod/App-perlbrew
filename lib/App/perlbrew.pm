@@ -1592,6 +1592,10 @@ sub perlbrew_env {
         unless ($perl_name) {
             die "\nERROR: The installation \"$name\" is unknown.\n\n";
         }
+
+        unless (grep { $_->{lib_name} eq $lib_name } $self->local_libs($perl_name)) {
+            die "\nERROR: The lib name \"$lib_name\" is unknown.\n\n";
+        }
     }
 
     my %env = (
