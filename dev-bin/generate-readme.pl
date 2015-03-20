@@ -52,7 +52,7 @@ close $readme_fh;
 
 print "Generated README.\n";
 
-my $parser = Pod::Markdown->new;
+my $parser = Pod::Markdown->new( perldoc_url_prefix => 'metacpan' );
 
 open my $in_file,  "<", $perlbrew_pm or die "Failed to open '$perlbrew_pm': $!\n";
 open my $out_file, ">", $readme_md   or die "Failed to open '$perlbrew_pm': $!\n";

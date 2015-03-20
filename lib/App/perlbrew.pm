@@ -2008,7 +2008,7 @@ sub run_command_exec {
     if ($opts{with}) {
         my %installed = map { $_->{name} => $_ } map { ($_, @{$_->{libs}}) } $self->installed_perls;
 
-        my $d = ($opts{with} =~ / /) ? qr( +) : qr(,+);
+        my $d = ($opts{with} =~ m/ /) ? qr( +) : qr(,+);
         my @with = grep { $_ } map {
             my ($p,$l) = $self->resolve_installation_name($_);
             $p .= "\@$l" if $l;
@@ -2896,7 +2896,7 @@ __END__
 
 =head1 NAME
 
-App::perlbrew - Manage perl installations in your $HOME
+L<App::perlbrew> - Manage perl installations in your $HOME
 
 =head1 SYNOPSIS
 
