@@ -2896,7 +2896,7 @@ __END__
 
 =head1 NAME
 
-L<App::perlbrew> - Manage perl installations in your $HOME
+L<App::perlbrew> - Manage perl installations in your C<$HOME>
 
 =head1 SYNOPSIS
 
@@ -2939,7 +2939,7 @@ L<App::perlbrew> - Manage perl installations in your $HOME
 
 =head1 DESCRIPTION
 
-perlbrew is a program to automate the building and installation of perl in an
+L<perlbrew> is a program to automate the building and installation of perl in an
 easy way. It provides multiple isolated perl environments, and a mechanism
 for you to switch between them.
 
@@ -2949,7 +2949,8 @@ benefit from not having to run 'sudo' commands to install
 cpan modules because those are installed inside your HOME too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
-on CPAN, or by running C<perlbrew help>. The following documentation
+on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>, 
+or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 

@@ -1,6 +1,6 @@
 # NAME
 
-[App::perlbrew](https://metacpan.org/pod/App::perlbrew) - Manage perl installations in your $HOME
+[App::perlbrew](https://metacpan.org/pod/App::perlbrew) - Manage perl installations in your `$HOME`
 
 # SYNOPSIS
 
@@ -43,7 +43,7 @@
 
 # DESCRIPTION
 
-perlbrew is a program to automate the building and installation of perl in an
+[perlbrew](https://metacpan.org/pod/perlbrew) is a program to automate the building and installation of perl in an
 easy way. It provides multiple isolated perl environments, and a mechanism
 for you to switch between them.
 
@@ -53,7 +53,8 @@ benefit from not having to run 'sudo' commands to install
 cpan modules because those are installed inside your HOME too.
 
 For the documentation of perlbrew usage see [perlbrew](https://metacpan.org/pod/perlbrew) command
-on CPAN, or by running `perlbrew help`. The following documentation
+on [MetaCPAN](https://metacpan.org/), or by running `perlbrew help`, 
+or by visiting [perlbrew's official website](http://perlbrew.pl/). The following documentation
 features the API of `App::perlbrew` module, and may not be remotely
 close to what your want to read.
 
