@@ -1,6 +1,6 @@
 # NAME
 
-App::perlbrew - Manage perl installations in your $HOME
+[App::perlbrew](https://metacpan.org/pod/App::perlbrew) - Manage perl installations in your $HOME
 
 # SYNOPSIS
 
