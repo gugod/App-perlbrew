@@ -612,21 +612,6 @@ re-installs all modules under perl-5.16.0:
 Note that this installs the I<latest> versions of the Perl modules on the new perl,
 which are not necessarily the I<same> module versions you had installed previously.
 
-=head1 UPGRADE NOTES
-
-If you are upgrading C<perlbrew> from 0.16 or earlier versions to a recent
-one (0.40-ish), you should do these steps to adjust your perl installations
-afterwards (you might need to change the value of PERLBREW_ROOT):
-
-    export PERLBREW_ROOT=${HOME}/perl5/perlbrew
-    rm -f $PERLBREW_ROOT/perls/current
-    rm -f `find $PERLBREW_ROOT/perls/bin -type l`
-    perlbrew symlink-executables
-    perlbrew init
-
-Following the instructions on screen to tweak your shell a bit. Then it
-should be good.
-
 =head1 SEE ALSO
 
 L<App::perlbrew>, L<App::cpanminus>, L<Devel::PatchPerl>

@@ -128,20 +128,20 @@ sub files_are_the_same {
     my %commands = (
         curl => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--insecure --silent --location --fail -o - {url}',
-            download => '--insecure --silent --location --fail -o {output} {url}',
+            get      => '--silent --location --fail -o - {url}',
+            download => '--silent --location --fail -o {output} {url}',
             order    => 1,
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--no-check-certificate --quiet -O - {url}',
-            download => '--no-check-certificate --quiet -O {output} {url}',
+            get      => '--quiet -O - {url}',
+            download => '--quiet -O {output} {url}',
             order    => 2,
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--no-verify-peer -o - {url}',
-            download => '--no-verify-peer {url}',
+            get      => '-o - {url}',
+            download => '{url}',
             order    => 3,
         }
     );
@@ -1592,6 +1592,10 @@ sub perlbrew_env {
         unless ($perl_name) {
             die "\nERROR: The installation \"$name\" is unknown.\n\n";
         }
+
+        unless (!$lib_name || grep { $_->{lib_name} eq $lib_name } $self->local_libs($perl_name)) {
+            die "\nERROR: The lib name \"$lib_name\" is unknown.\n\n";
+        }
     }
 
     my %env = (
@@ -2897,7 +2901,7 @@ App::perlbrew - Manage perl installations in your $HOME
 =head1 SYNOPSIS
 
     # Installation
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
     # Initialize
     perlbrew init
@@ -2954,7 +2958,7 @@ close to what your want to read.
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
 
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
 Or this one, if you have C<fetch> (default on FreeBSD):
 
@@ -2978,7 +2982,7 @@ say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
 environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
 As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
