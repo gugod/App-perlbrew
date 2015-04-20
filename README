@@ -11,16 +11,17 @@ Description:
     You then can benefit from not having to run 'sudo' commands to install
     cpan modules because those are installed inside your HOME too.
 
-    For the documentation of perlbrew usage see perlbrew command on CPAN, or
-    by running "perlbrew help". The following documentation features the API
-    of "App::perlbrew" module, and may not be remotely close to what your
-    want to read.
+    For the documentation of perlbrew usage see perlbrew command on MetaCPAN
+    <https://metacpan.org/>, or by running "perlbrew help", or by visiting
+    perlbrew's official website <http://perlbrew.pl/>. The following
+    documentation features the API of "App::perlbrew" module, and may not be
+    remotely close to what your want to read.
 
 Installation:
     It is the simplest to use the perlbrew installer, just paste this
     statement to your terminal:
 
-        curl -kL http://install.perlbrew.pl | bash
+        curl -L http://install.perlbrew.pl | bash
 
     Or this one, if you have "fetch" (default on FreeBSD):
 
@@ -45,7 +46,7 @@ Installation:
     before running the installer:
 
         export PERLBREW_ROOT=/opt/perl5
-        curl -kL http://install.perlbrew.pl | bash
+        curl -L http://install.perlbrew.pl | bash
 
     As a result, different users on the same machine can all share the same
     perlbrew root directory (although only original user that made the
@@ -159,7 +160,8 @@ Author:
     Kang-min Liu "<gugod@gugod.org>"
 
 Copyright:
-    Copyright (c) 2010,2011,2012,2013,2014 Kang-min Liu "<gugod@gugod.org>".
+    Copyright (c) 2010,2011,2012,2013,2014,2015 Kang-min Liu
+    "<gugod@gugod.org>".
 
 Disclaimer of Warranty:
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
