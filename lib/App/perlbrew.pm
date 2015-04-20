@@ -1627,6 +1627,13 @@ sub perlbrew_env {
 
             if (-d $base) {
                 $current_local_lib_context = $current_local_lib_context->activate($base);
+
+                if ( $self->env('PERLBREW_LIB_PREFIX') ) {
+                    unshift
+                        @{$current_local_lib_context->libs},
+                            $self->env('PERLBREW_LIB_PREFIX');
+                }
+
                 $env{PERLBREW_PATH}    = joinpath($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = joinpath($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
