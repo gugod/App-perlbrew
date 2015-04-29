@@ -1548,7 +1548,7 @@ sub installed_perls {
 sub local_libs {
     my ($self, $perl_name) = @_;
 
-    my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <$PERLBREW_HOME/libs/*>;
+    my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <"$PERLBREW_HOME/libs/*">;
 
     if ($perl_name) {
         @libs = grep { /^$perl_name\@/ } @libs;
