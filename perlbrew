@@ -1409,38 +1409,31 @@ $fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
       delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
   
       if ($self->do_system($cmd)) {
-  	eval {
-              my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
-              unless (-e $newperl) {
-                  $self->run_command_symlink_executables($installation_name);
-              }
-              if ( $sitecustomize ) {
-                      my $capture = $self->do_capture("$newperl -V:sitelib");
-                  my ($sitelib) = $capture =~ /sitelib='(.*)';/;
-                  mkpath($sitelib) unless -d $sitelib;
-                  my $target = "$sitelib/sitecustomize.pl";
-                  open my $dst, ">", $target
-                      or die "Could not open '$target' for writing: $!\n";
-                  open my $src, "<", $sitecustomize
-                      or die "Could not open '$sitecustomize' for reading: $!\n";
-                  print {$dst} do { local $/; <$src> };
-              }
-  
-              my $version_file =
-                joinpath( $self->root, 'perls', $installation_name, '.version' );
-  
-              if ( -e $version_file ) {
-                  unlink($version_file)
-                    or die "Could not unlink $version_file file: $!\n";
-              }
-          };
-  
-          if (my $e = $@) {
-              eval { $self->append_log("##### Brew Failed: $e #####") };
-              die $e;
+          my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
+          unless (-e $newperl) {
+              $self->run_command_symlink_executables($installation_name);
           }
-          else {
-              eval { $self->append_log('##### Brew Finished #####') };
+  
+          eval { $self->append_log('##### Brew Finished #####') };
+  
+          if ( $sitecustomize ) {
+                  my $capture = $self->do_capture("$newperl -V:sitelib");
+              my ($sitelib) = $capture =~ /sitelib='(.*)';/;
+              mkpath($sitelib) unless -d $sitelib;
+              my $target = "$sitelib/sitecustomize.pl";
+              open my $dst, ">", $target
+                  or die "Could not open '$target' for writing: $!\n";
+              open my $src, "<", $sitecustomize
+                  or die "Could not open '$sitecustomize' for reading: $!\n";
+              print {$dst} do { local $/; <$src> };
+          }
+  
+          my $version_file =
+            joinpath( $self->root, 'perls', $installation_name, '.version' );
+  
+          if ( -e $version_file ) {
+              unlink($version_file)
+                or die "Could not unlink $version_file file: $!\n";
           }
   
           print "$installation_name is successfully installed.\n";
