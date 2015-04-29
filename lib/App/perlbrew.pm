@@ -1406,7 +1406,7 @@ INSTALL
         eval { $self->append_log('##### Brew Finished #####') };
 
         if ( $sitecustomize ) {
-                my $capture = $self->do_capture("$newperl -V:sitelib");
+            my $capture = $self->do_capture("$newperl -V:sitelib");
             my ($sitelib) = $capture =~ /sitelib='(.*)';/;
             mkpath($sitelib) unless -d $sitelib;
             my $target = "$sitelib/sitecustomize.pl";
@@ -1428,7 +1428,7 @@ INSTALL
         print "$installation_name is successfully installed.\n";
     }
     else {
-	eval { $self->append_log('##### Brew Failed #####') };
+        eval { $self->append_log('##### Brew Failed #####') };
         die $self->INSTALLATION_FAILURE_MESSAGE;
     }
     return;

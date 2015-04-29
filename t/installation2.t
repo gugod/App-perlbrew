@@ -16,8 +16,6 @@ use Test::Spec;
 
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 
-#mock_perlbrew_install("perl-5.12.3");
-
 describe "App::perlbrew" => sub {
     describe "->do_install_url method" => sub {
         it "should accept an URL to perl tarball, and download the tarball." => sub {
