@@ -5,6 +5,7 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
+use Test::Exception;
 require 'test_helpers.pl';
 
 use Test::Spec;
@@ -14,6 +15,8 @@ use Test::Spec;
 ##
 
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
+
+#mock_perlbrew_install("perl-5.12.3");
 
 describe "App::perlbrew" => sub {
     describe "->do_install_url method" => sub {
@@ -48,6 +51,44 @@ describe "App::perlbrew" => sub {
             pass;
         }
     };
+    
+    describe "->do_install_this method" => sub {
+        it "should log successful brews to the log_file." => sub {
+            my $app = App::perlbrew->new;
+            $app->{dist_extracted_dir} = '';
+            $app->{dist_name} = '';
+            
+            my %expectations = (
+                'do_system' => $app->expects("do_system")->returns(1),
+            );
+            
+            $app->do_install_this('', '5.12.3', 'perl-5.12.3');
+            open(my $log_handle, '<', $app->{log_file});
+            like(<$log_handle>, qr/##### Brew Finished #####/, 'Success message shows in log');
+
+            foreach my $sub_name (keys %expectations) {
+                ok $expectations{$sub_name}->verify, "$sub_name is called";
+            }
+        };
+        
+        it "should log brew failure to the log_file if system call fails." => sub {
+            my $app = App::perlbrew->new;
+            $app->{dist_extracted_dir} = '';
+            $app->{dist_name} = '';
+
+            my %expectations = (
+                'do_system' => $app->expects("do_system")->returns(0),
+            );
+            
+            throws_ok( sub {$app->do_install_this('', '5.12.3', 'perl-5.12.3')}, qr/Installation process failed/);
+            open(my $log_handle, '<', $app->{log_file});
+            like(<$log_handle>, qr/##### Brew Failed #####/, 'Failure message shows in log');
+
+            foreach my $sub_name (keys %expectations) {
+                ok $expectations{$sub_name}->verify, "$sub_name is called";
+            }
+        };
+    }
 
 };
 
