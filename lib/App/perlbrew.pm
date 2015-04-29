@@ -1398,33 +1398,44 @@ INSTALL
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
 
     if ($self->do_system($cmd)) {
-        my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
-        unless (-e $newperl) {
-            $self->run_command_symlink_executables($installation_name);
-        }
-        if ( $sitecustomize ) {
-            my $capture = $self->do_capture("$newperl -V:sitelib");
-            my ($sitelib) = $capture =~ /sitelib='(.*)';/;
-            mkpath($sitelib) unless -d $sitelib;
-            my $target = "$sitelib/sitecustomize.pl";
-            open my $dst, ">", $target
-                or die "Could not open '$target' for writing: $!\n";
-            open my $src, "<", $sitecustomize
-                or die "Could not open '$sitecustomize' for reading: $!\n";
-            print {$dst} do { local $/; <$src> };
-        }
+	eval {
+            my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
+            unless (-e $newperl) {
+                $self->run_command_symlink_executables($installation_name);
+            }
+            if ( $sitecustomize ) {
+                    my $capture = $self->do_capture("$newperl -V:sitelib");
+                my ($sitelib) = $capture =~ /sitelib='(.*)';/;
+                mkpath($sitelib) unless -d $sitelib;
+                my $target = "$sitelib/sitecustomize.pl";
+                open my $dst, ">", $target
+                    or die "Could not open '$target' for writing: $!\n";
+                open my $src, "<", $sitecustomize
+                    or die "Could not open '$sitecustomize' for reading: $!\n";
+                print {$dst} do { local $/; <$src> };
+            }
 
-        my $version_file =
-          joinpath( $self->root, 'perls', $installation_name, '.version' );
+            my $version_file =
+              joinpath( $self->root, 'perls', $installation_name, '.version' );
 
-        if ( -e $version_file ) {
-            unlink($version_file)
-              or die "Could not unlink $version_file file: $!\n";
+            if ( -e $version_file ) {
+                unlink($version_file)
+                  or die "Could not unlink $version_file file: $!\n";
+            }
+        };
+
+        if (my $e = $@) {
+            eval { $self->append_log("##### Brew Failed: $e #####") };
+            die $e;
+        }
+        else {
+            eval { $self->append_log('##### Brew Finished #####') };
         }
 
         print "$installation_name is successfully installed.\n";
     }
     else {
+	eval { $self->append_log('##### Brew Failed #####') };
         die $self->INSTALLATION_FAILURE_MESSAGE;
     }
     return;
@@ -2867,6 +2878,15 @@ source "$PERLBREW_ROOT/etc/csh_set_path"
 alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
 CSHRC
 
+}
+
+sub append_log {
+    my ($self, $message) = @_;
+    my $log_handler;
+    open($log_handler, '>>', $self->{log_file})
+        or die "Cannot open log file for appending: $!";
+    print $log_handler "$message\n";
+    close($log_handler);
 }
 
 sub INSTALLATION_FAILURE_MESSAGE {

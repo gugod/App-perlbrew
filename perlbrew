@@ -8,7 +8,7 @@ BEGIN { use Config; @INC = @Config{qw(privlibexp archlibexp sitelibexp sitearche
 BEGIN {
 my %fatpacked;
 
-$fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_PERLBREW';
+$fatpacked{"App/perlbrew.pm"} = <<'APP_PERLBREW';
   package App::perlbrew;
   use strict;
   use warnings;
@@ -139,20 +139,20 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my %commands = (
           curl => {
               test     => '--version >/dev/null 2>&1',
-              get      => '--insecure --silent --location --fail -o - {url}',
-              download => '--insecure --silent --location --fail -o {output} {url}',
+              get      => '--silent --location --fail -o - {url}',
+              download => '--silent --location --fail -o {output} {url}',
               order    => 1,
           },
           wget => {
               test     => '--version >/dev/null 2>&1',
-              get      => '--no-check-certificate --quiet -O - {url}',
-              download => '--no-check-certificate --quiet -O {output} {url}',
+              get      => '--quiet -O - {url}',
+              download => '--quiet -O {output} {url}',
               order    => 2,
           },
           fetch => {
               test     => '--version >/dev/null 2>&1',
-              get      => '--no-verify-peer -o - {url}',
-              download => '--no-verify-peer {url}',
+              get      => '-o - {url}',
+              download => '{url}',
               order    => 3,
           }
       );
@@ -1409,33 +1409,44 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
   
       if ($self->do_system($cmd)) {
-          my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
-          unless (-e $newperl) {
-              $self->run_command_symlink_executables($installation_name);
-          }
-          if ( $sitecustomize ) {
-              my $capture = $self->do_capture("$newperl -V:sitelib");
-              my ($sitelib) = $capture =~ /sitelib='(.*)';/;
-              mkpath($sitelib) unless -d $sitelib;
-              my $target = "$sitelib/sitecustomize.pl";
-              open my $dst, ">", $target
-                  or die "Could not open '$target' for writing: $!\n";
-              open my $src, "<", $sitecustomize
-                  or die "Could not open '$sitecustomize' for reading: $!\n";
-              print {$dst} do { local $/; <$src> };
-          }
+  	eval {
+              my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
+              unless (-e $newperl) {
+                  $self->run_command_symlink_executables($installation_name);
+              }
+              if ( $sitecustomize ) {
+                      my $capture = $self->do_capture("$newperl -V:sitelib");
+                  my ($sitelib) = $capture =~ /sitelib='(.*)';/;
+                  mkpath($sitelib) unless -d $sitelib;
+                  my $target = "$sitelib/sitecustomize.pl";
+                  open my $dst, ">", $target
+                      or die "Could not open '$target' for writing: $!\n";
+                  open my $src, "<", $sitecustomize
+                      or die "Could not open '$sitecustomize' for reading: $!\n";
+                  print {$dst} do { local $/; <$src> };
+              }
   
-          my $version_file =
-            joinpath( $self->root, 'perls', $installation_name, '.version' );
+              my $version_file =
+                joinpath( $self->root, 'perls', $installation_name, '.version' );
   
-          if ( -e $version_file ) {
-              unlink($version_file)
-                or die "Could not unlink $version_file file: $!\n";
+              if ( -e $version_file ) {
+                  unlink($version_file)
+                    or die "Could not unlink $version_file file: $!\n";
+              }
+          };
+  
+          if (my $e = $@) {
+              eval { $self->append_log("##### Brew Failed: $e #####") };
+              die $e;
+          }
+          else {
+              eval { $self->append_log('##### Brew Finished #####') };
           }
   
           print "$installation_name is successfully installed.\n";
       }
       else {
+  	eval { $self->append_log('##### Brew Failed #####') };
           die $self->INSTALLATION_FAILURE_MESSAGE;
       }
       return;
@@ -1603,6 +1614,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           unless ($perl_name) {
               die "\nERROR: The installation \"$name\" is unknown.\n\n";
           }
+  
+          unless (!$lib_name || grep { $_->{lib_name} eq $lib_name } $self->local_libs($perl_name)) {
+              die "\nERROR: The lib name \"$lib_name\" is unknown.\n\n";
+          }
       }
   
       my %env = (
@@ -1634,6 +1649,13 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
               if (-d $base) {
                   $current_local_lib_context = $current_local_lib_context->activate($base);
+  
+                  if ( $self->env('PERLBREW_LIB_PREFIX') ) {
+                      unshift
+                          @{$current_local_lib_context->libs},
+                              $self->env('PERLBREW_LIB_PREFIX');
+                  }
+  
                   $env{PERLBREW_PATH}    = joinpath($base, "bin") . ":" . $env{PERLBREW_PATH};
                   $env{PERLBREW_MANPATH} = joinpath($base, "man") . ":" . $env{PERLBREW_MANPATH};
                   $env{PERLBREW_LIB}  = $lib_name;
@@ -2015,7 +2037,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       if ($opts{with}) {
           my %installed = map { $_->{name} => $_ } map { ($_, @{$_->{libs}}) } $self->installed_perls;
   
-          my $d = ($opts{with} =~ / /) ? qr( +) : qr(,+);
+          my $d = ($opts{with} =~ m/ /) ? qr( +) : qr(,+);
           my @with = grep { $_ } map {
               my ($p,$l) = $self->resolve_installation_name($_);
               $p .= "\@$l" if $l;
@@ -2869,6 +2891,15 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   }
   
+  sub append_log {
+      my ($self, $message) = @_;
+      my $log_handler;
+      open($log_handler, '>>', $self->{log_file})
+          or die "Cannot open log file for appending: $!";
+      print $log_handler "$message\n";
+      close($log_handler);
+  }
+  
   sub INSTALLATION_FAILURE_MESSAGE {
       my ($self) = @_;
       return <<FAIL;
@@ -2903,12 +2934,12 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   =head1 NAME
   
-  App::perlbrew - Manage perl installations in your $HOME
+  L<App::perlbrew> - Manage perl installations in your C<$HOME>
   
-  =head1 SYNOPSIS
+  =head2 SYNOPSIS
   
       # Installation
-      curl -kL http://install.perlbrew.pl | bash
+      curl -L http://install.perlbrew.pl | bash
   
       # Initialize
       perlbrew init
@@ -2944,28 +2975,29 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       # Exec something with all perlbrew-ed perls
       perlbrew exec -- perl -E 'say $]'
   
-  =head1 DESCRIPTION
+  =head2 DESCRIPTION
   
-  perlbrew is a program to automate the building and installation of perl in an
+  L<perlbrew> is a program to automate the building and installation of perl in an
   easy way. It provides multiple isolated perl environments, and a mechanism
   for you to switch between them.
   
   Everything are installed unter C<~/perl5/perlbrew>. You then need to include a
   bashrc/cshrc provided by perlbrew to tweak the PATH for you. You then can
-  benefit from not having to run 'sudo' commands to install
-  cpan modules because those are installed inside your HOME too.
+  benefit from not having to run C<sudo> commands to install
+  cpan modules because those are installed inside your C<HOME> too.
   
   For the documentation of perlbrew usage see L<perlbrew> command
-  on CPAN, or by running C<perlbrew help>. The following documentation
+  on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>, 
+  or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
   features the API of C<App::perlbrew> module, and may not be remotely
   close to what your want to read.
   
-  =head1 INSTALLATION
+  =head2 INSTALLATION
   
   It is the simplest to use the perlbrew installer, just paste this statement to
   your terminal:
   
-      curl -kL http://install.perlbrew.pl | bash
+      curl -L http://install.perlbrew.pl | bash
   
   Or this one, if you have C<fetch> (default on FreeBSD):
   
@@ -2979,17 +3011,17 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   system perl. The minimum system perl version requirement is 5.8.0, which should
   be good enough for most of the OSes these days.
   
-  A fat-packed version of C<patchperl> is also installed to
+  A fat-packed version of L<patchperl> is also installed to
   C<~/perl5/perlbrew/bin>, which is required to build old perls.
   
   The directory C<~/perl5/perlbrew> will contain all install perl executables,
   libraries, documentations, lib, site_libs. In the documentation, that directory
-  is referred as "perlbrew root". If you need to set it to somewhere else because,
-  say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
+  is referred as C<perlbrew root>. If you need to set it to somewhere else because,
+  say, your C<HOME> has limited quota, you can do that by setting C<PERLBREW_ROOT>
   environment variable before running the installer:
   
       export PERLBREW_ROOT=/opt/perl5
-      curl -kL http://install.perlbrew.pl | bash
+      curl -L http://install.perlbrew.pl | bash
   
   As a result, different users on the same machine can all share the same perlbrew
   root directory (although only original user that made the installation would
@@ -3015,27 +3047,27 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
   
   The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
-  command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
+  command, but it is also easy to upgrade perlbrew by running C<cpan App::perlbrew>
   again.
   
-  =head1 METHODS
+  =head2 METHODS
   
   =over 4
   
   =item (Str) current_perl
   
   Return the "current perl" object attribute string, or, if absent, the value of
-  PERLBREW_PERL environment variable.
+  C<PERLBREW_PERL> environment variable.
   
   =item (Str) current_perl (Str)
   
-  Set the "current_perl" object attribute to the given value.
+  Set the C<current_perl> object attribute to the given value.
   
   =back
   
-  =head1 PROJECT DEVELOPMENT
+  =head2 PROJECT DEVELOPMENT
   
-  perlbrew project uses github
+  L<perlbrew project|http://perlbrew.pl/> uses github
   L<http://github.com/gugod/App-perlbrew/issues> and RT
   <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
   tracking. Issues sent to these two systems will eventually be reviewed
@@ -3052,11 +3084,11 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   Copyright (c) 2010,2011,2012,2013,2014,2015 Kang-min Liu C<< <gugod@gugod.org> >>.
   
-  =head1 LICENCE
+  =head3 LICENCE
   
   The MIT License
   
-  =head1 DISCLAIMER OF WARRANTY
+  =head2 DISCLAIMER OF WARRANTY
   
   BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
   FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
@@ -3082,9 +3114,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   =cut
 APP_PERLBREW
 
-$fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
+$fatpacked{"CPAN/Perl/Releases.pm"} = <<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '1.84';
+  $CPAN::Perl::Releases::VERSION = '2.14';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -3233,6 +3265,21 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.21.3" => { id => 'PCM' },
   "5.20.1-RC1" => { id => 'SHAY' },
   "5.20.1-RC2" => { id => 'SHAY' },
+  "5.20.1" => { id => 'SHAY' },
+  "5.18.3-RC1" => { id => 'RJBS' },
+  "5.21.4" => { id => 'SHAY' },
+  "5.18.3-RC2" => { id => 'RJBS' },
+  "5.18.3" => { id => 'RJBS' },
+  "5.18.4" => { id => 'RJBS' },
+  "5.21.5" => { id => 'ABIGAIL' },
+  "5.21.6" => { id => 'BINGOS', xz => 1 },
+  "5.21.7" => { id => 'CORION', xz => 1 },
+  "5.21.8" => { id => 'WOLFSAGE', xz => 1 },
+  "5.20.2-RC1" => { id => 'SHAY' },
+  "5.20.2" => { id => 'SHAY' },
+  "5.21.9" => { id => 'XSAWYERX', xz => 1 },
+  "5.21.10" => { id => 'SHAY', xz => 1 },
+  "5.21.11" => { id => 'SHAY', xz => 1 },
   };
   
   sub perl_tarballs {
@@ -3251,6 +3298,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
     my $foo = { };
     $foo->{'tar.gz'} = "$path/$perl.tar.gz" unless $onlybz2;
     $foo->{'tar.bz2'} = "$path/$perl.tar.bz2" unless $onlygz;
+    $foo->{'tar.xz'} = "$path/$perl.tar.xz" if $data->{ $vers }->{xz};
     $cache->{ $vers } = $foo;
     return { %$foo };
   }
@@ -3289,7 +3337,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 1.84
+  version 2.14
   
   =head1 SYNOPSIS
   
@@ -3331,6 +3379,8 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   Not all C<perl> releases had C<tar.bz2>, but only a C<tar.gz>.
   
+  Perl tarballs may also be compressed using C<xz> and therefore have a C<tar.xz> entry.
+  
   =item C<perl_versions>
   
   Returns the list of all the perl versions supported by the module in ascending order. C<TRIAL> and C<RC> will be lower
@@ -3354,7 +3404,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2014 by Chris Williams.
+  This software is copyright (c) 2015 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
@@ -3362,13 +3412,13 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   =cut
 CPAN_PERL_RELEASES
 
-$fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CAPTURE_TINY';
+$fatpacked{"Capture/Tiny.pm"} = <<'CAPTURE_TINY';
   use 5.006;
   use strict;
   use warnings;
   package Capture::Tiny;
   # ABSTRACT: Capture STDOUT and STDERR from Perl, XS or external programs
-  our $VERSION = '0.25'; # VERSION
+  our $VERSION = '0.28';
   use Carp ();
   use Exporter ();
   use IO::Handle ();
@@ -3734,6 +3784,8 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
       eval { @result = $code->(); $inner_error = $@ };
       $exit_code = $?; # save this for later
       $outer_error = $@; # save this for later
+      STDOUT->flush if $do_stdout;
+      STDERR->flush if $do_stderr;
     }
     # restore prior filehandles and shut down tees
     # _debug( "# restoring filehandles ...\n" );
@@ -3785,7 +3837,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head1 VERSION
   
-  version 0.25
+  version 0.28
   
   =head1 SYNOPSIS
   
@@ -4059,11 +4111,14 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head2 PERL_CAPTURE_TINY_TIMEOUT
   
-  Capture::Tiny uses subprocesses for C<<< tee >>>.  By default, Capture::Tiny will
-  timeout with an error if the subprocesses are not ready to receive data within
-  30 seconds (or whatever is the value of C<<< $Capture::Tiny::TIMEOUT >>>).  An
-  alternate timeout may be specified by setting the C<<< PERL_CAPTURE_TINY_TIMEOUT >>>
-  environment variable.  Setting it to zero will disable timeouts.
+  Capture::Tiny uses subprocesses internally for C<<< tee >>>.  By default,
+  Capture::Tiny will timeout with an error if such subprocesses are not ready to
+  receive data within 30 seconds (or whatever is the value of
+  C<<< $Capture::Tiny::TIMEOUT >>>).  An alternate timeout may be specified by setting
+  the C<<< PERL_CAPTURE_TINY_TIMEOUT >>> environment variable.  Setting it to zero will
+  disable timeouts.  BE<lt>NOTEE<gt>, this does not timeout the code reference being
+  captured -- this only prevents Capture::Tiny itself from hanging your process
+  waiting for its child processes to be ready to proceed.
   
   =head1 SEE ALSO
   
@@ -4216,7 +4271,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   =cut
 CAPTURE_TINY
 
-$fatpacked{"lib/core/only.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LIB_CORE_ONLY';
+$fatpacked{"lib/core/only.pm"} = <<'LIB_CORE_ONLY';
   package lib::core::only;
   
   use strict;
@@ -4319,14 +4374,14 @@ $fatpacked{"lib/core/only.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'L
   1;
 LIB_CORE_ONLY
 
-$fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL_LIB';
+$fatpacked{"local/lib.pm"} = <<'LOCAL_LIB';
   package local::lib;
   use 5.006;
   use strict;
   use warnings;
   use Config;
   
-  our $VERSION = '2.000014';
+  our $VERSION = '2.000015';
   $VERSION = eval $VERSION;
   
   BEGIN {
@@ -4551,9 +4606,9 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   
   sub _mm_escape_path {
     my $path = shift;
-    $path =~ s/\\/\\\\\\\\/g;
+    $path =~ s/\\/\\\\/g;
     if ($path =~ s/ /\\ /g) {
-      $path = qq{"\\"$path\\""};
+      $path = qq{"$path"};
     }
     return $path;
   }
@@ -5758,37 +5813,24 @@ LOCAL_LIB
 
 s/^  //mg for values %fatpacked;
 
-my $class = 'FatPacked::'.(0+\%fatpacked);
-no strict 'refs';
-*{"${class}::files"} = sub { keys %{$_[0]} };
-
-if ($] < 5.008) {
-  *{"${class}::INC"} = sub {
-     if (my $fat = $_[0]{$_[1]}) {
-       return sub {
-         return 0 unless length $fat;
-         $fat =~ s/^([^\n]*\n?)//;
-         $_ = $1;
-         return 1;
-       };
-     }
-     return;
-  };
-}
-
-else {
-  *{"${class}::INC"} = sub {
-    if (my $fat = $_[0]{$_[1]}) {
-      open my $fh, '<', \$fat
-        or die "FatPacker error loading $_[1] (could be a perl installation issue?)";
-      return $fh;
+unshift @INC, sub {
+  if (my $fat = $fatpacked{$_[1]}) {
+    if ($] < 5.008) {
+      return sub {
+        return 0 unless length $fat;
+        $fat =~ s/^([^\n]*\n?)//;
+        $_ = $1;
+        return 1;
+      };
     }
-    return;
-  };
-}
+    open my $fh, '<', \$fat
+      or die "FatPacker error loading $_[1] (could be a perl installation issue?)";
+    return $fh;
+  }
+  return
+};
 
-unshift @INC, bless \%fatpacked, $class;
-  } # END OF FATPACK CODE
+} # END OF FATPACK CODE
 
 #!/usr/bin/perl
 use strict;
@@ -6403,21 +6445,6 @@ re-installs all modules under perl-5.16.0:
     
 Note that this installs the I<latest> versions of the Perl modules on the new perl,
 which are not necessarily the I<same> module versions you had installed previously.
-
-=head1 UPGRADE NOTES
-
-If you are upgrading C<perlbrew> from 0.16 or earlier versions to a recent
-one (0.40-ish), you should do these steps to adjust your perl installations
-afterwards (you might need to change the value of PERLBREW_ROOT):
-
-    export PERLBREW_ROOT=${HOME}/perl5/perlbrew
-    rm -f $PERLBREW_ROOT/perls/current
-    rm -f `find $PERLBREW_ROOT/perls/bin -type l`
-    perlbrew symlink-executables
-    perlbrew init
-
-Following the instructions on screen to tweak your shell a bit. Then it
-should be good.
 
 =head1 SEE ALSO
 
