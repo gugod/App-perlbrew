@@ -1402,6 +1402,9 @@ INSTALL
         unless (-e $newperl) {
             $self->run_command_symlink_executables($installation_name);
         }
+
+        eval { $self->append_log('##### Brew Finished #####') };
+
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
             my ($sitelib) = $capture =~ /sitelib='(.*)';/;
@@ -1425,6 +1428,7 @@ INSTALL
         print "$installation_name is successfully installed.\n";
     }
     else {
+        eval { $self->append_log('##### Brew Failed #####') };
         die $self->INSTALLATION_FAILURE_MESSAGE;
     }
     return;
@@ -2867,6 +2871,15 @@ source "$PERLBREW_ROOT/etc/csh_set_path"
 alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
 CSHRC
 
+}
+
+sub append_log {
+    my ($self, $message) = @_;
+    my $log_handler;
+    open($log_handler, '>>', $self->{log_file})
+        or die "Cannot open log file for appending: $!";
+    print $log_handler "$message\n";
+    close($log_handler);
 }
 
 sub INSTALLATION_FAILURE_MESSAGE {
