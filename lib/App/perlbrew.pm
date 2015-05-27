@@ -2889,7 +2889,7 @@ Installation process failed. To spot any issues, check
 
   $self->{log_file}
 
-If some perl tests failed and you still want install this distribution anyway,
+If some perl tests failed and you still want to install this distribution anyway,
 do:
 
   (cd $self->{dist_extracted_dir}; make install)
