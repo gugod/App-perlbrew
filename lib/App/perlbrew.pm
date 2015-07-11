@@ -2598,16 +2598,17 @@ function __perlbrew_set_path
 
     set -l PATH_WITHOUT_PERLBREW (eval $perlbrew_command display-pristine-path | perl -pe'y/:/ /')
 
+    # silencing stderr in case there's a non-existent path in $PATH (see GH#446)
     if test -n "$PERLBREW_PATH"
         set -x PERLBREW_PATH (echo $PERLBREW_PATH | perl -pe 'y/:/ /' )
-        eval set -x PATH $PERLBREW_PATH $PATH_WITHOUT_PERLBREW
+        eval set -x PATH $PERLBREW_PATH $PATH_WITHOUT_PERLBREW 2> /dev/null
     else
-        eval set -x PATH $PERLBREW_ROOT/bin $PATH_WITHOUT_PERLBREW
+        eval set -x PATH $PERLBREW_ROOT/bin $PATH_WITHOUT_PERLBREW 2> /dev/null
     end
 end
 
 function __perlbrew_set_env
-    set -l code (eval $perlbrew_command env $argv | perl -pe 's/^(export|setenv)/set -xg/; s/^unset[env]*/set -eug/; s/$/;/; y/:/ /')
+    set -l code (eval $perlbrew_command env $argv | perl -pe 's/^(export|setenv)/set -xg/; s/=/ /; s/^unset[env]*/set -eug/; s/$/;/; y/:/ /')
 
     if test -z "$code"
         return 0;
@@ -2685,7 +2686,7 @@ function perlbrew
 end
 
 function __source_init
-    perl -pe's/^\(export|setenv\)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
+    perl -pe's/^(export|setenv)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
 end
 
 if test -z "$PERLBREW_ROOT"
@@ -2889,7 +2890,7 @@ Installation process failed. To spot any issues, check
 
   $self->{log_file}
 
-If some perl tests failed and you still want install this distribution anyway,
+If some perl tests failed and you still want to install this distribution anyway,
 do:
 
   (cd $self->{dist_extracted_dir}; make install)
