@@ -2696,7 +2696,7 @@ function perlbrew
 end
 
 function __source_init
-    perl -pe's/^(export|setenv)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
+    perl -pe's/^(export|setenv)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | source
 end
 
 if test -z "$PERLBREW_ROOT"
