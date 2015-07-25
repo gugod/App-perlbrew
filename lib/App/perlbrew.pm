@@ -2300,6 +2300,16 @@ sub run_command_upgrade_perl {
     print "Upgrading $current->{name} to $dist_version\n" unless $self->{quiet};
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
+
+    require Config ;
+    my @d_options = map { '-D' . $flavor{$_}->{d_option}} keys %flavor ;
+    my %sub_config = map { $_ => $Config{$_}} grep { /^config_arg\d/} keys %Config ;
+    for my $value ( values %sub_config ) {
+        my $value_wo_D = $value;
+        $value_wo_D =~ s/^-D//;
+        push @{$self->{D}} , $value_wo_D if grep {/$value/} @d_options;
+    }
+    
     $self->do_install_release($dist, $dist_version);
 }
 
