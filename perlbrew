@@ -5987,6 +5987,16 @@ snippet for the given scenario.
 
     source ~/perl5/perlbrew/etc/bashrc
 
+=item PERLBREW_LIB_PREFIX
+
+By default, when activating a perlbrew with a local lib, the local lib is
+placed at the start of the existing PERL5LIB. Set this environment variable if
+you want certain directories to always take precedence in your PERL5LIB, before
+any perlbrew local libs.
+
+So PERLBREW_LIB_PREFIX="./lib:$HOME/lib" would ensure these directories
+are always at the beginning of the PERL5LIB.
+
 =item PERLBREW_CONFIGURE_FLAGS
 
 This environment variable specify the list of command like flags to pass through
