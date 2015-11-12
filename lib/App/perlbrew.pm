@@ -2503,12 +2503,8 @@ perlbrew () {
                 [ -n "$PERLBREW_LIB" ] && echo -n "@$PERLBREW_LIB"
                 echo
             else
-                __perlbrew_set_env "$2"
+                __perlbrew_set_env "$2" && { __perlbrew_set_path ; true ; }
                 exit_status="$?"
-                if [[ $exit_status -eq 0 ]]
-                then
-                    __perlbrew_set_path
-                fi
             fi
             ;;
 
@@ -2516,11 +2512,8 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2
+                  perlbrew use $2 && { __perlbrew_reinit $2 ; true ; }
                   exit_status=$?
-                  if [[ ${exit_status} -eq 0 ]]; then
-                      __perlbrew_reinit $2
-                  fi
               fi
               ;;
 
