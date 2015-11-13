@@ -1811,69 +1811,6 @@ sub run_command_switch_off {
     print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
-sub run_command_mirror {
-    my($self) = @_;
-    print "Fetching mirror list\n";
-    my $raw = http_get("http://search.cpan.org/mirror");
-
-    unless ($raw) {
-        die "\nERROR: Failed to retrieve the mirror list.\n\n";
-    }
-
-    my $found;
-    my @mirrors;
-    foreach my $line ( split m{\n}, $raw ) {
-        $found = 1 if $line =~ m{<select name="mirror">};
-        next if ! $found;
-        last if $line =~ m{</select>};
-        if ( $line =~ m{<option value="(.+?)">(.+?)</option>} ) {
-            my $url  = $1;
-            my $name = $2;
-            $name =~ s/&#(\d+);/chr $1/seg;
-            $url =~ s/&#(\d+);/chr $1/seg;
-            push @mirrors, { url => $url, name => $name };
-        }
-    }
-
-    require ExtUtils::MakeMaker;
-    my $select;
-    my $max = @mirrors;
-    my $id  = 0;
-    while ( @mirrors ) {
-        my @page = splice(@mirrors,0,20);
-        my $base = $id;
-        printf "[% 3d] %s\n", ++$id, $_->{name} for @page;
-        my $remaining = $max - $id;
-        my $ask = "Select a mirror by number or press enter to see the rest "
-                . "($remaining more) [q to quit, m for manual entry]";
-        my $val = ExtUtils::MakeMaker::prompt( $ask );
-        if ( ! length $val )  { next }
-        elsif ( $val eq 'q' ) { last }
-        elsif ( $val eq 'm' ) {
-            my $url  = ExtUtils::MakeMaker::prompt("Enter the URL of your CPAN mirror:");
-            my $name = ExtUtils::MakeMaker::prompt("Enter a Name: [default: My CPAN Mirror]") || "My CPAN Mirror";
-            $select = { name => $name, url => $url };
-            last;
-        }
-        elsif ( not $val =~ /\s*(\d+)\s*/ ) {
-            die "Invalid answer: must be 'q', 'm' or a number\n";
-        }
-        elsif (1 <= $val and $val <= $max) {
-            $select = $page[ $val - 1 - $base ];
-            last;
-        }
-        else {
-            die "Invalid ID: must be between 1 and $max\n";
-        }
-    }
-    die "You didn't select a mirror!\n" if ! $select;
-    print "Selected $select->{name} ($select->{url}) as the mirror\n";
-    my $conf = $self->config;
-    $conf->{mirror} = $select;
-    $self->_save_config;
-    return;
-}
-
 sub run_command_env {
     my($self, $name) = @_;
 
