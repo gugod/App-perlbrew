@@ -44,7 +44,6 @@ Commands:
     install-multiple   Install multiple versions and flavors of perl
 
     download       Download the specified perl distribution tarball.
-    mirror         Pick a preferred mirror site
     clean          Purge tarballs and build directories
     version        Display version
     help           Read more detailed instructions
@@ -172,7 +171,7 @@ Version numbers usually look like "5.x.xx", or
 The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
-To configure mirror site, invoke `mirror` command.
+Add '--mirror $URL' to specify the URL of mirror site.
 
 =item B<install> [options]  perl-stable
 
@@ -367,14 +366,6 @@ Usage: perlbrew alias [-f] rename <old_alias> <new_alias>
 Usage: perlbrew alias delete <alias>
 
     Delete the given alias.
-
-=head1 COMMAND: MIRROR
-
-Usage: perlbrew mirror
-
-Run this if you want to choose a specific CPAN mirror to install the
-perls from. It will display a list of mirrors for you to pick
-from. Hit 'q' to cancel the selection.
 
 =head1 COMMAND: EXEC
 
