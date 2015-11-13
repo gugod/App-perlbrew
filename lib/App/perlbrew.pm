@@ -19,6 +19,7 @@ BEGIN {
     @INC = @oldinc;
 }
 
+use HTTP::Tinyish;
 use Getopt::Long ();
 
 sub min(@) {
@@ -124,109 +125,33 @@ sub files_are_the_same {
     return 1
 }
 
-{
-    my %commands = (
-        curl => {
-            test     => '--version >/dev/null 2>&1',
-            get      => '--silent --location --fail -o - {url}',
-            download => '--silent --location --fail -o {output} {url}',
-            order    => 1,
-        },
-        wget => {
-            test     => '--version >/dev/null 2>&1',
-            get      => '--quiet -O - {url}',
-            download => '--quiet -O {output} {url}',
-            order    => 2,
-        },
-        fetch => {
-            test     => '--version >/dev/null 2>&1',
-            get      => '-o - {url}',
-            download => '{url}',
-            order    => 3,
-        }
-    );
+sub http_download {
+    my ($url, $path) = @_;
 
-    our $HTTP_USER_AGENT_PROGRAM;
-    sub http_user_agent_program {
-        $HTTP_USER_AGENT_PROGRAM ||= do {
-            my $program;
-
-            for my $p (sort {$commands{$a}{order}<=>$commands{$b}{order}} keys %commands) {
-                my $code = system("$p $commands{$p}->{test}") >> 8;
-                if ($code != 127) {
-                    $program = $p;
-                    last;
-                }
-            }
-
-            unless($program) {
-                die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
-            }
-
-            $program;
-        };
-
-        die "[ERROR] Unrecognized http user agent program: $HTTP_USER_AGENT_PROGRAM. It can only be one of: ".join(",", keys %commands)."\n" unless $commands{$HTTP_USER_AGENT_PROGRAM};
-
-        return $HTTP_USER_AGENT_PROGRAM;
+    if (-e $path) {
+        die "ERROR: The download target < $path > already exists.\n";
     }
 
-    sub http_user_agent_command {
-        my ($purpose, $params) = @_;
-        my $ua = http_user_agent_program;
-        my $cmd = $ua . " " . $commands{ $ua }->{ $purpose };
-        for (keys %$params) {
-            $cmd =~ s!{$_}!$params->{$_}!g;
-        }
-        return ($ua, $cmd) if wantarray;
-        return $cmd;
+    my $http = HTTP::Tinyish->new();
+    my $res = $http->mirror($url, $path);
+    unless ($res->{success}) {
+        return "ERROR: Fail to download. http status = $res->{status}, URL = $url";
     }
+    return 0;
+}
 
-    sub http_download {
-        my ($url, $path) = @_;
-
-        if (-e $path) {
-            die "ERROR: The download target < $path > already exists.\n";
-        }
-
-        my $download_command = http_user_agent_command( download => { url => $url, output => $path } );
-
-        my $status = system($download_command);
-        unless ($status == 0) {
-            return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
-        }
-        return 0;
+sub http_get {
+    my ($url, $header, $cb) = @_;
+    if (ref($header) eq 'CODE') {
+        $cb = $header;
+        $header = undef;
     }
-
-    sub http_get {
-        my ($url, $header, $cb) = @_;
-
-        if (ref($header) eq 'CODE') {
-            $cb = $header;
-            $header = undef;
-        }
-
-        my ($program, $command) = http_user_agent_command( get => { url =>  $url } );
-
-        open my $fh, '-|', $command
-            or die "open() for '$command': $!";
-
-        local $/;
-        my $body = <$fh>;
-        close $fh;
-
-        die 'Page not retrieved; HTTP error code 400 or above.'
-            if $program eq 'curl' # Exit code is 22 on 404s etc
-            and $? >> 8 == 22; # exit code is packed into $?; see perlvar
-        die 'Page not retrieved: fetch failed.'
-            if $program eq 'fetch' # Exit code is not 0 on error
-            and $?;
-        die 'Server issued an error response.'
-            if $program eq 'wget' # Exit code is 8 on 404s etc
-            and $? >> 8 == 8;
-
-        return $cb ? $cb->($body) : $body;
+    my $http = HTTP::Tinyish->new();
+    my $res = $http->get($url);
+    unless ($res->{success}) {
+        die "Fail to fetch URL. http status = $res->{status}, url = $url\n";
     }
+    return $cb ? $cb->($res->{content}) : $res->{content};
 }
 
 sub perl_version_to_integer {
