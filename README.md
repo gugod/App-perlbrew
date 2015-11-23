@@ -2,7 +2,7 @@
 
 [App::perlbrew](https://metacpan.org/pod/App::perlbrew) - Manage perl installations in your `$HOME`
 
-# SYNOPSIS
+## SYNOPSIS
 
     # Installation
     curl -L http://install.perlbrew.pl | bash
@@ -41,7 +41,7 @@
     # Exec something with all perlbrew-ed perls
     perlbrew exec -- perl -E 'say $]'
 
-# DESCRIPTION
+## DESCRIPTION
 
 [perlbrew](https://metacpan.org/pod/perlbrew) is a program to automate the building and installation of perl in an
 easy way. It provides multiple isolated perl environments, and a mechanism
@@ -49,8 +49,8 @@ for you to switch between them.
 
 Everything are installed unter `~/perl5/perlbrew`. You then need to include a
 bashrc/cshrc provided by perlbrew to tweak the PATH for you. You then can
-benefit from not having to run 'sudo' commands to install
-cpan modules because those are installed inside your HOME too.
+benefit from not having to run `sudo` commands to install
+cpan modules because those are installed inside your `HOME` too.
 
 For the documentation of perlbrew usage see [perlbrew](https://metacpan.org/pod/perlbrew) command
 on [MetaCPAN](https://metacpan.org/), or by running `perlbrew help`, 
@@ -58,7 +58,7 @@ or by visiting [perlbrew's official website](http://perlbrew.pl/). The following
 features the API of `App::perlbrew` module, and may not be remotely
 close to what your want to read.
 
-# INSTALLATION
+## INSTALLATION
 
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
@@ -77,13 +77,13 @@ The installed perlbrew command is a standalone executable that can be run with
 system perl. The minimum system perl version requirement is 5.8.0, which should
 be good enough for most of the OSes these days.
 
-A fat-packed version of `patchperl` is also installed to
+A fat-packed version of [patchperl](https://metacpan.org/pod/patchperl) is also installed to
 `~/perl5/perlbrew/bin`, which is required to build old perls.
 
 The directory `~/perl5/perlbrew` will contain all install perl executables,
 libraries, documentations, lib, site\_libs. In the documentation, that directory
-is referred as "perlbrew root". If you need to set it to somewhere else because,
-say, your HOME has limited quota, you can do that by setting `PERLBREW_ROOT`
+is referred as `perlbrew root`. If you need to set it to somewhere else because,
+say, your `HOME` has limited quota, you can do that by setting `PERLBREW_ROOT`
 environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
@@ -113,23 +113,23 @@ You should always use system cpan (like /usr/bin/cpan) to install
 `/usr/bin`, which is not affected by perlbrew `switch` or `use` command.
 
 The `self-upgrade` command will not upgrade the perlbrew installed by cpan
-command, but it is also easy to upgrade perlbrew by running \`cpan App::perlbrew\`
+command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
 again.
 
-# METHODS
+## METHODS
 
 - (Str) current\_perl
 
     Return the "current perl" object attribute string, or, if absent, the value of
-    PERLBREW\_PERL environment variable.
+    `PERLBREW_PERL` environment variable.
 
 - (Str) current\_perl (Str)
 
-    Set the "current\_perl" object attribute to the given value.
+    Set the `current_perl` object attribute to the given value.
 
-# PROJECT DEVELOPMENT
+## PROJECT DEVELOPMENT
 
-perlbrew project uses github
+[perlbrew project](http://perlbrew.pl/) uses github
 [http://github.com/gugod/App-perlbrew/issues](http://github.com/gugod/App-perlbrew/issues) and RT
 <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
 tracking. Issues sent to these two systems will eventually be reviewed
@@ -146,11 +146,11 @@ Kang-min Liu  `<gugod@gugod.org>`
 
 Copyright (c) 2010,2011,2012,2013,2014,2015 Kang-min Liu `<gugod@gugod.org>`.
 
-# LICENCE
+### LICENCE
 
 The MIT License
 
-# DISCLAIMER OF WARRANTY
+## DISCLAIMER OF WARRANTY
 
 BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
 FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
