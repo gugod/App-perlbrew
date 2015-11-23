@@ -30,6 +30,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       @INC = @oldinc;
   }
   
+  use File::Glob ':glob';
   use Getopt::Long ();
   
   sub min(@) {
@@ -1563,7 +1564,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub local_libs {
       my ($self, $perl_name) = @_;
   
-      my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <"$PERLBREW_HOME/libs/*">;
+      my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } bsd_glob("$PERLBREW_HOME/libs/*");
   
       if ($perl_name) {
           @libs = grep { /^$perl_name\@/ } @libs;
@@ -1820,69 +1821,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
       print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
-  }
-  
-  sub run_command_mirror {
-      my($self) = @_;
-      print "Fetching mirror list\n";
-      my $raw = http_get("http://search.cpan.org/mirror");
-  
-      unless ($raw) {
-          die "\nERROR: Failed to retrieve the mirror list.\n\n";
-      }
-  
-      my $found;
-      my @mirrors;
-      foreach my $line ( split m{\n}, $raw ) {
-          $found = 1 if $line =~ m{<select name="mirror">};
-          next if ! $found;
-          last if $line =~ m{</select>};
-          if ( $line =~ m{<option value="(.+?)">(.+?)</option>} ) {
-              my $url  = $1;
-              my $name = $2;
-              $name =~ s/&#(\d+);/chr $1/seg;
-              $url =~ s/&#(\d+);/chr $1/seg;
-              push @mirrors, { url => $url, name => $name };
-          }
-      }
-  
-      require ExtUtils::MakeMaker;
-      my $select;
-      my $max = @mirrors;
-      my $id  = 0;
-      while ( @mirrors ) {
-          my @page = splice(@mirrors,0,20);
-          my $base = $id;
-          printf "[% 3d] %s\n", ++$id, $_->{name} for @page;
-          my $remaining = $max - $id;
-          my $ask = "Select a mirror by number or press enter to see the rest "
-                  . "($remaining more) [q to quit, m for manual entry]";
-          my $val = ExtUtils::MakeMaker::prompt( $ask );
-          if ( ! length $val )  { next }
-          elsif ( $val eq 'q' ) { last }
-          elsif ( $val eq 'm' ) {
-              my $url  = ExtUtils::MakeMaker::prompt("Enter the URL of your CPAN mirror:");
-              my $name = ExtUtils::MakeMaker::prompt("Enter a Name: [default: My CPAN Mirror]") || "My CPAN Mirror";
-              $select = { name => $name, url => $url };
-              last;
-          }
-          elsif ( not $val =~ /\s*(\d+)\s*/ ) {
-              die "Invalid answer: must be 'q', 'm' or a number\n";
-          }
-          elsif (1 <= $val and $val <= $max) {
-              $select = $page[ $val - 1 - $base ];
-              last;
-          }
-          else {
-              die "Invalid ID: must be between 1 and $max\n";
-          }
-      }
-      die "You didn't select a mirror!\n" if ! $select;
-      print "Selected $select->{name} ($select->{url}) as the mirror\n";
-      my $conf = $self->config;
-      $conf->{mirror} = $select;
-      $self->_save_config;
-      return;
   }
   
   sub run_command_env {
@@ -2514,12 +2452,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
                   [ -n "$PERLBREW_LIB" ] && echo -n "@$PERLBREW_LIB"
                   echo
               else
-                  __perlbrew_set_env "$2"
+                  __perlbrew_set_env "$2" && { __perlbrew_set_path ; true ; }
                   exit_status="$?"
-                  if [[ $exit_status -eq 0 ]]
-                  then
-                      __perlbrew_set_path
-                  fi
               fi
               ;;
   
@@ -2527,11 +2461,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
                 if [[ -z "$2" ]] ; then
                     command perlbrew switch
                 else
-                    perlbrew use $2
+                    perlbrew use $2 && { __perlbrew_reinit $2 ; true ; }
                     exit_status=$?
-                    if [[ ${exit_status} -eq 0 ]]; then
-                        __perlbrew_reinit $2
-                    fi
                 fi
                 ;;
   
@@ -5910,7 +5841,6 @@ Commands:
     install-multiple   Install multiple versions and flavors of perl
 
     download       Download the specified perl distribution tarball.
-    mirror         Pick a preferred mirror site
     clean          Purge tarballs and build directories
     version        Display version
     help           Read more detailed instructions
@@ -5987,16 +5917,6 @@ snippet for the given scenario.
 
     source ~/perl5/perlbrew/etc/bashrc
 
-=item PERLBREW_LIB_PREFIX
-
-By default, when activating a perlbrew with a local lib, the local lib is
-placed at the start of the existing PERL5LIB. Set this environment variable if
-you want certain directories to always take precedence in your PERL5LIB, before
-any perlbrew local libs.
-
-So PERLBREW_LIB_PREFIX="./lib:$HOME/lib" would ensure these directories
-are always at the beginning of the PERL5LIB.
-
 =item PERLBREW_CONFIGURE_FLAGS
 
 This environment variable specify the list of command like flags to pass through
@@ -6048,7 +5968,7 @@ Version numbers usually look like "5.x.xx", or
 The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
-To configure mirror site, invoke `mirror` command.
+Add '--mirror $URL' to specify the URL of mirror site.
 
 =item B<install> [options]  perl-stable
 
@@ -6243,14 +6163,6 @@ Usage: perlbrew alias [-f] rename <old_alias> <new_alias>
 Usage: perlbrew alias delete <alias>
 
     Delete the given alias.
-
-=head1 COMMAND: MIRROR
-
-Usage: perlbrew mirror
-
-Run this if you want to choose a specific CPAN mirror to install the
-perls from. It will display a list of mirrors for you to pick
-from. Hit 'q' to cancel the selection.
 
 =head1 COMMAND: EXEC
 
