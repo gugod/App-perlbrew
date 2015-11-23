@@ -5,6 +5,7 @@
 - RHEL vendorlib fix https://github.com/gugod/App-perlbrew/issues/409
 - improvements with fish integration.
 - unbreak when running with perl 5.14 or earlier: "list" command now correctly display lib names.
+- retaining flags in upgrade-perl. https://github.com/gugod/App-perlbrew/commit/b8d466670bbfc8e214a9d3ff2e889a4860060d84
 - variour document clean up and improvements.
 
 0.73: # 2015-02-01T09:59:45+0100
