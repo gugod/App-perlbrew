@@ -50,7 +50,13 @@ export PERL5LIB="lib":$PERL5LIB
 cat - <<"EOF" > perlbrew
 #!/usr/bin/perl
 
-BEGIN { use Config; @INC = @Config{qw(vendorlibexp privlibexp archlibexp sitelibexp sitearchexp)} };
+use Config;
+BEGIN {
+    my @oldinc = @INC;
+    @INC = ( $Config{sitelibexp}."/".$Config{archname}, $Config{sitelibexp}, @Config{qw<vendorlibexp vendorarchexp archlibexp privlibexp>} );
+    require Cwd;
+    @INC = @oldinc;
+}
 
 EOF
 
