@@ -12,9 +12,7 @@ requires
     'Devel::PatchPerl'     => '1.28',
     'Pod::Parser'          => '1.62',
     'Pod::Usage'           => '1.64',
-    'Pod::Markdown'        => '2.002';
     'local::lib'           => '2.000014';
-
 
 test_requires
     'ExtUtils::MakeMaker'  => '6.86',
@@ -27,6 +25,9 @@ test_requires
     'Test::Output'         => '1.03',
     'Test::Simple'         => '1.001002',
     'Test::Spec'           => '0.47';
+
+author_requires
+    'Pod::Markdown'        => '2.002';
 
 install_script 'bin/perlbrew';
 
