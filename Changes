@@ -1,3 +1,14 @@
+0.74: # 2015-11-24T20:55:02+0100
+- A big thanks for our contributers: Aristotle Pagaltzis, Dave Jacoby, Dylan Cali, John Krull, Kevin Johnson, Nathan Day, Paul Cochrane, Tudor Constantin, Yanick Champoux, tm604
+- support PERLBREW_LIB_PREFIX. https://github.com/gugod/App-perlbrew/commit/c29813cd4633683bd049964178a9ac96647986bc
+- prefer https and remove insecure download cli flags. https://github.com/gugod/App-perlbrew/commit/f49a908c1702942006de4654107edf77a48ead52
+- perlbrew now dies when switching to/use a lib that does not exist. https://github.com/gugod/App-perlbrew/issues/432
+- RHEL vendorlib fix https://github.com/gugod/App-perlbrew/issues/409
+- improvements with fish integration.
+- unbreak when running with perl 5.14 or earlier: "list" command now correctly display lib names.
+- retaining flags in upgrade-perl. https://github.com/gugod/App-perlbrew/commit/b8d466670bbfc8e214a9d3ff2e889a4860060d84
+- variour document clean up and improvements.
+
 0.73: # 2015-02-01T09:59:45+0100
 - fixes and improvements from Manuel Streuhofer, Aristotle Pagaltzis, Sebastian Willert, David Hand, Eric Enns,
   Peter Roberts, Thomas Sibley, Ivan Baidakou, thanks!

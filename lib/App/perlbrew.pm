@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.73";
+our $VERSION = "0.74";
 use Config;
 
 BEGIN {
@@ -19,6 +19,7 @@ BEGIN {
     @INC = @oldinc;
 }
 
+use File::Glob ':glob';
 use Getopt::Long ();
 
 sub min(@) {
@@ -128,20 +129,20 @@ sub files_are_the_same {
     my %commands = (
         curl => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--insecure --silent --location --fail -o - {url}',
-            download => '--insecure --silent --location --fail -o {output} {url}',
+            get      => '--silent --location --fail -o - {url}',
+            download => '--silent --location --fail -o {output} {url}',
             order    => 1,
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--no-check-certificate --quiet -O - {url}',
-            download => '--no-check-certificate --quiet -O {output} {url}',
+            get      => '--quiet -O - {url}',
+            download => '--quiet -O {output} {url}',
             order    => 2,
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
-            get      => '--no-verify-peer -o - {url}',
-            download => '--no-verify-peer {url}',
+            get      => '-o - {url}',
+            download => '{url}',
             order    => 3,
         }
     );
@@ -1402,6 +1403,9 @@ INSTALL
         unless (-e $newperl) {
             $self->run_command_symlink_executables($installation_name);
         }
+
+        eval { $self->append_log('##### Brew Finished #####') };
+
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
             my ($sitelib) = $capture =~ /sitelib='(.*)';/;
@@ -1425,6 +1429,7 @@ INSTALL
         print "$installation_name is successfully installed.\n";
     }
     else {
+        eval { $self->append_log('##### Brew Failed #####') };
         die $self->INSTALLATION_FAILURE_MESSAGE;
     }
     return;
@@ -1548,7 +1553,7 @@ sub installed_perls {
 sub local_libs {
     my ($self, $perl_name) = @_;
 
-    my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } <$PERLBREW_HOME/libs/*>;
+    my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } bsd_glob("$PERLBREW_HOME/libs/*");
 
     if ($perl_name) {
         @libs = grep { /^$perl_name\@/ } @libs;
@@ -1592,6 +1597,10 @@ sub perlbrew_env {
         unless ($perl_name) {
             die "\nERROR: The installation \"$name\" is unknown.\n\n";
         }
+
+        unless (!$lib_name || grep { $_->{lib_name} eq $lib_name } $self->local_libs($perl_name)) {
+            die "\nERROR: The lib name \"$lib_name\" is unknown.\n\n";
+        }
     }
 
     my %env = (
@@ -1623,6 +1632,13 @@ sub perlbrew_env {
 
             if (-d $base) {
                 $current_local_lib_context = $current_local_lib_context->activate($base);
+
+                if ( $self->env('PERLBREW_LIB_PREFIX') ) {
+                    unshift
+                        @{$current_local_lib_context->libs},
+                            $self->env('PERLBREW_LIB_PREFIX');
+                }
+
                 $env{PERLBREW_PATH}    = joinpath($base, "bin") . ":" . $env{PERLBREW_PATH};
                 $env{PERLBREW_MANPATH} = joinpath($base, "man") . ":" . $env{PERLBREW_MANPATH};
                 $env{PERLBREW_LIB}  = $lib_name;
@@ -1796,69 +1812,6 @@ sub run_command_switch_off {
     print "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
-sub run_command_mirror {
-    my($self) = @_;
-    print "Fetching mirror list\n";
-    my $raw = http_get("http://search.cpan.org/mirror");
-
-    unless ($raw) {
-        die "\nERROR: Failed to retrieve the mirror list.\n\n";
-    }
-
-    my $found;
-    my @mirrors;
-    foreach my $line ( split m{\n}, $raw ) {
-        $found = 1 if $line =~ m{<select name="mirror">};
-        next if ! $found;
-        last if $line =~ m{</select>};
-        if ( $line =~ m{<option value="(.+?)">(.+?)</option>} ) {
-            my $url  = $1;
-            my $name = $2;
-            $name =~ s/&#(\d+);/chr $1/seg;
-            $url =~ s/&#(\d+);/chr $1/seg;
-            push @mirrors, { url => $url, name => $name };
-        }
-    }
-
-    require ExtUtils::MakeMaker;
-    my $select;
-    my $max = @mirrors;
-    my $id  = 0;
-    while ( @mirrors ) {
-        my @page = splice(@mirrors,0,20);
-        my $base = $id;
-        printf "[% 3d] %s\n", ++$id, $_->{name} for @page;
-        my $remaining = $max - $id;
-        my $ask = "Select a mirror by number or press enter to see the rest "
-                . "($remaining more) [q to quit, m for manual entry]";
-        my $val = ExtUtils::MakeMaker::prompt( $ask );
-        if ( ! length $val )  { next }
-        elsif ( $val eq 'q' ) { last }
-        elsif ( $val eq 'm' ) {
-            my $url  = ExtUtils::MakeMaker::prompt("Enter the URL of your CPAN mirror:");
-            my $name = ExtUtils::MakeMaker::prompt("Enter a Name: [default: My CPAN Mirror]") || "My CPAN Mirror";
-            $select = { name => $name, url => $url };
-            last;
-        }
-        elsif ( not $val =~ /\s*(\d+)\s*/ ) {
-            die "Invalid answer: must be 'q', 'm' or a number\n";
-        }
-        elsif (1 <= $val and $val <= $max) {
-            $select = $page[ $val - 1 - $base ];
-            last;
-        }
-        else {
-            die "Invalid ID: must be between 1 and $max\n";
-        }
-    }
-    die "You didn't select a mirror!\n" if ! $select;
-    print "Selected $select->{name} ($select->{url}) as the mirror\n";
-    my $conf = $self->config;
-    $conf->{mirror} = $select;
-    $self->_save_config;
-    return;
-}
-
 sub run_command_env {
     my($self, $name) = @_;
 
@@ -2004,7 +1957,7 @@ sub run_command_exec {
     if ($opts{with}) {
         my %installed = map { $_->{name} => $_ } map { ($_, @{$_->{libs}}) } $self->installed_perls;
 
-        my $d = ($opts{with} =~ / /) ? qr( +) : qr(,+);
+        my $d = ($opts{with} =~ m/ /) ? qr( +) : qr(,+);
         my @with = grep { $_ } map {
             my ($p,$l) = $self->resolve_installation_name($_);
             $p .= "\@$l" if $l;
@@ -2285,6 +2238,16 @@ sub run_command_upgrade_perl {
     print "Upgrading $current->{name} to $dist_version\n" unless $self->{quiet};
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
+
+    require Config ;
+    my @d_options = map { '-D' . $flavor{$_}->{d_option}} keys %flavor ;
+    my %sub_config = map { $_ => $Config{$_}} grep { /^config_arg\d/} keys %Config ;
+    for my $value ( values %sub_config ) {
+        my $value_wo_D = $value;
+        $value_wo_D =~ s/^-D//;
+        push @{$self->{D}} , $value_wo_D if grep {/$value/} @d_options;
+    }
+    
     $self->do_install_release($dist, $dist_version);
 }
 
@@ -2478,12 +2441,8 @@ perlbrew () {
                 [ -n "$PERLBREW_LIB" ] && echo -n "@$PERLBREW_LIB"
                 echo
             else
-                __perlbrew_set_env "$2"
+                __perlbrew_set_env "$2" && { __perlbrew_set_path ; true ; }
                 exit_status="$?"
-                if [[ $exit_status -eq 0 ]]
-                then
-                    __perlbrew_set_path
-                fi
             fi
             ;;
 
@@ -2491,11 +2450,8 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2
+                  perlbrew use $2 && { __perlbrew_reinit $2 ; true ; }
                   exit_status=$?
-                  if [[ ${exit_status} -eq 0 ]]; then
-                      __perlbrew_reinit $2
-                  fi
               fi
               ;;
 
@@ -2583,16 +2539,17 @@ function __perlbrew_set_path
 
     set -l PATH_WITHOUT_PERLBREW (eval $perlbrew_command display-pristine-path | perl -pe'y/:/ /')
 
+    # silencing stderr in case there's a non-existent path in $PATH (see GH#446)
     if test -n "$PERLBREW_PATH"
         set -x PERLBREW_PATH (echo $PERLBREW_PATH | perl -pe 'y/:/ /' )
-        eval set -x PATH $PERLBREW_PATH $PATH_WITHOUT_PERLBREW
+        eval set -x PATH $PERLBREW_PATH $PATH_WITHOUT_PERLBREW 2> /dev/null
     else
-        eval set -x PATH $PERLBREW_ROOT/bin $PATH_WITHOUT_PERLBREW
+        eval set -x PATH $PERLBREW_ROOT/bin $PATH_WITHOUT_PERLBREW 2> /dev/null
     end
 end
 
 function __perlbrew_set_env
-    set -l code (eval $perlbrew_command env $argv | perl -pe 's/^(export|setenv)/set -xg/; s/^unset[env]*/set -eug/; s/$/;/; y/:/ /')
+    set -l code (eval $perlbrew_command env $argv | perl -pe 's/^(export|setenv)/set -xg/; s/=/ /; s/^unset[env]*/set -eug/; s/$/;/; y/:/ /')
 
     if test -z "$code"
         return 0;
@@ -2670,7 +2627,7 @@ function perlbrew
 end
 
 function __source_init
-    perl -pe's/^\(export|setenv\)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | . -
+    perl -pe's/^(export|setenv)/set -xg/; s/=/ /; s/$/;/;' "$PERLBREW_HOME/init" | source
 end
 
 if test -z "$PERLBREW_ROOT"
@@ -2858,6 +2815,15 @@ CSHRC
 
 }
 
+sub append_log {
+    my ($self, $message) = @_;
+    my $log_handler;
+    open($log_handler, '>>', $self->{log_file})
+        or die "Cannot open log file for appending: $!";
+    print $log_handler "$message\n";
+    close($log_handler);
+}
+
 sub INSTALLATION_FAILURE_MESSAGE {
     my ($self) = @_;
     return <<FAIL;
@@ -2865,7 +2831,7 @@ Installation process failed. To spot any issues, check
 
   $self->{log_file}
 
-If some perl tests failed and you still want install this distribution anyway,
+If some perl tests failed and you still want to install this distribution anyway,
 do:
 
   (cd $self->{dist_extracted_dir}; make install)
@@ -2892,12 +2858,12 @@ __END__
 
 =head1 NAME
 
-App::perlbrew - Manage perl installations in your $HOME
+L<App::perlbrew> - Manage perl installations in your C<$HOME>
 
-=head1 SYNOPSIS
+=head2 SYNOPSIS
 
     # Installation
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
     # Initialize
     perlbrew init
@@ -2933,28 +2899,29 @@ App::perlbrew - Manage perl installations in your $HOME
     # Exec something with all perlbrew-ed perls
     perlbrew exec -- perl -E 'say $]'
 
-=head1 DESCRIPTION
+=head2 DESCRIPTION
 
-perlbrew is a program to automate the building and installation of perl in an
+L<perlbrew> is a program to automate the building and installation of perl in an
 easy way. It provides multiple isolated perl environments, and a mechanism
 for you to switch between them.
 
 Everything are installed unter C<~/perl5/perlbrew>. You then need to include a
 bashrc/cshrc provided by perlbrew to tweak the PATH for you. You then can
-benefit from not having to run 'sudo' commands to install
-cpan modules because those are installed inside your HOME too.
+benefit from not having to run C<sudo> commands to install
+cpan modules because those are installed inside your C<HOME> too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
-on CPAN, or by running C<perlbrew help>. The following documentation
+on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>, 
+or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 
-=head1 INSTALLATION
+=head2 INSTALLATION
 
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
 
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
 Or this one, if you have C<fetch> (default on FreeBSD):
 
@@ -2968,17 +2935,17 @@ The installed perlbrew command is a standalone executable that can be run with
 system perl. The minimum system perl version requirement is 5.8.0, which should
 be good enough for most of the OSes these days.
 
-A fat-packed version of C<patchperl> is also installed to
+A fat-packed version of L<patchperl> is also installed to
 C<~/perl5/perlbrew/bin>, which is required to build old perls.
 
 The directory C<~/perl5/perlbrew> will contain all install perl executables,
 libraries, documentations, lib, site_libs. In the documentation, that directory
-is referred as "perlbrew root". If you need to set it to somewhere else because,
-say, your HOME has limited quota, you can do that by setting C<PERLBREW_ROOT>
+is referred as C<perlbrew root>. If you need to set it to somewhere else because,
+say, your C<HOME> has limited quota, you can do that by setting C<PERLBREW_ROOT>
 environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
 As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
@@ -3004,27 +2971,27 @@ C<App::perlbrew> because it will be installed under a system PATH like
 C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
 
 The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
-command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
+command, but it is also easy to upgrade perlbrew by running C<cpan App::perlbrew>
 again.
 
-=head1 METHODS
+=head2 METHODS
 
 =over 4
 
 =item (Str) current_perl
 
 Return the "current perl" object attribute string, or, if absent, the value of
-PERLBREW_PERL environment variable.
+C<PERLBREW_PERL> environment variable.
 
 =item (Str) current_perl (Str)
 
-Set the "current_perl" object attribute to the given value.
+Set the C<current_perl> object attribute to the given value.
 
 =back
 
-=head1 PROJECT DEVELOPMENT
+=head2 PROJECT DEVELOPMENT
 
-perlbrew project uses github
+L<perlbrew project|http://perlbrew.pl/> uses github
 L<http://github.com/gugod/App-perlbrew/issues> and RT
 <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
 tracking. Issues sent to these two systems will eventually be reviewed
@@ -3041,11 +3008,11 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 Copyright (c) 2010,2011,2012,2013,2014,2015 Kang-min Liu C<< <gugod@gugod.org> >>.
 
-=head1 LICENCE
+=head3 LICENCE
 
 The MIT License
 
-=head1 DISCLAIMER OF WARRANTY
+=head2 DISCLAIMER OF WARRANTY
 
 BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
 FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN

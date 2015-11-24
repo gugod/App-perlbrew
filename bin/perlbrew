@@ -44,7 +44,6 @@ Commands:
     install-multiple   Install multiple versions and flavors of perl
 
     download       Download the specified perl distribution tarball.
-    mirror         Pick a preferred mirror site
     clean          Purge tarballs and build directories
     version        Display version
     help           Read more detailed instructions
@@ -172,7 +171,7 @@ Version numbers usually look like "5.x.xx", or
 The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
-To configure mirror site, invoke `mirror` command.
+Add '--mirror $URL' to specify the URL of mirror site.
 
 =item B<install> [options]  perl-stable
 
@@ -367,14 +366,6 @@ Usage: perlbrew alias [-f] rename <old_alias> <new_alias>
 Usage: perlbrew alias delete <alias>
 
     Delete the given alias.
-
-=head1 COMMAND: MIRROR
-
-Usage: perlbrew mirror
-
-Run this if you want to choose a specific CPAN mirror to install the
-perls from. It will display a list of mirrors for you to pick
-from. Hit 'q' to cancel the selection.
 
 =head1 COMMAND: EXEC
 
@@ -611,21 +602,6 @@ re-installs all modules under perl-5.16.0:
     
 Note that this installs the I<latest> versions of the Perl modules on the new perl,
 which are not necessarily the I<same> module versions you had installed previously.
-
-=head1 UPGRADE NOTES
-
-If you are upgrading C<perlbrew> from 0.16 or earlier versions to a recent
-one (0.40-ish), you should do these steps to adjust your perl installations
-afterwards (you might need to change the value of PERLBREW_ROOT):
-
-    export PERLBREW_ROOT=${HOME}/perl5/perlbrew
-    rm -f $PERLBREW_ROOT/perls/current
-    rm -f `find $PERLBREW_ROOT/perls/bin -type l`
-    perlbrew symlink-executables
-    perlbrew init
-
-Following the instructions on screen to tweak your shell a bit. Then it
-should be good.
 
 =head1 SEE ALSO
 

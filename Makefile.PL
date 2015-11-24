@@ -26,6 +26,9 @@ test_requires
     'Test::Simple'         => '1.001002',
     'Test::Spec'           => '0.47';
 
+author_requires
+    'Pod::Markdown'        => '2.002';
+
 install_script 'bin/perlbrew';
 
 tests 't/*.t';
