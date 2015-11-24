@@ -1,3 +1,4 @@
+0.74: # 2015-11-24T20:55:02+0100
 - A big thanks for our contributers: Aristotle Pagaltzis, Dave Jacoby, Dylan Cali, John Krull, Kevin Johnson, Nathan Day, Paul Cochrane, Tudor Constantin, Yanick Champoux, tm604
 - support PERLBREW_LIB_PREFIX. https://github.com/gugod/App-perlbrew/commit/c29813cd4633683bd049964178a9ac96647986bc
 - prefer https and remove insecure download cli flags. https://github.com/gugod/App-perlbrew/commit/f49a908c1702942006de4654107edf77a48ead52
