@@ -2868,9 +2868,6 @@ L<App::perlbrew> - Manage perl installations in your C<$HOME>
     # Initialize
     perlbrew init
 
-    # Pick a preferred CPAN mirror
-    perlbrew mirror
-
     # See what is available
     perlbrew available
 
