@@ -1896,7 +1896,7 @@ sub run_command_self_upgrade {
         die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
 
-    http_get('http://get.perlbrew.pl', undef, sub {
+    http_get('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
         my ( $body ) = @_;
 
         open my $fh, '>', $TMP_PERLBREW or die "Unable to write perlbrew: $!";
