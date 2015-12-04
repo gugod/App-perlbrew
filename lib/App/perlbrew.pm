@@ -730,8 +730,8 @@ sub perl_release {
     }
 
     # try to find it on search.cpan.org
-    my $mirror = $self->config->{mirror};
-    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+    my $mirror = $self->cpan_mirror();
+    my $header = $mirror ? { 'Cookie' => "cpan=$mirror" } : undef;
     my $html = http_get("http://search.cpan.org/dist/perl-${version}", $header);
 
     unless ($html) {
@@ -2321,49 +2321,6 @@ sub format_info_output
 sub run_command_info {
     my ($self) = shift;
     print $self->format_info_output(@_);
-}
-
-
-sub config {
-    my($self) = @_;
-    $self->_load_config if ! $CONFIG;
-    return $CONFIG;
-}
-
-sub config_file {
-    my ($self) = @_;
-    joinpath( $self->root, 'Config.pm' );
-}
-
-sub _save_config {
-    my($self) = @_;
-    require Data::Dumper;
-    open my $FH, '>', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!";
-    my $d = Data::Dumper->new([$CONFIG],['App::perlbrew::CONFIG']);
-    print $FH $d->Dump;
-    close $FH;
-}
-
-sub _load_config {
-    my($self) = @_;
-
-    if ( ! -e $self->config_file ) {
-        local $CONFIG = {} if ! $CONFIG;
-        $self->_save_config;
-    }
-
-    open my $FH, '<', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!\n";
-    my $raw = do { local $/; my $rv = <$FH>; $rv };
-    close $FH;
-
-    my $rv = eval $raw;
-    if ( $@ ) {
-        warn "Error loading conf: $@\n";
-        $CONFIG = {};
-        return;
-    }
-    $CONFIG = {} if ! $CONFIG;
-    return;
 }
 
 sub BASHRC_CONTENT() {

@@ -747,8 +747,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       # try to find it on search.cpan.org
-      my $mirror = $self->config->{mirror};
-      my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
+      my $mirror = $self->cpan_mirror();
+      my $header = $mirror ? { 'Cookie' => "cpan=$mirror" } : undef;
       my $html = http_get("http://search.cpan.org/dist/perl-${version}", $header);
   
       unless ($html) {
@@ -1913,7 +1913,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
       }
   
-      http_get('http://get.perlbrew.pl', undef, sub {
+      http_get('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
           my ( $body ) = @_;
   
           open my $fh, '>', $TMP_PERLBREW or die "Unable to write perlbrew: $!";
@@ -2338,49 +2338,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub run_command_info {
       my ($self) = shift;
       print $self->format_info_output(@_);
-  }
-  
-  
-  sub config {
-      my($self) = @_;
-      $self->_load_config if ! $CONFIG;
-      return $CONFIG;
-  }
-  
-  sub config_file {
-      my ($self) = @_;
-      joinpath( $self->root, 'Config.pm' );
-  }
-  
-  sub _save_config {
-      my($self) = @_;
-      require Data::Dumper;
-      open my $FH, '>', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!";
-      my $d = Data::Dumper->new([$CONFIG],['App::perlbrew::CONFIG']);
-      print $FH $d->Dump;
-      close $FH;
-  }
-  
-  sub _load_config {
-      my($self) = @_;
-  
-      if ( ! -e $self->config_file ) {
-          local $CONFIG = {} if ! $CONFIG;
-          $self->_save_config;
-      }
-  
-      open my $FH, '<', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!\n";
-      my $raw = do { local $/; my $rv = <$FH>; $rv };
-      close $FH;
-  
-      my $rv = eval $raw;
-      if ( $@ ) {
-          warn "Error loading conf: $@\n";
-          $CONFIG = {};
-          return;
-      }
-      $CONFIG = {} if ! $CONFIG;
-      return;
   }
   
   sub BASHRC_CONTENT() {
@@ -2884,9 +2841,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       # Initialize
       perlbrew init
-  
-      # Pick a preferred CPAN mirror
-      perlbrew mirror
   
       # See what is available
       perlbrew available
@@ -5899,7 +5853,7 @@ It is also possible to set this variable before installing perlbrew
 to make perlbrew install itself under the given PERLBREW_ROOT:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
 After doing this, the perlbrew executable is installed as C</opt/perl5/bin/perlbrew>
 
@@ -6300,7 +6254,7 @@ This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
 be used by the perlbrew installer. However, you could manually do the following
 to re-install only the C<perlbrew> executable:
 
-    curl -kL http://get.perlbrew.pl -o perlbrew
+    curl https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew -o perlbrew
     perl ./perlbrew self-install
 
 It is slightly different from running the perlbrew installer because
