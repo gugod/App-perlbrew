@@ -1926,16 +1926,21 @@ sub run_command_uninstall {
         exit(-1);
     }
 
-    my $dir = "@{[ $self->root ]}/perls/$target";
+    my @installed = $self->installed_perls(@_);
 
-    if (-l $dir) {
-        die "\nThe given name `$target` is an alias, not a real installation. Cannot perform uninstall.\nTo delete the alias, run:\n\n    perlbrew alias delete $target\n\n";
-    }
+    my ($to_delete) = grep { $_->{name} eq $target } @installed;
 
-    unless(-d $dir) {
-        die "'$target' is not installed\n";
+    die "'$target' is not installed\n" unless $to_delete;
+
+    my @dir_to_delete;
+    for (@{$to_delete->{libs}}) {
+        push @dir_to_delete, $_->{dir};
     }
-    exec 'rm', '-rf', $dir;
+    push @dir_to_delete, $to_delete->{dir};
+
+    for (@dir_to_delete) {
+        rmpath($_);
+    }
 }
 
 sub run_command_exec {

@@ -290,7 +290,8 @@ Another example using custom compilation flags:
 Usage: perlbrew uninstall <name>
 
 Uninstalls the given perl installation. The name is the installation name as in
-the output of `perlbrew list`
+the output of `perlbrew list`. This effectively deletes the specified perl installation,
+and all libs associated with it.
 
 =head1 COMMAND: USE
 
