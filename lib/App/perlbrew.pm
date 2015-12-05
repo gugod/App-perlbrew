@@ -142,7 +142,7 @@ sub files_are_the_same {
         fetch => {
             test     => '--version >/dev/null 2>&1',
             get      => '-o - {url}',
-            download => '{url}',
+            download => '-o {output} {url}',
             order    => 3,
         }
     );
