@@ -1518,10 +1518,10 @@ sub installed_perls {
     my @result;
     my $root = $self->root;
 
-    for (<$root/perls/*>) {
-        my ($name) = $_ =~ m/\/([^\/]+$)/;
-        my $executable = joinpath($_, 'bin', 'perl');
-        my $version_file = joinpath($_,'.version');
+    for my $installation_dir (<$root/perls/*>) {
+        my ($name) = $installation_dir =~ m/\/([^\/]+$)/;
+        my $executable = joinpath($installation_dir, 'bin', 'perl');
+        my $version_file = joinpath($installation_dir,'.version');
         my $orig_version;
         if ( -e $version_file ){
             open my $fh, '<', $version_file;
@@ -1543,7 +1543,8 @@ sub installed_perls {
             version     => $self->format_perl_version($orig_version),
             is_current  => ($self->current_perl eq $name) && !($self->current_lib),
             libs => [ $self->local_libs($name) ],
-            executable  => $executable
+            executable  => $executable,
+            dir => $installation_dir,
         };
     }
 
@@ -1553,24 +1554,21 @@ sub installed_perls {
 sub local_libs {
     my ($self, $perl_name) = @_;
 
-    my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } bsd_glob("$PERLBREW_HOME/libs/*");
-
-    if ($perl_name) {
-        @libs = grep { /^$perl_name\@/ } @libs;
-    }
-
     my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
-
-    @libs = map {
-        my ($p, $l) = split(/@/, $_);
-
+    my @libs = map {
+        my $name = substr($_, length($PERLBREW_HOME) + 6);
+        my ($p, $l) = split(/@/, $name);
         +{
-            name       => $_,
-            is_current => $_ eq $current,
+            name       => $name,
+            is_current => $name eq $current,
             perl_name  => $p,
-            lib_name   => $l
+            lib_name   => $l,
+            dir        => $_,
         }
-    } @libs;
+    } bsd_glob("$PERLBREW_HOME/libs/*");
+    if ($perl_name) {
+        @libs = grep { $perl_name eq $_->{perl_name} } @libs;
+    }
     return @libs;
 }
 
