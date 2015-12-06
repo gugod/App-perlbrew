@@ -818,10 +818,10 @@ sub run_command_init {
     }
 
     my $root_dir = $self->path_with_tilde($self->root);
-    my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
+    my $pb_home_dir = $self->path_with_tilde($self->home);
 
     my $code = qq(    source $root_dir/etc/${shrc});
-    if ($PERLBREW_HOME ne joinpath($self->env('HOME'), ".perlbrew")) {
+    if ($self->home ne joinpath($self->env('HOME'), ".perlbrew")) {
         $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
     }
 
@@ -1222,7 +1222,7 @@ sub run_command_download {
 
 sub purify {
     my ($self, $envname) = @_;
-    my @paths = grep { index($_, $PERLBREW_HOME) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
+    my @paths = grep { index($_, $self->home) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
     return wantarray ? @paths : join(":", @paths);
 }
 
@@ -1566,7 +1566,7 @@ sub local_libs {
 
     my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
     my @libs = map {
-        my $name = substr($_, length($PERLBREW_HOME) + 6);
+        my $name = substr($_, length($self->home) + 6);
         my ($p, $l) = split(/@/, $name);
         +{
             name       => $name,
@@ -1575,7 +1575,7 @@ sub local_libs {
             lib_name   => $l,
             dir        => $_,
         }
-    } bsd_glob("$PERLBREW_HOME/libs/*");
+    } bsd_glob(joinpath($self->home, "libs", "*"));
     if ($perl_name) {
         @libs = grep { $perl_name eq $_->{perl_name} } @libs;
     }
@@ -1619,10 +1619,11 @@ sub perlbrew_env {
     );
 
     require local::lib;
+    my $pb_home = $self->home;
     my $current_local_lib_root = $self->env("PERL_LOCAL_LIB_ROOT") || "";
     my $current_local_lib_context = local::lib->new;
-    my @perlbrew_local_lib_root =  uniq(grep { /\Q${PERLBREW_HOME}\E/ } split(/:/, $current_local_lib_root));
-    if ($current_local_lib_root =~ /^\Q$PERLBREW_HOME\E/) {
+    my @perlbrew_local_lib_root =  uniq(grep { /\Q${pb_home}\E/ } split(/:/, $current_local_lib_root));
+    if ($current_local_lib_root =~ /^\Q${pb_home}\E/) {
         $current_local_lib_context = $current_local_lib_context->activate($_) for @perlbrew_local_lib_root;
     }
 
@@ -1636,7 +1637,7 @@ sub perlbrew_env {
         if ($lib_name) {
             $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
 
-            my $base = "$PERLBREW_HOME/libs/${perl_name}\@${lib_name}";
+            my $base = joinpath($self->home, "libs", "${perl_name}\@${lib_name}");
 
             if (-d $base) {
                 $current_local_lib_context = $current_local_lib_context->activate($base);
@@ -1792,7 +1793,7 @@ sub switch_to {
     if ($self->env("PERLBREW_BASHRC_VERSION")) {
         local $ENV{PERLBREW_PERL} = $dist;
         my $HOME = $self->env('HOME');
-        my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+        my $pb_home = $self->home;
 
         mkpath($pb_home);
         system("$0 env $dist > " . joinpath($pb_home, "init"));
@@ -1811,7 +1812,7 @@ sub run_command_off {
 
 sub run_command_switch_off {
     my $self = shift;
-    my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+    my $pb_home = $self->home;
 
     mkpath($pb_home);
     system("env PERLBREW_PERL= $0 env > " . joinpath($pb_home, "init"));
@@ -2142,7 +2143,7 @@ sub run_command_lib_create {
     }
 
     my $fullname = $perl_name . '@' . $lib_name;
-    my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
+    my $dir = joinpath($self->home,  "libs", $fullname);
 
     if (-d $dir) {
         die "$fullname is already there.\n";
@@ -2169,7 +2170,7 @@ sub run_command_lib_delete {
 
     my $current  = $self->current_perl . '@' . $self->current_lib;
 
-    my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
+    my $dir = joinpath($self->home,  "libs", $fullname);
 
     if (-d $dir) {
 
@@ -2191,7 +2192,7 @@ sub run_command_lib_delete {
 
 sub run_command_lib_list {
     my ($self) = @_;
-    my $dir = joinpath($PERLBREW_HOME,  "libs");
+    my $dir = joinpath($self->home,  "libs");
     return unless -d $dir;
 
     opendir my $dh, $dir or die "open $dir failed: $!";
