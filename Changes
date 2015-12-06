@@ -1,4 +1,4 @@
-
+- "uninstall" command now also delete associated libs.
 - "mirror" command is removed.
 - "config" command is removed.
 
