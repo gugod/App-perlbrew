@@ -367,6 +367,16 @@ sub root {
     return $self->{root} || $PERLBREW_ROOT;
 }
 
+sub home {
+    my ($self, $new_home) = @_;
+
+    if (defined($new_home)) {
+        $self->{home} = $new_home;
+    }
+
+    return $self->{home} || $PERLBREW_HOME;
+}
+
 sub current_perl {
     my ($self, $v) = @_;
     $self->{current_perl} = $v if $v;
