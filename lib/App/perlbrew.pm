@@ -1312,8 +1312,8 @@ sub do_install_this {
         $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
     }
 
-    my $perlpath = $self->root . "/perls/$installation_name";
-    my $patchperl = $self->root . "/bin/patchperl";
+    my $perlpath = joinpath($self->root, "perls", $installation_name);
+    my $patchperl = joinpath($self->root, "bin", "patchperl");
 
     unless (-x $patchperl && -f _) {
         $patchperl = "patchperl";
@@ -1438,7 +1438,7 @@ INSTALL
 sub do_install_program_from_url {
     my ($self, $url, $program_name, $body_filter) = @_;
 
-    my $out = $self->root . "/bin/" . $program_name;
+    my $out = joinpath($self->root, "bin", $program_name);
 
     if (-f $out && !$self->{force}) {
         require ExtUtils::MakeMaker;
@@ -1979,7 +1979,7 @@ sub run_command_exec {
 
     my $overall_success = 1;
     for my $i ( @exec_with ) {
-        next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
+        next if -l joinpath($self->root, 'perls', $i->{name}); # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
