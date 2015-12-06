@@ -19,7 +19,7 @@ BEGIN {
     @INC = @oldinc;
 }
 
-use File::Glob ':glob';
+use File::Glob 'bsd_glob';
 use Getopt::Long ();
 
 sub min(@) {
