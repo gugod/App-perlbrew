@@ -127,7 +127,7 @@ to 'sh Configure'. By default it is '-de'.
 
 =item PERLBREW_CPAN_MIRROR
 
-The CPAN mirror url of your choice.
+The CPAN mirror url of your choice. The default value is "http://www.cpan.org"
 
 =back
 
