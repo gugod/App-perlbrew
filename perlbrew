@@ -36,7 +36,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       @INC = @oldinc;
   }
   
-  use File::Glob ':glob';
+  use File::Glob 'bsd_glob';
   use Getopt::Long ();
   
   sub min(@) {
@@ -159,7 +159,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           fetch => {
               test     => '--version >/dev/null 2>&1',
               get      => '-o - {url}',
-              download => '{url}',
+              download => '-o {output} {url}',
               order    => 3,
           }
       );
@@ -382,6 +382,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       return $self->{root} || $PERLBREW_ROOT;
+  }
+  
+  sub home {
+      my ($self, $new_home) = @_;
+  
+      if (defined($new_home)) {
+          $self->{home} = $new_home;
+      }
+  
+      return $self->{home} || $PERLBREW_HOME;
   }
   
   sub current_perl {
@@ -825,10 +835,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       my $root_dir = $self->path_with_tilde($self->root);
-      my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
+      my $pb_home_dir = $self->path_with_tilde($self->home);
   
       my $code = qq(    source $root_dir/etc/${shrc});
-      if ($PERLBREW_HOME ne joinpath($self->env('HOME'), ".perlbrew")) {
+      if ($self->home ne joinpath($self->env('HOME'), ".perlbrew")) {
           $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
       }
   
@@ -1229,7 +1239,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   sub purify {
       my ($self, $envname) = @_;
-      my @paths = grep { index($_, $PERLBREW_HOME) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
+      my @paths = grep { index($_, $self->home) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
       return wantarray ? @paths : join(":", @paths);
   }
   
@@ -1329,8 +1339,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
       }
   
-      my $perlpath = $self->root . "/perls/$installation_name";
-      my $patchperl = $self->root . "/bin/patchperl";
+      my $perlpath = joinpath($self->root, "perls", $installation_name);
+      my $patchperl = joinpath($self->root, "bin", "patchperl");
   
       unless (-x $patchperl && -f _) {
           $patchperl = "patchperl";
@@ -1455,7 +1465,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub do_install_program_from_url {
       my ($self, $url, $program_name, $body_filter) = @_;
   
-      my $out = $self->root . "/bin/" . $program_name;
+      my $out = joinpath($self->root, "bin", $program_name);
   
       if (-f $out && !$self->{force}) {
           require ExtUtils::MakeMaker;
@@ -1535,10 +1545,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my @result;
       my $root = $self->root;
   
-      for (<$root/perls/*>) {
-          my ($name) = $_ =~ m/\/([^\/]+$)/;
-          my $executable = joinpath($_, 'bin', 'perl');
-          my $version_file = joinpath($_,'.version');
+      for my $installation_dir (<$root/perls/*>) {
+          my ($name) = $installation_dir =~ m/\/([^\/]+$)/;
+          my $executable = joinpath($installation_dir, 'bin', 'perl');
+          my $version_file = joinpath($installation_dir,'.version');
           my $orig_version;
           if ( -e $version_file ){
               open my $fh, '<', $version_file;
@@ -1560,7 +1570,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
               version     => $self->format_perl_version($orig_version),
               is_current  => ($self->current_perl eq $name) && !($self->current_lib),
               libs => [ $self->local_libs($name) ],
-              executable  => $executable
+              executable  => $executable,
+              dir => $installation_dir,
           };
       }
   
@@ -1570,24 +1581,21 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub local_libs {
       my ($self, $perl_name) = @_;
   
-      my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } bsd_glob("$PERLBREW_HOME/libs/*");
-  
-      if ($perl_name) {
-          @libs = grep { /^$perl_name\@/ } @libs;
-      }
-  
       my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
-  
-      @libs = map {
-          my ($p, $l) = split(/@/, $_);
-  
+      my @libs = map {
+          my $name = substr($_, length($self->home) + 6);
+          my ($p, $l) = split(/@/, $name);
           +{
-              name       => $_,
-              is_current => $_ eq $current,
+              name       => $name,
+              is_current => $name eq $current,
               perl_name  => $p,
-              lib_name   => $l
+              lib_name   => $l,
+              dir        => $_,
           }
-      } @libs;
+      } bsd_glob(joinpath($self->home, "libs", "*"));
+      if ($perl_name) {
+          @libs = grep { $perl_name eq $_->{perl_name} } @libs;
+      }
       return @libs;
   }
   
@@ -1628,10 +1636,11 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       );
   
       require local::lib;
+      my $pb_home = $self->home;
       my $current_local_lib_root = $self->env("PERL_LOCAL_LIB_ROOT") || "";
       my $current_local_lib_context = local::lib->new;
-      my @perlbrew_local_lib_root =  uniq(grep { /\Q${PERLBREW_HOME}\E/ } split(/:/, $current_local_lib_root));
-      if ($current_local_lib_root =~ /^\Q$PERLBREW_HOME\E/) {
+      my @perlbrew_local_lib_root =  uniq(grep { /\Q${pb_home}\E/ } split(/:/, $current_local_lib_root));
+      if ($current_local_lib_root =~ /^\Q${pb_home}\E/) {
           $current_local_lib_context = $current_local_lib_context->activate($_) for @perlbrew_local_lib_root;
       }
   
@@ -1645,7 +1654,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           if ($lib_name) {
               $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
   
-              my $base = "$PERLBREW_HOME/libs/${perl_name}\@${lib_name}";
+              my $base = joinpath($self->home, "libs", "${perl_name}\@${lib_name}");
   
               if (-d $base) {
                   $current_local_lib_context = $current_local_lib_context->activate($base);
@@ -1801,7 +1810,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       if ($self->env("PERLBREW_BASHRC_VERSION")) {
           local $ENV{PERLBREW_PERL} = $dist;
           my $HOME = $self->env('HOME');
-          my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+          my $pb_home = $self->home;
   
           mkpath($pb_home);
           system("$0 env $dist > " . joinpath($pb_home, "init"));
@@ -1820,7 +1829,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   sub run_command_switch_off {
       my $self = shift;
-      my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+      my $pb_home = $self->home;
   
       mkpath($pb_home);
       system("env PERLBREW_PERL= $0 env > " . joinpath($pb_home, "init"));
@@ -1945,16 +1954,21 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           exit(-1);
       }
   
-      my $dir = "@{[ $self->root ]}/perls/$target";
+      my @installed = $self->installed_perls(@_);
   
-      if (-l $dir) {
-          die "\nThe given name `$target` is an alias, not a real installation. Cannot perform uninstall.\nTo delete the alias, run:\n\n    perlbrew alias delete $target\n\n";
-      }
+      my ($to_delete) = grep { $_->{name} eq $target } @installed;
   
-      unless(-d $dir) {
-          die "'$target' is not installed\n";
+      die "'$target' is not installed\n" unless $to_delete;
+  
+      my @dir_to_delete;
+      for (@{$to_delete->{libs}}) {
+          push @dir_to_delete, $_->{dir};
       }
-      exec 'rm', '-rf', $dir;
+      push @dir_to_delete, $to_delete->{dir};
+  
+      for (@dir_to_delete) {
+          rmpath($_);
+      }
   }
   
   sub run_command_exec {
@@ -1993,7 +2007,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my $overall_success = 1;
       for my $i ( @exec_with ) {
-          next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
+          next if -l joinpath($self->root, 'perls', $i->{name}); # Skip Aliases
           my %env = $self->perlbrew_env($i->{name});
           next if !$env{PERLBREW_PERL};
   
@@ -2146,7 +2160,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       my $fullname = $perl_name . '@' . $lib_name;
-      my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
+      my $dir = joinpath($self->home,  "libs", $fullname);
   
       if (-d $dir) {
           die "$fullname is already there.\n";
@@ -2173,7 +2187,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my $current  = $self->current_perl . '@' . $self->current_lib;
   
-      my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
+      my $dir = joinpath($self->home,  "libs", $fullname);
   
       if (-d $dir) {
   
@@ -2195,7 +2209,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   sub run_command_lib_list {
       my ($self) = @_;
-      my $dir = joinpath($PERLBREW_HOME,  "libs");
+      my $dir = joinpath($self->home,  "libs");
       return unless -d $dir;
   
       opendir my $dh, $dir or die "open $dir failed: $!";
@@ -5884,7 +5898,7 @@ to 'sh Configure'. By default it is '-de'.
 
 =item PERLBREW_CPAN_MIRROR
 
-The CPAN mirror url of your choice.
+The CPAN mirror url of your choice. The default value is "http://www.cpan.org"
 
 =back
 
@@ -6047,7 +6061,8 @@ Another example using custom compilation flags:
 Usage: perlbrew uninstall <name>
 
 Uninstalls the given perl installation. The name is the installation name as in
-the output of `perlbrew list`
+the output of `perlbrew list`. This effectively deletes the specified perl installation,
+and all libs associated with it.
 
 =head1 COMMAND: USE
 
