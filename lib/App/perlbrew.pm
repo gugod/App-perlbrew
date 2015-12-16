@@ -714,13 +714,15 @@ sub available_perls {
 sub perl_release {
     my ($self, $version) = @_;
 
+    my $mirror = $self->cpan_mirror();
+
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
     my $index = http_get("http://www.cpan.org/src/5.0/");
     if ($index) {
         for my $prefix ( "perl-", "perl" ){
             for my $suffix ( ".tar.bz2", ".tar.gz" ) {
                 my $dist_tarball = "$prefix$version$suffix";
-                my $dist_tarball_url = $self->cpan_mirror() . "/src/5.0/$dist_tarball";
+                my $dist_tarball_url = "$mirror/src/5.0/$dist_tarball";
                 return ( $dist_tarball, $dist_tarball_url )
                     if ( $index =~ /href\s*=\s*"\Q$dist_tarball\E"/ms );
             }
@@ -735,14 +737,11 @@ sub perl_release {
 
     if ($x) {
         my $dist_tarball = (split("/", $x))[-1];
-        my $dist_tarball_url = $self->cpan_mirror() . "/authors/id/$x";
+        my $dist_tarball_url = "$mirror/authors/id/$x";
         return ($dist_tarball, $dist_tarball_url);
     }
 
-    # try to find it on search.cpan.org
-    my $mirror = $self->cpan_mirror();
-    my $header = $mirror ? { 'Cookie' => "cpan=$mirror" } : undef;
-    my $html = http_get("http://search.cpan.org/dist/perl-${version}", $header);
+    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
 
     unless ($html) {
         die "ERROR: Failed to locate perl-${version} tarball.";
