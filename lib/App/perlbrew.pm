@@ -2261,7 +2261,7 @@ sub run_command_upgrade_perl {
         $value_wo_D =~ s/^-D//;
         push @{$self->{D}} , $value_wo_D if grep {/$value/} @d_options;
     }
-    
+
     $self->do_install_release($dist, $dist_version);
 }
 
@@ -2879,7 +2879,7 @@ benefit from not having to run C<sudo> commands to install
 cpan modules because those are installed inside your C<HOME> too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
-on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>, 
+on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>,
 or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
