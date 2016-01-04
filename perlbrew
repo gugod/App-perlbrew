@@ -6001,6 +6001,9 @@ Options for C<install> command:
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
 
+    --destdir $path
+                   Install perl as per 'make install DESTDIR=$path'
+
     --sitecustomize $filename
                    Specify a file to be installed as sitecustomize.pl
 
@@ -6371,7 +6374,7 @@ your module installation to different perl. The following command
 re-installs all modules under perl-5.16.0:
 
     perlbrew list-modules | perlbrew exec --with perl-5.16.0 cpanm
-    
+
 Note that this installs the I<latest> versions of the Perl modules on the new perl,
 which are not necessarily the I<same> module versions you had installed previously.
 

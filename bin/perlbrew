@@ -230,6 +230,9 @@ Options for C<install> command:
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
 
+    --destdir $path
+                   Install perl as per 'make install DESTDIR=$path'
+
     --sitecustomize $filename
                    Specify a file to be installed as sitecustomize.pl
 
