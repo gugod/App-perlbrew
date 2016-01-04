@@ -48,7 +48,7 @@ local $SIG{__DIE__} = sub {
 };
 
 our $CONFIG;
-our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
+our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath('/opt', 'perlbrew');
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
 
 my @flavors = ( { d_option => 'usethreads',
@@ -1388,7 +1388,7 @@ INSTALL
     local $ENV{TEST_JOBS}=$self->{j}
       if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-    my @install_commands = ("make install" . $destdir ? " DESTDIR=$destdir" : q||);
+    my @install_commands = ("make install" . ($destdir ? " DESTDIR=$destdir" : q||));
     unshift @install_commands, "make $test_target" if $self->{notest};
     # Whats happening here? we optionally join with && based on $self->{force}, but then subsequently join with && anyway?
     @install_commands    = join " && ", @install_commands unless($self->{force});
