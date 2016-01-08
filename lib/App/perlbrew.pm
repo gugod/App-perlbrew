@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.74";
+our $VERSION = "0.74.1";
 use Config;
 
 BEGIN {
@@ -48,7 +48,7 @@ local $SIG{__DIE__} = sub {
 };
 
 our $CONFIG;
-our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
+our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath('/opt', 'perlbrew');
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
 
 my @flavors = ( { d_option => 'usethreads',
@@ -281,10 +281,11 @@ sub new {
         U => [],
         A => [],
         sitecustomize => '',
+        destdir => '',
         noman => '',
         variation => '',
         both => [],
-	append => '',
+        append => '',
     );
 
     $opt{$_} = '' for keys %flavor;
@@ -345,6 +346,7 @@ sub parse_cmdline {
         'j=i',
         # options that affect Configure and customize post-build
         'sitecustomize=s',
+        'destdir=s',
         'noman',
 
         # flavors support
@@ -1302,6 +1304,7 @@ sub do_install_this {
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
+    my $destdir = $self->{destdir};
     $installation_name = $self->{as} if $self->{as};
     $installation_name .= "$variation$append";
 
@@ -1385,7 +1388,9 @@ INSTALL
     local $ENV{TEST_JOBS}=$self->{j}
       if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-    my @install_commands = $self->{notest} ? "make install" : ("make $test_target", "make install");
+    my @install_commands = ("make install" . ($destdir ? " DESTDIR=$destdir" : q||));
+    unshift @install_commands, "make $test_target" if $self->{notest};
+    # Whats happening here? we optionally join with && based on $self->{force}, but then subsequently join with && anyway?
     @install_commands    = join " && ", @install_commands unless($self->{force});
 
     my $cmd = join " && ",
@@ -1417,7 +1422,11 @@ INSTALL
 
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
-            my ($sitelib) = $capture =~ /sitelib='(.*)';/;
+            my ($sitelib) = $capture =~ m/sitelib='([^']*)';/;
+            # This should probably all use File::Path
+            if ($destdir) {
+                $sitelib = $destdir . $sitelib
+            }
             mkpath($sitelib) unless -d $sitelib;
             my $target = "$sitelib/sitecustomize.pl";
             open my $dst, ">", $target
