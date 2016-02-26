@@ -1410,7 +1410,7 @@ INSTALL
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
     }
 
-    delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
+    delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH);
 
     if ($self->do_system($cmd)) {
         my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
