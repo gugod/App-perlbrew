@@ -325,9 +325,9 @@ sub parse_cmdline {
     return Getopt::Long::GetOptions(
         $params,
 
-        'force|f!',
-        'notest|n!',
-        'quiet|q!',
+        'force|f',
+        'notest|n',
+        'quiet|q',
         'verbose|v',
         'as=s',
       	'append=s',
