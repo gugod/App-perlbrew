@@ -48,7 +48,7 @@ local $SIG{__DIE__} = sub {
 };
 
 our $CONFIG;
-our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath('/opt', 'perlbrew');
+our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || joinpath($ENV{HOME}, "perl5", "perlbrew");
 our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || joinpath($ENV{HOME}, ".perlbrew");
 
 my @flavors = ( { d_option => 'usethreads',
