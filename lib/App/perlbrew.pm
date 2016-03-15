@@ -1390,7 +1390,7 @@ INSTALL
       if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
     my @install_commands = ("make install" . ($destdir ? " DESTDIR=$destdir" : q||));
-    unshift @install_commands, "make $test_target" if $self->{notest};
+    unshift @install_commands, "make $test_target" unless $self->{notest};
     # Whats happening here? we optionally join with && based on $self->{force}, but then subsequently join with && anyway?
     @install_commands    = join " && ", @install_commands unless($self->{force});
 
