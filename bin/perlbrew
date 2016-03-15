@@ -226,6 +226,8 @@ Options for C<install> command:
        --ld        Build perl with uselongdouble enabled
        --debug     Build perl with DEBUGGING enabled
        --clang     Build perl using the clang compiler
+       --no-patchperl
+                   Skip calling patchperl
 
     -D,-U,-A       Switches passed to perl Configure script.
                    ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U versiononly>

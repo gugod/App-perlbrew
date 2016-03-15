@@ -337,6 +337,7 @@ sub parse_cmdline {
         'switch',
         'all',
         'shell=s',
+        'no-patchperl',
 
         # options passed directly to Configure
         'D=s@',
@@ -1355,8 +1356,8 @@ INSTALL
     my @preconfigure_commands = (
         "cd $dist_extracted_dir",
         "rm -f config.sh Policy.sh",
-        $patchperl,
     );
+    push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"};
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
