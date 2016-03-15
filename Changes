@@ -1,3 +1,6 @@
+- Thanks to our contributors: Dave Cross,  Dean Hamstead,  Mark J. Reed,  Mohammed El-Afifi,
+- Add '--no-patchperl' install option for skip running patchperl.
+- Add '--destdir' install option.
 - "uninstall" command now also delete associated libs.
 - "mirror" command is removed.
 - "config" command is removed.
