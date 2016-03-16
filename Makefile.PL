@@ -4,6 +4,8 @@ license 'mit';
 
 all_from 'lib/App/perlbrew.pm';
 
+abstract 'App::perlbrew - Manage perl installations in your $HOME';
+
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires

@@ -1,3 +1,11 @@
+0.75: # 2016-03-16T23:41:41+0100
+- Thanks to our contributors: Dave Cross,  Dean Hamstead,  Mark J. Reed,  Mohammed El-Afifi,
+- Add '--no-patchperl' install option for skip running patchperl.
+- Add '--destdir' install option.
+- "uninstall" command now also delete associated libs.
+- "mirror" command is removed.
+- "config" command is removed.
+
 0.74: # 2015-11-24T20:55:02+0100
 - A big thanks for our contributers: Aristotle Pagaltzis, Dave Jacoby, Dylan Cali, John Krull, Kevin Johnson, Nathan Day, Paul Cochrane, Tudor Constantin, Yanick Champoux, tm604
 - support PERLBREW_LIB_PREFIX. https://github.com/gugod/App-perlbrew/commit/c29813cd4633683bd049964178a9ac96647986bc

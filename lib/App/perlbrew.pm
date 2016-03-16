@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.74";
+our $VERSION = "0.75";
 use Config;
 
 BEGIN {
@@ -19,7 +19,7 @@ BEGIN {
     @INC = @oldinc;
 }
 
-use File::Glob ':glob';
+use File::Glob 'bsd_glob';
 use Getopt::Long ();
 
 sub min(@) {
@@ -142,7 +142,7 @@ sub files_are_the_same {
         fetch => {
             test     => '--version >/dev/null 2>&1',
             get      => '-o - {url}',
-            download => '{url}',
+            download => '-o {output} {url}',
             order    => 3,
         }
     );
@@ -281,10 +281,11 @@ sub new {
         U => [],
         A => [],
         sitecustomize => '',
+        destdir => '',
         noman => '',
         variation => '',
         both => [],
-	append => '',
+        append => '',
     );
 
     $opt{$_} = '' for keys %flavor;
@@ -324,9 +325,9 @@ sub parse_cmdline {
     return Getopt::Long::GetOptions(
         $params,
 
-        'force|f!',
-        'notest|n!',
-        'quiet|q!',
+        'force|f',
+        'notest|n',
+        'quiet|q',
         'verbose|v',
         'as=s',
       	'append=s',
@@ -336,6 +337,7 @@ sub parse_cmdline {
         'switch',
         'all',
         'shell=s',
+        'no-patchperl',
 
         # options passed directly to Configure
         'D=s@',
@@ -345,6 +347,7 @@ sub parse_cmdline {
         'j=i',
         # options that affect Configure and customize post-build
         'sitecustomize=s',
+        'destdir=s',
         'noman',
 
         # flavors support
@@ -365,6 +368,16 @@ sub root {
     }
 
     return $self->{root} || $PERLBREW_ROOT;
+}
+
+sub home {
+    my ($self, $new_home) = @_;
+
+    if (defined($new_home)) {
+        $self->{home} = $new_home;
+    }
+
+    return $self->{home} || $PERLBREW_HOME;
 }
 
 sub current_perl {
@@ -704,13 +717,15 @@ sub available_perls {
 sub perl_release {
     my ($self, $version) = @_;
 
+    my $mirror = $self->cpan_mirror();
+
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
     my $index = http_get("http://www.cpan.org/src/5.0/");
     if ($index) {
         for my $prefix ( "perl-", "perl" ){
             for my $suffix ( ".tar.bz2", ".tar.gz" ) {
                 my $dist_tarball = "$prefix$version$suffix";
-                my $dist_tarball_url = $self->cpan_mirror() . "/src/5.0/$dist_tarball";
+                my $dist_tarball_url = "$mirror/src/5.0/$dist_tarball";
                 return ( $dist_tarball, $dist_tarball_url )
                     if ( $index =~ /href\s*=\s*"\Q$dist_tarball\E"/ms );
             }
@@ -725,14 +740,11 @@ sub perl_release {
 
     if ($x) {
         my $dist_tarball = (split("/", $x))[-1];
-        my $dist_tarball_url = $self->cpan_mirror() . "/authors/id/$x";
+        my $dist_tarball_url = "$mirror/authors/id/$x";
         return ($dist_tarball, $dist_tarball_url);
     }
 
-    # try to find it on search.cpan.org
-    my $mirror = $self->config->{mirror};
-    my $header = $mirror ? { 'Cookie' => "cpan=$mirror->{url}" } : undef;
-    my $html = http_get("http://search.cpan.org/dist/perl-${version}", $header);
+    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
 
     unless ($html) {
         die "ERROR: Failed to locate perl-${version} tarball.";
@@ -808,10 +820,10 @@ sub run_command_init {
     }
 
     my $root_dir = $self->path_with_tilde($self->root);
-    my $pb_home_dir = $self->path_with_tilde($PERLBREW_HOME);
+    my $pb_home_dir = $self->path_with_tilde($self->home);
 
     my $code = qq(    source $root_dir/etc/${shrc});
-    if ($PERLBREW_HOME ne joinpath($self->env('HOME'), ".perlbrew")) {
+    if ($self->home ne joinpath($self->env('HOME'), ".perlbrew")) {
         $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
     }
 
@@ -1212,7 +1224,7 @@ sub run_command_download {
 
 sub purify {
     my ($self, $envname) = @_;
-    my @paths = grep { index($_, $PERLBREW_HOME) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
+    my @paths = grep { index($_, $self->home) < 0 && index($_, $self->root) < 0 } split /:/, $self->env($envname);
     return wantarray ? @paths : join(":", @paths);
 }
 
@@ -1293,6 +1305,7 @@ sub do_install_this {
     my @u_options = @{ $self->{U} };
     my @a_options = @{ $self->{A} };
     my $sitecustomize = $self->{sitecustomize};
+    my $destdir = $self->{destdir};
     $installation_name = $self->{as} if $self->{as};
     $installation_name .= "$variation$append";
 
@@ -1312,8 +1325,8 @@ sub do_install_this {
         $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
     }
 
-    my $perlpath = $self->root . "/perls/$installation_name";
-    my $patchperl = $self->root . "/bin/patchperl";
+    my $perlpath = joinpath($self->root, "perls", $installation_name);
+    my $patchperl = joinpath($self->root, "bin", "patchperl");
 
     unless (-x $patchperl && -f _) {
         $patchperl = "patchperl";
@@ -1343,8 +1356,8 @@ INSTALL
     my @preconfigure_commands = (
         "cd $dist_extracted_dir",
         "rm -f config.sh Policy.sh",
-        $patchperl,
     );
+    push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"};
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
@@ -1376,7 +1389,9 @@ INSTALL
     local $ENV{TEST_JOBS}=$self->{j}
       if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-    my @install_commands = $self->{notest} ? "make install" : ("make $test_target", "make install");
+    my @install_commands = ("make install" . ($destdir ? " DESTDIR=$destdir" : q||));
+    unshift @install_commands, "make $test_target" unless $self->{notest};
+    # Whats happening here? we optionally join with && based on $self->{force}, but then subsequently join with && anyway?
     @install_commands    = join " && ", @install_commands unless($self->{force});
 
     my $cmd = join " && ",
@@ -1396,7 +1411,7 @@ INSTALL
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
     }
 
-    delete $ENV{$_} for qw(PERL5LIB PERL5OPT);
+    delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH);
 
     if ($self->do_system($cmd)) {
         my $newperl = joinpath($self->root, "perls", $installation_name, "bin", "perl");
@@ -1408,7 +1423,11 @@ INSTALL
 
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
-            my ($sitelib) = $capture =~ /sitelib='(.*)';/;
+            my ($sitelib) = $capture =~ m/sitelib='([^']*)';/;
+            # This should probably all use File::Path
+            if ($destdir) {
+                $sitelib = $destdir . $sitelib
+            }
             mkpath($sitelib) unless -d $sitelib;
             my $target = "$sitelib/sitecustomize.pl";
             open my $dst, ">", $target
@@ -1438,7 +1457,7 @@ INSTALL
 sub do_install_program_from_url {
     my ($self, $url, $program_name, $body_filter) = @_;
 
-    my $out = $self->root . "/bin/" . $program_name;
+    my $out = joinpath($self->root, "bin", $program_name);
 
     if (-f $out && !$self->{force}) {
         require ExtUtils::MakeMaker;
@@ -1518,10 +1537,10 @@ sub installed_perls {
     my @result;
     my $root = $self->root;
 
-    for (<$root/perls/*>) {
-        my ($name) = $_ =~ m/\/([^\/]+$)/;
-        my $executable = joinpath($_, 'bin', 'perl');
-        my $version_file = joinpath($_,'.version');
+    for my $installation_dir (<$root/perls/*>) {
+        my ($name) = $installation_dir =~ m/\/([^\/]+$)/;
+        my $executable = joinpath($installation_dir, 'bin', 'perl');
+        my $version_file = joinpath($installation_dir,'.version');
         my $orig_version;
         if ( -e $version_file ){
             open my $fh, '<', $version_file;
@@ -1543,7 +1562,8 @@ sub installed_perls {
             version     => $self->format_perl_version($orig_version),
             is_current  => ($self->current_perl eq $name) && !($self->current_lib),
             libs => [ $self->local_libs($name) ],
-            executable  => $executable
+            executable  => $executable,
+            dir => $installation_dir,
         };
     }
 
@@ -1553,24 +1573,21 @@ sub installed_perls {
 sub local_libs {
     my ($self, $perl_name) = @_;
 
-    my @libs = map { substr($_, length($PERLBREW_HOME) + 6) } bsd_glob("$PERLBREW_HOME/libs/*");
-
-    if ($perl_name) {
-        @libs = grep { /^$perl_name\@/ } @libs;
-    }
-
     my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
-
-    @libs = map {
-        my ($p, $l) = split(/@/, $_);
-
+    my @libs = map {
+        my $name = substr($_, length($self->home) + 6);
+        my ($p, $l) = split(/@/, $name);
         +{
-            name       => $_,
-            is_current => $_ eq $current,
+            name       => $name,
+            is_current => $name eq $current,
             perl_name  => $p,
-            lib_name   => $l
+            lib_name   => $l,
+            dir        => $_,
         }
-    } @libs;
+    } bsd_glob(joinpath($self->home, "libs", "*"));
+    if ($perl_name) {
+        @libs = grep { $perl_name eq $_->{perl_name} } @libs;
+    }
     return @libs;
 }
 
@@ -1611,10 +1628,11 @@ sub perlbrew_env {
     );
 
     require local::lib;
+    my $pb_home = $self->home;
     my $current_local_lib_root = $self->env("PERL_LOCAL_LIB_ROOT") || "";
     my $current_local_lib_context = local::lib->new;
-    my @perlbrew_local_lib_root =  uniq(grep { /\Q${PERLBREW_HOME}\E/ } split(/:/, $current_local_lib_root));
-    if ($current_local_lib_root =~ /^\Q$PERLBREW_HOME\E/) {
+    my @perlbrew_local_lib_root =  uniq(grep { /\Q${pb_home}\E/ } split(/:/, $current_local_lib_root));
+    if ($current_local_lib_root =~ /^\Q${pb_home}\E/) {
         $current_local_lib_context = $current_local_lib_context->activate($_) for @perlbrew_local_lib_root;
     }
 
@@ -1628,7 +1646,7 @@ sub perlbrew_env {
         if ($lib_name) {
             $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
 
-            my $base = "$PERLBREW_HOME/libs/${perl_name}\@${lib_name}";
+            my $base = joinpath($self->home, "libs", "${perl_name}\@${lib_name}");
 
             if (-d $base) {
                 $current_local_lib_context = $current_local_lib_context->activate($base);
@@ -1784,7 +1802,7 @@ sub switch_to {
     if ($self->env("PERLBREW_BASHRC_VERSION")) {
         local $ENV{PERLBREW_PERL} = $dist;
         my $HOME = $self->env('HOME');
-        my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+        my $pb_home = $self->home;
 
         mkpath($pb_home);
         system("$0 env $dist > " . joinpath($pb_home, "init"));
@@ -1803,7 +1821,7 @@ sub run_command_off {
 
 sub run_command_switch_off {
     my $self = shift;
-    my $pb_home = $self->env("PERLBREW_HOME") || $PERLBREW_HOME;
+    my $pb_home = $self->home;
 
     mkpath($pb_home);
     system("env PERLBREW_PERL= $0 env > " . joinpath($pb_home, "init"));
@@ -1896,7 +1914,7 @@ sub run_command_self_upgrade {
         die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
 
-    http_get('http://get.perlbrew.pl', undef, sub {
+    http_get('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
         my ( $body ) = @_;
 
         open my $fh, '>', $TMP_PERLBREW or die "Unable to write perlbrew: $!";
@@ -1928,16 +1946,21 @@ sub run_command_uninstall {
         exit(-1);
     }
 
-    my $dir = "@{[ $self->root ]}/perls/$target";
+    my @installed = $self->installed_perls(@_);
 
-    if (-l $dir) {
-        die "\nThe given name `$target` is an alias, not a real installation. Cannot perform uninstall.\nTo delete the alias, run:\n\n    perlbrew alias delete $target\n\n";
-    }
+    my ($to_delete) = grep { $_->{name} eq $target } @installed;
 
-    unless(-d $dir) {
-        die "'$target' is not installed\n";
+    die "'$target' is not installed\n" unless $to_delete;
+
+    my @dir_to_delete;
+    for (@{$to_delete->{libs}}) {
+        push @dir_to_delete, $_->{dir};
     }
-    exec 'rm', '-rf', $dir;
+    push @dir_to_delete, $to_delete->{dir};
+
+    for (@dir_to_delete) {
+        rmpath($_);
+    }
 }
 
 sub run_command_exec {
@@ -1976,7 +1999,7 @@ sub run_command_exec {
 
     my $overall_success = 1;
     for my $i ( @exec_with ) {
-        next if -l $self->root . '/perls/' . $i->{name}; # Skip Aliases
+        next if -l joinpath($self->root, 'perls', $i->{name}); # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
@@ -2129,7 +2152,7 @@ sub run_command_lib_create {
     }
 
     my $fullname = $perl_name . '@' . $lib_name;
-    my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
+    my $dir = joinpath($self->home,  "libs", $fullname);
 
     if (-d $dir) {
         die "$fullname is already there.\n";
@@ -2156,7 +2179,7 @@ sub run_command_lib_delete {
 
     my $current  = $self->current_perl . '@' . $self->current_lib;
 
-    my $dir = joinpath($PERLBREW_HOME,  "libs", $fullname);
+    my $dir = joinpath($self->home,  "libs", $fullname);
 
     if (-d $dir) {
 
@@ -2178,7 +2201,7 @@ sub run_command_lib_delete {
 
 sub run_command_lib_list {
     my ($self) = @_;
-    my $dir = joinpath($PERLBREW_HOME,  "libs");
+    my $dir = joinpath($self->home,  "libs");
     return unless -d $dir;
 
     opendir my $dh, $dir or die "open $dir failed: $!";
@@ -2247,7 +2270,7 @@ sub run_command_upgrade_perl {
         $value_wo_D =~ s/^-D//;
         push @{$self->{D}} , $value_wo_D if grep {/$value/} @d_options;
     }
-    
+
     $self->do_install_release($dist, $dist_version);
 }
 
@@ -2321,49 +2344,6 @@ sub format_info_output
 sub run_command_info {
     my ($self) = shift;
     print $self->format_info_output(@_);
-}
-
-
-sub config {
-    my($self) = @_;
-    $self->_load_config if ! $CONFIG;
-    return $CONFIG;
-}
-
-sub config_file {
-    my ($self) = @_;
-    joinpath( $self->root, 'Config.pm' );
-}
-
-sub _save_config {
-    my($self) = @_;
-    require Data::Dumper;
-    open my $FH, '>', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!";
-    my $d = Data::Dumper->new([$CONFIG],['App::perlbrew::CONFIG']);
-    print $FH $d->Dump;
-    close $FH;
-}
-
-sub _load_config {
-    my($self) = @_;
-
-    if ( ! -e $self->config_file ) {
-        local $CONFIG = {} if ! $CONFIG;
-        $self->_save_config;
-    }
-
-    open my $FH, '<', $self->config_file or die "Unable to open config (@{[ $self->config_file ]}): $!\n";
-    my $raw = do { local $/; my $rv = <$FH>; $rv };
-    close $FH;
-
-    my $rv = eval $raw;
-    if ( $@ ) {
-        warn "Error loading conf: $@\n";
-        $CONFIG = {};
-        return;
-    }
-    $CONFIG = {} if ! $CONFIG;
-    return;
 }
 
 sub BASHRC_CONTENT() {
@@ -2868,9 +2848,6 @@ L<App::perlbrew> - Manage perl installations in your C<$HOME>
     # Initialize
     perlbrew init
 
-    # Pick a preferred CPAN mirror
-    perlbrew mirror
-
     # See what is available
     perlbrew available
 
@@ -2911,7 +2888,7 @@ benefit from not having to run C<sudo> commands to install
 cpan modules because those are installed inside your C<HOME> too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
-on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>, 
+on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>,
 or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
@@ -3006,7 +2983,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010,2011,2012,2013,2014,2015 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010-2016 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head3 LICENCE
 

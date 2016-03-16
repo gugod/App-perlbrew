@@ -10,9 +10,6 @@
     # Initialize
     perlbrew init
 
-    # Pick a preferred CPAN mirror
-    perlbrew mirror
-
     # See what is available
     perlbrew available
 
@@ -53,7 +50,7 @@ benefit from not having to run `sudo` commands to install
 cpan modules because those are installed inside your `HOME` too.
 
 For the documentation of perlbrew usage see [perlbrew](https://metacpan.org/pod/perlbrew) command
-on [MetaCPAN](https://metacpan.org/), or by running `perlbrew help`, 
+on [MetaCPAN](https://metacpan.org/), or by running `perlbrew help`,
 or by visiting [perlbrew's official website](http://perlbrew.pl/). The following documentation
 features the API of `App::perlbrew` module, and may not be remotely
 close to what your want to read.
@@ -144,7 +141,7 @@ Kang-min Liu  `<gugod@gugod.org>`
 
 # COPYRIGHT
 
-Copyright (c) 2010,2011,2012,2013,2014,2015 Kang-min Liu `<gugod@gugod.org>`.
+Copyright (c) 2010-2016 Kang-min Liu `<gugod@gugod.org>`.
 
 ### LICENCE
 

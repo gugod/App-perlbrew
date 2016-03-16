@@ -96,7 +96,7 @@ It is also possible to set this variable before installing perlbrew
 to make perlbrew install itself under the given PERLBREW_ROOT:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -kL http://install.perlbrew.pl | bash
+    curl -L http://install.perlbrew.pl | bash
 
 After doing this, the perlbrew executable is installed as C</opt/perl5/bin/perlbrew>
 
@@ -127,7 +127,7 @@ to 'sh Configure'. By default it is '-de'.
 
 =item PERLBREW_CPAN_MIRROR
 
-The CPAN mirror url of your choice.
+The CPAN mirror url of your choice. The default value is "http://www.cpan.org"
 
 =back
 
@@ -226,9 +226,14 @@ Options for C<install> command:
        --ld        Build perl with uselongdouble enabled
        --debug     Build perl with DEBUGGING enabled
        --clang     Build perl using the clang compiler
+       --no-patchperl
+                   Skip calling patchperl
 
     -D,-U,-A       Switches passed to perl Configure script.
-                   ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U uselargefiles>
+                   ex. C<perlbrew install perl-5.10.1 -D usemymalloc -U versiononly>
+
+    --destdir $path
+                   Install perl as per 'make install DESTDIR=$path'
 
     --sitecustomize $filename
                    Specify a file to be installed as sitecustomize.pl
@@ -290,7 +295,8 @@ Another example using custom compilation flags:
 Usage: perlbrew uninstall <name>
 
 Uninstalls the given perl installation. The name is the installation name as in
-the output of `perlbrew list`
+the output of `perlbrew list`. This effectively deletes the specified perl installation,
+and all libs associated with it.
 
 =head1 COMMAND: USE
 
@@ -497,7 +503,7 @@ This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
 be used by the perlbrew installer. However, you could manually do the following
 to re-install only the C<perlbrew> executable:
 
-    curl -kL http://get.perlbrew.pl -o perlbrew
+    curl https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew -o perlbrew
     perl ./perlbrew self-install
 
 It is slightly different from running the perlbrew installer because

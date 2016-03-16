@@ -1,6 +1,7 @@
 sudo: false
 language: perl
 perl:
+  - "5.22"
   - "5.20"
   - "5.20-shrplib"
   - "5.18"
