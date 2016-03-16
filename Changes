@@ -1,3 +1,4 @@
+0.75: # 2016-03-16T23:41:41+0100
 - Thanks to our contributors: Dave Cross,  Dean Hamstead,  Mark J. Reed,  Mohammed El-Afifi,
 - Add '--no-patchperl' install option for skip running patchperl.
 - Add '--destdir' install option.
