@@ -190,10 +190,18 @@ sub files_are_the_same {
             die "ERROR: The download target < $path > already exists.\n";
         }
 
+        my $partial = 0;
+        local $SIG{TERM} = local $SIG{INT} = sub { $partial++ };
+
         my $download_command = http_user_agent_command( download => { url => $url, output => $path } );
 
         my $status = system($download_command);
+        if ($partial) {
+            unlink($path) if -f $path;
+            return "ERROR: Interrupted.";
+        }
         unless ($status == 0) {
+            unlink($path) if -f $path;
             return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
         }
         return 0;
