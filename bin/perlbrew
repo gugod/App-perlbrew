@@ -34,7 +34,7 @@ Commands:
     off            Turn off perlbrew in current shell
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
-    exec           exec programs with specified perl enviroments.
+    exec           exec programs with specified perl environments.
 
     self-install       Install perlbrew itself under PERLBREW_ROOT/bin
     self-upgrade       Upgrade perlbrew itself.
