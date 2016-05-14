@@ -116,7 +116,8 @@ again.
 ### Installation via sparrow perlbrew plugin
 
 This method could be used for automation of perlbrew installation. 
-As it not only installs perlbrew but amend `~/.bash_profile` file with `source ~/perl5/perlbrew/etc/bashrc` line.
+As it not only installs a perlbrew but amends `~/.bash_profile` file with `source ~/perl5/perlbrew/etc/bashrc` line
+and adds some trivial post deployment checks.
 
     cpanm Sparrow
     sparrow index update
