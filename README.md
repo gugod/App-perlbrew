@@ -113,10 +113,10 @@ The `self-upgrade` command will not upgrade the perlbrew installed by cpan
 command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
 again.
 
-### Installation via sparrow perlbrew plugin. 
+### Installation via sparrow perlbrew plugin
 
 This method could be used for automation of perlbrew installation. 
-As it not only installs perlbrew but amend ~/.bash_profile file with `source ~/perl5/perlbrew/etc/bashrc`.
+As it not only installs perlbrew but amend `~/.bash_profile` file with `source ~/perl5/perlbrew/etc/bashrc` line.
 
     cpanm Sparrow
     sparrow index update
