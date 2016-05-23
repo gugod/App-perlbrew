@@ -960,6 +960,11 @@ sub do_extract_tarball {
     # Note that this is incorrect for blead.
     my $extracted_dir = "@{[ $self->root ]}/build/$dist_tarball_basename";
 
+    # cperl tarball contains a dir name like: cperl-cperl-5.22.1
+    if ($dist_tarball_basename =~ /^cperl-/) {
+        $extracted_dir = "@{[ $self->root ]}/build/cperl-${dist_tarball_basename}";
+    }
+
     # Was broken on Solaris, where GNU tar is probably
     # installed as 'gtar' - RT #61042
     my $tarx =
@@ -1286,9 +1291,10 @@ sub do_install_archive {
     my $dist_version;
     my $installation_name;
 
-    if (File::Basename::basename($dist_tarball_path) =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
-        $dist_version = $1;
-        $installation_name = "perl-${dist_version}";
+    if (File::Basename::basename($dist_tarball_path) =~ m{(c?perl)-?(5.+)\.tar\.(gz|bz2)\Z}) {
+        my $perl_variant = $1;
+        $dist_version = $2;
+        $installation_name = "${perl_variant}-${dist_version}";
     }
 
     unless ($dist_version && $installation_name) {
@@ -1305,6 +1311,7 @@ sub do_install_this {
 
     my $variation = $self->{variation};
     my $append = $self->{append};
+    my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /cperl-cperl-5/;
 
     $self->{dist_extracted_dir} = $dist_extracted_dir;
     $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}${append}.log");
@@ -1343,6 +1350,8 @@ sub do_install_this {
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
 
+    push @d_options, "usecperl" if $looks_like_we_are_installing_cperl;
+
     unless (grep { /eval:scriptdir=/} @a_options) {
         push @a_options, "'eval:scriptdir=${perlpath}/bin'";
     }
@@ -1365,7 +1374,7 @@ INSTALL
         "cd $dist_extracted_dir",
         "rm -f config.sh Policy.sh",
     );
-    push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"};
+    push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
