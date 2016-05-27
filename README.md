@@ -5,7 +5,7 @@
 ## SYNOPSIS
 
     # Installation
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
     # Initialize
     perlbrew init
@@ -51,7 +51,7 @@ cpan modules because those are installed inside your `HOME` too.
 
 For the documentation of perlbrew usage see [perlbrew](https://metacpan.org/pod/perlbrew) command
 on [MetaCPAN](https://metacpan.org/), or by running `perlbrew help`,
-or by visiting [perlbrew's official website](http://perlbrew.pl/). The following documentation
+or by visiting [perlbrew's official website](https://perlbrew.pl/). The following documentation
 features the API of `App::perlbrew` module, and may not be remotely
 close to what your want to read.
 
@@ -60,11 +60,11 @@ close to what your want to read.
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
 
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 Or this one, if you have `fetch` (default on FreeBSD):
 
-    fetch -o- http://install.perlbrew.pl | sh
+    fetch -o- https://install.perlbrew.pl | sh
 
 After that, `perlbrew` installs itself to `~/perl5/perlbrew/bin`, and you
 should follow the instruction on screen to modify your shell rc file to put it
@@ -84,7 +84,7 @@ say, your `HOME` has limited quota, you can do that by setting `PERLBREW_ROOT`
 environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
@@ -113,19 +113,6 @@ The `self-upgrade` command will not upgrade the perlbrew installed by cpan
 command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
 again.
 
-### Installation via sparrow perlbrew plugin
-
-This method could be used for automation of perlbrew installation. 
-As it not only installs a perlbrew but amends `~/.bash_profile` file with `source ~/perl5/perlbrew/etc/bashrc` line
-and adds some trivial post deployment checks.
-
-    cpanm Sparrow
-    sparrow index update
-    sparrow plg install perlbrew
-    sparrow plg run perlbrew
-
-Follow [sparrow perlbrew](https://sparrowhub.org/info/perlbrew) for details.
-
 ## METHODS
 
 - (Str) current\_perl
@@ -139,8 +126,8 @@ Follow [sparrow perlbrew](https://sparrowhub.org/info/perlbrew) for details.
 
 ## PROJECT DEVELOPMENT
 
-[perlbrew project](http://perlbrew.pl/) uses github
-[http://github.com/gugod/App-perlbrew/issues](http://github.com/gugod/App-perlbrew/issues) and RT
+[perlbrew project](https://perlbrew.pl/) uses github
+[https://github.com/gugod/App-perlbrew/issues](https://github.com/gugod/App-perlbrew/issues) and RT
 <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
 tracking. Issues sent to these two systems will eventually be reviewed
 and handled.
