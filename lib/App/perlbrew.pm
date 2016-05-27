@@ -2860,7 +2860,7 @@ L<App::perlbrew> - Manage perl installations in your C<$HOME>
 =head2 SYNOPSIS
 
     # Installation
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
     # Initialize
     perlbrew init
@@ -2906,7 +2906,7 @@ cpan modules because those are installed inside your C<HOME> too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
 on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>,
-or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
+or by visiting L<perlbrew's official website|https://perlbrew.pl/>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 
@@ -2915,11 +2915,11 @@ close to what your want to read.
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
 
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 Or this one, if you have C<fetch> (default on FreeBSD):
 
-    fetch -o- http://install.perlbrew.pl | sh
+    fetch -o- https://install.perlbrew.pl | sh
 
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
 should follow the instruction on screen to modify your shell rc file to put it
@@ -2939,7 +2939,7 @@ say, your C<HOME> has limited quota, you can do that by setting C<PERLBREW_ROOT>
 environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
@@ -2985,8 +2985,8 @@ Set the C<current_perl> object attribute to the given value.
 
 =head2 PROJECT DEVELOPMENT
 
-L<perlbrew project|http://perlbrew.pl/> uses github
-L<http://github.com/gugod/App-perlbrew/issues> and RT
+L<perlbrew project|https://perlbrew.pl/> uses github
+L<https://github.com/gugod/App-perlbrew/issues> and RT
 <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
 tracking. Issues sent to these two systems will eventually be reviewed
 and handled.
