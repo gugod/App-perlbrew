@@ -22,7 +22,7 @@ describe "App::perlbrew::http_get function" => sub {
 
     before all => sub {
         App::perlbrew::http_get(
-            "http://get.perlbrew.pl",
+            "https://get.perlbrew.pl",
             undef,
             sub { $output = $_[0]; }
         );
@@ -55,7 +55,7 @@ Therefore we cannot proceed the test.
 REASON
         }
 
-        my $download_error = App::perlbrew::http_download("http://install.perlbrew.pl", $output);
+        my $download_error = App::perlbrew::http_download("https://install.perlbrew.pl", $output);
     };
 
     it "downloads to the wanted path" => sub {
