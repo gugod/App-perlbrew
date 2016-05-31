@@ -34,7 +34,7 @@ describe "App::perlbrew::http_get function" => sub {
 
     it "seems to download the correct content", sub {
         ok $output =~ m<\A #!/usr/bin/perl\n >x;
-        ok $output =~ m< \$fatpacked{"App/perlbrew.pm"} >x;
+        ok $output =~ m< \$fatpacked\{"App/perlbrew.pm"\} >x;
     };
 };
 
