@@ -725,6 +725,18 @@ sub available_perls {
 sub perl_release {
     my ($self, $version) = @_;
 
+    # try CPAN::Perl::Releases
+    require CPAN::Perl::Releases;
+    my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
+
+    my $x = (values %$tarballs)[0];
+
+    if ($x) {
+        my $dist_tarball = (split("/", $x))[-1];
+        my $dist_tarball_url = "$mirror/authors/id/$x";
+        return ($dist_tarball, $dist_tarball_url);
+    }
+
     my $mirror = $self->cpan_mirror();
 
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
@@ -738,18 +750,6 @@ sub perl_release {
                     if ( $index =~ /href\s*=\s*"\Q$dist_tarball\E"/ms );
             }
         }
-    }
-
-    # try CPAN::Perl::Releases
-    require CPAN::Perl::Releases;
-    my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
-
-    my $x = (values %$tarballs)[0];
-
-    if ($x) {
-        my $dist_tarball = (split("/", $x))[-1];
-        my $dist_tarball_url = "$mirror/authors/id/$x";
-        return ($dist_tarball, $dist_tarball_url);
     }
 
     my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
