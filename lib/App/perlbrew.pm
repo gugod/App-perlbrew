@@ -724,6 +724,7 @@ sub available_perls {
 
 sub perl_release {
     my ($self, $version) = @_;
+    my $mirror = $self->cpan_mirror();
 
     # try CPAN::Perl::Releases
     require CPAN::Perl::Releases;
@@ -736,8 +737,6 @@ sub perl_release {
         my $dist_tarball_url = "$mirror/authors/id/$x";
         return ($dist_tarball, $dist_tarball_url);
     }
-
-    my $mirror = $self->cpan_mirror();
 
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
     my $index = http_get("http://www.cpan.org/src/5.0/");
