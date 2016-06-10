@@ -765,6 +765,21 @@ sub perl_release {
     return ($dist_tarball, $dist_tarball_url);
 }
 
+sub cperl_release {
+    my ($self, $version) = @_;
+    my %url = {
+        "5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
+        "5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz"
+    };
+    # my %digest => {
+    #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
+    #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
+    # };
+    my $dist_tarball_url = $url{$version}or die "ERROR: Cannot find the tarball for cperl-$version\n";
+    my $dist_tarball = "cperl-${version}.tar.gz";
+    return ($dist_tarball, $dist_tarball_url);
+}
+
 sub run_command_init {
     my $self = shift;
     my @args = @_;
