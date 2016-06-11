@@ -767,10 +767,10 @@ sub perl_release {
 
 sub cperl_release {
     my ($self, $version) = @_;
-    my %url = {
+    my %url = (
         "5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
         "5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz"
-    };
+    );
     # my %digest => {
     #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
     #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
@@ -1230,11 +1230,17 @@ sub run_command_download {
     $dist = $self->resolve_stable_version
         if $dist && $dist eq 'stable';
 
-    my ($dist_version) = $dist =~ /^ (?:perl-?)? (.*) $/xs;
+    my ($dist_type, $dist_version) = $dist =~ /^ (?:(c?perl)-?)? (.*) $/xs;
 
-    die "\"$dist\" does not look like a perl distribution name. " unless $dist_version =~ /^\d\./;
+    die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
 
-    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    my ($dist_tarball, $dist_tarball_url);
+    if ($dist_type eq "perl") {
+        ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    } elsif ($dist_type eq "cperl") {
+        ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
+    }
+
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path && !$self->{force}) {
