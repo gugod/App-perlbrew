@@ -769,7 +769,8 @@ sub cperl_release {
     my ($self, $version) = @_;
     my %url = (
         "5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
-        "5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz"
+        "5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
+        "5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
     );
     # my %digest => {
     #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
