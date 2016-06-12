@@ -977,7 +977,7 @@ sub do_extract_tarball {
 
     # cperl tarball contains a dir name like: cperl-cperl-5.22.1
     if ($dist_tarball_basename =~ /^cperl-/) {
-        $extracted_dir = "@{[ $self->root ]}/build/cperl-${dist_tarball_basename}";
+        $extracted_dir = "@{[ $self->root ]}/build/${dist_tarball_basename}";
     }
 
     # Was broken on Solaris, where GNU tar is probably
@@ -1056,7 +1056,15 @@ sub resolve_stable_version {
 sub do_install_release {
     my ($self, $dist, $dist_version) = @_;
 
-    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    my ($dist_tarball, $dist_tarball_url);
+    my ($dist_type) = $dist =~ /^ (c?perl) - (.*) $/xs;
+    $dist_type ||= "perl";
+    die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
+    if ($dist_type eq "perl") {
+        ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    } elsif ($dist_type eq "cperl") {
+        ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
+    }
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path) {
@@ -1084,20 +1092,23 @@ sub run_command_install {
     $self->{dist_name} = $dist; # for help msg generation, set to non
                                 # normalized name
 
-    if ($dist =~ /^(?:perl-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/) {
-        my $version = ($1 eq 'stable' ? $self->resolve_stable_version : $1);
-        $dist = "perl-$version"; # normalize dist name
+    my ($dist_type, $dist_version);
+    if ( ($dist_type, $dist_version) = $dist =~ /^(?:(c?perl)-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/ ) {
+        my $dist_version = ($dist_version eq 'stable' ? $self->resolve_stable_version : $2);
+        $dist_version = $self->resolve_stable_version if $dist_version eq 'stable';
+        $dist_type //= "perl";
+        $dist = "${dist_type}-${dist_version}"; # normalize dist name
 
         my $installation_name = ($self->{as} || $dist) . $self->{variation} . $self->{append};
         if (not $self->{force} and $self->is_installed( $installation_name )) {
             die "\nABORT: $installation_name is already installed.\n\n";
         }
 
-        if ($version eq 'blead') {
+        if ( $dist_type eq 'perl' && $dist_version eq 'blead') {
             $self->do_install_blead($dist);
         }
         else {
-            $self->do_install_release( $dist, $version );
+            $self->do_install_release( $dist, $dist_version );
         }
 
     }
@@ -1332,7 +1343,7 @@ sub do_install_this {
 
     my $variation = $self->{variation};
     my $append = $self->{append};
-    my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /cperl-cperl-5/;
+    my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /\/ cperl- /x;
 
     $self->{dist_extracted_dir} = $dist_extracted_dir;
     $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}${append}.log");
