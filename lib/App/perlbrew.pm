@@ -1930,7 +1930,9 @@ sub run_command_symlink_executables {
     for my $perl (@perls) {
         for my $executable (<$root/perls/$perl/bin/*>) {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-            system("ln -fs $executable $root/perls/$perl/bin/$name") if $version;
+            next unless $version;
+            system("ln -fs $executable $root/perls/$perl/bin/$name");
+            system("ln -fs $executable $root/perls/$perl/bin/perl") if $name eq "cperl";
         }
     }
 }
