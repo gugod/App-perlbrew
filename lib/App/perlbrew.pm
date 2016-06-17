@@ -1096,7 +1096,7 @@ sub run_command_install {
     if ( ($dist_type, $dist_version) = $dist =~ /^(?:(c?perl)-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/ ) {
         my $dist_version = ($dist_version eq 'stable' ? $self->resolve_stable_version : $2);
         $dist_version = $self->resolve_stable_version if $dist_version eq 'stable';
-        $dist_type //= "perl";
+        $dist_type ||= "perl";
         $dist = "${dist_type}-${dist_version}"; # normalize dist name
 
         my $installation_name = ($self->{as} || $dist) . $self->{variation} . $self->{append};
