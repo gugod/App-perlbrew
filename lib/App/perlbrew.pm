@@ -782,20 +782,37 @@ sub cperl_release {
     return ($dist_tarball, $dist_tarball_url);
 }
 
+sub release_detail_cperl_local {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my %url = (
+        "cperl-5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
+        "cperl-5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
+        "cperl-5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
+    );
+
+    my $error = 1;
+    if ( my $u = $url{$dist} ) {
+        $rd->{tarball_name} = "${dist}.tar.gz";
+        $rd->{tarball_url} = $u;
+        $error = 0;
+    }
+    return ($error, $rd);
+}
+
 sub release_detail_cperl_remote {
     my ($self, $dist, $rd) = @_;
     $rd ||= {};
-
     my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
     my $expect_url = "https://github.com/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
     my $html = http_get('https://github.com/perl11/cperl/releases');
+    my $error = 1;
     if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
         $rd->{tarball_name} = "${dist}.tar.gz";
         $rd->{tarball_url}  = $expect_url;
-    } else {
-        die "Cannot find a cperl release named: $dist";
+        $error = 0;
     }
-    return $rd;
+    return ($error, $rd);
 }
 
 sub release_detail {
