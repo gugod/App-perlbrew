@@ -21,6 +21,7 @@ BEGIN {
 
 use File::Glob 'bsd_glob';
 use Getopt::Long ();
+use CPAN::Perl::Releases;
 
 sub min(@) {
     my $m = $_[0];
@@ -727,11 +728,9 @@ sub perl_release {
     my $mirror = $self->cpan_mirror();
 
     # try CPAN::Perl::Releases
-    require CPAN::Perl::Releases;
     my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
 
     my $x = (values %$tarballs)[0];
-
     if ($x) {
         my $dist_tarball = (split("/", $x))[-1];
         my $dist_tarball_url = "$mirror/authors/id/$x";
@@ -780,6 +779,25 @@ sub cperl_release {
     my $dist_tarball_url = $url{$version}or die "ERROR: Cannot find the tarball for cperl-$version\n";
     my $dist_tarball = "cperl-${version}.tar.gz";
     return ($dist_tarball, $dist_tarball_url);
+}
+
+sub release_detail_perl_local {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my $error = 1;
+    my $mirror = $self->cpan_mirror();
+    my $tarballs = CPAN::Perl::Releases::perl_tarballs($rd->{version});
+    if (keys %$tarballs) {
+        for ("tar.bz2", "tar.gz") {
+            if (my $x = $tarballs->{$_}) {
+                $rd->{tarball_name} = (split("/", $x))[-1];
+                $rd->{tarball_url} = "$mirror/authors/id/$x";
+                $error = 0;
+                last;
+            }
+        }
+    }
+    return ($error, $rd);
 }
 
 sub release_detail_cperl_local {
