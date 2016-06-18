@@ -781,6 +781,27 @@ sub cperl_release {
     return ($dist_tarball, $dist_tarball_url);
 }
 
+sub release_detail {
+    my ($self, $dist) = @_;
+    my ($dist_type, $dist_version, $tarball_name, $tarball_url);
+
+    ($dist_type, $dist_version) = $dist =~ /^ (?: (c?perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
+    $dist_type = "perl" if $dist_version && !$dist_type;
+
+    if ($dist_type eq "perl") {
+        ($tarball_name, $tarball_url) = $self->perl_release($dist_version);
+    } elsif ($dist_type eq "cperl") {
+        ($tarball_name, $tarball_url) = $self->cperl_release($dist_version);
+    }
+
+    return {
+        type         => $dist_type,
+        version      => $dist_version,
+        tarball_name => $tarball_name,
+        tarball_url  => $tarball_url,
+    }
+}
+
 sub run_command_init {
     my $self = shift;
     my @args = @_;
