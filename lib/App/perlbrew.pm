@@ -800,6 +800,50 @@ sub release_detail_perl_local {
     return ($error, $rd);
 }
 
+sub release_detail_perl_remote {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my $error = 1;
+    my $mirror = $self->cpan_mirror();
+
+    my $version = $rd->{version};
+
+    # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
+    my $index = http_get("http://www.cpan.org/src/5.0/");
+    if ($index) {
+        for my $prefix ( "perl-", "perl" ){
+            for my $suffix ( ".tar.bz2", ".tar.gz" ) {
+                my $dist_tarball = "$prefix$version$suffix";
+                my $dist_tarball_url = "$mirror/src/5.0/$dist_tarball";
+                if ( $index =~ /href\s*=\s*"\Q$dist_tarball\E"/ms ) {
+                    $rd->{tarball_url} = $dist_tarball_url;
+                    $rd->{tarball_name} = $dist_tarball;
+                    $error = 0;
+                    return ($error, $rd);
+                }
+            }
+        }
+    }
+
+    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
+
+    unless ($html) {
+        die "ERROR: Failed to locate perl-${version} tarball.";
+    }
+
+    my ($dist_path, $dist_tarball) =
+        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+    die "ERROR: Cannot find the tarball for perl-$version\n"
+        if !$dist_path and !$dist_tarball;
+    my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+
+    $rd->{tarball_name} = $dist_tarball;
+    $rd->{tarball_url} = $dist_tarball_url;
+    $error = 0;
+
+    return ($error, $rd);
+}
+
 sub release_detail_cperl_local {
     my ($self, $dist, $rd) = @_;
     $rd ||= {};
