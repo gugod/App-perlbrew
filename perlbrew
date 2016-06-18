@@ -741,8 +741,19 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   sub perl_release {
       my ($self, $version) = @_;
-  
       my $mirror = $self->cpan_mirror();
+  
+      # try CPAN::Perl::Releases
+      require CPAN::Perl::Releases;
+      my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
+  
+      my $x = (values %$tarballs)[0];
+  
+      if ($x) {
+          my $dist_tarball = (split("/", $x))[-1];
+          my $dist_tarball_url = "$mirror/authors/id/$x";
+          return ($dist_tarball, $dist_tarball_url);
+      }
   
       # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
       my $index = http_get("http://www.cpan.org/src/5.0/");
@@ -757,18 +768,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           }
       }
   
-      # try CPAN::Perl::Releases
-      require CPAN::Perl::Releases;
-      my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
-  
-      my $x = (values %$tarballs)[0];
-  
-      if ($x) {
-          my $dist_tarball = (split("/", $x))[-1];
-          my $dist_tarball_url = "$mirror/authors/id/$x";
-          return ($dist_tarball, $dist_tarball_url);
-      }
-  
       my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
   
       unless ($html) {
@@ -780,6 +779,22 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       die "ERROR: Cannot find the tarball for perl-$version\n"
           if !$dist_path and !$dist_tarball;
       my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+      return ($dist_tarball, $dist_tarball_url);
+  }
+  
+  sub cperl_release {
+      my ($self, $version) = @_;
+      my %url = (
+          "5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
+          "5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
+          "5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
+      );
+      # my %digest => {
+      #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
+      #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
+      # };
+      my $dist_tarball_url = $url{$version}or die "ERROR: Cannot find the tarball for cperl-$version\n";
+      my $dist_tarball = "cperl-${version}.tar.gz";
       return ($dist_tarball, $dist_tarball_url);
   }
   
@@ -977,6 +992,11 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       # Note that this is incorrect for blead.
       my $extracted_dir = "@{[ $self->root ]}/build/$dist_tarball_basename";
   
+      # cperl tarball contains a dir name like: cperl-cperl-5.22.1
+      if ($dist_tarball_basename =~ /^cperl-/) {
+          $extracted_dir = "@{[ $self->root ]}/build/${dist_tarball_basename}";
+      }
+  
       # Was broken on Solaris, where GNU tar is probably
       # installed as 'gtar' - RT #61042
       my $tarx =
@@ -1053,7 +1073,15 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub do_install_release {
       my ($self, $dist, $dist_version) = @_;
   
-      my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+      my ($dist_tarball, $dist_tarball_url);
+      my ($dist_type) = $dist =~ /^ (c?perl) - (.*) $/xs;
+      $dist_type ||= "perl";
+      die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
+      if ($dist_type eq "perl") {
+          ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+      } elsif ($dist_type eq "cperl") {
+          ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
+      }
       my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
   
       if (-f $dist_tarball_path) {
@@ -1081,20 +1109,23 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       $self->{dist_name} = $dist; # for help msg generation, set to non
                                   # normalized name
   
-      if ($dist =~ /^(?:perl-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/) {
-          my $version = ($1 eq 'stable' ? $self->resolve_stable_version : $1);
-          $dist = "perl-$version"; # normalize dist name
+      my ($dist_type, $dist_version);
+      if ( ($dist_type, $dist_version) = $dist =~ /^(?:(c?perl)-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/ ) {
+          my $dist_version = ($dist_version eq 'stable' ? $self->resolve_stable_version : $2);
+          $dist_version = $self->resolve_stable_version if $dist_version eq 'stable';
+          $dist_type ||= "perl";
+          $dist = "${dist_type}-${dist_version}"; # normalize dist name
   
           my $installation_name = ($self->{as} || $dist) . $self->{variation} . $self->{append};
           if (not $self->{force} and $self->is_installed( $installation_name )) {
               die "\nABORT: $installation_name is already installed.\n\n";
           }
   
-          if ($version eq 'blead') {
+          if ( $dist_type eq 'perl' && $dist_version eq 'blead') {
               $self->do_install_blead($dist);
           }
           else {
-              $self->do_install_release( $dist, $version );
+              $self->do_install_release( $dist, $dist_version );
           }
   
       }
@@ -1228,11 +1259,17 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       $dist = $self->resolve_stable_version
           if $dist && $dist eq 'stable';
   
-      my ($dist_version) = $dist =~ /^ (?:perl-?)? (.*) $/xs;
+      my ($dist_type, $dist_version) = $dist =~ /^ (?:(c?perl)-?)? (.*) $/xs;
   
-      die "\"$dist\" does not look like a perl distribution name. " unless $dist_version =~ /^\d\./;
+      die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
   
-      my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+      my ($dist_tarball, $dist_tarball_url);
+      if ($dist_type eq "perl") {
+          ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+      } elsif ($dist_type eq "cperl") {
+          ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
+      }
+  
       my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
   
       if (-f $dist_tarball_path && !$self->{force}) {
@@ -1303,9 +1340,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my $dist_version;
       my $installation_name;
   
-      if (File::Basename::basename($dist_tarball_path) =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
-          $dist_version = $1;
-          $installation_name = "perl-${dist_version}";
+      if (File::Basename::basename($dist_tarball_path) =~ m{(c?perl)-?(5.+)\.tar\.(gz|bz2)\Z}) {
+          my $perl_variant = $1;
+          $dist_version = $2;
+          $installation_name = "${perl_variant}-${dist_version}";
       }
   
       unless ($dist_version && $installation_name) {
@@ -1322,6 +1360,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my $variation = $self->{variation};
       my $append = $self->{append};
+      my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /\/ cperl- /x;
   
       $self->{dist_extracted_dir} = $dist_extracted_dir;
       $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}${append}.log");
@@ -1360,6 +1399,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       unshift @d_options, qq(prefix=$perlpath);
       push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
   
+      push @d_options, "usecperl" if $looks_like_we_are_installing_cperl;
+  
       unless (grep { /eval:scriptdir=/} @a_options) {
           push @a_options, "'eval:scriptdir=${perlpath}/bin'";
       }
@@ -1382,7 +1423,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           "cd $dist_extracted_dir",
           "rm -f config.sh Policy.sh",
       );
-      push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"};
+      push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
   
       my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
   
@@ -1906,7 +1947,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       for my $perl (@perls) {
           for my $executable (<$root/perls/$perl/bin/*>) {
               my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-              system("ln -fs $executable $root/perls/$perl/bin/$name") if $version;
+              next unless $version;
+              system("ln -fs $executable $root/perls/$perl/bin/$name");
+              system("ln -fs $executable $root/perls/$perl/bin/perl") if $name eq "cperl";
           }
       }
   }
@@ -2868,7 +2911,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   =head2 SYNOPSIS
   
       # Installation
-      curl -L http://install.perlbrew.pl | bash
+      curl -L https://install.perlbrew.pl | bash
   
       # Initialize
       perlbrew init
@@ -2914,7 +2957,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   For the documentation of perlbrew usage see L<perlbrew> command
   on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>,
-  or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
+  or by visiting L<perlbrew's official website|https://perlbrew.pl/>. The following documentation
   features the API of C<App::perlbrew> module, and may not be remotely
   close to what your want to read.
   
@@ -2923,11 +2966,11 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   It is the simplest to use the perlbrew installer, just paste this statement to
   your terminal:
   
-      curl -L http://install.perlbrew.pl | bash
+      curl -L https://install.perlbrew.pl | bash
   
   Or this one, if you have C<fetch> (default on FreeBSD):
   
-      fetch -o- http://install.perlbrew.pl | sh
+      fetch -o- https://install.perlbrew.pl | sh
   
   After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
   should follow the instruction on screen to modify your shell rc file to put it
@@ -2947,7 +2990,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   environment variable before running the installer:
   
       export PERLBREW_ROOT=/opt/perl5
-      curl -L http://install.perlbrew.pl | bash
+      curl -L https://install.perlbrew.pl | bash
   
   As a result, different users on the same machine can all share the same perlbrew
   root directory (although only original user that made the installation would
@@ -2993,8 +3036,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   =head2 PROJECT DEVELOPMENT
   
-  L<perlbrew project|http://perlbrew.pl/> uses github
-  L<http://github.com/gugod/App-perlbrew/issues> and RT
+  L<perlbrew project|https://perlbrew.pl/> uses github
+  L<https://github.com/gugod/App-perlbrew/issues> and RT
   <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
   tracking. Issues sent to these two systems will eventually be reviewed
   and handled.
@@ -6034,6 +6077,14 @@ The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
 Add '--mirror $URL' to specify the URL of mirror site.
+
+=item B<install> [options] cperl-<version>
+
+Install the cperl distribution released from:
+
+    https://github.com/perl11/cperl/releases
+
+See  http://perl11.org/cperl/ for mor information about cperl distribution.
 
 =item B<install> [options]  perl-stable
 
