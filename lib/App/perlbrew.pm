@@ -776,9 +776,26 @@ sub cperl_release {
     #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
     #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
     # };
+
     my $dist_tarball_url = $url{$version}or die "ERROR: Cannot find the tarball for cperl-$version\n";
     my $dist_tarball = "cperl-${version}.tar.gz";
     return ($dist_tarball, $dist_tarball_url);
+}
+
+sub release_detail_cperl_remote {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+
+    my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
+    my $expect_url = "https://github.com/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
+    my $html = http_get('https://github.com/perl11/cperl/releases');
+    if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
+        $rd->{tarball_name} = "${dist}.tar.gz";
+        $rd->{tarball_url}  = $expect_url;
+    } else {
+        die "Cannot find a cperl release named: $dist";
+    }
+    return $rd;
 }
 
 sub release_detail {
