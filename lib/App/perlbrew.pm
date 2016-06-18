@@ -884,18 +884,24 @@ sub release_detail {
     ($dist_type, $dist_version) = $dist =~ /^ (?: (c?perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
     $dist_type = "perl" if $dist_version && !$dist_type;
 
-    if ($dist_type eq "perl") {
-        ($tarball_name, $tarball_url) = $self->perl_release($dist_version);
-    } elsif ($dist_type eq "cperl") {
-        ($tarball_name, $tarball_url) = $self->cperl_release($dist_version);
+    my $rd = {
+        type => $dist_type,
+        version => $dist_version,
+        tarball_url => undef,
+        tarball_name => undef,
+    };
+
+    my $m_local = "release_detail_${dist_type}_local";
+    my $m_remote = "release_detail_${dist_type}_remote";
+
+    my ($error) = $self->$m_local($dist, $rd);
+    ($error) = $self->$m_remote($dist, $rd) if $error;
+
+    if ($error) {
+        die "ERROR: Fail to get the tarball URL for dist: $dist\n";
     }
 
-    return {
-        type         => $dist_type,
-        version      => $dist_version,
-        tarball_name => $tarball_name,
-        tarball_url  => $tarball_url,
-    }
+    return $rd;
 }
 
 sub run_command_init {
@@ -1359,17 +1365,10 @@ sub run_command_download {
     $dist = $self->resolve_stable_version
         if $dist && $dist eq 'stable';
 
-    my ($dist_type, $dist_version) = $dist =~ /^ (?:(c?perl)-?)? (.*) $/xs;
+    my $rd = $self->release_detail($dist);
 
-    die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
-
-    my ($dist_tarball, $dist_tarball_url);
-    if ($dist_type eq "perl") {
-        ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
-    } elsif ($dist_type eq "cperl") {
-        ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
-    }
-
+    my $dist_tarball = $rd->{tarball_name};
+    my $dist_tarball_url = $rd->{tarball_url};
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path && !$self->{force}) {
