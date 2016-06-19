@@ -517,12 +517,9 @@ sub find_similar_commands {
 
     my @commands = sort {
         $a->[1] <=> $b->[1]
-    } grep {
-        defined
     } map {
         my $d = editdist($_, $command);
-
-        ($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : undef
+        (($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : ())
     } $self->commands;
 
     if(@commands) {
