@@ -1179,15 +1179,13 @@ sub resolve_stable_version {
 sub do_install_release {
     my ($self, $dist, $dist_version) = @_;
 
-    my ($dist_tarball, $dist_tarball_url);
-    my ($dist_type) = $dist =~ /^ (c?perl) - (.*) $/xs;
-    $dist_type ||= "perl";
+    my $rd = $self->release_detail($dist);
+    my $dist_type = $rd->{type};
+
     die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
-    if ($dist_type eq "perl") {
-        ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
-    } elsif ($dist_type eq "cperl") {
-        ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
-    }
+
+    my $dist_tarball = $rd->{tarball_name};
+    my $dist_tarball_url = $rd->{tarball_url};
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path) {
