@@ -1587,12 +1587,9 @@ INSTALL
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
             my ($sitelib) = $capture =~ m/sitelib='([^']*)';/;
-            # This should probably all use File::Path
-            if ($destdir) {
-                $sitelib = $destdir . $sitelib
-            }
+            $sitelib = $destdir . $sitelib if $destdir;
             mkpath($sitelib) unless -d $sitelib;
-            my $target = "$sitelib/sitecustomize.pl";
+            my $target = joinpath($sitelib, "sitecustomize.pl");
             open my $dst, ">", $target
                 or die "Could not open '$target' for writing: $!\n";
             open my $src, "<", $sitecustomize
