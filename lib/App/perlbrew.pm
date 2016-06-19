@@ -1498,14 +1498,14 @@ sub do_install_this {
 
     push @d_options, "usecperl" if $looks_like_we_are_installing_cperl;
 
-    unless (grep { /eval:scriptdir=/} @a_options) {
-        push @a_options, "'eval:scriptdir=${perlpath}/bin'";
-    }
-
     my $version = perl_version_to_integer($dist_version);
     if (defined $version and $version < perl_version_to_integer( '5.6.0' ) ) {
         # ancient perls do not support -A for Configure
         @a_options = ();
+    } else {
+        unless (grep { /eval:scriptdir=/} @a_options) {
+            push @a_options, "'eval:scriptdir=${perlpath}/bin'";
+        }
     }
 
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n\n";
