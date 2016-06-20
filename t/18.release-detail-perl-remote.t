@@ -8,6 +8,10 @@ $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 
 use Test::More;
 
+unless ($ENV{TEST_LIVE}) {
+    plan skip_all => 'These tests send HTTP requests. Set env TEST_LIVE=1 to really run them.';
+}
+
 my $app = App::perlbrew->new();
 $app->cpan_mirror("http://www.cpan.org");
 
