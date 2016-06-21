@@ -19,7 +19,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.75";
+  our $VERSION = "0.76";
   use Config;
   
   BEGIN {
@@ -38,6 +38,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   use File::Glob 'bsd_glob';
   use Getopt::Long ();
+  use CPAN::Perl::Releases;
   
   sub min(@) {
       my $m = $_[0];
@@ -533,12 +534,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my @commands = sort {
           $a->[1] <=> $b->[1]
-      } grep {
-          defined
       } map {
           my $d = editdist($_, $command);
-  
-          ($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : undef
+          (($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : ())
       } $self->commands;
   
       if(@commands) {
@@ -744,11 +742,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my $mirror = $self->cpan_mirror();
   
       # try CPAN::Perl::Releases
-      require CPAN::Perl::Releases;
       my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
   
       my $x = (values %$tarballs)[0];
-  
       if ($x) {
           my $dist_tarball = (split("/", $x))[-1];
           my $dist_tarball_url = "$mirror/authors/id/$x";
@@ -793,9 +789,133 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
       #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
       # };
+  
       my $dist_tarball_url = $url{$version}or die "ERROR: Cannot find the tarball for cperl-$version\n";
       my $dist_tarball = "cperl-${version}.tar.gz";
       return ($dist_tarball, $dist_tarball_url);
+  }
+  
+  sub release_detail_perl_local {
+      my ($self, $dist, $rd) = @_;
+      $rd ||= {};
+      my $error = 1;
+      my $mirror = $self->cpan_mirror();
+      my $tarballs = CPAN::Perl::Releases::perl_tarballs($rd->{version});
+      if (keys %$tarballs) {
+          for ("tar.bz2", "tar.gz") {
+              if (my $x = $tarballs->{$_}) {
+                  $rd->{tarball_name} = (split("/", $x))[-1];
+                  $rd->{tarball_url} = "$mirror/authors/id/$x";
+                  $error = 0;
+                  last;
+              }
+          }
+      }
+      return ($error, $rd);
+  }
+  
+  sub release_detail_perl_remote {
+      my ($self, $dist, $rd) = @_;
+      $rd ||= {};
+      my $error = 1;
+      my $mirror = $self->cpan_mirror();
+  
+      my $version = $rd->{version};
+  
+      # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
+      my $index = http_get("http://www.cpan.org/src/5.0/");
+      if ($index) {
+          for my $prefix ( "perl-", "perl" ){
+              for my $suffix ( ".tar.bz2", ".tar.gz" ) {
+                  my $dist_tarball = "$prefix$version$suffix";
+                  my $dist_tarball_url = "$mirror/src/5.0/$dist_tarball";
+                  if ( $index =~ /href\s*=\s*"\Q$dist_tarball\E"/ms ) {
+                      $rd->{tarball_url} = $dist_tarball_url;
+                      $rd->{tarball_name} = $dist_tarball;
+                      $error = 0;
+                      return ($error, $rd);
+                  }
+              }
+          }
+      }
+  
+      my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
+  
+      unless ($html) {
+          die "ERROR: Failed to locate perl-${version} tarball.";
+      }
+  
+      my ($dist_path, $dist_tarball) =
+          $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+      die "ERROR: Cannot find the tarball for perl-$version\n"
+          if !$dist_path and !$dist_tarball;
+      my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+  
+      $rd->{tarball_name} = $dist_tarball;
+      $rd->{tarball_url} = $dist_tarball_url;
+      $error = 0;
+  
+      return ($error, $rd);
+  }
+  
+  sub release_detail_cperl_local {
+      my ($self, $dist, $rd) = @_;
+      $rd ||= {};
+      my %url = (
+          "cperl-5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
+          "cperl-5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
+          "cperl-5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
+      );
+  
+      my $error = 1;
+      if ( my $u = $url{$dist} ) {
+          $rd->{tarball_name} = "${dist}.tar.gz";
+          $rd->{tarball_url} = $u;
+          $error = 0;
+      }
+      return ($error, $rd);
+  }
+  
+  sub release_detail_cperl_remote {
+      my ($self, $dist, $rd) = @_;
+      $rd ||= {};
+      my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
+      my $expect_url = "https://github.com/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
+      my $html = http_get('https://github.com/perl11/cperl/releases');
+      my $error = 1;
+      if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
+          $rd->{tarball_name} = "${dist}.tar.gz";
+          $rd->{tarball_url}  = $expect_url;
+          $error = 0;
+      }
+      return ($error, $rd);
+  }
+  
+  sub release_detail {
+      my ($self, $dist) = @_;
+      my ($dist_type, $dist_version, $tarball_name, $tarball_url);
+  
+      ($dist_type, $dist_version) = $dist =~ /^ (?: (c?perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
+      $dist_type = "perl" if $dist_version && !$dist_type;
+  
+      my $rd = {
+          type => $dist_type,
+          version => $dist_version,
+          tarball_url => undef,
+          tarball_name => undef,
+      };
+  
+      my $m_local = "release_detail_${dist_type}_local";
+      my $m_remote = "release_detail_${dist_type}_remote";
+  
+      my ($error) = $self->$m_local($dist, $rd);
+      ($error) = $self->$m_remote($dist, $rd) if $error;
+  
+      if ($error) {
+          die "ERROR: Fail to get the tarball URL for dist: $dist\n";
+      }
+  
+      return $rd;
   }
   
   sub run_command_init {
@@ -1073,15 +1193,13 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub do_install_release {
       my ($self, $dist, $dist_version) = @_;
   
-      my ($dist_tarball, $dist_tarball_url);
-      my ($dist_type) = $dist =~ /^ (c?perl) - (.*) $/xs;
-      $dist_type ||= "perl";
+      my $rd = $self->release_detail($dist);
+      my $dist_type = $rd->{type};
+  
       die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
-      if ($dist_type eq "perl") {
-          ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
-      } elsif ($dist_type eq "cperl") {
-          ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
-      }
+  
+      my $dist_tarball = $rd->{tarball_name};
+      my $dist_tarball_url = $rd->{tarball_url};
       my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
   
       if (-f $dist_tarball_path) {
@@ -1259,17 +1377,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       $dist = $self->resolve_stable_version
           if $dist && $dist eq 'stable';
   
-      my ($dist_type, $dist_version) = $dist =~ /^ (?:(c?perl)-?)? (.*) $/xs;
+      my $rd = $self->release_detail($dist);
   
-      die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
-  
-      my ($dist_tarball, $dist_tarball_url);
-      if ($dist_type eq "perl") {
-          ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
-      } elsif ($dist_type eq "cperl") {
-          ($dist_tarball, $dist_tarball_url) = $self->cperl_release($dist_version);
-      }
-  
+      my $dist_tarball = $rd->{tarball_name};
+      my $dist_tarball_url = $rd->{tarball_url};
       my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
   
       if (-f $dist_tarball_path && !$self->{force}) {
@@ -1401,14 +1512,14 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       push @d_options, "usecperl" if $looks_like_we_are_installing_cperl;
   
-      unless (grep { /eval:scriptdir=/} @a_options) {
-          push @a_options, "'eval:scriptdir=${perlpath}/bin'";
-      }
-  
       my $version = perl_version_to_integer($dist_version);
       if (defined $version and $version < perl_version_to_integer( '5.6.0' ) ) {
           # ancient perls do not support -A for Configure
           @a_options = ();
+      } else {
+          unless (grep { /eval:scriptdir=/} @a_options) {
+              push @a_options, "'eval:scriptdir=${perlpath}/bin'";
+          }
       }
   
       print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n\n";
@@ -1490,12 +1601,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           if ( $sitecustomize ) {
               my $capture = $self->do_capture("$newperl -V:sitelib");
               my ($sitelib) = $capture =~ m/sitelib='([^']*)';/;
-              # This should probably all use File::Path
-              if ($destdir) {
-                  $sitelib = $destdir . $sitelib
-              }
+              $sitelib = $destdir . $sitelib if $destdir;
               mkpath($sitelib) unless -d $sitelib;
-              my $target = "$sitelib/sitecustomize.pl";
+              my $target = joinpath($sitelib, "sitecustomize.pl");
               open my $dst, ">", $target
                   or die "Could not open '$target' for writing: $!\n";
               open my $src, "<", $sitecustomize
