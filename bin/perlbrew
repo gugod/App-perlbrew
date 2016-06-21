@@ -34,7 +34,7 @@ Commands:
     off            Turn off perlbrew in current shell
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
-    exec           exec programs with specified perl enviroments.
+    exec           exec programs with specified perl environments.
 
     self-install       Install perlbrew itself under PERLBREW_ROOT/bin
     self-upgrade       Upgrade perlbrew itself.
@@ -172,6 +172,14 @@ The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
 Add '--mirror $URL' to specify the URL of mirror site.
+
+=item B<install> [options] cperl-<version>
+
+Install the cperl distribution released from:
+
+    https://github.com/perl11/cperl/releases
+
+See  http://perl11.org/cperl/ for mor information about cperl distribution.
 
 =item B<install> [options]  perl-stable
 

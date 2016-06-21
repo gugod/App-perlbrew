@@ -4,18 +4,6 @@ if [ "x${PERLBREWURL}" == "x" ]; then
     PERLBREWURL=https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew
 fi
 
-if [ -z "$TMPDIR" ]; then
-    if [ -d "/tmp" ]; then
-        TMPDIR="/tmp"
-    else
-        TMPDIR="."
-    fi
-fi
-
-cd $TMPDIR || exit 1
-
-LOCALINSTALLER=$(mktemp perlbrew.XXXXXX)
-
 echo
 if type curl >/dev/null 2>&1; then
   PERLBREWDOWNLOAD="curl -f -sS -Lo $LOCALINSTALLER $PERLBREWURL"
@@ -27,6 +15,18 @@ else
   echo "Need wget or curl to use $0"
   exit 1
 fi
+
+if [ -z "$TMPDIR" ]; then
+    if [ -d "/tmp" ]; then
+        TMPDIR="/tmp"
+    else
+        TMPDIR="."
+    fi
+fi
+
+cd $TMPDIR || exit 1
+
+LOCALINSTALLER=$(mktemp perlbrew.XXXXXX)
 
 clean_exit () {
   [ -f $LOCALINSTALLER ] && rm $LOCALINSTALLER

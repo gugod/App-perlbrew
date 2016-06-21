@@ -11,6 +11,10 @@ perl:
   - "5.12"
   - "5.10"
   - "5.8"
+
+env:
+  - TEST_LIVE=1
+
 before_install:
   - ./dev-bin/travis-prepare.sh
 script:

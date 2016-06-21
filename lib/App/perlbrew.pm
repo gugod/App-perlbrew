@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.75";
+our $VERSION = "0.76";
 use Config;
 
 BEGIN {
@@ -21,6 +21,7 @@ BEGIN {
 
 use File::Glob 'bsd_glob';
 use Getopt::Long ();
+use CPAN::Perl::Releases;
 
 sub min(@) {
     my $m = $_[0];
@@ -190,10 +191,18 @@ sub files_are_the_same {
             die "ERROR: The download target < $path > already exists.\n";
         }
 
+        my $partial = 0;
+        local $SIG{TERM} = local $SIG{INT} = sub { $partial++ };
+
         my $download_command = http_user_agent_command( download => { url => $url, output => $path } );
 
         my $status = system($download_command);
+        if ($partial) {
+            unlink($path) if -f $path;
+            return "ERROR: Interrupted.";
+        }
         unless ($status == 0) {
+            unlink($path) if -f $path;
             return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
         }
         return 0;
@@ -508,12 +517,9 @@ sub find_similar_commands {
 
     my @commands = sort {
         $a->[1] <=> $b->[1]
-    } grep {
-        defined
     } map {
         my $d = editdist($_, $command);
-
-        ($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : undef
+        (($d < $SIMILAR_DISTANCE) ? [ $_, $d ] : ())
     } $self->commands;
 
     if(@commands) {
@@ -716,8 +722,17 @@ sub available_perls {
 
 sub perl_release {
     my ($self, $version) = @_;
-
     my $mirror = $self->cpan_mirror();
+
+    # try CPAN::Perl::Releases
+    my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
+
+    my $x = (values %$tarballs)[0];
+    if ($x) {
+        my $dist_tarball = (split("/", $x))[-1];
+        my $dist_tarball_url = "$mirror/authors/id/$x";
+        return ($dist_tarball, $dist_tarball_url);
+    }
 
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
     my $index = http_get("http://www.cpan.org/src/5.0/");
@@ -732,16 +747,79 @@ sub perl_release {
         }
     }
 
-    # try CPAN::Perl::Releases
-    require CPAN::Perl::Releases;
-    my $tarballs = CPAN::Perl::Releases::perl_tarballs($version);
+    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
 
-    my $x = (values %$tarballs)[0];
+    unless ($html) {
+        die "ERROR: Failed to locate perl-${version} tarball.";
+    }
 
-    if ($x) {
-        my $dist_tarball = (split("/", $x))[-1];
-        my $dist_tarball_url = "$mirror/authors/id/$x";
-        return ($dist_tarball, $dist_tarball_url);
+    my ($dist_path, $dist_tarball) =
+        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+    die "ERROR: Cannot find the tarball for perl-$version\n"
+        if !$dist_path and !$dist_tarball;
+    my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+    return ($dist_tarball, $dist_tarball_url);
+}
+
+sub cperl_release {
+    my ($self, $version) = @_;
+    my %url = (
+        "5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
+        "5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
+        "5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
+    );
+    # my %digest => {
+    #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
+    #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
+    # };
+
+    my $dist_tarball_url = $url{$version}or die "ERROR: Cannot find the tarball for cperl-$version\n";
+    my $dist_tarball = "cperl-${version}.tar.gz";
+    return ($dist_tarball, $dist_tarball_url);
+}
+
+sub release_detail_perl_local {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my $error = 1;
+    my $mirror = $self->cpan_mirror();
+    my $tarballs = CPAN::Perl::Releases::perl_tarballs($rd->{version});
+    if (keys %$tarballs) {
+        for ("tar.bz2", "tar.gz") {
+            if (my $x = $tarballs->{$_}) {
+                $rd->{tarball_name} = (split("/", $x))[-1];
+                $rd->{tarball_url} = "$mirror/authors/id/$x";
+                $error = 0;
+                last;
+            }
+        }
+    }
+    return ($error, $rd);
+}
+
+sub release_detail_perl_remote {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my $error = 1;
+    my $mirror = $self->cpan_mirror();
+
+    my $version = $rd->{version};
+
+    # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
+    my $index = http_get("http://www.cpan.org/src/5.0/");
+    if ($index) {
+        for my $prefix ( "perl-", "perl" ){
+            for my $suffix ( ".tar.bz2", ".tar.gz" ) {
+                my $dist_tarball = "$prefix$version$suffix";
+                my $dist_tarball_url = "$mirror/src/5.0/$dist_tarball";
+                if ( $index =~ /href\s*=\s*"\Q$dist_tarball\E"/ms ) {
+                    $rd->{tarball_url} = $dist_tarball_url;
+                    $rd->{tarball_name} = $dist_tarball;
+                    $error = 0;
+                    return ($error, $rd);
+                }
+            }
+        }
     }
 
     my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
@@ -755,7 +833,72 @@ sub perl_release {
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
     my $dist_tarball_url = "http://search.cpan.org${dist_path}";
-    return ($dist_tarball, $dist_tarball_url);
+
+    $rd->{tarball_name} = $dist_tarball;
+    $rd->{tarball_url} = $dist_tarball_url;
+    $error = 0;
+
+    return ($error, $rd);
+}
+
+sub release_detail_cperl_local {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my %url = (
+        "cperl-5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
+        "cperl-5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
+        "cperl-5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
+    );
+
+    my $error = 1;
+    if ( my $u = $url{$dist} ) {
+        $rd->{tarball_name} = "${dist}.tar.gz";
+        $rd->{tarball_url} = $u;
+        $error = 0;
+    }
+    return ($error, $rd);
+}
+
+sub release_detail_cperl_remote {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
+    my $expect_url = "https://github.com/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
+    my $html = http_get('https://github.com/perl11/cperl/releases');
+    my $error = 1;
+    if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
+        $rd->{tarball_name} = "${dist}.tar.gz";
+        $rd->{tarball_url}  = $expect_url;
+        $error = 0;
+    }
+    return ($error, $rd);
+}
+
+sub release_detail {
+    my ($self, $dist) = @_;
+    my ($dist_type, $dist_version, $tarball_name, $tarball_url);
+
+    ($dist_type, $dist_version) = $dist =~ /^ (?: (c?perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
+    $dist_type = "perl" if $dist_version && !$dist_type;
+
+    my $rd = {
+        type => $dist_type,
+        version => $dist_version,
+        tarball_url => undef,
+        tarball_name => undef,
+    };
+
+    my $m_local = "release_detail_${dist_type}_local";
+    my $m_remote = "release_detail_${dist_type}_remote";
+
+    my ($error) = $self->$m_local($dist, $rd);
+    ($error) = $self->$m_remote($dist, $rd) if $error;
+
+    if ($error) {
+        die "ERROR: Fail to get the tarball URL for dist: $dist\n";
+    }
+
+    return $rd;
 }
 
 sub run_command_init {
@@ -952,6 +1095,11 @@ sub do_extract_tarball {
     # Note that this is incorrect for blead.
     my $extracted_dir = "@{[ $self->root ]}/build/$dist_tarball_basename";
 
+    # cperl tarball contains a dir name like: cperl-cperl-5.22.1
+    if ($dist_tarball_basename =~ /^cperl-/) {
+        $extracted_dir = "@{[ $self->root ]}/build/${dist_tarball_basename}";
+    }
+
     # Was broken on Solaris, where GNU tar is probably
     # installed as 'gtar' - RT #61042
     my $tarx =
@@ -1028,7 +1176,13 @@ sub resolve_stable_version {
 sub do_install_release {
     my ($self, $dist, $dist_version) = @_;
 
-    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    my $rd = $self->release_detail($dist);
+    my $dist_type = $rd->{type};
+
+    die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
+
+    my $dist_tarball = $rd->{tarball_name};
+    my $dist_tarball_url = $rd->{tarball_url};
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path) {
@@ -1056,20 +1210,23 @@ sub run_command_install {
     $self->{dist_name} = $dist; # for help msg generation, set to non
                                 # normalized name
 
-    if ($dist =~ /^(?:perl-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/) {
-        my $version = ($1 eq 'stable' ? $self->resolve_stable_version : $1);
-        $dist = "perl-$version"; # normalize dist name
+    my ($dist_type, $dist_version);
+    if ( ($dist_type, $dist_version) = $dist =~ /^(?:(c?perl)-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/ ) {
+        my $dist_version = ($dist_version eq 'stable' ? $self->resolve_stable_version : $2);
+        $dist_version = $self->resolve_stable_version if $dist_version eq 'stable';
+        $dist_type ||= "perl";
+        $dist = "${dist_type}-${dist_version}"; # normalize dist name
 
         my $installation_name = ($self->{as} || $dist) . $self->{variation} . $self->{append};
         if (not $self->{force} and $self->is_installed( $installation_name )) {
             die "\nABORT: $installation_name is already installed.\n\n";
         }
 
-        if ($version eq 'blead') {
+        if ( $dist_type eq 'perl' && $dist_version eq 'blead') {
             $self->do_install_blead($dist);
         }
         else {
-            $self->do_install_release( $dist, $version );
+            $self->do_install_release( $dist, $dist_version );
         }
 
     }
@@ -1203,11 +1360,10 @@ sub run_command_download {
     $dist = $self->resolve_stable_version
         if $dist && $dist eq 'stable';
 
-    my ($dist_version) = $dist =~ /^ (?:perl-?)? (.*) $/xs;
+    my $rd = $self->release_detail($dist);
 
-    die "\"$dist\" does not look like a perl distribution name. " unless $dist_version =~ /^\d\./;
-
-    my ($dist_tarball, $dist_tarball_url) = $self->perl_release($dist_version);
+    my $dist_tarball = $rd->{tarball_name};
+    my $dist_tarball_url = $rd->{tarball_url};
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
 
     if (-f $dist_tarball_path && !$self->{force}) {
@@ -1278,9 +1434,10 @@ sub do_install_archive {
     my $dist_version;
     my $installation_name;
 
-    if (File::Basename::basename($dist_tarball_path) =~ m{perl-?(5.+)\.tar\.(gz|bz2)\Z}) {
-        $dist_version = $1;
-        $installation_name = "perl-${dist_version}";
+    if (File::Basename::basename($dist_tarball_path) =~ m{(c?perl)-?(5.+)\.tar\.(gz|bz2)\Z}) {
+        my $perl_variant = $1;
+        $dist_version = $2;
+        $installation_name = "${perl_variant}-${dist_version}";
     }
 
     unless ($dist_version && $installation_name) {
@@ -1297,6 +1454,7 @@ sub do_install_this {
 
     my $variation = $self->{variation};
     my $append = $self->{append};
+    my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /\/ cperl- /x;
 
     $self->{dist_extracted_dir} = $dist_extracted_dir;
     $self->{log_file} = joinpath($self->root, "build.${installation_name}${variation}${append}.log");
@@ -1335,14 +1493,16 @@ sub do_install_this {
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
 
-    unless (grep { /eval:scriptdir=/} @a_options) {
-        push @a_options, "'eval:scriptdir=${perlpath}/bin'";
-    }
+    push @d_options, "usecperl" if $looks_like_we_are_installing_cperl;
 
     my $version = perl_version_to_integer($dist_version);
     if (defined $version and $version < perl_version_to_integer( '5.6.0' ) ) {
         # ancient perls do not support -A for Configure
         @a_options = ();
+    } else {
+        unless (grep { /eval:scriptdir=/} @a_options) {
+            push @a_options, "'eval:scriptdir=${perlpath}/bin'";
+        }
     }
 
     print "Installing $dist_extracted_dir into " . $self->path_with_tilde("@{[ $self->root ]}/perls/$installation_name") . "\n\n";
@@ -1357,7 +1517,7 @@ INSTALL
         "cd $dist_extracted_dir",
         "rm -f config.sh Policy.sh",
     );
-    push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"};
+    push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
@@ -1424,12 +1584,9 @@ INSTALL
         if ( $sitecustomize ) {
             my $capture = $self->do_capture("$newperl -V:sitelib");
             my ($sitelib) = $capture =~ m/sitelib='([^']*)';/;
-            # This should probably all use File::Path
-            if ($destdir) {
-                $sitelib = $destdir . $sitelib
-            }
+            $sitelib = $destdir . $sitelib if $destdir;
             mkpath($sitelib) unless -d $sitelib;
-            my $target = "$sitelib/sitecustomize.pl";
+            my $target = joinpath($sitelib, "sitecustomize.pl");
             open my $dst, ">", $target
                 or die "Could not open '$target' for writing: $!\n";
             open my $src, "<", $sitecustomize
@@ -1881,7 +2038,9 @@ sub run_command_symlink_executables {
     for my $perl (@perls) {
         for my $executable (<$root/perls/$perl/bin/*>) {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
-            system("ln -fs $executable $root/perls/$perl/bin/$name") if $version;
+            next unless $version;
+            system("ln -fs $executable $root/perls/$perl/bin/$name");
+            system("ln -fs $executable $root/perls/$perl/bin/perl") if $name eq "cperl";
         }
     }
 }
@@ -2843,7 +3002,7 @@ L<App::perlbrew> - Manage perl installations in your C<$HOME>
 =head2 SYNOPSIS
 
     # Installation
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
     # Initialize
     perlbrew init
@@ -2889,7 +3048,7 @@ cpan modules because those are installed inside your C<HOME> too.
 
 For the documentation of perlbrew usage see L<perlbrew> command
 on L<MetaCPAN|https://metacpan.org/>, or by running C<perlbrew help>,
-or by visiting L<perlbrew's official website|http://perlbrew.pl/>. The following documentation
+or by visiting L<perlbrew's official website|https://perlbrew.pl/>. The following documentation
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 
@@ -2898,11 +3057,11 @@ close to what your want to read.
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
 
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 Or this one, if you have C<fetch> (default on FreeBSD):
 
-    fetch -o- http://install.perlbrew.pl | sh
+    fetch -o- https://install.perlbrew.pl | sh
 
 After that, C<perlbrew> installs itself to C<~/perl5/perlbrew/bin>, and you
 should follow the instruction on screen to modify your shell rc file to put it
@@ -2922,7 +3081,7 @@ say, your C<HOME> has limited quota, you can do that by setting C<PERLBREW_ROOT>
 environment variable before running the installer:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
@@ -2968,8 +3127,8 @@ Set the C<current_perl> object attribute to the given value.
 
 =head2 PROJECT DEVELOPMENT
 
-L<perlbrew project|http://perlbrew.pl/> uses github
-L<http://github.com/gugod/App-perlbrew/issues> and RT
+L<perlbrew project|https://perlbrew.pl/> uses github
+L<https://github.com/gugod/App-perlbrew/issues> and RT
 <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
 tracking. Issues sent to these two systems will eventually be reviewed
 and handled.
