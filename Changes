@@ -1,4 +1,5 @@
-- Start supporting cperl installation
+- Start supporting cperl installation.
+- cperl releases are sourced from: https://github.com/perl11/cperl/releases
 - Deal with a regex warning when testing perlbrew with perl-5.25. See RT: https://rt.cpan.org/Ticket/Display.html?id=114871
 
 0.75: # 2016-03-16T23:41:41+0100
