@@ -2922,7 +2922,7 @@ if ( $?PERLBREW_PATH == 0 ) then
 endif
 
 setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
-setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+setenv PATH "${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}"
 
 setenv MANPATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath 2> /dev/null);'`
 if ( $?PERLBREW_MANPATH == 1 ) then
