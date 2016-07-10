@@ -693,18 +693,14 @@ sub run_command_available {
 
 sub available_perls {
     my ( $self, $dist, $opts ) = @_;
+    my @available_versions;
 
     my $url = $self->{all}  ? "http://www.cpan.org/src/5.0/"
                             : "http://www.cpan.org/src/README.html" ;
-
     my $html = http_get( $url, undef, undef );
-
     unless($html) {
         die "\nERROR: Unable to retrieve the list of perls.\n\n";
     }
-
-    my @available_versions;
-
     for ( split "\n", $html ) {
         if ( $self->{all} ) {
             push @available_versions, $1
@@ -717,6 +713,16 @@ sub available_perls {
     }
     s/\.tar\.gz// for @available_versions;
 
+    # cperl releases: https://github.com/perl11/cperl/releases
+    # links do downloads looks: /perl11/cperl/releases/download/cperl-5.24.0-RC3/cperl-5.24.0-RC3.tar.gz
+    $html = http_get("https://github.com/perl11/cperl/releases");
+    if ($html) {
+        while ( $html =~ m{href="/perl11/cperl/releases/download/cperl-(.+?)/cperl-\1.tar.gz"}xg ) {
+            push @available_versions, "cperl-$1";
+        }
+    } else {
+        warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+    }
     return @available_versions;
 }
 
