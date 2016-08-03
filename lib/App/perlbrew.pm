@@ -284,6 +284,7 @@ sub new {
     my %opt = (
         original_argv  => \@argv,
         args => [],
+        yes   => 0,
         force => 0,
         quiet => 0,
         D => [],
@@ -334,6 +335,7 @@ sub parse_cmdline {
     return Getopt::Long::GetOptions(
         $params,
 
+        'yes',
         'force|f',
         'notest|n',
         'quiet|q',
@@ -2123,8 +2125,21 @@ sub run_command_uninstall {
     }
     push @dir_to_delete, $to_delete->{dir};
 
-    for (@dir_to_delete) {
-        rmpath($_);
+    my $ans = ($self->{yes}) ? "Y": undef;
+    if (!defined($ans)) {
+        require ExtUtils::MakeMaker;
+        $ans = ExtUtils::MakeMaker::prompt("\nThe following perl+lib installation(s) will be deleted:\n\n\t" . join("\n\t", @dir_to_delete) . "\n\n... are you sure ? [y/N]", "N");
+    }
+
+    if ($ans =~ /^Y/i) {
+        for (@dir_to_delete) {
+            print "Deleting: $_\n" unless $self->{quiet};
+            rmpath($_);
+            print "Deleted:  $_\n" unless $self->{quiet};
+        }
+    } else {
+        print "\nOK. Not deleting anything.\n\n";
+        return;
     }
 }
 
