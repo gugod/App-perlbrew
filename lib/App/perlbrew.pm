@@ -1624,7 +1624,7 @@ sub do_install_program_from_url {
 
     my $out = joinpath($self->root, "bin", $program_name);
 
-    if (-f $out && !$self->{force}) {
+    if (-f $out && !$self->{force} && !$self->{yes}) {
         require ExtUtils::MakeMaker;
 
         my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
