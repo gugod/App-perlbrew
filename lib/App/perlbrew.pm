@@ -1151,7 +1151,7 @@ sub do_install_blead {
     opendir DIRH, $build_dir or die "Couldn't open ${build_dir}: $!";
     my @contents = readdir DIRH;
     closedir DIRH or warn "Couldn't close ${build_dir}: $!";
-    my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
+    my @candidates = grep { m/^perl-[0-9a-f]{4,40}$/ } @contents;
     # Use a Schwartzian Transform in case there are lots of dirs that
     # look like "perl-$SHA1", which is what's inside blead.tar.gz,
     # so we stat each one only once.
