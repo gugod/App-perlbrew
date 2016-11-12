@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.76";
+our $VERSION = "0.77";
 use Config;
 
 BEGIN {
@@ -284,6 +284,7 @@ sub new {
     my %opt = (
         original_argv  => \@argv,
         args => [],
+        yes   => 0,
         force => 0,
         quiet => 0,
         D => [],
@@ -334,6 +335,7 @@ sub parse_cmdline {
     return Getopt::Long::GetOptions(
         $params,
 
+        'yes',
         'force|f',
         'notest|n',
         'quiet|q',
@@ -693,18 +695,14 @@ sub run_command_available {
 
 sub available_perls {
     my ( $self, $dist, $opts ) = @_;
+    my @available_versions;
 
     my $url = $self->{all}  ? "http://www.cpan.org/src/5.0/"
                             : "http://www.cpan.org/src/README.html" ;
-
     my $html = http_get( $url, undef, undef );
-
     unless($html) {
         die "\nERROR: Unable to retrieve the list of perls.\n\n";
     }
-
-    my @available_versions;
-
     for ( split "\n", $html ) {
         if ( $self->{all} ) {
             push @available_versions, $1
@@ -717,6 +715,16 @@ sub available_perls {
     }
     s/\.tar\.gz// for @available_versions;
 
+    # cperl releases: https://github.com/perl11/cperl/releases
+    # links do downloads looks: /perl11/cperl/releases/download/cperl-5.24.0-RC3/cperl-5.24.0-RC3.tar.gz
+    $html = http_get("https://github.com/perl11/cperl/releases");
+    if ($html) {
+        while ( $html =~ m{href="/perl11/cperl/releases/download/cperl-(.+?)/cperl-\1.tar.gz"}xg ) {
+            push @available_versions, "cperl-$1";
+        }
+    } else {
+        warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+    }
     return @available_versions;
 }
 
@@ -1143,7 +1151,7 @@ sub do_install_blead {
     opendir DIRH, $build_dir or die "Couldn't open ${build_dir}: $!";
     my @contents = readdir DIRH;
     closedir DIRH or warn "Couldn't close ${build_dir}: $!";
-    my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
+    my @candidates = grep { m/^perl-[0-9a-f]{4,40}$/ } @contents;
     # Use a Schwartzian Transform in case there are lots of dirs that
     # look like "perl-$SHA1", which is what's inside blead.tar.gz,
     # so we stat each one only once.
@@ -1616,7 +1624,7 @@ sub do_install_program_from_url {
 
     my $out = joinpath($self->root, "bin", $program_name);
 
-    if (-f $out && !$self->{force}) {
+    if (-f $out && !$self->{force} && !$self->{yes}) {
         require ExtUtils::MakeMaker;
 
         my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
@@ -2117,8 +2125,21 @@ sub run_command_uninstall {
     }
     push @dir_to_delete, $to_delete->{dir};
 
-    for (@dir_to_delete) {
-        rmpath($_);
+    my $ans = ($self->{yes}) ? "Y": undef;
+    if (!defined($ans)) {
+        require ExtUtils::MakeMaker;
+        $ans = ExtUtils::MakeMaker::prompt("\nThe following perl+lib installation(s) will be deleted:\n\n\t" . join("\n\t", @dir_to_delete) . "\n\n... are you sure ? [y/N]", "N");
+    }
+
+    if ($ans =~ /^Y/i) {
+        for (@dir_to_delete) {
+            print "Deleting: $_\n" unless $self->{quiet};
+            rmpath($_);
+            print "Deleted:  $_\n" unless $self->{quiet};
+        }
+    } else {
+        print "\nOK. Not deleting anything.\n\n";
+        return;
     }
 }
 
@@ -2916,7 +2937,7 @@ if ( $?PERLBREW_PATH == 0 ) then
 endif
 
 setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
-setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+setenv PATH "${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}"
 
 setenv MANPATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath 2> /dev/null);'`
 if ( $?PERLBREW_MANPATH == 1 ) then

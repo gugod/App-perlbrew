@@ -19,7 +19,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.76";
+  our $VERSION = "0.77";
   use Config;
   
   BEGIN {
@@ -301,6 +301,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my %opt = (
           original_argv  => \@argv,
           args => [],
+          yes   => 0,
           force => 0,
           quiet => 0,
           D => [],
@@ -351,6 +352,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       return Getopt::Long::GetOptions(
           $params,
   
+          'yes',
           'force|f',
           'notest|n',
           'quiet|q',
@@ -710,18 +712,14 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   sub available_perls {
       my ( $self, $dist, $opts ) = @_;
+      my @available_versions;
   
       my $url = $self->{all}  ? "http://www.cpan.org/src/5.0/"
                               : "http://www.cpan.org/src/README.html" ;
-  
       my $html = http_get( $url, undef, undef );
-  
       unless($html) {
           die "\nERROR: Unable to retrieve the list of perls.\n\n";
       }
-  
-      my @available_versions;
-  
       for ( split "\n", $html ) {
           if ( $self->{all} ) {
               push @available_versions, $1
@@ -734,6 +732,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
       s/\.tar\.gz// for @available_versions;
   
+      # cperl releases: https://github.com/perl11/cperl/releases
+      # links do downloads looks: /perl11/cperl/releases/download/cperl-5.24.0-RC3/cperl-5.24.0-RC3.tar.gz
+      $html = http_get("https://github.com/perl11/cperl/releases");
+      if ($html) {
+          while ( $html =~ m{href="/perl11/cperl/releases/download/cperl-(.+?)/cperl-\1.tar.gz"}xg ) {
+              push @available_versions, "cperl-$1";
+          }
+      } else {
+          warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+      }
       return @available_versions;
   }
   
@@ -1160,7 +1168,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       opendir DIRH, $build_dir or die "Couldn't open ${build_dir}: $!";
       my @contents = readdir DIRH;
       closedir DIRH or warn "Couldn't close ${build_dir}: $!";
-      my @candidates = grep { m/^perl-[0-9a-f]{7,8}$/ } @contents;
+      my @candidates = grep { m/^perl-[0-9a-f]{4,40}$/ } @contents;
       # Use a Schwartzian Transform in case there are lots of dirs that
       # look like "perl-$SHA1", which is what's inside blead.tar.gz,
       # so we stat each one only once.
@@ -1633,7 +1641,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my $out = joinpath($self->root, "bin", $program_name);
   
-      if (-f $out && !$self->{force}) {
+      if (-f $out && !$self->{force} && !$self->{yes}) {
           require ExtUtils::MakeMaker;
   
           my $ans = ExtUtils::MakeMaker::prompt("\n$out already exists, are you sure to override ? [y/N]", "N");
@@ -2134,8 +2142,21 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
       push @dir_to_delete, $to_delete->{dir};
   
-      for (@dir_to_delete) {
-          rmpath($_);
+      my $ans = ($self->{yes}) ? "Y": undef;
+      if (!defined($ans)) {
+          require ExtUtils::MakeMaker;
+          $ans = ExtUtils::MakeMaker::prompt("\nThe following perl+lib installation(s) will be deleted:\n\n\t" . join("\n\t", @dir_to_delete) . "\n\n... are you sure ? [y/N]", "N");
+      }
+  
+      if ($ans =~ /^Y/i) {
+          for (@dir_to_delete) {
+              print "Deleting: $_\n" unless $self->{quiet};
+              rmpath($_);
+              print "Deleted:  $_\n" unless $self->{quiet};
+          }
+      } else {
+          print "\nOK. Not deleting anything.\n\n";
+          return;
       }
   }
   
@@ -2933,7 +2954,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   endif
   
   setenv PATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,$ENV{PATH};'`
-  setenv PATH ${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}
+  setenv PATH "${PERLBREW_PATH}:${PATH_WITHOUT_PERLBREW}"
   
   setenv MANPATH_WITHOUT_PERLBREW `perl -e 'print join ":", grep { index($_, $ENV{PERLBREW_ROOT}) } split/:/,qx(manpath 2> /dev/null);'`
   if ( $?PERLBREW_MANPATH == 1 ) then
@@ -3193,7 +3214,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '2.60';
+  $CPAN::Perl::Releases::VERSION = '2.98';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -3210,7 +3231,6 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   our $cache = { };
   our $data =
   {
-  "5.003_07" => { id => 'ANDYD' },
   "5.004" => { id => 'CHIPS' },
   "5.004_01" => { id => 'TIMB' },
   "5.004_02" => { id => 'TIMB' },
@@ -3361,6 +3381,29 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.23.7" => { id => 'STEVAN' },
   "5.23.8" => { id => 'XSAWYERX' },
   "5.23.9" => { id => 'ABIGAIL' },
+  "5.22.2-RC1" => { id => 'SHAY' },
+  "5.24.0-RC1" => { id => 'RJBS' },
+  "5.24.0-RC2" => { id => 'RJBS' },
+  "5.24.0-RC3" => { id => 'RJBS' },
+  "5.22.2" => { id => 'SHAY' },
+  "5.24.0-RC4" => { id => 'RJBS' },
+  "5.24.0-RC5" => { id => 'RJBS' },
+  "5.24.0" => { id => 'RJBS' },
+  "5.25.0" => { id => 'RJBS' },
+  "5.25.1" => { id => 'XSAWYERX' },
+  "5.25.2" => { id => 'WOLFSAGE' },
+  "5.22.3-RC1" => { id => 'SHAY' },
+  "5.24.1-RC1" => { id => 'SHAY' },
+  "5.25.3" => { id => 'SHAY' },
+  "5.22.3-RC2" => { id => 'SHAY' },
+  "5.24.1-RC2" => { id => 'SHAY' },
+  "5.22.3-RC3" => { id => 'SHAY' },
+  "5.24.1-RC3" => { id => 'SHAY' },
+  "5.25.4" => { id => 'BINGOS' },
+  "5.25.5" => { id => 'STEVAN' },
+  "5.22.3-RC4" => { id => 'SHAY' },
+  "5.24.1-RC4" => { id => 'SHAY' },
+  "5.25.6" => { id => 'ARC' },
   };
   
   sub perl_tarballs {
@@ -3428,7 +3471,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 2.60
+  version 2.98
   
   =head1 SYNOPSIS
   
@@ -3509,7 +3552,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   use warnings;
   package Capture::Tiny;
   # ABSTRACT: Capture STDOUT and STDERR from Perl, XS or external programs
-  our $VERSION = '0.36';
+  our $VERSION = '0.44';
   use Carp ();
   use Exporter ();
   use IO::Handle ();
@@ -3942,7 +3985,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head1 VERSION
   
-  version 0.36
+  version 0.44
   
   =head1 SYNOPSIS
   
@@ -4211,6 +4254,11 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   captures.  Other problems may occur in the child or parent, as well.
   Forking in a capture block is not recommended.
   
+  =head3 Dropping privileges during a capture
+  
+  If you drop privileges during a capture, temporary files created to
+  facilitate the capture may not be cleaned up afterwards.
+  
   =head2 No support for Perl 5.8.0
   
   It's just too buggy when it comes to layers and UTF-8.  Perl 5.8.1 or later
@@ -4359,7 +4407,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head1 CONTRIBUTORS
   
-  =for stopwords Dagfinn Ilmari Mannsåker David E. Wheeler fecundf
+  =for stopwords Dagfinn Ilmari Mannsåker David E. Wheeler fecundf Peter Rabbitson
   
   =over 4
   
@@ -4374,6 +4422,10 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   =item *
   
   fecundf <not.com+github@gmail.com>
+  
+  =item *
+  
+  Peter Rabbitson <ribasushi@cpan.org>
   
   =back
   
@@ -4498,7 +4550,7 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   use warnings;
   use Config;
   
-  our $VERSION = '2.000018';
+  our $VERSION = '2.000019';
   $VERSION = eval $VERSION;
   
   BEGIN {
@@ -4972,14 +5024,14 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   
   sub build_bourne_env_declaration {
     my ($class, $name, $args) = @_;
-    my $value = $class->_interpolate($args, '${%s}', qr/["\\\$!`]/, '\\%s');
+    my $value = $class->_interpolate($args, '${%s:-}', qr/["\\\$!`]/, '\\%s');
   
     if (!defined $value) {
       return qq{unset $name;\n};
     }
   
-    $value =~ s/(^|\G|$_path_sep)\$\{$name\}$_path_sep/$1\${$name}\${$name+$_path_sep}/g;
-    $value =~ s/$_path_sep\$\{$name\}$/\${$name+$_path_sep}\${$name}/;
+    $value =~ s/(^|\G|$_path_sep)\$\{$name:-\}$_path_sep/$1\${$name}\${$name:+$_path_sep}/g;
+    $value =~ s/$_path_sep\$\{$name:-\}$/\${$name:+$_path_sep\${$name}}/;
   
     qq{${name}="$value"; export ${name};\n}
   }
@@ -5915,7 +5967,7 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   
   IRC:
   
-      Join #local-lib on irc.perl.org.
+      Join #toolchain on irc.perl.org.
   
   =head1 AUTHOR
   
@@ -5985,15 +6037,17 @@ no strict 'refs';
 
 if ($] < 5.008) {
   *{"${class}::INC"} = sub {
-     if (my $fat = $_[0]{$_[1]}) {
-       return sub {
-         return 0 unless length $fat;
-         $fat =~ s/^([^\n]*\n?)//;
-         $_ = $1;
-         return 1;
-       };
-     }
-     return;
+    if (my $fat = $_[0]{$_[1]}) {
+      my $pos = 0;
+      my $last = length $fat;
+      return (sub {
+        return 0 if $pos == $last;
+        my $next = (1 + index $fat, "\n", $pos) || $last;
+        $_ .= substr $fat, $pos, $next - $pos;
+        $pos = $next;
+        return 1;
+      });
+    }
   };
 }
 

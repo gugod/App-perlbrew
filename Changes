@@ -1,3 +1,9 @@
+0.77: # 2016-11-12T06:42:45+0100
+- Thanks to our contributors: Dennis Kaarsemaker, Roel Harbers
+- The "uninstall" command now requires confirmation.
+- Fix bug with csh when PATH entries contain spaces
+- Accommodate git commit abbrivation changes on perl5.git.perl.org. See GH #524 https://github.com/gugod/App-perlbrew/pull/524
+
 0.76: # 2016-06-21T23:02:44+0200
 - Start supporting cperl installation.
 - cperl releases are sourced from: https://github.com/perl11/cperl/releases
