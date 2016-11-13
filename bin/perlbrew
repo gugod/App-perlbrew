@@ -482,7 +482,7 @@ Usage: perlbrew install-cpanm
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 For more rationale about the existence of this command, read
-<http://www.perlbrew.pl/Perlbrew-and-Friends.html>
+<http://perlbrew.pl/Perlbrew-and-Friends.html>
 
 =head1 COMMAND: INSTALL-PATCHPERL
 
@@ -493,7 +493,7 @@ is automatically invoked if your perlbrew installation is done with the
 installer, but not with cpan.
 
 For more rationale about the existence of this command, read
-<http://www.perlbrew.pl/Perlbrew-and-Friends.html>
+<http://perlbrew.pl/Perlbrew-and-Friends.html>
 
 =head1 COMMAND: SELF-UPGRADE
 
