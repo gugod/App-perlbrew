@@ -1,3 +1,7 @@
+0.78: # 2016-11-20T22:59:55+0100
+- Thanks to our contributors: Manuel Streuhofer, Sergey Aleynikov
+- More fixes to accomodate changes on perl5.git.perl.org
+
 0.77: # 2016-11-12T06:42:45+0100
 - Thanks to our contributors: Dennis Kaarsemaker, Roel Harbers
 - The "uninstall" command now requires confirmation.
