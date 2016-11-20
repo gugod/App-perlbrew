@@ -2240,7 +2240,7 @@ sub run_command_alias {
         exit(-1);
     }
 
-    my $path_name  = joinpath($self->root, "perls", $name);
+    my $path_name  = joinpath($self->root, "perls", $name) if $name;
     my $path_alias = joinpath($self->root, "perls", $alias) if $alias;
 
     if ($alias && -e $path_alias && !-l $path_alias) {
