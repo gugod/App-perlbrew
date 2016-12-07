@@ -517,6 +517,8 @@ sub find_similar_commands {
     my ( $self, $command ) = @_;
     my $SIMILAR_DISTANCE = 6;
 
+    $command =~ s/_/-/g;
+
     my @commands = sort {
         $a->[1] <=> $b->[1]
     } map {
