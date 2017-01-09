@@ -681,7 +681,8 @@ sub run_command_available {
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
-    while(  my ( $available, $url ) = each %$perls ) {
+    for my $available ( reverse sort keys %$perls ){
+        my $url = $perls->{ $available };
         $is_installed = 0;
         for my $installed (@installed) {
             my $name = $installed->{name};
@@ -692,18 +693,19 @@ sub run_command_available {
             }
         }
 
-        print sprintf( "\n%1s %s\tURL: <%s>",
+        print sprintf( "\n%1s %12s      URL: <%s>",
                        $is_installed ? 'i' : '',
                        $available,
                        $url );
     }
 
     print "\n";
+
 }
 
 sub available_perls {
     my $perls = available_perls_with_urls( @_ );
-    return keys %$perls;
+    return reverse sort keys %$perls;
 }
 
 
