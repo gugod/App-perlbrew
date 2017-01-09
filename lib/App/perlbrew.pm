@@ -575,7 +575,7 @@ sub run_command_version {
     my ( $self ) = @_;
     my $package = ref $self;
     my $version = $self->VERSION;
-    print "$0  - $package/$version\n";
+    print "$0 - $package/$version\n";
 }
 
 sub run_command_help {
