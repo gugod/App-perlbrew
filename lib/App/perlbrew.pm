@@ -188,7 +188,7 @@ sub files_are_the_same {
         my ($url, $path) = @_;
 
         if (-e $path) {
-            die "ERROR: The download target < $path > already exists.\n";
+            die "[ERROR] The download target < $path > already exists.\n";
         }
 
         my $partial = 0;
@@ -219,19 +219,19 @@ sub files_are_the_same {
         my ($program, $command) = http_user_agent_command( get => { url =>  $url } );
 
         open my $fh, '-|', $command
-            or die "open() for '$command': $!";
+            or die "[ERROR] open() failed for '$command': $!";
 
         local $/;
         my $body = <$fh>;
         close $fh;
 
-        die 'Page not retrieved; HTTP error code 400 or above.'
+        die '[ERROR] Page not retrieved; HTTP error code 400 or above.'
             if $program eq 'curl' # Exit code is 22 on 404s etc
             and $? >> 8 == 22; # exit code is packed into $?; see perlvar
-        die 'Page not retrieved: fetch failed.'
+        die '[ERROR] Page not retrieved: fetch failed.'
             if $program eq 'fetch' # Exit code is not 0 on error
             and $?;
-        die 'Server issued an error response.'
+        die '[ERROR] Server issued an error response.'
             if $program eq 'wget' # Exit code is 8 on 404s etc
             and $? >> 8 == 8;
 
@@ -560,11 +560,11 @@ sub run_command {
 
         if(@commands > 1) {
             @commands = map { '    ' . $_ } @commands;
-            die "Unknown command: `$command`. Did you mean one of the following?\n" . join("\n", @commands) . "\n";
+            die "[ERROR] Unknown command: `$command`. Did you mean one of the following?\n" . join("\n", @commands) . "\n";
         } elsif(@commands == 1) {
-            die "Unknown command: `$command`. Did you mean `$commands[0]`?\n";
+            die "[ERROR] Unknown command: `$command`. Did you mean `$commands[0]`?\n";
         } else {
-            die "Unknown command: `$command`. Typo?\n";
+            die "[ERROR] Unknown command: `$command`. Typo?\n";
         }
     }
 
@@ -703,7 +703,7 @@ sub available_perls {
                             : "http://www.cpan.org/src/README.html" ;
     my $html = http_get( $url, undef, undef );
     unless($html) {
-        die "\nERROR: Unable to retrieve the list of perls.\n\n";
+        die "\n[ERROR] Unable to retrieve the list of perls.\n\n";
     }
     for ( split "\n", $html ) {
         if ( $self->{all} ) {
@@ -725,7 +725,7 @@ sub available_perls {
             push @available_versions, "cperl-$1";
         }
     } else {
-        warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+        warn "\n[WARN] Unable to retrieve the list of cperl releases.\n\n";
     }
     return @available_versions;
 }
@@ -760,12 +760,12 @@ sub perl_release {
     my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
 
     unless ($html) {
-        die "ERROR: Failed to locate perl-${version} tarball.";
+        die "[ERROR] Failed to locate perl-${version} tarball.";
     }
 
     my ($dist_path, $dist_tarball) =
         $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
-    die "ERROR: Cannot find the tarball for perl-$version\n"
+    die "[ERROR] Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
     my $dist_tarball_url = "http://search.cpan.org${dist_path}";
     return ($dist_tarball, $dist_tarball_url);
@@ -783,7 +783,7 @@ sub cperl_release {
     #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
     # };
 
-    my $dist_tarball_url = $url{$version}or die "ERROR: Cannot find the tarball for cperl-$version\n";
+    my $dist_tarball_url = $url{$version}or die "[ERROR] Cannot find the tarball for cperl-$version\n";
     my $dist_tarball = "cperl-${version}.tar.gz";
     return ($dist_tarball, $dist_tarball_url);
 }
@@ -835,12 +835,12 @@ sub release_detail_perl_remote {
     my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
 
     unless ($html) {
-        die "ERROR: Failed to locate perl-${version} tarball.";
+        die "[ERROR] Failed to locate perl-${version} tarball.";
     }
 
     my ($dist_path, $dist_tarball) =
         $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
-    die "ERROR: Cannot find the tarball for perl-$version\n"
+    die "[ERROR] Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
     my $dist_tarball_url = "http://search.cpan.org${dist_path}";
 
@@ -905,7 +905,7 @@ sub release_detail {
     ($error) = $self->$m_remote($dist, $rd) if $error;
 
     if ($error) {
-        die "ERROR: Fail to get the tarball URL for dist: $dist\n";
+        die "[ERROR] Fail to get the tarball URL for dist: $dist\n";
     }
 
     return $rd;
@@ -939,7 +939,7 @@ sub run_command_init {
         my ($file_name, $method) = @$_;
         my $path = joinpath($etc_dir, $file_name);
         if (! -f $path) {
-            open($fh, ">", $path) or die "Fail to create $path. Please check the permission of $etc_dir and try `perlbrew init` again.";
+            open($fh, ">", $path) or die "[ERROR] Fail to create $path. Please check the permission of $etc_dir and try `perlbrew init` again.";
             print $fh $self->$method;
             close $fh;
         }
@@ -1086,7 +1086,7 @@ sub do_install_url {
     else {
         print "Fetching $dist as $dist_tarball_path\n";
         my $error = http_download($dist_tarball_url, $dist_tarball_path);
-        die "ERROR: Failed to download $dist_tarball_url\n" if $error;
+        die "[ERROR] Failed to download $dist_tarball_url\n" if $error;
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -1121,7 +1121,7 @@ sub do_extract_tarball {
     }
 
     my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball";
-    die "Failed to extract $dist_tarball" if system($extract_command);
+    die "[ERROR] Failed to extract $dist_tarball" if system($extract_command);
     return $extracted_dir;
 }
 
@@ -1142,7 +1142,7 @@ sub do_install_blead {
     my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
 
     if ($error) {
-        die "\nERROR: Failed to download perl-blead tarball.\n\n";
+        die "\n[ERROR] Failed to download perl-blead tarball.\n\n";
     }
 
     # Returns the wrong extracted dir for blead
@@ -1150,9 +1150,9 @@ sub do_install_blead {
 
     my $build_dir = joinpath($self->root, "build");
     local *DIRH;
-    opendir DIRH, $build_dir or die "Couldn't open ${build_dir}: $!";
+    opendir DIRH, $build_dir or die "[ERROR] Couldn't open ${build_dir}: $!";
     my @contents = readdir DIRH;
-    closedir DIRH or warn "Couldn't close ${build_dir}: $!";
+    closedir DIRH or warn "[WARN] Couldn't close ${build_dir}: $!";
     my @candidates = grep { m/^perl-blead-[0-9a-f]{4,40}$/ } @contents;
     # Use a Schwartzian Transform in case there are lots of dirs that
     # look like "perl-$SHA1", which is what's inside blead.tar.gz,
@@ -1177,7 +1177,7 @@ sub resolve_stable_version {
             || $latest_minor < $minor;
     }
 
-    die "Can't determine latest stable Perl release\n"
+    die "[ERROR] Can't determine latest stable Perl release\n"
         if !defined $latest_ver;
 
     return $latest_ver;
@@ -1189,7 +1189,7 @@ sub do_install_release {
     my $rd = $self->release_detail($dist);
     my $dist_type = $rd->{type};
 
-    die "\"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
+    die "[ERROR] \"$dist\" does not look like a perl distribution name. " unless $dist_type && $dist_version =~ /^\d\./;
 
     my $dist_tarball = $rd->{tarball_name};
     my $dist_tarball_url = $rd->{tarball_url};
@@ -1229,7 +1229,7 @@ sub run_command_install {
 
         my $installation_name = ($self->{as} || $dist) . $self->{variation} . $self->{append};
         if (not $self->{force} and $self->is_installed( $installation_name )) {
-            die "\nABORT: $installation_name is already installed.\n\n";
+            die "\n[ABORT] $installation_name is already installed.\n\n";
         }
 
         if ( $dist_type eq 'perl' && $dist_version eq 'blead') {
@@ -1251,7 +1251,7 @@ sub run_command_install {
         $self->do_install_url($dist);
     }
     else {
-        die "Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` " .
+        die "[ERROR] Unknown installation target \"$dist\", abort.\nPlease see `perlbrew help` " .
             "for the instruction on using the install command.\n\n";
     }
 
@@ -1260,7 +1260,7 @@ sub run_command_install {
             $self->switch_to($installation_name)
         }
         else {
-            warn "can't switch, unable to infer final destination name.\n\n";
+            warn "[WARN] can't switch, unable to infer final destination name.\n\n";
         }
     }
     return;
@@ -1279,10 +1279,10 @@ sub check_and_calculate_variations {
 
     # check the validity of the varitions given via 'both'
     for my $both (@both) {
-        $flavor{$both} or die "$both is not a supported flavor.\n\n";
-        $self->{$both} and die "options --both $both and --$both can not be used together";
+        $flavor{$both} or die "[ERROR] $both is not a supported flavor.\n\n";
+        $self->{$both} and die "[ERROR] options --both $both and --$both can not be used together";
         if (my $implied_by = $flavor{$both}{implied_by}) {
-            $self->{$implied_by} and die "options --both $both and --$implied_by can not be used together";
+            $self->{$implied_by} and die "[ERROR] options --both $both and --$implied_by can not be used together";
         }
     }
 
@@ -1323,9 +1323,9 @@ sub run_command_install_multiple {
         exit(-1);
     }
 
-    die "--switch can not be used with command install-multiple.\n\n"
+    die "[ERROR] --switch can not be used with command install-multiple.\n\n"
         if $self->{switch};
-    die "--as can not be used when more than one distribution is given.\n\n"
+    die "[ERROR] --as can not be used when more than one distribution is given.\n\n"
         if $self->{as} and @dists > 1;
 
     my @variations = $self->check_and_calculate_variations;
@@ -1383,7 +1383,7 @@ sub run_command_download {
         print "Download $dist_tarball_url to $dist_tarball_path\n" unless $self->{quiet};
         my $error = http_download($dist_tarball_url, $dist_tarball_path);
         if ($error) {
-            die "ERROR: Failed to download $dist_tarball_url\n";
+            die "\n[ERROR] Failed to download $dist_tarball_url\n";
         }
     }
 }
@@ -1451,7 +1451,7 @@ sub do_install_archive {
     }
 
     unless ($dist_version && $installation_name) {
-        die "Unable to determine perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2\n";
+        die "[ERROR] Unable to determine perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2\n";
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -1480,7 +1480,7 @@ sub do_install_this {
     $self->{installation_name} = $installation_name;
 
     if ( $sitecustomize ) {
-        die "Could not read sitecustomize file '$sitecustomize'\n"
+        die "[ERROR] Could not read sitecustomize file '$sitecustomize'\n"
             unless -r $sitecustomize;
         push @d_options, "usesitecustomize";
     }
@@ -1598,9 +1598,9 @@ INSTALL
             mkpath($sitelib) unless -d $sitelib;
             my $target = joinpath($sitelib, "sitecustomize.pl");
             open my $dst, ">", $target
-                or die "Could not open '$target' for writing: $!\n";
+                or die "[ERROR] Could not open '$target' for writing: $!\n";
             open my $src, "<", $sitecustomize
-                or die "Could not open '$sitecustomize' for reading: $!\n";
+                or die "[ERROR] Could not open '$sitecustomize' for reading: $!\n";
             print {$dst} do { local $/; <$src> };
         }
 
@@ -1609,7 +1609,7 @@ INSTALL
 
         if ( -e $version_file ) {
             unlink($version_file)
-              or die "Could not unlink $version_file file: $!\n";
+                or die "[ERROR] Could not unlink $version_file file: $!\n";
         }
 
         print "$installation_name is successfully installed.\n";
@@ -1637,7 +1637,7 @@ sub do_install_program_from_url {
         }
     }
 
-    my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
+    my $body = http_get($url) or die "\n[ERROR] Failed to retrieve $program_name executable.\n\n";
 
     unless ($body =~ m{\A#!/}s) {
         my $x = joinpath($self->env('TMPDIR') || "/tmp", "${program_name}.downloaded.$$");
@@ -1658,7 +1658,7 @@ sub do_install_program_from_url {
     }
 
     mkpath("@{[ $self->root ]}/bin") unless -d "@{[ $self->root ]}/bin";
-    open my $OUT, '>', $out or die "cannot open file($out): $!";
+    open my $OUT, '>', $out or die "[ERROR] cannot open file < $out >: $!";
     print $OUT $body;
     close $OUT;
     chmod 0755, $out;
@@ -1767,7 +1767,7 @@ sub is_installed {
 sub assert_known_installation {
     my ($self, $name) = @_;
     return 1 if $self->is_installed($name);
-    die "ERROR: The installation \"$name\" is unknown\n\n";
+    die "[ERROR] The installation \"$name\" is unknown\n\n";
 }
 
 # Return a hash of PERLBREW_* variables
@@ -1779,11 +1779,11 @@ sub perlbrew_env {
         ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
         unless ($perl_name) {
-            die "\nERROR: The installation \"$name\" is unknown.\n\n";
+            die "\n[ERROR] The installation \"$name\" is unknown.\n\n";
         }
 
         unless (!$lib_name || grep { $_->{lib_name} eq $lib_name } $self->local_libs($perl_name)) {
-            die "\nERROR: The lib name \"$lib_name\" is unknown.\n\n";
+            die "\n[ERROR] The lib name \"$lib_name\" is unknown.\n\n";
         }
     }
 
@@ -1961,10 +1961,10 @@ sub run_command_switch {
 sub switch_to {
     my ( $self, $dist, $alias ) = @_;
 
-    die "Cannot use for alias something that starts with 'perl-'\n"
+    die "[ERROR] Cannot use for alias something that starts with 'perl-'\n"
       if $alias && $alias =~ /^perl-/;
 
-    die "${dist} is not installed\n" unless -d joinpath($self->root, "perls", $dist);
+    die "[ERROR] ${dist} is not installed\n" unless -d joinpath($self->root, "perls", $dist);
 
     if ($self->env("PERLBREW_BASHRC_VERSION")) {
         local $ENV{PERLBREW_PERL} = $dist;
@@ -2080,13 +2080,13 @@ sub run_command_self_upgrade {
 
     require FindBin;
     unless(-w $FindBin::Bin) {
-        die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
+        die "[ERROR] Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
 
     http_get('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
         my ( $body ) = @_;
 
-        open my $fh, '>', $TMP_PERLBREW or die "Unable to write perlbrew: $!";
+        open my $fh, '>', $TMP_PERLBREW or die "[ERROR] Unable to write perlbrew: $!";
         print $fh $body;
         close $fh;
     });
@@ -2097,7 +2097,7 @@ sub run_command_self_upgrade {
     if($new_version =~ /App::perlbrew\/(\d+\.\d+)$/) {
         $new_version = $1;
     } else {
-        die "Unable to detect version of new perlbrew!\n";
+        die "[ERROR] Unable to detect version of new perlbrew!\n";
     }
     if($new_version <= $VERSION) {
         print "Your perlbrew is up-to-date.\n";
@@ -2119,7 +2119,7 @@ sub run_command_uninstall {
 
     my ($to_delete) = grep { $_->{name} eq $target } @installed;
 
-    die "'$target' is not installed\n" unless $to_delete;
+    die "[ERROR] '$target' is not installed\n" unless $to_delete;
 
     my @dir_to_delete;
     for (@{$to_delete->{libs}}) {
@@ -2246,14 +2246,14 @@ sub run_command_alias {
     my $path_alias = joinpath($self->root, "perls", $alias) if $alias;
 
     if ($alias && -e $path_alias && !-l $path_alias) {
-        die "\nABORT: The installation name `$alias` is not an alias, cannot override.\n\n";
+        die "\n[ABORT] The installation name `$alias` is not an alias, cannot override.\n\n";
     }
 
     if ($cmd eq 'create') {
         $self->assert_known_installation($name);
 
         if ( $self->is_installed($alias) && !$self->{force} ) {
-            die "\nABORT: The installation `${alias}` already exists. Cannot override.\n\n";
+            die "\n[ABORT] The installation `${alias}` already exists. Cannot override.\n\n";
         }
 
 
@@ -2264,7 +2264,7 @@ sub run_command_alias {
         $self->assert_known_installation($name);
 
         unless (-l $path_name) {
-            die "\nABORT: The installation name `$name` is not an alias, cannot remove.\n\n";
+            die "\n[ABORT] The installation name `$name` is not an alias, cannot remove.\n\n";
         }
 
         unlink($path_name);
@@ -2273,11 +2273,11 @@ sub run_command_alias {
         $self->assert_known_installation($name);
 
         unless (-l $path_name) {
-            die "\nABORT: The installation name `$name` is not an alias, cannot rename.\n\n";
+            die "\n[ABORT] The installation name `$name` is not an alias, cannot rename.\n\n";
         }
 
         if (-l $path_alias && !$self->{force}) {
-            die "\nABORT: The alias `$alias` already exists, cannot rename to it.\n\n";
+            die "\n[ABORT] The alias `$alias` already exists, cannot rename to it.\n\n";
         }
 
         rename($path_name, $path_alias);
@@ -2286,7 +2286,7 @@ sub run_command_alias {
         $self->run_command_help("alias");
     }
     else {
-        die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
+        die "\n[ERROR]  Unrecognized action: `${cmd}`.\n\n";
     }
 }
 
@@ -2322,7 +2322,7 @@ sub run_command_lib {
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
-    die "ERROR: No lib name\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
+    die "[ERROR] No lib name\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
@@ -2330,14 +2330,14 @@ sub run_command_lib_create {
 
     if (!$perl_name) {
         my ($perl_name, $lib_name) = split('@', $name);
-        die "ERROR: '$perl_name' is not installed yet, '$name' cannot be created.\n";
+        die "[ERROR] '$perl_name' is not installed yet, '$name' cannot be created.\n";
     }
 
     my $fullname = $perl_name . '@' . $lib_name;
     my $dir = joinpath($self->home,  "libs", $fullname);
 
     if (-d $dir) {
-        die "$fullname is already there.\n";
+        die "[ERROR] $fullname is already there.\n";
     }
 
     mkpath($dir);
@@ -2351,7 +2351,7 @@ sub run_command_lib_create {
 sub run_command_lib_delete {
     my ($self, $name) = @_;
 
-    die "ERROR: No lib to delete\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
+    die "[ERROR] No lib to delete\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
     $name =~ s/^/@/ unless $name =~ /@/;
 
@@ -2366,7 +2366,7 @@ sub run_command_lib_delete {
     if (-d $dir) {
 
         if ($fullname eq $current) {
-            die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
+            die "[ERROR] $fullname is currently being used in the current shell, it cannot be deleted.\n";
         }
 
         rmpath($dir);
@@ -2375,7 +2375,7 @@ sub run_command_lib_delete {
             unless $self->{quiet};
     }
     else {
-        die "ERROR: '$fullname' does not exist.\n";
+        die "[ERROR] '$fullname' does not exist.\n";
     }
 
     return;
@@ -2386,7 +2386,7 @@ sub run_command_lib_list {
     my $dir = joinpath($self->home,  "libs");
     return unless -d $dir;
 
-    opendir my $dh, $dir or die "open $dir failed: $!";
+    opendir my $dh, $dir or die "[ERROR] open $dir failed: $!";
     my @libs = grep { !/^\./ && /\@/ } readdir($dh);
 
     my $current = $self->current_env;
@@ -2470,7 +2470,7 @@ sub run_command_list_modules {
 
 sub resolve_installation_name {
     my ($self, $name) = @_;
-    die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
+    die '[ERROR] App::perlbrew->resolve_installation_name requires one argument.' unless $name;
 
     my ($perl_name, $lib_name) = split('@', $name);
     $perl_name = $name unless $lib_name;
@@ -2982,7 +2982,7 @@ sub append_log {
     my ($self, $message) = @_;
     my $log_handler;
     open($log_handler, '>>', $self->{log_file})
-        or die "Cannot open log file for appending: $!";
+        or die "[ERROR] Cannot open log file for appending: $!";
     print $log_handler "$message\n";
     close($log_handler);
 }
