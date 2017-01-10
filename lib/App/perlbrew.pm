@@ -701,6 +701,7 @@ sub run_command_available {
 
     print "\n";
 
+    return reverse sort keys %$perls;
 }
 
 sub available_perls {
