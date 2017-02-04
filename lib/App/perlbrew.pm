@@ -741,12 +741,10 @@ sub available_perls_with_urls {
     # links do downloads looks: /perl11/cperl/releases/download/cperl-5.24.0-RC3/cperl-5.24.0-RC3.tar.gz
     my $cperl_remote        = 'https://github.com';
     my $cperl_release_html  = $cperl_remote . '/perl11/cperl/releases';
-    my $cperl_download_base = $cperl_release_html . '/download/';
-    my $cperl_base_url = '/perl11/cperl/releases/download/cperl-';
     $html = http_get( $cperl_release_html );
     if ($html) {
-        while ( $html =~ m{href="$cperl_base_url(.+?)/cperl-\1.tar.gz"}xg ) {
-            $perls->{ "cperl-$1" } = $cperl_remote . '/' . $cperl_base_url . $1;
+        while ( $html =~ m{href="(/perl11/cperl/releases/download/cperl-(.+?)/cperl-\2.tar.gz)"}xg ) {
+            $perls->{ "cperl-$2" } = $cperl_remote . $1;
         }
     } else {
         warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
