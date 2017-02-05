@@ -18,6 +18,7 @@ requires
 
 test_requires
     'ExtUtils::MakeMaker'  => '6.86',
+    'File::Which'          => '1.21',
     'File::Temp'           => '0.2304',
     'IO::All'              => '0.51',
     'Path::Class'          => '0.33',
