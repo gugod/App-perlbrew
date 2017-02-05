@@ -10,9 +10,9 @@ require 'test_helpers.pl';
 use Test::More;
 use Test::Exception;
 
-for (qw(curl wget fetch)) {
-    $App::perlbrew::HTTP_USER_AGENT_PROGRAM = "curl";
-    is App::perlbrew::http_user_agent_program(), "curl";
+for my $prog (qw(curl wget fetch)) {
+    $App::perlbrew::HTTP_USER_AGENT_PROGRAM = $prog;
+    is App::perlbrew::http_user_agent_program(), $prog, "UA Program can be set to: $prog";
 }
 
 $App::perlbrew::HTTP_USER_AGENT_PROGRAM = "something-that-is-not-recognized";
