@@ -3242,7 +3242,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '2.98';
+  $CPAN::Perl::Releases::VERSION = '3.22';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -3432,6 +3432,20 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.22.3-RC4" => { id => 'SHAY' },
   "5.24.1-RC4" => { id => 'SHAY' },
   "5.25.6" => { id => 'ARC' },
+  "5.25.7" => { id => 'EXODIST' },
+  "5.25.8" => { id => 'XSAWYERX' },
+  "5.22.3-RC5" => { id => 'SHAY' },
+  "5.24.1-RC5" => { id => 'SHAY' },
+  "5.22.3" => { id => 'SHAY' },
+  "5.24.1" => { id => 'SHAY' },
+  "5.25.9" => { id => 'ABIGAIL' },
+  "5.25.10" => { id => 'RENEEB' },
+  "5.25.11" => { id => 'XSAWYERX' },
+  "5.25.12" => { id => 'XSAWYERX' },
+  "5.26.0-RC1" => { id => 'XSAWYERX' },
+  "5.26.0-RC2" => { id => 'XSAWYERX' },
+  "5.26.0" => { id => 'XSAWYERX' },
+  "5.27.0" => { id => 'XSAWYERX' },
   };
   
   sub perl_tarballs {
@@ -3499,7 +3513,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 2.98
+  version 3.22
   
   =head1 SYNOPSIS
   
@@ -3566,7 +3580,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2016 by Chris Williams.
+  This software is copyright (c) 2017 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
@@ -3580,7 +3594,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   use warnings;
   package Capture::Tiny;
   # ABSTRACT: Capture STDOUT and STDERR from Perl, XS or external programs
-  our $VERSION = '0.44';
+  our $VERSION = '0.46';
   use Carp ();
   use Exporter ();
   use IO::Handle ();
@@ -3658,7 +3672,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   #--------------------------------------------------------------------------#
   
   sub _relayer {
-    my ($fh, $layers) = @_;
+    my ($fh, $apply_layers) = @_;
     # _debug("# requested layers (@{$layers}) for @{[fileno $fh]}\n");
   
     # eliminate pseudo-layers
@@ -3668,7 +3682,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
         binmode( $fh, ":pop" );
     }
     # apply other layers
-    my @to_apply = @$layers;
+    my @to_apply = @$apply_layers;
     shift @to_apply; # eliminate initial :unix
     # _debug("# applying layers  (unix @to_apply) to @{[fileno $fh]}\n");
     binmode($fh, ":" . join(":",@to_apply));
@@ -4013,7 +4027,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head1 VERSION
   
-  version 0.44
+  version 0.46
   
   =head1 SYNOPSIS
   
@@ -4282,6 +4296,12 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   captures.  Other problems may occur in the child or parent, as well.
   Forking in a capture block is not recommended.
   
+  =head3 Using threads
+  
+  Filehandles are global.  Mixing up I/O and captures in different threads
+  without coordination is going to cause problems.  Besides, threads are
+  officially discouraged.
+  
   =head3 Dropping privileges during a capture
   
   If you drop privileges during a capture, temporary files created to
@@ -4435,7 +4455,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head1 CONTRIBUTORS
   
-  =for stopwords Dagfinn Ilmari Mannsåker David E. Wheeler fecundf Peter Rabbitson
+  =for stopwords Dagfinn Ilmari Mannsåker David E. Wheeler fecundf Graham Knop Peter Rabbitson
   
   =over 4
   
@@ -4450,6 +4470,10 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   =item *
   
   fecundf <not.com+github@gmail.com>
+  
+  =item *
+  
+  Graham Knop <haarg@haarg.org>
   
   =item *
   
@@ -4574,11 +4598,17 @@ LIB_CORE_ONLY
 $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL_LIB';
   package local::lib;
   use 5.006;
-  use strict;
-  use warnings;
-  use Config;
+  BEGIN {
+    if ($ENV{RELEASE_TESTING}) {
+      require strict;
+      strict->import;
+      require warnings;
+      warnings->import;
+    }
+  }
+  use Config ();
   
-  our $VERSION = '2.000019';
+  our $VERSION = '2.000023';
   $VERSION = eval $VERSION;
   
   BEGIN {
@@ -4588,6 +4618,11 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
     *_USE_FSPEC = ($^O eq 'MacOS' || $^O eq 'VMS' || $INC{'File/Spec.pm'})
       ? sub(){1} : sub(){0};
   }
+  my $_archname = $Config::Config{archname};
+  my $_version = $Config::Config{version};
+  my @_inc_version_list = reverse split / /, $Config::Config{inc_version_list};
+  my $_path_sep = $Config::Config{path_sep};
+  
   our $_DIR_JOIN = _WIN32 ? '\\' : '/';
   our $_DIR_SPLIT = (_WIN32 || $^O eq 'cygwin') ? qr{[\\/]}
                                                 : qr{/};
@@ -4597,27 +4632,50 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   } : qr{^/};
   our $_PERL;
   
-  sub _cwd {
-    my $drive = shift;
+  sub _perl {
     if (!$_PERL) {
-      ($_PERL) = $^X =~ /(.+)/; # $^X is internal how could it be tainted?!
+      # untaint and validate
+      ($_PERL, my $exe) = $^X =~ /((?:.*$_DIR_SPLIT)?(.+))/;
+      $_PERL = 'perl'
+        if $exe !~ /perl/;
       if (_is_abs($_PERL)) {
       }
-      elsif (-x $Config{perlpath}) {
-        $_PERL = $Config{perlpath};
+      elsif (-x $Config::Config{perlpath}) {
+        $_PERL = $Config::Config{perlpath};
+      }
+      elsif ($_PERL =~ $_DIR_SPLIT && -x $_PERL) {
+        $_PERL = _rel2abs($_PERL);
       }
       else {
         ($_PERL) =
           map { /(.*)/ }
           grep { -x $_ }
+          map { ($_, _WIN32 ? ("$_.exe") : ()) }
           map { join($_DIR_JOIN, $_, $_PERL) }
-          split /\Q$Config{path_sep}\E/, $ENV{PATH};
+          split /\Q$_path_sep\E/, $ENV{PATH};
       }
     }
+    $_PERL;
+  }
+  
+  sub _cwd {
+    if (my $cwd
+      = defined &Cwd::sys_cwd ? \&Cwd::sys_cwd
+      : defined &Cwd::cwd     ? \&Cwd::cwd
+      : undef
+    ) {
+      no warnings 'redefine';
+      *_cwd = $cwd;
+      goto &$cwd;
+    }
+    my $drive = shift;
+    return Win32::Cwd()
+      if _WIN32 && defined &Win32::Cwd && !$drive;
     local @ENV{qw(PATH IFS CDPATH ENV BASH_ENV)};
     my $cmd = $drive ? "eval { Cwd::getdcwd(q($drive)) }"
                      : 'getcwd';
-    my $cwd = `"$_PERL" -MCwd -le "print $cmd"`;
+    my $perl = _perl;
+    my $cwd = `"$perl" -MCwd -le "print $cmd"`;
     chomp $cwd;
     if (!length $cwd && $drive) {
       $cwd = $drive;
@@ -4654,7 +4712,7 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
       if _is_abs($dir);
   
     $base = _WIN32 && $dir =~ s/^([A-Za-z]:)// ? _cwd("$1")
-          : $base                              ? $base
+          : $base                              ? _rel2abs($base)
                                                : _cwd;
     return _catdir($base, $dir);
   }
@@ -4670,8 +4728,10 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   
   sub import {
     my ($class, @args) = @_;
-    push @args, @ARGV
-      if $0 eq '-';
+    if ($0 eq '-') {
+      push @args, @ARGV;
+      require Cwd;
+    }
   
     my @steps;
     my %opts;
@@ -4765,11 +4825,6 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   sub extra { $_[0]->{extra} ||= {} }
   sub quiet { $_[0]->{quiet} }
   
-  my $_archname = $Config{archname};
-  my $_version  = $Config{version};
-  my @_inc_version_list = reverse split / /, $Config{inc_version_list};
-  my $_path_sep = $Config{path_sep};
-  
   sub _as_list {
     my $list = shift;
     grep length, map {
@@ -4791,7 +4846,7 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
     [$_version, $_archname],
     [$_version],
     [$_archname],
-    (@_inc_version_list ? \@_inc_version_list : ()),
+    (map [$_], @_inc_version_list),
     [],
   );
   
@@ -5266,7 +5321,7 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   
   sub guess_shelltype {
     my $shellbin
-      = defined $ENV{SHELL}
+      = defined $ENV{SHELL} && length $ENV{SHELL}
         ? ($ENV{SHELL} =~ /([\w.]+)$/)[-1]
       : ( $^O eq 'MSWin32' && exists $ENV{'!EXITCODE'} )
         ? 'bash'
