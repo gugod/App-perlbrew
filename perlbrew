@@ -2501,9 +2501,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub run_command_list_modules {
       my ($self) = @_;
       my $class = ref($self) || __PACKAGE__;
+  
+      my $name = $self->current_env;
+      if (-l (my $path = joinpath($self->root, 'perls', $name))) {
+          require File::Basename;
+          $name = File::Basename::basename(readlink $path);
+      }
+  
       my $app = $class->new(
           qw(--quiet exec --with),
-          $self->current_env,
+          $name,
           'perl', '-MExtUtils::Installed', '-le',
           'BEGIN{@INC=grep {$_ ne q!.!} @INC}; print for ExtUtils::Installed->new->modules;'
       );
