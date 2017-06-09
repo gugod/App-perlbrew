@@ -13,6 +13,9 @@ else
    echo "!!! Fail to use ${wanted_perl_installation} for building. Please prepare it first."
 fi
 
+cd `dirname $0`/../
+cpanm --installdeps .
+
 cd `dirname $0`
 
 fatpack_path=`which fatpack`
