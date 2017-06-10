@@ -1,3 +1,7 @@
+
+use FindBin '$Bin';
+BEGIN { push @INC, $Bin; }
+
 use inc::Module::Install;
 
 license 'mit';
