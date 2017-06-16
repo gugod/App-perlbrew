@@ -18,6 +18,9 @@
     perlbrew install perl-5.8.1
     perlbrew install perl-5.19.9
 
+    # Install with thread support
+    perlbrew install -v perl-5.18.2 -Dusethreads
+
     # See what were installed
     perlbrew list
 
