@@ -7,8 +7,6 @@ use Cwd;
 
 chdir dirname($0);
 
-remove_tree("fatlib");
-
 my $modules = [ split /\s+/, <<MODULES ];
 local/lib.pm
 Capture/Tiny.pm
@@ -28,19 +26,3 @@ File::Find::find({
         /^.*\.pod\z/s && unlink;
     } }, 'fatlib');
 
-exit if exists $ENV{PERLBREW_PERLSTRIP} && !$ENV{PERLBREW_PERLSTRIP};
-
-if (my $strip = `which perlstrip`) {
-    chomp($strip);
-    my @files;
-    File::Find::find({
-        wanted => sub {
-            /^.*\.pm\z/s or return;
-            push @files, $File::Find::name;
-
-        } }, 'fatlib');
-
-    for (@files){
-        system($strip, "-s", $_);
-    }
-}
