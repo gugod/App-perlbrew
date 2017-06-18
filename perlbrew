@@ -754,17 +754,19 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           }
       }
   
-      # cperl releases: https://github.com/perl11/cperl/releases
-      # links do downloads looks: /perl11/cperl/releases/download/cperl-5.24.0-RC3/cperl-5.24.0-RC3.tar.gz
+      # cperl releases: https://github.com/perl11/cperl/tags
       my $cperl_remote        = 'https://github.com';
-      my $cperl_release_html  = $cperl_remote . '/perl11/cperl/releases';
-      $html = http_get( $cperl_release_html );
+      my $url_cperl_release_list  = $cperl_remote . '/perl11/cperl/tags';
+  
+      $html = http_get( $url_cperl_release_list );
       if ($html) {
-          while ( $html =~ m{href="(/perl11/cperl/releases/download/cperl-(.+?)/cperl-\2.tar.gz)"}xg ) {
+          while ( $html =~ m{href="(/perl11/cperl/archive/cperl-(5.+?)\.tar\.gz)"}xg ) {
               $perls->{ "cperl-$2" } = $cperl_remote . $1;
           }
       } else {
-          warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+          if ($self->{verbose}) {
+              warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+          }
       }
   
       return $perls;
@@ -900,6 +902,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           "cperl-5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
           "cperl-5.24.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.24.2.tar.gz",
           "cperl-5.25.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.25.2.tar.gz",
+          "cperl-5.26.0" => "https://github.com/perl11/cperl/archive/cperl-5.26.0.tar.gz",
+          "cperl-5.26.0-RC1" => "https://github.com/perl11/cperl/archive/cperl-5.26.0-RC1.tar.gz",
+          "cperl-5.27.0" => "https://github.com/perl11/cperl/archive/cperl-5.27.0.tar.gz",
       );
   
       my $error = 1;
@@ -914,9 +919,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub release_detail_cperl_remote {
       my ($self, $dist, $rd) = @_;
       $rd ||= {};
-      my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
-      my $expect_url = "https://github.com/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
-      my $html = http_get('https://github.com/perl11/cperl/releases');
+      my $expect_href = "/perl11/cperl/archive/${dist}.tar.gz";
+      my $expect_url = "https://github.com/perl11/cperl/archive/${dist}.tar.gz";
+      my $html = http_get('https://github.com/perl11/cperl/tags');
       my $error = 1;
       if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
           $rd->{tarball_name} = "${dist}.tar.gz";
