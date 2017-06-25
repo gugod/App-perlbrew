@@ -13,7 +13,7 @@ abstract 'App::perlbrew - Manage perl installations in your $HOME';
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires
-    'CPAN::Perl::Releases' => '2.60',
+    'CPAN::Perl::Releases' => '3.24',
     'Capture::Tiny'        => '0.36',
     'Devel::PatchPerl'     => '1.40',
     'Pod::Parser'          => '1.63',
