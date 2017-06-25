@@ -1,4 +1,5 @@
-
+0.79: # 2017-06-25T23:40:45+0200
+- deal with perl-5.26 change about @INC in Makefile.PL
 - "available" command now also shows the URLs
 
 0.78: # 2016-11-20T22:59:55+0100
