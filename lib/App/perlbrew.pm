@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.78";
+our $VERSION = "0.79";
 use Config;
 
 BEGIN {
@@ -517,6 +517,8 @@ sub find_similar_commands {
     my ( $self, $command ) = @_;
     my $SIMILAR_DISTANCE = 6;
 
+    $command =~ s/_/-/g;
+
     my @commands = sort {
         $a->[1] <=> $b->[1]
     } map {
@@ -675,11 +677,12 @@ sub _compgen {
 sub run_command_available {
     my ( $self, $dist, $opts ) = @_;
 
-    my @available = $self->available_perls(@_);
+    my $perls     = $self->available_perls_with_urls(@_);
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
-    for my $available (@available) {
+    for my $available ( reverse sort keys %$perls ){
+        my $url = $perls->{ $available };
         $is_installed = 0;
         for my $installed (@installed) {
             my $name = $installed->{name};
@@ -689,13 +692,28 @@ sub run_command_available {
                 last;
             }
         }
-        print $is_installed ? 'i ' : '  ', $available, "\n";
+
+        print sprintf( "\n%1s %12s      URL: <%s>",
+                       $is_installed ? 'i' : '',
+                       $available,
+                       $url );
     }
+
+    print "\n";
+
+    return reverse sort keys %$perls;
 }
 
 sub available_perls {
+    my $perls = available_perls_with_urls( @_ );
+    return  reverse sort keys %$perls;
+
+}
+
+
+sub available_perls_with_urls {
     my ( $self, $dist, $opts ) = @_;
-    my @available_versions;
+    my $perls = {};
 
     my $url = $self->{all}  ? "http://www.cpan.org/src/5.0/"
                             : "http://www.cpan.org/src/README.html" ;
@@ -704,28 +722,37 @@ sub available_perls {
         die "\nERROR: Unable to retrieve the list of perls.\n\n";
     }
     for ( split "\n", $html ) {
+        my ( $current_perl, $current_url );
         if ( $self->{all} ) {
-            push @available_versions, $1
-                if m|<a href="perl.*?\.tar\.gz">(.+?)</a>|;
+            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<a href="(perl.*?\.tar\.gz)">(.+?)</a>|;
         }
         else {
-            push @available_versions, $1
-                if m|<td><a href="http://www.cpan.org/src/.+?">(.+?)</a></td>|;
+            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<td><a href="(http://www.cpan.org/src/.+?)">(.+?)</a></td>|;
+        }
+
+        # if we have a $current_perl add it to the available hash of perls
+        if ( $current_perl ){
+            $current_perl =~ s/\.tar\.gz//;
+            $perls->{ $current_perl } = $current_url;
         }
     }
-    s/\.tar\.gz// for @available_versions;
 
-    # cperl releases: https://github.com/perl11/cperl/releases
-    # links do downloads looks: /perl11/cperl/releases/download/cperl-5.24.0-RC3/cperl-5.24.0-RC3.tar.gz
-    $html = http_get("https://github.com/perl11/cperl/releases");
+    # cperl releases: https://github.com/perl11/cperl/tags
+    my $cperl_remote        = 'https://github.com';
+    my $url_cperl_release_list  = $cperl_remote . '/perl11/cperl/tags';
+
+    $html = http_get( $url_cperl_release_list );
     if ($html) {
-        while ( $html =~ m{href="/perl11/cperl/releases/download/cperl-(.+?)/cperl-\1.tar.gz"}xg ) {
-            push @available_versions, "cperl-$1";
+        while ( $html =~ m{href="(/perl11/cperl/archive/cperl-(5.+?)\.tar\.gz)"}xg ) {
+            $perls->{ "cperl-$2" } = $cperl_remote . $1;
         }
     } else {
-        warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+        if ($self->{verbose}) {
+            warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
+        }
     }
-    return @available_versions;
+
+    return $perls;
 }
 
 sub perl_release {
@@ -856,27 +883,17 @@ sub release_detail_cperl_local {
         "cperl-5.22.3" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
         "cperl-5.22.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
         "cperl-5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
+        "cperl-5.24.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.24.2.tar.gz",
+        "cperl-5.25.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.25.2.tar.gz",
+        "cperl-5.26.0" => "https://github.com/perl11/cperl/archive/cperl-5.26.0.tar.gz",
+        "cperl-5.26.0-RC1" => "https://github.com/perl11/cperl/archive/cperl-5.26.0-RC1.tar.gz",
+        "cperl-5.27.0" => "https://github.com/perl11/cperl/archive/cperl-5.27.0.tar.gz",
     );
 
     my $error = 1;
     if ( my $u = $url{$dist} ) {
         $rd->{tarball_name} = "${dist}.tar.gz";
         $rd->{tarball_url} = $u;
-        $error = 0;
-    }
-    return ($error, $rd);
-}
-
-sub release_detail_cperl_remote {
-    my ($self, $dist, $rd) = @_;
-    $rd ||= {};
-    my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
-    my $expect_url = "https://github.com/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
-    my $html = http_get('https://github.com/perl11/cperl/releases');
-    my $error = 1;
-    if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
-        $rd->{tarball_name} = "${dist}.tar.gz";
-        $rd->{tarball_url}  = $expect_url;
         $error = 0;
     }
     return ($error, $rd);
@@ -2457,9 +2474,16 @@ sub run_command_upgrade_perl {
 sub run_command_list_modules {
     my ($self) = @_;
     my $class = ref($self) || __PACKAGE__;
+
+    my $name = $self->current_env;
+    if (-l (my $path = joinpath($self->root, 'perls', $name))) {
+        require File::Basename;
+        $name = File::Basename::basename(readlink $path);
+    }
+
     my $app = $class->new(
         qw(--quiet exec --with),
-        $self->current_env,
+        $name,
         'perl', '-MExtUtils::Installed', '-le',
         'BEGIN{@INC=grep {$_ ne q!.!} @INC}; print for ExtUtils::Installed->new->modules;'
     );

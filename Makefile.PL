@@ -1,3 +1,7 @@
+
+use FindBin '$Bin';
+BEGIN { push @INC, $Bin; }
+
 use inc::Module::Install;
 
 license 'mit';
@@ -9,7 +13,7 @@ abstract 'App::perlbrew - Manage perl installations in your $HOME';
 repository 'git://github.com/gugod/App-perlbrew.git';
 
 requires
-    'CPAN::Perl::Releases' => '2.60',
+    'CPAN::Perl::Releases' => '3.24',
     'Capture::Tiny'        => '0.36',
     'Devel::PatchPerl'     => '1.40',
     'Pod::Parser'          => '1.63',
@@ -18,6 +22,7 @@ requires
 
 test_requires
     'ExtUtils::MakeMaker'  => '6.86',
+    'File::Which'          => '1.21',
     'File::Temp'           => '0.2304',
     'IO::All'              => '0.51',
     'Path::Class'          => '0.33',
