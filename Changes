@@ -1,3 +1,6 @@
+0.80: # 2017-06-30T07:40:45+0200
+- Fix version in META.yml in CPAN distribution. See: https://rt.cpan.org/Public/Bug/Display.html?id=122279
+
 0.79: # 2017-06-25T23:40:45+0200
 - deal with perl-5.26 change about @INC in Makefile.PL
 - "available" command now also shows the URLs
