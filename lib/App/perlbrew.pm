@@ -1118,12 +1118,7 @@ sub do_extract_tarball {
     $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2)$}{$1};
 
     # Note that this is incorrect for blead.
-    my $extracted_dir = "@{[ $self->root ]}/build/$dist_tarball_basename";
-
-    # cperl tarball contains a dir name like: cperl-cperl-5.22.1
-    if ($dist_tarball_basename =~ /^cperl-/) {
-        $extracted_dir = "@{[ $self->root ]}/build/${dist_tarball_basename}";
-    }
+    my $extracted_dir = joinpath($self->root, "build", $dist_tarball_basename);
 
     # Was broken on Solaris, where GNU tar is probably
     # installed as 'gtar' - RT #61042
