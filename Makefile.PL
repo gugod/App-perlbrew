@@ -32,8 +32,7 @@ test_requires
     'Test::NoWarnings'     => '1.04',
     'Test::Output'         => '1.03',
     'Test::Simple'         => '1.001002',
-    'Test::Spec'           => '0.47',
-    'Test::Spec'           => '0.51';
+    'Test::Spec'           => '0.47';
 
 install_script 'bin/perlbrew';
 
