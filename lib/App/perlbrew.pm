@@ -403,6 +403,11 @@ sub current_lib {
     return $self->{current_lib} || $self->env('PERLBREW_LIB')  || '';
 }
 
+sub current_shell_is_bashish {
+    my ( $self ) = @_;
+    return $self->current_shell =~ /(ba|z)?sh/;
+}
+
 sub current_shell {
     my ($self, $x) = @_;
     $self->{current_shell} = $x if $x;
@@ -661,6 +666,14 @@ sub run_command_compgen {
             # TODO
         }
     }
+}
+
+sub _firstrcfile {
+    my ( $self ) = @_;
+    foreach my $path (@_) {
+        return $path if -f joinpath($self->env('HOME'), $path);
+    }
+    return;
 }
 
 sub _compgen {
@@ -931,7 +944,7 @@ sub run_command_init {
     my @args = @_;
 
     if (@args && $args[0] eq '-') {
-        if ($self->current_shell =~ /(ba|z)?sh/) {
+        if ($self->current_shell_is_bashish) {
             $self->run_command_init_in_bash;
         }
         exit 0;
@@ -969,51 +982,65 @@ sub run_command_init {
         }
     }
 
-    my ( $shrc, $yourshrc );
-    if ( $self->current_shell =~ m/(t?csh)/ ) {
-        $shrc     = 'cshrc';
-        $yourshrc = $1 . "rc";
-    }
-    elsif ($self->current_shell =~ m/zsh\d?$/) {
-        $shrc = "bashrc";
-        $yourshrc = 'zshenv';
-    }
-    elsif( $self->current_shell eq 'fish' ) {
-        $shrc = "perlbrew.fish";
-        $yourshrc = 'config/fish/config.fish';
-    }
-    else {
-        $shrc = "bashrc";
-        $yourshrc = "bash_profile";
-    }
+    my $root_dir = $self->path_with_tilde($self->root) . "/etc/";
+    # Skip this if we are running in a shell that already 'source's perlbrew.
+    # This is true during a self-install/self-init.
+    # Ref. https://github.com/gugod/App-perlbrew/issues/525
+    if ( $ENV{PERLBREW_SHELLRC_VERSION} ) {
+        print("\nperlbrew root ($root_dir) is initialized.\n");
+    } else {
+        my $shell = $self->current_shell;
+        my ( $code, $yourshrc );
+        if ( $shell =~ m/(t?csh)/ ) {
+            $code = "source $root_dir/etc/cshrc";
+            $yourshrc = $1 . "rc";
+        }
+        elsif ( $shell =~ m/zsh\d?$/ ) {
+            $code = "source $root_dir/etc/bashrc";
+            $yourshrc = $self->_firstrcfile(qw(
+                zshenv
+                .bash_profile
+                .bash_login
+                .profile
+            )) || "zshenv";
+        }
+        elsif( $shell =~ m/fish/ ) {
+            $code = ". $root_dir/etc/perlbrew.fish";
+            $yourshrc = 'config/fish/config.fish';
+        }
+        else {
+            $code = "source $root_dir/etc/bashrc";
+            $yourshrc = $self->_firstrcfile(qw(
+                .bash_profile
+                .bash_login
+                .profile
+            )) || ".bash_profile"; 
+        }
 
-    my $root_dir = $self->path_with_tilde($self->root);
-    my $pb_home_dir = $self->path_with_tilde($self->home);
+        if ($self->home ne joinpath($self->env('HOME'), ".perlbrew")) {
+            my $pb_home_dir = $self->path_with_tilde($self->home);
+            if ( $shell =~ m/fish/ ) {
+                $code = "    set -x PERLBREW_HOME $pb_home_dir\n$code";
+            } else {
+                $code = "    export PERLBREW_HOME=$pb_home_dir\n$code";
+            }
+        }
 
-    my $code = qq(    source $root_dir/etc/${shrc});
-    if ($self->home ne joinpath($self->env('HOME'), ".perlbrew")) {
-        $code = "    export PERLBREW_HOME=$pb_home_dir\n" . $code;
-    }
-
-    if ( $self->env('SHELL') =~ m/fish/ ) {
-        $code =~ s/source/./;
-        $code =~ s/export (\S+)=(\S+)/set -x $1 $2/;
-    }
-
-    print <<INSTRUCTION;
+        print <<INSTRUCTION;
 
 perlbrew root ($root_dir) is initialized.
 
 Append the following piece of code to the end of your ~/.${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
-$code
+    $code
 
 Simply run `perlbrew` for usage details.
 
 Happy brewing!
 
 INSTRUCTION
+    }
 
 }
 
@@ -1976,7 +2003,7 @@ sub switch_to {
 
     die "${dist} is not installed\n" unless -d joinpath($self->root, "perls", $dist);
 
-    if ($self->env("PERLBREW_BASHRC_VERSION")) {
+    if ($self->env("PERLBREW_SHELLRC_VERSION") && $self->current_shell_is_bashish) {
         local $ENV{PERLBREW_PERL} = $dist;
         my $HOME = $self->env('HOME');
         my $pb_home = $self->home;
@@ -2546,7 +2573,7 @@ sub run_command_info {
 }
 
 sub BASHRC_CONTENT() {
-    return "export PERLBREW_BASHRC_VERSION=$VERSION\n" .
+    return "export PERLBREW_SHELLRC_VERSION=$VERSION\n" .
            (exists $ENV{PERLBREW_ROOT} ? "export PERLBREW_ROOT=$PERLBREW_ROOT\n" : "") . "\n" . <<'RC';
 
 __perlbrew_reinit() {
@@ -2694,7 +2721,7 @@ COMPLETION
 }
 
 sub PERLBREW_FISH_CONTENT {
-    return "set -x PERLBREW_FISH_VERSION $VERSION\n" . <<'END';
+    return "set -x PERLBREW_SHELLRC_VERSION $VERSION\n" . <<'END';
 
 function __perlbrew_reinit
     if not test -d "$PERLBREW_HOME"
@@ -2969,7 +2996,7 @@ SETPATH
 }
 
 sub CSHRC_CONTENT {
-    return "setenv PERLBREW_CSHRC_VERSION $VERSION\n\n" . <<'CSHRC';
+    return "setenv PERLBREW_SHELLRC_VERSION $VERSION\n\n" . <<'CSHRC';
 
 if ( $?PERLBREW_HOME == 0 ) then
     setenv PERLBREW_HOME "$HOME/.perlbrew"
