@@ -22,19 +22,17 @@ requires
 
 test_requires
     'ExtUtils::MakeMaker'  => '6.86',
-    'File::Which'          => '1.21',
     'File::Temp'           => '0.2304',
+    'File::Which'          => '1.21',
     'IO::All'              => '0.51',
     'Path::Class'          => '0.33',
+    'Pod::Markdown'        => '2.002',
     'Test::Exception'      => '0.32',
     'Test::More'           => '1.001002',
     'Test::NoWarnings'     => '1.04',
     'Test::Output'         => '1.03',
     'Test::Simple'         => '1.001002',
     'Test::Spec'           => '0.47';
-
-author_requires
-    'Pod::Markdown'        => '2.002';
 
 install_script 'bin/perlbrew';
 
