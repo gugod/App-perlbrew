@@ -982,7 +982,7 @@ sub run_command_init {
         }
     }
 
-    my $root_dir = $self->path_with_tilde($self->root) . "/etc/";
+    my $root_dir = $self->path_with_tilde($self->root);
     # Skip this if we are running in a shell that already 'source's perlbrew.
     # This is true during a self-install/self-init.
     # Ref. https://github.com/gugod/App-perlbrew/issues/525
@@ -1020,9 +1020,9 @@ sub run_command_init {
         if ($self->home ne joinpath($self->env('HOME'), ".perlbrew")) {
             my $pb_home_dir = $self->path_with_tilde($self->home);
             if ( $shell =~ m/fish/ ) {
-                $code = "    set -x PERLBREW_HOME $pb_home_dir\n$code";
+                $code = "set -x PERLBREW_HOME $pb_home_dir\n    $code";
             } else {
-                $code = "    export PERLBREW_HOME=$pb_home_dir\n$code";
+                $code = "export PERLBREW_HOME=$pb_home_dir\n    $code";
             }
         }
 
