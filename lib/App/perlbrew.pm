@@ -1014,7 +1014,7 @@ sub run_command_init {
                 .bash_profile
                 .bash_login
                 .profile
-            )) || ".bash_profile"; 
+            )) || ".bash_profile";
         }
 
         if ($self->home ne joinpath($self->env('HOME'), ".perlbrew")) {
@@ -1142,7 +1142,7 @@ sub do_extract_tarball {
 
     # Assuming the dir extracted from the tarball is named after the tarball.
     my $dist_tarball_basename = $dist_tarball;
-    $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2)$}{$1};
+    $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2|xz)$}{$1};
 
     # Note that this is incorrect for blead.
     my $extracted_dir = joinpath($self->root, "build", $dist_tarball_basename);
@@ -1151,7 +1151,8 @@ sub do_extract_tarball {
     # installed as 'gtar' - RT #61042
     my $tarx =
         ($^O eq 'solaris' ? 'gtar ' : 'tar ') .
-        ( $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
+        ( $dist_tarball =~ m/xz$/  ? 'xJf' :
+          $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
 
     if (-d $extracted_dir) {
         rmpath($extracted_dir);
@@ -1481,14 +1482,14 @@ sub do_install_archive {
     my $dist_version;
     my $installation_name;
 
-    if (File::Basename::basename($dist_tarball_path) =~ m{(c?perl)-?(5.+)\.tar\.(gz|bz2)\Z}) {
+    if (File::Basename::basename($dist_tarball_path) =~ m{(c?perl)-?(5.+)\.tar\.(gz|bz2|xz)\Z}) {
         my $perl_variant = $1;
         $dist_version = $2;
         $installation_name = "${perl_variant}-${dist_version}";
     }
 
     unless ($dist_version && $installation_name) {
-        die "Unable to determine perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2\n";
+        die "Unable to determine perl version from archive filename.\n\nThe archive name should look like perl-5.x.y.tar.gz or perl-5.x.y.tar.bz2 or perl-5.x.y.tar.xz\n";
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
