@@ -912,6 +912,21 @@ sub release_detail_cperl_local {
     return ($error, $rd);
 }
 
+sub release_detail_cperl_remote {
+    my ($self, $dist, $rd) = @_;
+    $rd ||= {};
+    my $expect_href = "/perl11/cperl/archive/${dist}.tar.gz";
+    my $expect_url = "https://github.com/perl11/cperl/archive/${dist}.tar.gz";
+    my $html = http_get('https://github.com/perl11/cperl/tags');
+    my $error = 1;
+    if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
+        $rd->{tarball_name} = "${dist}.tar.gz";
+        $rd->{tarball_url}  = $expect_url;
+        $error = 0;
+    }
+    return ($error, $rd);
+}
+
 sub release_detail {
     my ($self, $dist) = @_;
     my ($dist_type, $dist_version, $tarball_name, $tarball_url);
