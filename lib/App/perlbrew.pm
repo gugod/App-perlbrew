@@ -598,6 +598,13 @@ sub run_command_version {
     print "$0  - $package/$version\n";
 }
 
+
+# Provides help information about a command.
+# The idea is similar to the 'run_command' and 'run_command_$x' chain:
+# this method dispatches to a 'run_command_help_$x' method
+# if found in the class, otherwise it tries to extract the help
+# documentation via the POD of the class itself using the
+# section 'COMMAND: $x' with uppercase $x.
 sub run_command_help {
     my ($self, $status, $verbose, $return_text) = @_;
 
@@ -2529,6 +2536,26 @@ sub resolve_installation_name {
 
     return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
+
+
+sub run_command_clone_modules {
+    my ( $self, $dst_perl, $src_perl, @args ) = @_;
+
+    # if no source perl installation has been specified, use the
+    # current one as default
+    $src_perl = $self->current_perl  if ( ! $src_perl );
+
+    # check that the user has provided a dest installation
+    # to which copy all the modules
+    unless ( $dst_perl ){
+        $self->run_command_help( 'clone_modules' );
+        exit( -1 );
+    }
+
+
+    die "\nrun_command_clone_modules from $src_perl to $dst_perl with [ @args ]\n";
+}
+
 
 sub format_info_output
 {
