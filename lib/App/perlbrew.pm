@@ -478,6 +478,10 @@ sub is_shell_csh {
     return 0;
 }
 
+
+# Entry point method: handles all the arguments
+# and dispatches to an appropriate internal
+# method to execute the corresponding command.
 sub run {
     my($self) = @_;
     $self->run_command($self->args);
@@ -534,6 +538,22 @@ sub find_similar_commands {
     return @commands;
 }
 
+# This mehtod is called in the 'run' loop
+# and executes every specific action depending
+# on the type of command.
+#
+# The first argument to this method is a self reference,
+# while the first "real" argument is the command to execute.
+# Other parameters after the command to execute are
+# considered as arguments for the command itself.
+#
+# In general the command is executed via a method named after the
+# command itself and with the 'run_command' prefix. For instance
+# the command 'exec' is handled by a method
+# `run_command_exec`
+#
+# If no candidates can be found, an execption is thrown
+# and a similar command is shown to the user.
 sub run_command {
     my ( $self, $x, @args ) = @_;
     my $command = $x;
