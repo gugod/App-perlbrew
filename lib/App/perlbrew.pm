@@ -2498,9 +2498,19 @@ sub run_command_upgrade_perl {
     $self->do_install_release($dist, $dist_version);
 }
 
+# Executes the list-modules command.
+# This routine launches a new perl instance that, thru
+# ExtUtils::Installed prints out all the modules
+# in the system. If an argument is passed to the
+# subroutine it is managed as a filename
+# to which prints the list of modules.
 sub run_command_list_modules {
-    my ($self) = @_;
+    my ($self, $output_filename) = @_;
     my $class = ref($self) || __PACKAGE__;
+
+    # avoid something that does not seem as a filename to print
+    # output to...
+    undef $output_filename if ( ! scalar( $output_filename ) );
 
     my $name = $self->current_env;
     if (-l (my $path = joinpath($self->root, 'perls', $name))) {
@@ -2508,14 +2518,22 @@ sub run_command_list_modules {
         $name = File::Basename::basename(readlink $path);
     }
 
+
     my $app = $class->new(
         qw(--quiet exec --with),
         $name,
-        'perl', '-MExtUtils::Installed', '-le',
-        'BEGIN{@INC=grep {$_ ne q!.!} @INC}; print for ExtUtils::Installed->new->modules;'
-    );
+        'perl',
+        '-MExtUtils::Installed',
+        '-le',
+        sprintf( 'BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for ExtUtils::Installed->new->modules;',
+                 $output_filename ? sprintf( 'open my $output_fh, \'>\', "%s"; ', $output_filename ) : '',
+                 $output_filename ? '$output_fh' : 'STDOUT' )
+        );
+
     $app->run;
 }
+
+
 
 sub resolve_installation_name {
     my ($self, $name) = @_;
@@ -2553,7 +2571,26 @@ sub run_command_clone_modules {
     }
 
 
-    die "\nrun_command_clone_modules from $src_perl to $dst_perl with [ @args ]\n";
+    # I need to run the list-modules command on myself
+    # and get the result back so to handle it and pass
+    # to the exec subroutine. The solution I found so far
+    # is to store the result in a temp file (the list_modules
+    # uses a sub-perl process, so there is no way to pass a
+    # filehandle or something similar).
+
+    require File::Temp;
+    use File::Temp ();
+    my $modules_fh = File::Temp->new;
+    $self->run_command_list_modules( $modules_fh->filename );
+
+    # here I should have the list of modules into the
+    # temporary file name, so I can ask the destination
+    # perl instance to install such list
+
+
+
+    print "\nTemp file name = " . $modules_fh->filename;
+    die "\nrun_command_clone_modules from $src_perl to $dst_perl\n";
 }
 
 
