@@ -18,6 +18,7 @@ requires
     'Devel::PatchPerl'     => '1.40',
     'Pod::Parser'          => '1.63',
     'Pod::Usage'           => '1.68',
+    'File::Temp'           => '0.2304',
     'local::lib'           => '2.000014';
 
 test_requires
@@ -33,8 +34,10 @@ test_requires
     'Test::Simple'         => '1.001002',
     'Test::Spec'           => '0.47';
 
+
 author_requires
     'Pod::Markdown'        => '2.002';
+
 
 install_script 'bin/perlbrew';
 
