@@ -2579,13 +2579,20 @@ sub run_command_clone_modules {
     # filehandle or something similar).
 
     require File::Temp;
-    use File::Temp ();
+    use File::Temp;
     my $modules_fh = File::Temp->new;
     $self->run_command_list_modules( $modules_fh->filename );
 
     # here I should have the list of modules into the
     # temporary file name, so I can ask the destination
     # perl instance to install such list
+    $modules_fh->close;
+    open $modules_fh, '<', $modules_fh->filename;
+    chomp( my @modules_to_install = <$modules_fh> );
+    $modules_fh->close;
+    die "\nNo modules installed on $src_perl !\n" if ( ! @modules_to_install );
+    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...";
+
 
 
 
