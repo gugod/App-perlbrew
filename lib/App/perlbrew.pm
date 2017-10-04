@@ -674,6 +674,28 @@ sub _compgen {
     }
 }
 
+# Internal utility function.
+# Given a specific perl version, e.g., perl-5.27.4
+# returns a string with a formatted version number such
+# as 50_027_004 that can be compared
+# easily for forcing an ordering of perl versions.
+#
+# In the case of cperl the major number is kept as it is, while
+# for perl instances it is multiplied by 10. This ensures
+# that cperl instances and perl ones are not mixed up.
+sub comparable_perl_version {
+    my ( $self, $perl_version ) = @_;
+    if ( $perl_version =~ /^(c?perl)-?(\d)\.(\d+).(\d+).*/ ){
+        return sprintf '%02d_%03d_%03d',
+            $2 * ( $1 eq 'cperl' ? 1 : 10 ), # major version
+            $3,                              # minor version
+            $4;                              # patch level
+    }
+    else {
+        return $perl_version;
+    }
+}
+
 sub run_command_available {
     my ( $self, $dist, $opts ) = @_;
 
@@ -681,7 +703,14 @@ sub run_command_available {
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
-    for my $available ( reverse sort keys %$perls ){
+
+    # sort the keys of Perl installation (Randal to the rescue!)
+    my @sorted_perls = map { $_->[ 0 ] }
+    sort { $b->[ 1 ] cmp $a->[ 1 ] }
+    map { [ $_, $self->comparable_perl_version( $_ ) ] }
+    keys %$perls;
+
+    for my $available ( @sorted_perls ){
         my $url = $perls->{ $available };
         $is_installed = 0;
         for my $installed (@installed) {
