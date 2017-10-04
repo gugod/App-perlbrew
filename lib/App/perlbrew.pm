@@ -696,6 +696,17 @@ sub comparable_perl_version {
     }
 }
 
+# Internal method.
+# Performs a comparable sort of the perl versions specified as
+# list.
+sub sort_perl_versions {
+    my ( $self, @perls ) = @_;
+    return map { $_->[ 0 ] }
+           sort { $b->[ 1 ] cmp $a->[ 1 ] }
+           map { [ $_, $self->comparable_perl_version( $_ ) ] }
+           @perls;
+}
+
 sub run_command_available {
     my ( $self, $dist, $opts ) = @_;
 
@@ -705,10 +716,7 @@ sub run_command_available {
     my $is_installed;
 
     # sort the keys of Perl installation (Randal to the rescue!)
-    my @sorted_perls = map { $_->[ 0 ] }
-    sort { $b->[ 1 ] cmp $a->[ 1 ] }
-    map { [ $_, $self->comparable_perl_version( $_ ) ] }
-    keys %$perls;
+    my @sorted_perls = $self->sort_perl_versions( keys %$perls );
 
     for my $available ( @sorted_perls ){
         my $url = $perls->{ $available };
@@ -730,16 +738,13 @@ sub run_command_available {
 
     print "\n";
 
-    return reverse sort keys %$perls;
+    return @sorted_perls;
 }
 
 sub available_perls {
-    my $perls = available_perls_with_urls( @_ );
-    # sort the keys of Perl installation (Randal to the rescue!)
-    return map { $_->[ 0 ] }
-           sort { $b->[ 1 ] cmp $a->[ 1 ] }
-           map { [ $_, $self->comparable_perl_version( $_ ) ] }
-           keys %$perls;
+    my ( $self ) = @_;
+    my $perls    = $self->available_perls_with_urls;
+    return $self->sort_perl_versions( keys %$perls );
 }
 
 
