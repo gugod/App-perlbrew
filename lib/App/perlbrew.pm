@@ -2561,7 +2561,11 @@ sub run_command_clone_modules {
 
     # if no source perl installation has been specified, use the
     # current one as default
-    $src_perl = $self->current_perl  if ( ! $src_perl );
+    $src_perl = $self->current_perl  if ( ! $src_perl || ! $self->resolve_installation_name( $src_perl ) );
+
+
+    # check for the destination Perl to be installed
+    undef $dst_perl if ( ! $self->resolve_installation_name( $dst_perl ) );
 
     # check that the user has provided a dest installation
     # to which copy all the modules
@@ -2591,7 +2595,7 @@ sub run_command_clone_modules {
     chomp( my @modules_to_install = <$modules_fh> );
     $modules_fh->close;
     die "\nNo modules installed on $src_perl !\n" if ( ! @modules_to_install );
-    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...";
+    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n";
 
     # create a new application to 'exec' the 'cpanm'
     # with the specified module list
