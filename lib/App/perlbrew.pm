@@ -735,8 +735,11 @@ sub run_command_available {
 
 sub available_perls {
     my $perls = available_perls_with_urls( @_ );
-    return  reverse sort keys %$perls;
-
+    # sort the keys of Perl installation (Randal to the rescue!)
+    return map { $_->[ 0 ] }
+           sort { $b->[ 1 ] cmp $a->[ 1 ] }
+           map { [ $_, $self->comparable_perl_version( $_ ) ] }
+           keys %$perls;
 }
 
 
@@ -780,6 +783,9 @@ sub available_perls_with_urls {
             warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
         }
     }
+
+
+
 
     return $perls;
 }
