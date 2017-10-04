@@ -2593,11 +2593,18 @@ sub run_command_clone_modules {
     die "\nNo modules installed on $src_perl !\n" if ( ! @modules_to_install );
     print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...";
 
+    # create a new application to 'exec' the 'cpanm'
+    # with the specified module list
+    my $class = ref( $self );
+    my $app = $class->new(
+        qw(--quiet exec --with),
+        $dst_perl,
+        'cpanm',
+        @modules_to_install
+        );
 
+    $app->run;
 
-
-    print "\nTemp file name = " . $modules_fh->filename;
-    die "\nrun_command_clone_modules from $src_perl to $dst_perl\n";
 }
 
 
