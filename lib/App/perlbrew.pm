@@ -680,23 +680,24 @@ sub run_command_available {
     my $perls     = $self->available_perls_with_urls(@_);
     my @installed = $self->installed_perls(@_);
 
-    my $is_installed;
     for my $available ( reverse sort keys %$perls ){
         my $url = $perls->{ $available };
-        $is_installed = 0;
+        my $ctime;
+
         for my $installed (@installed) {
             my $name = $installed->{name};
             my $cur  = $installed->{is_current};
             if ( $available eq $installed->{name} ) {
-                $is_installed = 1;
+                $ctime = $installed->{ctime};
                 last;
             }
         }
 
-        print sprintf( "\n%1s %12s      URL: <%s>",
-                       $is_installed ? 'i' : '',
-                       $available,
-                       $url );
+        print sprintf "\n%1s %12s  %s <%s>",
+            $ctime ? 'i' : '',
+            $available,
+            $ctime ? 'INSTALLED on ' . $ctime . ' via ' : 'available from ',
+            $url ;
     }
 
     print "\n";
