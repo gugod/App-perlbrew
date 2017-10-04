@@ -1786,10 +1786,11 @@ sub installed_perls {
             libs => [ $self->local_libs($name) ],
             executable  => $executable,
             dir => $installation_dir,
+            comparable_version => $self->comparable_perl_version( $orig_version ),
         };
     }
 
-    return sort { $a->{orig_version} <=> $b->{orig_version} or $a->{name} cmp $b->{name}  } @result;
+    return sort { $b->{comparable_version} <=> $a->{comparable_version} or $a->{name} cmp $b->{name}  } @result;
 }
 
 sub local_libs {
