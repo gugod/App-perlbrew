@@ -6515,13 +6515,16 @@ C<use> command to enable it only in the current shell.
 
 Re-enables the default system Perl, whatever that is.
 
-=head1 COMMAND: CLONE_MODULES
+=head1 COMMAND: CLONE-MODULES
 
-Usage: perlbrew clone_modules <dest-name> [src-name]
+Usage: perlbrew clone-modules <dest-name> [src-name]
 
-    Install all modules from the <src-name> installation into the <dst-name> installation.
-    If no <src-name> installation is provided the current running Perl is used
-_   as a base to clone modules from.
+Install all modules from the <src-name> installation into the <dst-name> installation.
+If no <src-name> installation is provided the current running Perl is used
+as a base to clone modules from.
+
+This is the same as specifying on the command line, using the src-name Perl installation:
+    perlbrew list-modules | perlbrew exec --with <dest-name> cpanm
 
 =head1 COMMAND: ALIAS
 

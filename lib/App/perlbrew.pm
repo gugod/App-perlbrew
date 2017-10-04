@@ -2556,6 +2556,22 @@ sub resolve_installation_name {
 }
 
 
+# Implementation of the 'clone-modules' command.
+#
+# This method accepts a destination and source installation
+# of Perl to clone modules from and into.
+# For instance calling
+# $app->run_command_clone_modules( $perl_a, $perl_b );
+# installs all modules that have been installed on Perl A
+# to the instance of Perl B.
+#
+# Of course, both Perl installation must exist on this
+# perlbrew enviroment.
+#
+# The method performs a list-modules command on the
+# source Perl installation, save the list on a temporary file
+# and then read back the list to execute a 'cpanm' shell
+# with the argument list.
 sub run_command_clone_modules {
     my ( $self, $dst_perl, $src_perl, @args ) = @_;
 
