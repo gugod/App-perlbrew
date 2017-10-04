@@ -1720,9 +1720,10 @@ sub installed_perls {
     my $root = $self->root;
 
     for my $installation_dir (<$root/perls/*>) {
-        my ($name) = $installation_dir =~ m/\/([^\/]+$)/;
-        my $executable = joinpath($installation_dir, 'bin', 'perl');
+        my ($name)       = $installation_dir =~ m/\/([^\/]+$)/;
+        my $executable   = joinpath($installation_dir, 'bin', 'perl');
         my $version_file = joinpath($installation_dir,'.version');
+        my $ctime        = localtime( ( stat $executable )[ 10 ] ); # localtime in scalar context!
         my $orig_version;
         if ( -e $version_file ){
             open my $fh, '<', $version_file;
@@ -1739,13 +1740,14 @@ sub installed_perls {
         }
 
         push @result, {
-            name        => $name,
-            orig_version=> $orig_version,
-            version     => $self->format_perl_version($orig_version),
-            is_current  => ($self->current_perl eq $name) && !($self->current_lib),
-            libs => [ $self->local_libs($name) ],
-            executable  => $executable,
-            dir => $installation_dir,
+            name         => $name,
+            orig_version => $orig_version,
+            version      => $self->format_perl_version($orig_version),
+            is_current   => ($self->current_perl eq $name) && !($self->current_lib),
+            libs         => [ $self->local_libs($name) ],
+            executable   => $executable,
+            dir          => $installation_dir,
+            ctime        => $ctime,
         };
     }
 
@@ -1872,10 +1874,12 @@ sub run_command_list {
     my $self = shift;
 
     for my $i ( $self->installed_perls ) {
-        print $i->{is_current} ? '* ': '  ',
+        print sprintf "%2s %-20s %-20s (installed on %s)\n",
+            $i->{is_current} ? '*' : '',
             $i->{name},
             (index($i->{name}, $i->{version}) < 0) ? " ($i->{version})" : "",
-            "\n";
+            $i->{ctime};
+
 
         for my $lib (@{$i->{libs}}) {
             print $lib->{is_current} ? "* " : "  ",
