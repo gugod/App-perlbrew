@@ -1566,8 +1566,8 @@ sub do_install_this {
 
     push @d_options, "usecperl" if $looks_like_we_are_installing_cperl;
 
-    my $version = perl_version_to_integer($dist_version);
-    if (defined $version and $version < perl_version_to_integer( '5.6.0' ) ) {
+    my $version = $self->comparable_perl_version( $dist_version );
+    if (defined $version and $version < $self->comparable_perl_version( '5.6.0' ) ) {
         # ancient perls do not support -A for Configure
         @a_options = ();
     } else {
@@ -1599,7 +1599,7 @@ INSTALL
                 ( map { qq{'-U$_'} } @u_options ),
                 ( map { qq{'-A$_'} } @a_options ),
             ),
-        (defined $version and $version < perl_version_to_integer( '5.8.9' ))
+        (defined $version and $version < $self->comparable_perl_version( '5.8.9' ))
                 ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                 : ()
     );
