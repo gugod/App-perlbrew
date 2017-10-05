@@ -677,19 +677,25 @@ sub _compgen {
 # Internal utility function.
 # Given a specific perl version, e.g., perl-5.27.4
 # returns a string with a formatted version number such
-# as 50_027_004 that can be compared
-# easily for forcing an ordering of perl versions.
+# as 05027004. Such string can be used as a number
+# in order to make either a string comparison
+# or a numeric comparison.
 #
-# In the case of cperl the major number is kept as it is, while
-# for perl instances it is multiplied by 10. This ensures
-# that cperl instances and perl ones are not mixed up.
+# In the case of cperl the major number is added by 6
+# so that it would match the project claim of being
+# Perl 5+6 = 11. The final result is then
+# multiplied by a negative factor (-1) in order
+# to make cperl being "less" in the ordered list
+# than a normal Perl installation.
 sub comparable_perl_version {
     my ( $self, $perl_version ) = @_;
     if ( $perl_version =~ /^(c?perl)-?(\d)\.(\d+).(\d+).*/ ){
-        return sprintf '%02d_%03d_%03d',
-            $2 * ( $1 eq 'cperl' ? 1 : 10 ), # major version
-            $3,                              # minor version
-            $4;                              # patch level
+        my $is_cperl = $1 eq 'cperl';
+        return ( $is_cperl ? -1 : 1 )
+            * sprintf( '%02d%03d%03d',
+                       $2 + ( $is_cperl ? 6 : 0 ),             # major version
+                       $3,                                     # minor version
+                       $4 );                                   # patch level
     }
     else {
         return $perl_version;
@@ -702,7 +708,7 @@ sub comparable_perl_version {
 sub sort_perl_versions {
     my ( $self, @perls ) = @_;
     return map { $_->[ 0 ] }
-           sort { $b->[ 1 ] cmp $a->[ 1 ] }
+           sort { $b->[ 1 ] <=> $a->[ 1 ] }
            map { [ $_, $self->comparable_perl_version( $_ ) ] }
            @perls;
 }
