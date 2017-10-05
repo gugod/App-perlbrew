@@ -219,7 +219,7 @@ sub files_are_the_same {
         my ($program, $command) = http_user_agent_command( get => { url =>  $url } );
 
         open my $fh, '-|', $command
-            or die "open() for '$command': $!";
+            or die "open() pipe for '$command': $!";
 
         local $/;
         my $body = <$fh>;
