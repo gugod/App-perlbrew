@@ -39,8 +39,11 @@ $PERLBREWDOWNLOAD || clean_exit 1
 echo
 echo "## Installing perlbrew"
 
-PERL="/usr/bin/perl"
-[ ! -x "$PERL" ] && PERL="/usr/local/bin/perl"
+# loop thru available well known Perl installations
+for PERL in "/usr/bin/perl" "/usr/local/bin/perl"
+do
+    [ -x "$PERL" ] && echo "Using Perl <$PERL>" && break
+done
 
 if [ ! -x "$PERL" ]; then
   echo "Need /usr/bin/perl or /usr/local/bin/perl to use $0"
