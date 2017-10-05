@@ -25,7 +25,7 @@ elif type fetch >/dev/null 2>&1; then
 elif type wget >/dev/null 2>&1; then
   PERLBREWDOWNLOAD="wget -nv -O $LOCALINSTALLER $PERLBREWURL"
 else
-  echo "Need wget or curl to use $0"
+  echo "Need either wget, fetch or curl to use $0"
   exit 1
 fi
 
