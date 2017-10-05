@@ -969,6 +969,18 @@ sub run_command_init {
     }
 
 
+    # special case: for bash and zsh it could be that ~/.profile
+    # is in place, so use it instead of a specific file
+    if ($self->current_shell =~ /(ba|z)?sh/) {
+        for my $found_yourshrc ( map { joinpath( $self->env('HOME'), ".$_" ) } ( $yourshrc, qq/profile/ ) ){
+            if ( -f $found_yourshrc ){
+                $yourshrc = $found_yourshrc;
+                last;
+            }
+        }
+
+    }
+
     my $root_dir = $self->path_with_tilde($self->root);
     my $pb_home_dir = $self->path_with_tilde($self->home);
 
