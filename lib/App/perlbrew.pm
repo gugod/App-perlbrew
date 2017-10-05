@@ -954,7 +954,7 @@ sub run_command_init {
         }
     }
 
-    my ( $shrc, $yourshrc );
+    my ( $shrc, $yourshrc ) = ( 'bashrc', 'bash_profile' ); # default to bash
     if ( $self->current_shell =~ m/(t?csh)/ ) {
         $shrc     = 'cshrc';
         $yourshrc = $1 . "rc";
@@ -967,10 +967,7 @@ sub run_command_init {
         $shrc = "perlbrew.fish";
         $yourshrc = 'config/fish/config.fish';
     }
-    else {
-        $shrc = "bashrc";
-        $yourshrc = "bash_profile";
-    }
+
 
     my $root_dir = $self->path_with_tilde($self->root);
     my $pb_home_dir = $self->path_with_tilde($self->home);
