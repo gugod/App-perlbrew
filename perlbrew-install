@@ -1,5 +1,13 @@
 #!/bin/sh
 
+
+clean_exit () {
+    [ -f $LOCALINSTALLER ] && rm $LOCALINSTALLER
+    exit $1
+}
+
+LOCALINSTALLER=$(mktemp perlbrew.XXXXXX)
+
 if [ -z "${PERLBREWURL}" ]; then
     PERLBREWURL=https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew
 fi
@@ -7,7 +15,7 @@ fi
 if [ -z "$TMPDIR" ]; then
     if [ -d "/tmp" ]; then
         TMPDIR="/tmp"
-        cd $TMPDIR || exit 1
+        cd $TMPDIR || clean_exit
     else
         TMPDIR="."
     fi
@@ -15,7 +23,7 @@ fi
 
 
 
-LOCALINSTALLER=$(mktemp perlbrew.XXXXXX)
+
 
 echo
 if type curl >/dev/null 2>&1; then
@@ -26,13 +34,9 @@ elif type wget >/dev/null 2>&1; then
   PERLBREWDOWNLOAD="wget -nv -O $LOCALINSTALLER $PERLBREWURL"
 else
   echo "Need either wget, fetch or curl to use $0"
-  exit 1
+  clean_exit
 fi
 
-clean_exit () {
-  [ -f $LOCALINSTALLER ] && rm $LOCALINSTALLER
-  exit $1
-}
 
 echo "## Download the latest perlbrew"
 $PERLBREWDOWNLOAD || clean_exit 1
@@ -48,7 +52,7 @@ done
 
 if [ ! -x "$PERL" ]; then
   echo "Need /usr/bin/perl or /usr/local/bin/perl to use $0"
-  clean_exit 1
+  clean_exit
 fi
 
 chmod +x $LOCALINSTALLER
