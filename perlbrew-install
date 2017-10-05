@@ -55,7 +55,7 @@ if [ ! -x "$PERL" ]; then
   clean_exit
 fi
 
-chmod +x $LOCALINSTALLER
+[ ! -x $LOCALINSTALLER ] && chmod +x $LOCALINSTALLER
 $PERL $LOCALINSTALLER self-install || clean_exit 1
 
 echo "## Installing patchperl"
