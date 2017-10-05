@@ -15,7 +15,7 @@ fi
 if [ -z "$TMPDIR" ]; then
     if [ -d "/tmp" ]; then
         TMPDIR="/tmp"
-        cd $TMPDIR || clean_exit
+        cd $TMPDIR || clean_exit 1
     else
         TMPDIR="."
     fi
@@ -52,14 +52,14 @@ done
 
 if [ ! -x "$PERL" ]; then
   echo "Need /usr/bin/perl or /usr/local/bin/perl to use $0"
-  clean_exit
+  clean_exit 2
 fi
 
 [ ! -x $LOCALINSTALLER ] && chmod +x $LOCALINSTALLER
-$PERL $LOCALINSTALLER self-install || clean_exit 1
+$PERL $LOCALINSTALLER self-install || clean_exit 3
 
 echo "## Installing patchperl"
-$PERL $LOCALINSTALLER -f -q install-patchperl || clean_exit 1
+$PERL $LOCALINSTALLER -f -q install-patchperl || clean_exit 4
 
 echo
 echo "## Done."
