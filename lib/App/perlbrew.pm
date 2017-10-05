@@ -133,18 +133,27 @@ sub files_are_the_same {
             get      => '--silent --location --fail -o - {url}',
             download => '--silent --location --fail -o {output} {url}',
             order    => 1,
+
+            # Exit code is 22 on 404s etc
+            die_on_error => sub { die 'Page not retrieved; HTTP error code 400 or above.' if ( $_[ 0 ] >> 8 == 22 ); },
         },
         wget => {
             test     => '--version >/dev/null 2>&1',
             get      => '--quiet -O - {url}',
             download => '--quiet -O {output} {url}',
             order    => 2,
+
+            # Exit code is not 0 on error
+            die_on_error => sub { die 'Page not retrieved: fetch failed.' if ( $_[ 0 ] ); },
         },
         fetch => {
             test     => '--version >/dev/null 2>&1',
             get      => '-o - {url}',
             download => '-o {output} {url}',
             order    => 3,
+
+            # Exit code is 8 on 404s etc
+            die_on_error => sub { die 'Server issued an error response.' if ( $_[ 0 ] >> 8 == 8 ); },
         }
     );
 
@@ -225,15 +234,9 @@ sub files_are_the_same {
         my $body = <$fh>;
         close $fh;
 
-        die 'Page not retrieved; HTTP error code 400 or above.'
-            if $program eq 'curl' # Exit code is 22 on 404s etc
-            and $? >> 8 == 22; # exit code is packed into $?; see perlvar
-        die 'Page not retrieved: fetch failed.'
-            if $program eq 'fetch' # Exit code is not 0 on error
-            and $?;
-        die 'Server issued an error response.'
-            if $program eq 'wget' # Exit code is 8 on 404s etc
-            and $? >> 8 == 8;
+
+        # check if the download has failed and die automatically
+        $commands{ $program }{ die_on_error }->( $? );
 
         return $cb ? $cb->($body) : $body;
     }
