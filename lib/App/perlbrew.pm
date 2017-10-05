@@ -485,6 +485,10 @@ sub run {
 
 sub args {
     my ( $self ) = @_;
+
+    # keep 'force' and 'yes' coherent across commands
+    $self->{force} = $self->{yes} = 1 if ( $self->{force} || $self->{yes} );
+
     return @{ $self->{args} };
 }
 
