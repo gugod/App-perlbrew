@@ -41,25 +41,8 @@ describe "available command output, when nothing installed locally," => sub {
 
         $app->expects( 'available_perls_with_urls' )->returns( \%available_perls );
 
-        stdout_is sub { $app->run(); }, <<OUT
+        stdout_like sub { $app->run(); }, qr/^\s{3,}c?perl-?\d\.\d{1,3}[_.]\d{1,2}\s+(available from)\s+<https?:\/\/.+>/, 'Cannot find Perl in output'
 
-  perl5.005_04      URL: <http://www.cpan.org/src/5.0/perl5.005_04.tar.gz>
-  perl5.004_05      URL: <http://www.cpan.org/src/5.0/perl5.004_05.tar.gz>
-    perl-5.8.9      URL: <http://www.cpan.org/src/5.0/perl-5.8.9.tar.gz>
-    perl-5.6.2      URL: <http://www.cpan.org/src/5.0/perl-5.6.2.tar.gz>
-   perl-5.24.0      URL: <http://www.cpan.org/src/5.0/perl-5.24.0.tar.gz>
-   perl-5.22.2      URL: <http://www.cpan.org/src/5.0/perl-5.22.2.tar.gz>
-   perl-5.20.3      URL: <http://www.cpan.org/src/5.0/perl-5.20.3.tar.gz>
-   perl-5.18.4      URL: <http://www.cpan.org/src/5.0/perl-5.18.4.tar.gz>
-   perl-5.16.3      URL: <http://www.cpan.org/src/5.0/perl-5.16.3.tar.gz>
-   perl-5.14.4      URL: <http://www.cpan.org/src/5.0/perl-5.14.4.tar.gz>
-   perl-5.12.5      URL: <http://www.cpan.org/src/5.0/perl-5.12.5.tar.gz>
-   perl-5.10.1      URL: <http://www.cpan.org/src/5.0/perl-5.10.1.tar.gz>
-  cperl-5.25.2      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.25.2>
-  cperl-5.25.1      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.25.1>
-  cperl-5.24.2      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.24.2>
-  cperl-5.24.1      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.24.1>
-OUT
     };
 };
 
@@ -75,26 +58,8 @@ describe "available command output, when something installed locally," => sub {
 
          $app->expects( 'available_perls_with_urls' )->returns( \%available_perls );
          $app->expects("installed_perls")->returns(@installed_perls);
+        stdout_like sub { $app->run(); }, qr/^i?\s{2,}c?perl-?\d\.\d{1,3}[_.]\d{1,2}\s+(INSTALLED on .* via|available from)\s+<https?:\/\/.+>/, 'Cannot find Perl in output'
 
-        stdout_is sub { $app->run(); }, <<OUT
-
-  perl5.005_04      URL: <http://www.cpan.org/src/5.0/perl5.005_04.tar.gz>
-  perl5.004_05      URL: <http://www.cpan.org/src/5.0/perl5.004_05.tar.gz>
-    perl-5.8.9      URL: <http://www.cpan.org/src/5.0/perl-5.8.9.tar.gz>
-    perl-5.6.2      URL: <http://www.cpan.org/src/5.0/perl-5.6.2.tar.gz>
-i  perl-5.24.0      URL: <http://www.cpan.org/src/5.0/perl-5.24.0.tar.gz>
-   perl-5.22.2      URL: <http://www.cpan.org/src/5.0/perl-5.22.2.tar.gz>
-i  perl-5.20.3      URL: <http://www.cpan.org/src/5.0/perl-5.20.3.tar.gz>
-   perl-5.18.4      URL: <http://www.cpan.org/src/5.0/perl-5.18.4.tar.gz>
-   perl-5.16.3      URL: <http://www.cpan.org/src/5.0/perl-5.16.3.tar.gz>
-   perl-5.14.4      URL: <http://www.cpan.org/src/5.0/perl-5.14.4.tar.gz>
-   perl-5.12.5      URL: <http://www.cpan.org/src/5.0/perl-5.12.5.tar.gz>
-   perl-5.10.1      URL: <http://www.cpan.org/src/5.0/perl-5.10.1.tar.gz>
-  cperl-5.25.2      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.25.2>
-  cperl-5.25.1      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.25.1>
-  cperl-5.24.2      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.24.2>
-  cperl-5.24.1      URL: <https://github.com//perl11/cperl/releases/download/cperl-5.24.1>
-OUT
     };
 };
 
