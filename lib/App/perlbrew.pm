@@ -687,6 +687,45 @@ sub _compgen {
     }
 }
 
+# Internal utility function.
+# Given a specific perl version, e.g., perl-5.27.4
+# returns a string with a formatted version number such
+# as 05027004. Such string can be used as a number
+# in order to make either a string comparison
+# or a numeric comparison.
+#
+# In the case of cperl the major number is added by 6
+# so that it would match the project claim of being
+# Perl 5+6 = 11. The final result is then
+# multiplied by a negative factor (-1) in order
+# to make cperl being "less" in the ordered list
+# than a normal Perl installation.
+sub comparable_perl_version {
+    my ( $self, $perl_version ) = @_;
+    if ( $perl_version =~ /^(c?perl)-?(\d)\.(\d+).(\d+).*/ ){
+        my $is_cperl = $1 eq 'cperl';
+        return ( $is_cperl ? -1 : 1 )
+            * sprintf( '%02d%03d%03d',
+                       $2 + ( $is_cperl ? 6 : 0 ),             # major version
+                       $3,                                     # minor version
+                       $4 );                                   # patch level
+    }
+    else {
+        return $perl_version;
+    }
+}
+
+# Internal method.
+# Performs a comparable sort of the perl versions specified as
+# list.
+sub sort_perl_versions {
+    my ( $self, @perls ) = @_;
+    return map { $_->[ 0 ] }
+           sort { $b->[ 1 ] <=> $a->[ 1 ] }
+           map { [ $_, $self->comparable_perl_version( $_ ) ] }
+           @perls;
+}
+
 sub run_command_available {
     my ( $self, $dist, $opts ) = @_;
 
@@ -694,7 +733,11 @@ sub run_command_available {
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
-    for my $available ( reverse sort keys %$perls ){
+
+    # sort the keys of Perl installation (Randal to the rescue!)
+    my @sorted_perls = $self->sort_perl_versions( keys %$perls );
+
+    for my $available ( @sorted_perls ){
         my $url = $perls->{ $available };
         $is_installed = 0;
         for my $installed (@installed) {
@@ -714,13 +757,13 @@ sub run_command_available {
 
     print "\n";
 
-    return reverse sort keys %$perls;
+    return @sorted_perls;
 }
 
 sub available_perls {
-    my $perls = available_perls_with_urls( @_ );
-    return  reverse sort keys %$perls;
-
+    my ( $self ) = @_;
+    my $perls    = $self->available_perls_with_urls;
+    return $self->sort_perl_versions( keys %$perls );
 }
 
 
@@ -764,6 +807,9 @@ sub available_perls_with_urls {
             warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
         }
     }
+
+
+
 
     return $perls;
 }
@@ -1558,8 +1604,8 @@ sub do_install_this {
 
     push @d_options, "usecperl" if $looks_like_we_are_installing_cperl;
 
-    my $version = perl_version_to_integer($dist_version);
-    if (defined $version and $version < perl_version_to_integer( '5.6.0' ) ) {
+    my $version = $self->comparable_perl_version( $dist_version );
+    if (defined $version and $version < $self->comparable_perl_version( '5.6.0' ) ) {
         # ancient perls do not support -A for Configure
         @a_options = ();
     } else {
@@ -1591,7 +1637,7 @@ INSTALL
                 ( map { qq{'-U$_'} } @u_options ),
                 ( map { qq{'-A$_'} } @a_options ),
             ),
-        (defined $version and $version < perl_version_to_integer( '5.8.9' ))
+        (defined $version and $version < $self->comparable_perl_version( '5.8.9' ))
                 ? ("$^X -i -nle 'print unless /command-line/' makefile x2p/makefile")
                 : ()
     );
@@ -1784,10 +1830,11 @@ sub installed_perls {
             libs => [ $self->local_libs($name) ],
             executable  => $executable,
             dir => $installation_dir,
+            comparable_version => $self->comparable_perl_version( $orig_version ),
         };
     }
 
-    return sort { $a->{orig_version} <=> $b->{orig_version} or $a->{name} cmp $b->{name}  } @result;
+    return sort { $b->{comparable_version} <=> $a->{comparable_version} or $a->{name} cmp $b->{name}  } @result;
 }
 
 sub local_libs {

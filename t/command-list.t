@@ -41,10 +41,10 @@ describe "list command," => sub {
             $out =~ s/\n\n+/\n/;
 
             is $out, <<"EOF";
-* perl-5.12.3
-  perl-5.12.4
-  perl-5.14.1
   perl-5.14.2
+  perl-5.14.1
+  perl-5.12.4
+* perl-5.12.3
 EOF
         };
     };
@@ -68,12 +68,12 @@ EOF
             $out =~ s/\n\n+/\n/;
 
             is $out, <<'OUT';
+  perl-5.14.2
+  perl-5.14.1
+  perl-5.12.4
 * perl-5.12.3
   perl-5.12.3@nobita
   perl-5.12.3@shizuka
-  perl-5.12.4
-  perl-5.14.1
-  perl-5.14.2
 OUT
         };
 
@@ -86,12 +86,12 @@ OUT
             $out =~ s/\n\n+/\n/;
 
             is $out, <<'OUT';
+  perl-5.14.2
+  perl-5.14.1
+  perl-5.12.4
   perl-5.12.3
 * perl-5.12.3@nobita
   perl-5.12.3@shizuka
-  perl-5.12.4
-  perl-5.14.1
-  perl-5.14.2
 OUT
 
         };
@@ -99,4 +99,3 @@ OUT
 };
 
 runtests unless caller;
-
