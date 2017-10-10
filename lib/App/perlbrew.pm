@@ -483,6 +483,10 @@ sub is_shell_csh {
     return 0;
 }
 
+
+# Entry point method: handles all the arguments
+# and dispatches to an appropriate internal
+# method to execute the corresponding command.
 sub run {
     my($self) = @_;
     $self->run_command($self->args);
@@ -539,6 +543,22 @@ sub find_similar_commands {
     return @commands;
 }
 
+# This mehtod is called in the 'run' loop
+# and executes every specific action depending
+# on the type of command.
+#
+# The first argument to this method is a self reference,
+# while the first "real" argument is the command to execute.
+# Other parameters after the command to execute are
+# considered as arguments for the command itself.
+#
+# In general the command is executed via a method named after the
+# command itself and with the 'run_command' prefix. For instance
+# the command 'exec' is handled by a method
+# `run_command_exec`
+#
+# If no candidates can be found, an execption is thrown
+# and a similar command is shown to the user.
 sub run_command {
     my ( $self, $x, @args ) = @_;
     my $command = $x;
@@ -583,6 +603,13 @@ sub run_command_version {
     print "$0  - $package/$version\n";
 }
 
+
+# Provides help information about a command.
+# The idea is similar to the 'run_command' and 'run_command_$x' chain:
+# this method dispatches to a 'run_command_help_$x' method
+# if found in the class, otherwise it tries to extract the help
+# documentation via the POD of the class itself using the
+# section 'COMMAND: $x' with uppercase $x.
 sub run_command_help {
     my ($self, $status, $verbose, $return_text) = @_;
 
@@ -2556,9 +2583,19 @@ sub run_command_upgrade_perl {
     $self->do_install_release($dist, $dist_version);
 }
 
+# Executes the list-modules command.
+# This routine launches a new perl instance that, thru
+# ExtUtils::Installed prints out all the modules
+# in the system. If an argument is passed to the
+# subroutine it is managed as a filename
+# to which prints the list of modules.
 sub run_command_list_modules {
-    my ($self) = @_;
+    my ($self, $output_filename) = @_;
     my $class = ref($self) || __PACKAGE__;
+
+    # avoid something that does not seem as a filename to print
+    # output to...
+    undef $output_filename if ( ! scalar( $output_filename ) );
 
     my $name = $self->current_env;
     if (-l (my $path = joinpath($self->root, 'perls', $name))) {
@@ -2566,14 +2603,22 @@ sub run_command_list_modules {
         $name = File::Basename::basename(readlink $path);
     }
 
+
     my $app = $class->new(
         qw(--quiet exec --with),
         $name,
-        'perl', '-MExtUtils::Installed', '-le',
-        'BEGIN{@INC=grep {$_ ne q!.!} @INC}; print for ExtUtils::Installed->new->modules;'
-    );
+        'perl',
+        '-MExtUtils::Installed',
+        '-le',
+        sprintf( 'BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for ExtUtils::Installed->new->modules;',
+                 $output_filename ? sprintf( 'open my $output_fh, \'>\', "%s"; ', $output_filename ) : '',
+                 $output_filename ? '$output_fh' : 'STDOUT' )
+        );
+
     $app->run;
 }
+
+
 
 sub resolve_installation_name {
     my ($self, $name) = @_;
@@ -2594,6 +2639,79 @@ sub resolve_installation_name {
 
     return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
+
+
+# Implementation of the 'clone-modules' command.
+#
+# This method accepts a destination and source installation
+# of Perl to clone modules from and into.
+# For instance calling
+# $app->run_command_clone_modules( $perl_a, $perl_b );
+# installs all modules that have been installed on Perl A
+# to the instance of Perl B.
+#
+# Of course, both Perl installation must exist on this
+# perlbrew enviroment.
+#
+# The method performs a list-modules command on the
+# source Perl installation, save the list on a temporary file
+# and then read back the list to execute a 'cpanm' shell
+# with the argument list.
+sub run_command_clone_modules {
+    my ( $self, $dst_perl, $src_perl, @args ) = @_;
+
+    # if no source perl installation has been specified, use the
+    # current one as default
+    $src_perl = $self->current_perl  if ( ! $src_perl || ! $self->resolve_installation_name( $src_perl ) );
+
+
+    # check for the destination Perl to be installed
+    undef $dst_perl if ( ! $self->resolve_installation_name( $dst_perl ) );
+
+    # check that the user has provided a dest installation
+    # to which copy all the modules
+    unless ( $dst_perl ){
+        $self->run_command_help( 'clone_modules' );
+        exit( -1 );
+    }
+
+
+    # I need to run the list-modules command on myself
+    # and get the result back so to handle it and pass
+    # to the exec subroutine. The solution I found so far
+    # is to store the result in a temp file (the list_modules
+    # uses a sub-perl process, so there is no way to pass a
+    # filehandle or something similar).
+
+    require File::Temp;
+    use File::Temp;
+    my $modules_fh = File::Temp->new;
+    $self->run_command_list_modules( $modules_fh->filename );
+
+    # here I should have the list of modules into the
+    # temporary file name, so I can ask the destination
+    # perl instance to install such list
+    $modules_fh->close;
+    open $modules_fh, '<', $modules_fh->filename;
+    chomp( my @modules_to_install = <$modules_fh> );
+    $modules_fh->close;
+    die "\nNo modules installed on $src_perl !\n" if ( ! @modules_to_install );
+    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n";
+
+    # create a new application to 'exec' the 'cpanm'
+    # with the specified module list
+    my $class = ref( $self );
+    my $app = $class->new(
+        qw(--quiet exec --with),
+        $dst_perl,
+        'cpanm',
+        @modules_to_install
+        );
+
+    $app->run;
+
+}
+
 
 sub format_info_output
 {
