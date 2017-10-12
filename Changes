@@ -1,3 +1,5 @@
+- New command: clone-modules
+
 0.80: # 2017-06-30T07:40:45+0200
 - Fix version in META.yml in CPAN distribution. See: https://rt.cpan.org/Public/Bug/Display.html?id=122279
 
