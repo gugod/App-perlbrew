@@ -773,20 +773,22 @@ sub run_command_available {
 
     for my $available ( @sorted_perls ){
         my $url = $perls->{ $available };
-        $is_installed = 0;
+        my $ctime;
+
         for my $installed (@installed) {
             my $name = $installed->{name};
             my $cur  = $installed->{is_current};
             if ( $available eq $installed->{name} ) {
-                $is_installed = 1;
+                $ctime = $installed->{ctime};
                 last;
             }
         }
 
-        print sprintf( "\n%1s %12s      URL: <%s>",
-                       $is_installed ? 'i' : '',
-                       $available,
-                       $url );
+        print sprintf "\n%1s %12s  %s <%s>",
+            $ctime ? 'i' : '',
+            $available,
+            $ctime ? 'INSTALLED on ' . $ctime . ' via ' : 'available from ',
+            $url ;
     }
 
     print "\n";
@@ -1838,9 +1840,10 @@ sub installed_perls {
     my $root = $self->root;
 
     for my $installation_dir (<$root/perls/*>) {
-        my ($name) = $installation_dir =~ m/\/([^\/]+$)/;
-        my $executable = joinpath($installation_dir, 'bin', 'perl');
+        my ($name)       = $installation_dir =~ m/\/([^\/]+$)/;
+        my $executable   = joinpath($installation_dir, 'bin', 'perl');
         my $version_file = joinpath($installation_dir,'.version');
+        my $ctime        = localtime( ( stat $executable )[ 10 ] ); # localtime in scalar context!
         my $orig_version;
         if ( -e $version_file ){
             open my $fh, '<', $version_file;
@@ -1865,6 +1868,7 @@ sub installed_perls {
             executable  => $executable,
             dir => $installation_dir,
             comparable_version => $self->comparable_perl_version( $orig_version ),
+            ctime        => $ctime,
         };
     }
 
@@ -1991,10 +1995,12 @@ sub run_command_list {
     my $self = shift;
 
     for my $i ( $self->installed_perls ) {
-        print $i->{is_current} ? '* ': '  ',
+        print sprintf "%2s %-20s %-20s (installed on %s)\n",
+            $i->{is_current} ? '*' : '',
             $i->{name},
             (index($i->{name}, $i->{version}) < 0) ? " ($i->{version})" : "",
-            "\n";
+            $i->{ctime};
+
 
         for my $lib (@{$i->{libs}}) {
             print $lib->{is_current} ? "* " : "  ",
