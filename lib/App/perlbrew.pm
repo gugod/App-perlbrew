@@ -736,17 +736,15 @@ sub _compgen {
 # than a normal Perl installation.
 sub comparable_perl_version {
     my ( $self, $perl_version ) = @_;
-    if ( $perl_version =~ /^(c?perl)-?(\d)\.(\d+).(\d+).*/ ){
-        my $is_cperl = $1 eq 'cperl';
+    if ( $perl_version =~ /^(?:(c?perl)-?)?(\d)\.(\d+).(\d+).*/ ){
+        my $is_cperl = $1 && ($1 eq 'cperl');
         return ( $is_cperl ? -1 : 1 )
             * sprintf( '%02d%03d%03d',
                        $2 + ( $is_cperl ? 6 : 0 ),             # major version
                        $3,                                     # minor version
                        $4 );                                   # patch level
     }
-    else {
-        return $perl_version;
-    }
+    return 0;
 }
 
 # Internal method.
