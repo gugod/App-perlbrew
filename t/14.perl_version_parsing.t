@@ -120,9 +120,22 @@ my @versions = qw(
 
 use Test::More;
 
-plan tests => 0+@versions;
+subtest "perl_version_to_integer" =>  sub {
+    plan tests => (@versions - 1);
 
-my @versions_i = sort { $a->[0] <=> $b->[0] } map { [App::perlbrew::perl_version_to_integer($_), $_] } @versions;
-for my $i (0..$#versions) {
-    is $versions[$i], $versions_i[$i]->[1];
-}
+    my @versions_i = map { App::perlbrew::perl_version_to_integer($_) } @versions;
+    for my $i (0 .. $#versions_i-1) {
+        ok( $versions_i[$i] < $versions_i[$i+1], "$versions[$i] < $versions[$i+1]");
+    }
+};
+
+subtest "comparable_perl_version" =>  sub {
+    plan tests => 0+@versions;
+
+    for my $v (@versions) {
+        my $n = App::perlbrew->comparable_perl_version($v);
+        like($n, qr/\-? [0-9]+/x, "can build comparable version from: $v");
+    }
+};
+
+done_testing;
