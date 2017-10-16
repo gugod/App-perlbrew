@@ -94,6 +94,7 @@ for (@flavors) {
     }
 }
 
+
 ### functions
 
 sub joinpath { join "/", @_ }
@@ -299,6 +300,7 @@ sub new {
         variation => '',
         both => [],
         append => '',
+        reverse => 0,
     );
 
     $opt{$_} = '' for keys %flavor;
@@ -340,6 +342,7 @@ sub parse_cmdline {
 
         'yes',
         'force|f',
+        'reverse',
         'notest|n',
         'quiet|q',
         'verbose|v',
@@ -352,6 +355,7 @@ sub parse_cmdline {
         'all',
         'shell=s',
         'no-patchperl',
+
 
         # options passed directly to Configure
         'D=s@',
@@ -369,6 +373,7 @@ sub parse_cmdline {
         'all-variations',
         'common-variations',
         @f,
+
 
         @ext
     )
@@ -752,8 +757,11 @@ sub comparable_perl_version {
 # list.
 sub sort_perl_versions {
     my ( $self, @perls ) = @_;
+
     return map { $_->[ 0 ] }
-           sort { $b->[ 1 ] <=> $a->[ 1 ] }
+    sort { (  $self->{reverse}
+            ? $a->[ 1 ] <=> $b->[ 1 ]
+            : $b->[ 1 ] <=> $a->[ 1 ] ) }
            map { [ $_, $self->comparable_perl_version( $_ ) ] }
            @perls;
 }
