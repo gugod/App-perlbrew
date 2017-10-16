@@ -1878,7 +1878,9 @@ sub installed_perls {
         };
     }
 
-    return sort { $b->{comparable_version} <=> $a->{comparable_version} or $a->{name} cmp $b->{name}  } @result;
+    return sort { ( $self->{reverse}
+                  ? ( $a->{comparable_version} <=> $b->{comparable_version} or $b->{name} cmp $a->{name} )
+                  : ( $b->{comparable_version} <=> $a->{comparable_version} or $a->{name} cmp $b->{name} ) )   } @result;
 }
 
 sub local_libs {
