@@ -179,7 +179,7 @@ Install the cperl distribution released from:
 
     https://github.com/perl11/cperl/releases
 
-See  http://perl11.org/cperl/ for mor information about cperl distribution.
+See  http://perl11.org/cperl/ for more information about cperl distribution.
 
 =item B<install> [options]  perl-stable
 
