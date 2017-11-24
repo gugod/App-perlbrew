@@ -1,6 +1,7 @@
 sudo: false
 language: perl
 perl:
+  - "blead" # allow failure on blead but this could help detect regression from p5p
   - "5.26"
   - "5.24"
   - "5.22"
@@ -22,6 +23,11 @@ before_install:
   - ./dev-bin/travis-prepare.sh
 script:
   PERL5OPT=-MDevel::Cover prove -lv t && cover -report coveralls
+
+matrix:
+  fast_finish: false # set to true to stop smoking at the first failure
+  allow_failures:
+    - perl: "blead"
 
 notifications:
   irc:
