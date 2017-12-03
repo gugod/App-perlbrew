@@ -1243,6 +1243,10 @@ sub do_extract_tarball {
     # Note that this is incorrect for blead.
     my $extracted_dir = joinpath($self->root, "build", $dist_tarball_basename);
 
+    if ($dist_tarball_basename =~ /^cperl-/) {
+        $extracted_dir = joinpath($self->root, "build", "cperl-" . $dist_tarball_basename);
+    }
+
     # Was broken on Solaris, where GNU tar is probably
     # installed as 'gtar' - RT #61042
     my $tarx =
@@ -1256,6 +1260,10 @@ sub do_extract_tarball {
 
     my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball";
     die "Failed to extract $dist_tarball" if system($extract_command);
+    unless (-d $extracted_dir) {
+        die "Failed to find the extracted $dist_tarball -- missing the directory: $extracted_dir\n";
+    }
+
     return $extracted_dir;
 }
 
