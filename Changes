@@ -1,6 +1,7 @@
 - New command: clone-modules
 - Recognize tarball in .tar.xz extension
 - The output of "availables" is now sorted by versions
+- Unbreak the integration with cperl releases
 
 0.80: # 2017-06-30T07:40:45+0200
 - Fix version in META.yml in CPAN distribution. See: https://rt.cpan.org/Public/Bug/Display.html?id=122279
