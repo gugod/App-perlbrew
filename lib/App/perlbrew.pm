@@ -1241,11 +1241,10 @@ sub do_extract_tarball {
     $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2|xz)$}{$1};
 
     # Note that this is incorrect for blead.
-    my $extracted_dir = joinpath($self->root, "build", $dist_tarball_basename);
-
-    if ($dist_tarball_basename =~ /^cperl-/) {
-        $extracted_dir = joinpath($self->root, "build", "cperl-" . $dist_tarball_basename);
-    }
+    my $workdir = joinpath($self->root, "build", $dist_tarball_basename);
+    rmpath($workdir) if -d $workdir;
+    mkpath($workdir);
+    my $extracted_dir;
 
     # Was broken on Solaris, where GNU tar is probably
     # installed as 'gtar' - RT #61042
@@ -1254,14 +1253,16 @@ sub do_extract_tarball {
         ( $dist_tarball =~ m/xz$/  ? 'xJf' :
           $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
 
-    if (-d $extracted_dir) {
-        rmpath($extracted_dir);
+    my $extract_command = "cd $workdir; $tarx $dist_tarball";
+    die "Failed to extract $dist_tarball" if system($extract_command);
+
+    my @things = <$workdir/*>;
+    if (@things == 1) {
+        $extracted_dir = $things[0];
     }
 
-    my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball";
-    die "Failed to extract $dist_tarball" if system($extract_command);
-    unless (-d $extracted_dir) {
-        die "Failed to find the extracted $dist_tarball -- missing the directory: $extracted_dir\n";
+    unless (defined($extracted_dir) && -d $extracted_dir) {
+        die "Failed to find the extracted directory under $workdir";
     }
 
     return $extracted_dir;
