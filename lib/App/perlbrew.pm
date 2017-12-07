@@ -1022,6 +1022,7 @@ sub release_detail {
         tarball_name => undef,
     };
 
+    # dynamic methods: release_detail_perl_local, release_detail_cperl_local, release_detail_perl_remote, release_detail_cperl_remote
     my $m_local = "release_detail_${dist_type}_local";
     my $m_remote = "release_detail_${dist_type}_remote";
 
