@@ -1249,7 +1249,7 @@ sub do_extract_tarball {
     # Was broken on Solaris, where GNU tar is probably
     # installed as 'gtar' - RT #61042
     my $tarx =
-        ($^O eq 'solaris' ? 'gtar ' : 'tar ') .
+        ($^O =~ /solaris|aix/ ? 'gtar ' : 'tar ') .
         ( $dist_tarball =~ m/xz$/  ? 'xJf' :
           $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
 
