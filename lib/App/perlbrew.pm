@@ -1000,10 +1000,19 @@ sub release_detail_cperl_remote {
     my $expect_url = "https://github.com/perl11/cperl/archive/${dist}.tar.gz";
     my $html = http_get('https://github.com/perl11/cperl/tags');
     my $error = 1;
-    if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
-        $rd->{tarball_name} = "${dist}.tar.gz";
-        $rd->{tarball_url}  = $expect_url;
-        $error = 0;
+    my $pages = 0;
+    while ($error && $pages++ < 25) {
+        if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
+            $rd->{tarball_name} = "${dist}.tar.gz";
+            $rd->{tarball_url}  = $expect_url;
+            $error = 0;
+        } else {
+            if ($html =~ m{ <a \s+ href="(https://github.com/perl11/cperl/tags\?after=[^"]+?)" }xsi) {
+                $html = http_get($1);
+            } else {
+                last;
+            }
+        }
     }
     return ($error, $rd);
 }
