@@ -32,6 +32,11 @@ subtest "`perlbrew self-install` initialize the required dir structure under PER
 };
 
 subtest "Works with bash", sub {
+    if ($ENV{PERLBREW_SHELLRC_VERSION}) {
+        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        return;
+    }
+
     my $out = capture_stdout {
         my $app = App::perlbrew->new('self-install');
         $app->current_shell("bash");
@@ -42,6 +47,11 @@ subtest "Works with bash", sub {
 };
 
 subtest "Works with fish", sub {
+    if ($ENV{PERLBREW_SHELLRC_VERSION}) {
+        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        return;
+    }
+
     my $out = capture_stdout {
         my $app = App::perlbrew->new('self-install');
         $app->current_shell("fish");
@@ -52,6 +62,10 @@ subtest "Works with fish", sub {
 };
 
 subtest "Works with zsh", sub {
+    if ($ENV{PERLBREW_SHELLRC_VERSION}) {
+        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        return;
+    }
     my $out = capture_stdout {
         my $app = App::perlbrew->new('self-install');
         $app->current_shell("zsh4");
@@ -62,6 +76,10 @@ subtest "Works with zsh", sub {
 };
 
 subtest "Exports PERLBREW_HOME when needed", sub {
+    if ($ENV{PERLBREW_SHELLRC_VERSION}) {
+        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        return;
+    }
     my $out = capture_stdout {
         local $App::perlbrew::PERLBREW_HOME = App::perlbrew::joinpath($ENV{HOME}, ".perlbrew");
         my $app = App::perlbrew->new('self-install');
