@@ -6697,7 +6697,7 @@ Without a parameter, shows the version of perl currently selected.
 
 =head1 COMMAND: LIST
 
-Usage: perlbrew list
+Usage: perlbrew list [--reverse]
 
 List all perl installations inside perlbrew root specified by C<$PERLBREW_ROOT>
 environment variable. By default, the value is C<~/perl5/perlbrew>.
@@ -6706,9 +6706,11 @@ If there are libs associated to some perl installations, they will be included
 as part of the name. The output items in this list can be the argument in
 various other commands.
 
+With the C<reverse> option the sorting output is the opposite of the default one.
+
 =head1 COMMAND: AVAILABLE
 
-Usage: perlbrew available [--all]
+Usage: perlbrew available [--all] [--reverse]
 
 List the recently available versions of perl on CPAN.
 
@@ -6716,6 +6718,8 @@ The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
 and is not the list of *all* perl versions ever released in the past.
 
 To get a list of all perls ever released, use the C<--all> option.
+
+With the C<reverse> option the sorting output is the opposite of the default one.
 
 NOTICE: This command might be gone in the future and becomes an option of 'list' command.
 
