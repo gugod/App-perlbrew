@@ -19,7 +19,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.80";
+  our $VERSION = "0.81";
   use Config;
   
   BEGIN {
@@ -110,6 +110,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           $flavor{$implies}{implied_by} = $_->{name};
       }
   }
+  
   
   ### functions
   
@@ -316,6 +317,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           variation => '',
           both => [],
           append => '',
+          reverse => 0,
       );
   
       $opt{$_} = '' for keys %flavor;
@@ -357,6 +359,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
           'yes',
           'force|f',
+          'reverse',
           'notest|n',
           'quiet|q',
           'verbose|v',
@@ -369,6 +372,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           'all',
           'shell=s',
           'no-patchperl',
+  
   
           # options passed directly to Configure
           'D=s@',
@@ -386,6 +390,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           'all-variations',
           'common-variations',
           @f,
+  
   
           @ext
       )
@@ -770,8 +775,11 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   # list.
   sub sort_perl_versions {
       my ( $self, @perls ) = @_;
+  
       return map { $_->[ 0 ] }
-             sort { $b->[ 1 ] <=> $a->[ 1 ] }
+      sort { (  $self->{reverse}
+              ? $a->[ 1 ] <=> $b->[ 1 ]
+              : $b->[ 1 ] <=> $a->[ 1 ] ) }
              map { [ $_, $self->comparable_perl_version( $_ ) ] }
              @perls;
   }
@@ -1017,10 +1025,19 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my $expect_url = "https://github.com/perl11/cperl/archive/${dist}.tar.gz";
       my $html = http_get('https://github.com/perl11/cperl/tags');
       my $error = 1;
-      if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
-          $rd->{tarball_name} = "${dist}.tar.gz";
-          $rd->{tarball_url}  = $expect_url;
-          $error = 0;
+      my $pages = 0;
+      while ($error && $pages++ < 25) {
+          if ($html =~ m{ <a \s+ href="$expect_href" }xsi) {
+              $rd->{tarball_name} = "${dist}.tar.gz";
+              $rd->{tarball_url}  = $expect_url;
+              $error = 0;
+          } else {
+              if ($html =~ m{ <a \s+ href="(https://github.com/perl11/cperl/tags\?after=[^"]+?)" }xsi) {
+                  $html = http_get($1);
+              } else {
+                  last;
+              }
+          }
       }
       return ($error, $rd);
   }
@@ -1039,6 +1056,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           tarball_name => undef,
       };
   
+      # dynamic methods: release_detail_perl_local, release_detail_cperl_local, release_detail_perl_remote, release_detail_cperl_remote
       my $m_local = "release_detail_${dist_type}_local";
       my $m_remote = "release_detail_${dist_type}_remote";
   
@@ -1258,27 +1276,28 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2|xz)$}{$1};
   
       # Note that this is incorrect for blead.
-      my $extracted_dir = joinpath($self->root, "build", $dist_tarball_basename);
-  
-      if ($dist_tarball_basename =~ /^cperl-/) {
-          $extracted_dir = joinpath($self->root, "build", "cperl-" . $dist_tarball_basename);
-      }
+      my $workdir = joinpath($self->root, "build", $dist_tarball_basename);
+      rmpath($workdir) if -d $workdir;
+      mkpath($workdir);
+      my $extracted_dir;
   
       # Was broken on Solaris, where GNU tar is probably
       # installed as 'gtar' - RT #61042
       my $tarx =
-          ($^O eq 'solaris' ? 'gtar ' : 'tar ') .
+          ($^O =~ /solaris|aix/ ? 'gtar ' : 'tar ') .
           ( $dist_tarball =~ m/xz$/  ? 'xJf' :
             $dist_tarball =~ m/bz2$/ ? 'xjf' : 'xzf' );
   
-      if (-d $extracted_dir) {
-          rmpath($extracted_dir);
+      my $extract_command = "cd $workdir; $tarx $dist_tarball";
+      die "Failed to extract $dist_tarball" if system($extract_command);
+  
+      my @things = <$workdir/*>;
+      if (@things == 1) {
+          $extracted_dir = $things[0];
       }
   
-      my $extract_command = "cd @{[ $self->root ]}/build; $tarx $dist_tarball";
-      die "Failed to extract $dist_tarball" if system($extract_command);
-      unless (-d $extracted_dir) {
-          die "Failed to find the extracted $dist_tarball -- missing the directory: $extracted_dir\n";
+      unless (defined($extracted_dir) && -d $extracted_dir) {
+          die "Failed to find the extracted directory under $workdir";
       }
   
       return $extracted_dir;
@@ -1896,7 +1915,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           };
       }
   
-      return sort { $b->{comparable_version} <=> $a->{comparable_version} or $a->{name} cmp $b->{name}  } @result;
+      return sort { ( $self->{reverse}
+                    ? ( $a->{comparable_version} <=> $b->{comparable_version} or $b->{name} cmp $a->{name} )
+                    : ( $b->{comparable_version} <=> $a->{comparable_version} or $a->{name} cmp $b->{name} ) )   } @result;
   }
   
   sub local_libs {
@@ -6550,7 +6571,7 @@ Install the cperl distribution released from:
 
     https://github.com/perl11/cperl/releases
 
-See  http://perl11.org/cperl/ for mor information about cperl distribution.
+See  http://perl11.org/cperl/ for more information about cperl distribution.
 
 =item B<install> [options]  perl-stable
 
@@ -6697,7 +6718,7 @@ Without a parameter, shows the version of perl currently selected.
 
 =head1 COMMAND: LIST
 
-Usage: perlbrew list [--reverse]
+Usage: perlbrew list
 
 List all perl installations inside perlbrew root specified by C<$PERLBREW_ROOT>
 environment variable. By default, the value is C<~/perl5/perlbrew>.
@@ -6706,11 +6727,9 @@ If there are libs associated to some perl installations, they will be included
 as part of the name. The output items in this list can be the argument in
 various other commands.
 
-With the C<reverse> option the sorting output is the opposite of the default one.
-
 =head1 COMMAND: AVAILABLE
 
-Usage: perlbrew available [--all] [--reverse]
+Usage: perlbrew available [--all]
 
 List the recently available versions of perl on CPAN.
 
@@ -6718,8 +6737,6 @@ The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
 and is not the list of *all* perl versions ever released in the past.
 
 To get a list of all perls ever released, use the C<--all> option.
-
-With the C<reverse> option the sorting output is the opposite of the default one.
 
 NOTICE: This command might be gone in the future and becomes an option of 'list' command.
 
