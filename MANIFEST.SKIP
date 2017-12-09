@@ -34,4 +34,4 @@
 ^t/mock_perlbrew_root/
 ^.prove$
 ^.travis.yml$
-
+^doc/notes.org$
