@@ -1,3 +1,12 @@
+0.81: # 2017-12-09T15:12:04+0900
+- Thanks to our contributors: Luca Ferrari, Zac Bentley, perlancar, Nicolas R, gregor herrmann, Paul Cochrane
+- New command: clone-modules
+- Recognize tarball in .tar.xz extension
+- The output of "availables" is now sorted by versions
+- Unbreak the integration with cperl releases
+- Make `perlbrew install` runs correctly on AIX
+- support the current perl blead (5.28)
+
 0.80: # 2017-06-30T07:40:45+0200
 - Fix version in META.yml in CPAN distribution. See: https://rt.cpan.org/Public/Bug/Display.html?id=122279
 
