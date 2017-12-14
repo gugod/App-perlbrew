@@ -1144,7 +1144,7 @@ sub run_command_init {
 
 perlbrew root ($root_dir) is initialized.
 
-Append the following piece of code to the end of your ~/.${yourshrc} and start a
+Append the following piece of code to the end of your ~/${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
     $code
