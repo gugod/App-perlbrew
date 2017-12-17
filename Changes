@@ -1,3 +1,6 @@
+- Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Paul Cochrane
+- Fix regression of 'perlbrew install blead'
+
 0.81: # 2017-12-09T15:12:04+0900
 - Thanks to our contributors: Luca Ferrari, Zac Bentley, perlancar, Nicolas R, gregor herrmann, Paul Cochrane
 - New command: clone-modules

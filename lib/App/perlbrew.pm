@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.81";
+our $VERSION = "0.82";
 use Config;
 
 BEGIN {
@@ -1144,7 +1144,7 @@ sub run_command_init {
 
 perlbrew root ($root_dir) is initialized.
 
-Append the following piece of code to the end of your ~/.${yourshrc} and start a
+Append the following piece of code to the end of your ~/${yourshrc} and start a
 new shell, perlbrew should be up and fully functional from there:
 
     $code
@@ -1286,45 +1286,71 @@ sub do_extract_tarball {
     return $extracted_dir;
 }
 
-sub do_install_blead {
-    my $self = shift;
-    my $dist = shift;
-
-    my $dist_name           = 'perl';
-    my $dist_git_describe   = 'blead';
-    my $dist_version        = 'blead';
-
-    # We always blindly overwrite anything that's already there,
-    # because blead is a moving target.
-    my $dist_tarball = 'blead.tar.gz';
-    my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
-    print "Fetching $dist_git_describe as $dist_tarball_path\n";
-
-    my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
-
-    if ($error) {
-        die "\nERROR: Failed to download perl-blead tarball.\n\n";
-    }
-
-    # Returns the wrong extracted dir for blead
-    $self->do_extract_tarball($dist_tarball_path);
-
-    my $build_dir = joinpath($self->root, "build");
+sub search_blead_dir {
+    my ($build_dir, $contents_ref) = @_;
     local *DIRH;
     opendir DIRH, $build_dir or die "Couldn't open ${build_dir}: $!";
-    my @contents = readdir DIRH;
+    @{$contents_ref} = grep {!/^\./ && -d joinpath($build_dir, $_)} readdir DIRH;
     closedir DIRH or warn "Couldn't close ${build_dir}: $!";
-    my @candidates = grep { m/^perl-blead-[0-9a-f]{4,40}$/ } @contents;
+    my @candidates = grep { m/^perl-blead-[0-9a-f]{4,40}$/ } @{$contents_ref};
     # Use a Schwartzian Transform in case there are lots of dirs that
     # look like "perl-$SHA1", which is what's inside blead.tar.gz,
     # so we stat each one only once.
     @candidates =   map  { $_->[0] }
                     sort { $b->[1] <=> $a->[1] } # descending
                     map  { [ $_, (stat( joinpath($build_dir, $_) ))[9] ] } @candidates;
-    my $dist_extracted_dir = joinpath($self->root, "build", $candidates[0]); # take the newest one
+    if (scalar(@candidates) > 0) {
+        # take the newest one
+        return $candidates[0];
+    } else {
+        return;
+    }
+}
+
+sub do_install_blead {
+    my ($self, $dist) = @_;
+    my $dist_name           = 'perl';
+    my $dist_git_describe   = 'blead';
+    my $dist_version        = 'blead';
+ 
+    # We always blindly overwrite anything that's already there,
+    # because blead is a moving target.
+    my $dist_tarball = 'blead.tar.gz';
+    my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
+    print "Fetching $dist_git_describe as $dist_tarball_path\n";
+ 
+    my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
+ 
+    if ($error) {
+        die "\nERROR: Failed to download perl-blead tarball.\n\n";
+    }
+ 
+    # Returns the wrong extracted dir for blead
+    $self->do_extract_tarball($dist_tarball_path);
+ 
+    my $build_dir = joinpath($self->root, "build");
+    my @contents;
+    my $dist_extracted_subdir = search_blead_dir($build_dir, \@contents);
+     
+    # there might be an additional level on $build_dir
+    unless (defined($dist_extracted_subdir)) {
+        warn "No candidate found at $build_dir, trying a level deeper";
+        for my $item (@contents) {
+            my $another_sub = joinpath($build_dir, $item);
+            $dist_extracted_subdir = search_blead_dir($another_sub);
+            if (defined($dist_extracted_subdir)) {
+               $build_dir = $another_sub;
+                last;
+            }
+        }
+    }
+
+    die "Could not identify where is the source code to build under $build_dir, aborting..." unless (defined($dist_extracted_subdir));
+    my $dist_extracted_dir = joinpath($build_dir, $dist_extracted_subdir);
     $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
     return;
 }
+
 
 sub resolve_stable_version {
     my ($self) = @_;
