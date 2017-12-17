@@ -1,3 +1,4 @@
+0.82: # 2017-12-17T09:53:00+0900
 - Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Paul Cochrane
 - Fix regression of 'perlbrew install blead'
 
