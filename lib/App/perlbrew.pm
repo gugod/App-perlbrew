@@ -3313,7 +3313,7 @@ __END__
 
 =head1 NAME
 
-L<App::perlbrew> - Manage perl installations in your C<$HOME>
+App::perlbrew - Manage perl installations in your C<$HOME>
 
 =head2 SYNOPSIS
 
