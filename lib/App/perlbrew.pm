@@ -1196,9 +1196,7 @@ sub run_command_self_install {
 }
 
 sub do_install_git {
-    my $self = shift;
-    my $dist = shift;
-
+    my ($self, $dist) = @_;
     my $dist_name;
     my $dist_git_describe;
     my $dist_version;
@@ -1222,9 +1220,7 @@ sub do_install_git {
 }
 
 sub do_install_url {
-    my $self = shift;
-    my $dist = shift;
-
+    my ($self, $dist) = @_;
     my $dist_name = 'perl';
     # need the period to account for the file extension
     my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
@@ -1251,8 +1247,7 @@ sub do_install_url {
 }
 
 sub do_extract_tarball {
-    my $self = shift;
-    my $dist_tarball = shift;
+    my ($self, $dist_tarball) = @_;
 
     # Assuming the dir extracted from the tarball is named after the tarball.
     my $dist_tarball_basename = $dist_tarball;
