@@ -97,7 +97,14 @@ for (@flavors) {
 
 ### functions
 
-sub joinpath { join "/", @_ }
+sub joinpath {
+    for my $entry(@_) {
+        no warnings 'uninitialized';
+        die 'Received an undefined entry as a parameter (all parameters are: '. join(', ', @_). ')' unless (defined($entry));
+    }
+    return join "/", @_;
+}
+
 sub splitpath { split "/", $_[0] }
 
 sub mkpath {
