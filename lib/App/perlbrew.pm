@@ -97,7 +97,14 @@ for (@flavors) {
 
 ### functions
 
-sub joinpath { join "/", @_ }
+sub joinpath {
+    for my $entry(@_) {
+        no warnings 'uninitialized';
+        die 'Received an undefined entry as a parameter (all parameters are: '. join(', ', @_). ')' unless (defined($entry));
+    }
+    return join "/", @_;
+}
+
 sub splitpath { split "/", $_[0] }
 
 sub mkpath {
@@ -1196,9 +1203,7 @@ sub run_command_self_install {
 }
 
 sub do_install_git {
-    my $self = shift;
-    my $dist = shift;
-
+    my ($self, $dist) = @_;
     my $dist_name;
     my $dist_git_describe;
     my $dist_version;
@@ -1222,9 +1227,7 @@ sub do_install_git {
 }
 
 sub do_install_url {
-    my $self = shift;
-    my $dist = shift;
-
+    my ($self, $dist) = @_;
     my $dist_name = 'perl';
     # need the period to account for the file extension
     my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
@@ -1251,8 +1254,7 @@ sub do_install_url {
 }
 
 sub do_extract_tarball {
-    my $self = shift;
-    my $dist_tarball = shift;
+    my ($self, $dist_tarball) = @_;
 
     # Assuming the dir extracted from the tarball is named after the tarball.
     my $dist_tarball_basename = $dist_tarball;
@@ -1286,6 +1288,14 @@ sub do_extract_tarball {
     return $extracted_dir;
 }
 
+# Searchs for directories inside a extracted tarball downloaded as perl "blead"
+# Use a Schwartzian Transform in case there are lots of dirs that
+# look like "perl-$SHA1", which is what's inside blead.tar.gz,
+# so we stat each one only once, ordering (descending )the directories per mtime
+# Expects as parameters:
+# - the path to the extracted "blead" tarball
+# - an array reference, that will be used to cache all contents from the read directory
+# Returns the most recent directory which name matches the expected one.
 sub search_blead_dir {
     my ($build_dir, $contents_ref) = @_;
     local *DIRH;
@@ -1293,9 +1303,6 @@ sub search_blead_dir {
     @{$contents_ref} = grep {!/^\./ && -d joinpath($build_dir, $_)} readdir DIRH;
     closedir DIRH or warn "Couldn't close ${build_dir}: $!";
     my @candidates = grep { m/^perl-blead-[0-9a-f]{4,40}$/ } @{$contents_ref};
-    # Use a Schwartzian Transform in case there are lots of dirs that
-    # look like "perl-$SHA1", which is what's inside blead.tar.gz,
-    # so we stat each one only once.
     @candidates =   map  { $_->[0] }
                     sort { $b->[1] <=> $a->[1] } # descending
                     map  { [ $_, (stat( joinpath($build_dir, $_) ))[9] ] } @candidates;
