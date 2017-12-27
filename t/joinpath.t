@@ -9,4 +9,4 @@ unshift(@long_path, '');
 is(App::perlbrew::joinpath(@long_path), '/this/is/a/long/path/to/check/if/it/is/joined/ok', 'we got the expected path');
 $long_path[3] = undef;
 dies_ok { App::perlbrew::joinpath(@long_path) } 'dies if a undefined parameter is received';
-like($@, qr/^Received an undefined entry as a parameter/);
+like($@, qr/^Received an undefined entry as a parameter/, 'dies with expected message');

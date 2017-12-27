@@ -1288,6 +1288,14 @@ sub do_extract_tarball {
     return $extracted_dir;
 }
 
+# Searchs for directories inside a extracted tarball downloaded as perl "blead"
+# Use a Schwartzian Transform in case there are lots of dirs that
+# look like "perl-$SHA1", which is what's inside blead.tar.gz,
+# so we stat each one only once, ordering (descending )the directories per mtime
+# Expects as parameters:
+# - the path to the extracted "blead" tarball
+# - an array reference, that will be used to cache all contents from the read directory
+# Returns the most recent directory which name matches the expected one.
 sub search_blead_dir {
     my ($build_dir, $contents_ref) = @_;
     local *DIRH;
@@ -1295,9 +1303,6 @@ sub search_blead_dir {
     @{$contents_ref} = grep {!/^\./ && -d joinpath($build_dir, $_)} readdir DIRH;
     closedir DIRH or warn "Couldn't close ${build_dir}: $!";
     my @candidates = grep { m/^perl-blead-[0-9a-f]{4,40}$/ } @{$contents_ref};
-    # Use a Schwartzian Transform in case there are lots of dirs that
-    # look like "perl-$SHA1", which is what's inside blead.tar.gz,
-    # so we stat each one only once.
     @candidates =   map  { $_->[0] }
                     sort { $b->[1] <=> $a->[1] } # descending
                     map  { [ $_, (stat( joinpath($build_dir, $_) ))[9] ] } @candidates;
