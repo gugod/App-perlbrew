@@ -105,7 +105,11 @@ sub joinpath {
     return join "/", @_;
 }
 
-sub splitpath { split "/", $_[0] }
+sub splitpath {
+    my $path = shift;
+    die 'Cannot receive an undefined path as parameter' unless(defined($path));
+    split "/", $path;
+}
 
 sub mkpath {
     require File::Path;
