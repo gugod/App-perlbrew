@@ -105,7 +105,11 @@ sub joinpath {
     return join "/", @_;
 }
 
-sub splitpath { split "/", $_[0] }
+sub splitpath {
+    my $path = shift;
+    die 'Cannot receive an undefined path as parameter' unless(defined($path));
+    split "/", $path;
+}
 
 sub mkpath {
     require File::Path;
@@ -563,7 +567,7 @@ sub find_similar_commands {
     return @commands;
 }
 
-# This mehtod is called in the 'run' loop
+# This method is called in the 'run' loop
 # and executes every specific action depending
 # on the type of command.
 #
@@ -1288,7 +1292,7 @@ sub do_extract_tarball {
     return $extracted_dir;
 }
 
-# Searchs for directories inside a extracted tarball downloaded as perl "blead"
+# Search for directories inside a extracted tarball downloaded as perl "blead"
 # Use a Schwartzian Transform in case there are lots of dirs that
 # look like "perl-$SHA1", which is what's inside blead.tar.gz,
 # so we stat each one only once, ordering (descending )the directories per mtime
