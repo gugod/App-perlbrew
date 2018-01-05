@@ -620,7 +620,15 @@ which are not necessarily the I<same> module versions you had installed previous
 
 =head1 COMMAND: CLONE-MODULES
 
-This command re-install all CPAN modules found from one installation to another.
+This command re-installs all CPAN modules found from one installation to another.
+
+Usage:
+    perlbrew clone-modules <src_version> <dst_version>
+
+for example
+
+    perlbrew clone-modules 5.26.1 5.27.7
+
 
 =head1 SEE ALSO
 
