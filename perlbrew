@@ -6453,6 +6453,7 @@ Commands:
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
     exec           exec programs with specified perl environments.
+    clone-modules  re-installs all CPAN modules from one installation to another
 
     self-install       Install perlbrew itself under PERLBREW_ROOT/bin
     self-upgrade       Upgrade perlbrew itself.
