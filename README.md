@@ -49,7 +49,7 @@ perlbrew exec -- perl -E 'say $]'
 easy way. It provides multiple isolated perl environments, and a mechanism
 for you to switch between them.
 
-Everything are installed unter `~/perl5/perlbrew`. You then need to include a
+Everything is installed under `~/perl5/perlbrew`. You then need to include a
 bashrc/cshrc provided by perlbrew to tweak the PATH for you. You then can
 benefit from not having to run `sudo` commands to install
 cpan modules because those are installed inside your `HOME` too.
