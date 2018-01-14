@@ -35,6 +35,7 @@ Commands:
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
     exec           exec programs with specified perl environments.
+    clone-modules  re-installs all CPAN modules from one installation to another
 
     self-install       Install perlbrew itself under PERLBREW_ROOT/bin
     self-upgrade       Upgrade perlbrew itself.
@@ -613,13 +614,21 @@ your module installation to different perl. The following command
 re-installs all modules under perl-5.16.0:
 
     perlbrew list-modules | perlbrew exec --with perl-5.16.0 cpanm
-    
+
 Note that this installs the I<latest> versions of the Perl modules on the new perl,
 which are not necessarily the I<same> module versions you had installed previously.
 
 =head1 COMMAND: CLONE-MODULES
 
-This command re-install all CPAN modules found from one installation to another.
+This command re-installs all CPAN modules found from one installation to another.
+
+Usage:
+    perlbrew clone-modules <src_version> <dst_version>
+
+for example
+
+    perlbrew clone-modules 5.26.1 5.27.7
+
 
 =head1 SEE ALSO
 
