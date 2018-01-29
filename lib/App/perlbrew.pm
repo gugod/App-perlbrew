@@ -783,12 +783,14 @@ sub sort_perl_versions {
 }
 
 sub run_command_available {
-    my ( $self, $dist, $opts ) = @_;
+    my ( $self ) = @_;
+
 
     my $perls     = $self->available_perls_with_urls(@_);
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
+    my $is_verbose = ( grep { $_ =~ /^verbose$/ } @_ ) == 1;
 
     # sort the keys of Perl installation (Randal to the rescue!)
     my @sorted_perls = $self->sort_perl_versions( keys %$perls );
@@ -806,11 +808,13 @@ sub run_command_available {
             }
         }
 
-        print sprintf "\n%1s %12s  %s <%s>",
+        print sprintf "\n%1s %12s  %s %s",
             $ctime ? 'i' : '',
             $available,
-            $ctime ? 'INSTALLED on ' . $ctime . ' via ' : 'available from ',
-            $url ;
+            ( $is_verbose
+              ? $ctime ? "INSTALLED on $ctime via"  : 'available from '
+              : '' ),
+            ( $is_verbose ? "<$url>" : '' ) ;
     }
 
     print "\n";
