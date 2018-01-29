@@ -1327,26 +1327,26 @@ sub do_install_blead {
     my $dist_name           = 'perl';
     my $dist_git_describe   = 'blead';
     my $dist_version        = 'blead';
- 
+
     # We always blindly overwrite anything that's already there,
     # because blead is a moving target.
     my $dist_tarball = 'blead.tar.gz';
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
- 
+
     my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
- 
+
     if ($error) {
         die "\nERROR: Failed to download perl-blead tarball.\n\n";
     }
- 
+
     # Returns the wrong extracted dir for blead
     $self->do_extract_tarball($dist_tarball_path);
- 
+
     my $build_dir = joinpath($self->root, "build");
     my @contents;
     my $dist_extracted_subdir = search_blead_dir($build_dir, \@contents);
-     
+
     # there might be an additional level on $build_dir
     unless (defined($dist_extracted_subdir)) {
         warn "No candidate found at $build_dir, trying a level deeper";
@@ -2061,14 +2061,17 @@ sub perlbrew_env {
 }
 
 sub run_command_list {
-    my $self = shift;
+    my $self       = shift;
+    my $is_verbose = $_[0] && $_[0] =~ /^verbose$/;
 
     for my $i ( $self->installed_perls ) {
-        print sprintf "%2s %-20s %-20s (installed on %s)\n",
+        print sprintf "%2s %-20s %-20s %s\n",
             $i->{is_current} ? '*' : '',
             $i->{name},
-            (index($i->{name}, $i->{version}) < 0) ? " ($i->{version})" : "",
-            $i->{ctime};
+            ( $is_verbose ?
+                (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
+              : '' ),
+            ( $is_verbose ? "(installed on $i->{ctime})" : '' );
 
 
         for my $lib (@{$i->{libs}}) {
