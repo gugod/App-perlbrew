@@ -2400,6 +2400,11 @@ sub run_command_exec {
         print "No perl installation found.\n" unless $self->{quiet};
     }
 
+    my $no_header = 0;
+    if (1 == @exec_with) {
+        $no_header = 1;
+    }
+
     my $overall_success = 1;
     for my $i ( @exec_with ) {
         next if -l joinpath($self->root, 'perls', $i->{name}); # Skip Aliases
@@ -2411,8 +2416,7 @@ sub run_command_exec {
         local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
         local $ENV{PERL5LIB} = $env{PERL5LIB} || "";
 
-        print "$i->{name}\n==========\n" unless $self->{quiet};
-
+        print "$i->{name}\n==========\n" unless $no_header || $self->{quiet};
 
         if (my $err = $self->do_system_with_exit_code(@ARGV)) {
             my $exit_code = $err >> 8;
