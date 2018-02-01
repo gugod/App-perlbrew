@@ -312,6 +312,7 @@ sub new {
         both => [],
         append => '',
         reverse => 0,
+        verbose => 0,
     );
 
     $opt{$_} = '' for keys %flavor;
@@ -790,7 +791,7 @@ sub run_command_available {
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
-    my $is_verbose = ( grep { $_ =~ /^verbose$/ } @_ ) == 1;
+    my $is_verbose = $self->{verbose};
 
     # sort the keys of Perl installation (Randal to the rescue!)
     my @sorted_perls = $self->sort_perl_versions( keys %$perls );
@@ -2066,7 +2067,7 @@ sub perlbrew_env {
 
 sub run_command_list {
     my $self       = shift;
-    my $is_verbose = $_[0] && $_[0] =~ /^verbose$/;
+    my $is_verbose = $self->{verbose};
 
     for my $i ( $self->installed_perls ) {
         print sprintf "%2s %-20s %-20s %s\n",
