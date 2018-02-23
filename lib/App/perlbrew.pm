@@ -1754,8 +1754,10 @@ INSTALL
                 : ()
     );
 
+
+    my $make = $Config{'make'};
     my @build_commands = (
-        "make " . ($self->{j} ? "-j$self->{j}" : "")
+        $make . ' ' . ($self->{j} ? "-j$self->{j}" : "")
     );
 
     # Test via "make test_harness" if available so we'll get
@@ -1770,8 +1772,8 @@ INSTALL
     local $ENV{TEST_JOBS}=$self->{j}
       if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-    my @install_commands = ("make install" . ($destdir ? " DESTDIR=$destdir" : q||));
-    unshift @install_commands, "make $test_target" unless $self->{notest};
+    my @install_commands = ("${make} install" . ($destdir ? " DESTDIR=$destdir" : q||));
+    unshift @install_commands, "${make} $test_target" unless $self->{notest};
     # Whats happening here? we optionally join with && based on $self->{force}, but then subsequently join with && anyway?
     @install_commands    = join " && ", @install_commands unless($self->{force});
 
