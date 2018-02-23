@@ -2294,6 +2294,11 @@ sub run_command_install_cpanm {
     $self->do_install_program_from_url('https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm' => 'cpanm');
 }
 
+sub run_command_install_cpm {
+    my ($self) = @_;
+    $self->do_install_program_from_url('https://raw.githubusercontent.com/skaji/cpm/master/cpm' => 'cpm');
+}
+
 sub run_command_self_upgrade {
     my ($self) = @_;
     my $TMPDIR = $ENV{TMPDIR} || "/tmp";
