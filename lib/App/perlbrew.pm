@@ -1755,7 +1755,7 @@ INSTALL
     );
 
 
-    my $make = $Config{'make'};
+    my $make = $ENV{MAKE} // ($^O eq "solaris" ? 'gmake' : 'make');
     my @build_commands = (
         $make . ' ' . ($self->{j} ? "-j$self->{j}" : "")
     );
