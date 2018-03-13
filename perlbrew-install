@@ -5,7 +5,13 @@ if [ -z "${PERLBREWURL}" ]; then
     PERLBREWURL=https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew
 fi
 
-if [ -z "$TMPDIR" ]; then
+clean_exit () {
+    [ ! -z "$LOCALINSTALLER" -a -f $LOCALINSTALLER ] && rm $LOCALINSTALLER
+    exit $1
+}
+
+
+if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ]; then
     if [ -d "/tmp" ]; then
         TMPDIR="/tmp"
     else
@@ -16,13 +22,6 @@ fi
 # TMPDIR could have been exported as variable
 # so it is required to change to such directory always
 cd $TMPDIR || clean_exit 1
-
-
-clean_exit () {
-    [ -f $LOCALINSTALLER ] && rm $LOCALINSTALLER
-    exit $1
-}
-
 LOCALINSTALLER=$(mktemp perlbrew.XXXXXX)
 
 
