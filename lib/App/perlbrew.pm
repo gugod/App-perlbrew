@@ -760,19 +760,6 @@ sub _compgen {
 # multiplied by a negative factor (-1) in order
 # to make cperl being "less" in the ordered list
 # than a normal Perl installation.
-<<<<<<< HEAD
-sub comparable_perl_version {
-    my ( $self, $perl_version ) = @_;
-    if ( $perl_version =~ /^(?:(c?perl)-?)?(\d)\.(\d+).(\d+).*/ ){
-        my $is_cperl = $1 && ($1 eq 'cperl');
-        return ( $is_cperl ? -1 : 1 )
-            * sprintf( '%02d%03d%03d',
-                       $2 + ( $is_cperl ? 6 : 0 ),             # major version
-                       $3,                                     # minor version
-                       $4 );                                   # patch level
-    }
-    return 0;
-=======
 #
 # The returned string is made by four pieces of two digits each:
 # MMmmppbb
@@ -806,7 +793,6 @@ sub comparable_perl_version {
                    $minor,                                     # minor version
                    $patch,                                     # patch level
                    $is_blead );                                # blead
->>>>>>> 73d8f17... New implementation of the comparable_perl_version function.
 }
 
 # Internal method.
