@@ -2812,7 +2812,6 @@ sub run_command_clone_modules {
     # filehandle or something similar).
 
     require File::Temp;
-    use File::Temp;
     my $modules_fh = File::Temp->new;
     $self->run_command_list_modules( $modules_fh->filename );
 
