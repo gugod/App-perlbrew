@@ -835,7 +835,7 @@ sub run_command_available {
             }
         }
 
-        print sprintf "\n%1s %12s  %s %s",
+        printf "\n%1s %12s  %s %s",
             $ctime ? 'i' : '',
             $available,
             ( $is_verbose
@@ -2098,7 +2098,7 @@ sub run_command_list {
     my $is_verbose = $self->{verbose};
 
     for my $i ( $self->installed_perls ) {
-        print sprintf "%2s %-20s %-20s %s\n",
+        printf "%2s %-20s %-20s %s\n",
             $i->{is_current} ? '*' : '',
             $i->{name},
             ( $is_verbose ?
