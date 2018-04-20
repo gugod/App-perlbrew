@@ -760,17 +760,39 @@ sub _compgen {
 # multiplied by a negative factor (-1) in order
 # to make cperl being "less" in the ordered list
 # than a normal Perl installation.
+#
+# The returned string is made by four pieces of two digits each:
+# MMmmppbb
+# where:
+# MM is the major Perl version (e.g., 5 -> 05)
+# mm is the minor Perl version (e.g. 27 -> 27)
+# pp is the patch level (e.g., 4 -> 04)
+# bb is the blead flag: it is 00 for a "normal" release, or 01 for a blead one
 sub comparable_perl_version {
-    my ( $self, $perl_version ) = @_;
+    my ( $self, $perl_version )   = @_;
+    my ( $is_cperl, $is_blead )   = ( 0, 0 );
+    my ( $major, $minor, $patch ) = ( 0, 0, 0 );
     if ( $perl_version =~ /^(?:(c?perl)-?)?(\d)\.(\d+).(\d+).*/ ){
-        my $is_cperl = $1 && ($1 eq 'cperl');
-        return ( $is_cperl ? -1 : 1 )
-            * sprintf( '%02d%03d%03d',
-                       $2 + ( $is_cperl ? 6 : 0 ),             # major version
-                       $3,                                     # minor version
-                       $4 );                                   # patch level
+        $is_cperl = $1 && ($1 eq 'cperl');
+        $major    = $2 + ( $is_cperl ? 6 : 0 );             # major version
+        $minor    = $3;                                     # minor version
+        $patch    = $4;                                     # patch level
+
     }
-    return 0;
+    elsif ( $perl_version =~ /^(?:(c?perl)-?)?-?(blead)$/ ) {
+        # in the case of a blead release use a fake high number
+        # to assume it is the "latest" release number available
+        $is_cperl = $1 && ($1 eq 'cperl');
+        $is_blead = $2 && ($2 eq 'blead' );
+        ( $major, $minor, $patch ) = ( 5, 99, 99 );
+    }
+
+    return ( $is_cperl ? -1 : 1 )
+        * sprintf( '%02d%02d%02d%02d',
+                   $major + ( $is_cperl ? 6 : 0 ),             # major version
+                   $minor,                                     # minor version
+                   $patch,                                     # patch level
+                   $is_blead );                                # blead
 }
 
 # Internal method.
