@@ -3,7 +3,7 @@
 eval "$(perlbrew init-in-bash)"
 # source $HOME/perl5/perlbrew/etc/bashrc
 
-wanted_perl_installation="perl-5.8.8@perlbrew"
+wanted_perl_installation="perl-5.8.9@perlbrew"
 
 perlbrew use ${wanted_perl_installation}
 
@@ -12,6 +12,8 @@ if [ $? -eq 0 ]; then
 else
    echo "!!! Fail to use ${wanted_perl_installation} for building. Please prepare it first."
 fi
+
+cpanm File::Path App::FatPacker
 
 cd `dirname $0`/../
 cpanm --installdeps .
