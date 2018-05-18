@@ -11,6 +11,7 @@ my $modules = [ split /\s+/, <<MODULES ];
 local/lib.pm
 Capture/Tiny.pm
 CPAN/Perl/Releases.pm
+JSON/PP.pm
 MODULES
 
 my $packer = App::FatPacker->new;

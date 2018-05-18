@@ -19,6 +19,7 @@ requires
     'Pod::Parser'          => '1.63',
     'Pod::Usage'           => '1.68',
     'File::Temp'           => '0.2304',
+    'JSON::PP'             => '0',
     'local::lib'           => '2.000014';
 
 test_requires
