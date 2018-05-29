@@ -2,6 +2,7 @@ Build
 _build_params
 MANIFEST
 META.yml
+META.json
 MYMETA.yml
 MYMETA.json
 Makefile
