@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.82";
+our $VERSION = "0.83";
 use Config;
 
 BEGIN {
@@ -22,6 +22,7 @@ BEGIN {
 use File::Glob 'bsd_glob';
 use Getopt::Long ();
 use CPAN::Perl::Releases;
+use JSON::PP 'decode_json';
 
 sub min(@) {
     my $m = $_[0];
@@ -97,8 +98,19 @@ for (@flavors) {
 
 ### functions
 
-sub joinpath { join "/", @_ }
-sub splitpath { split "/", $_[0] }
+sub joinpath {
+    for my $entry(@_) {
+        no warnings 'uninitialized';
+        die 'Received an undefined entry as a parameter (all parameters are: '. join(', ', @_). ')' unless (defined($entry));
+    }
+    return join "/", @_;
+}
+
+sub splitpath {
+    my $path = shift;
+    die 'Cannot receive an undefined path as parameter' unless(defined($path));
+    split "/", $path;
+}
 
 sub mkpath {
     require File::Path;
@@ -301,6 +313,7 @@ sub new {
         both => [],
         append => '',
         reverse => 0,
+        verbose => 0,
     );
 
     $opt{$_} = '' for keys %flavor;
@@ -329,7 +342,11 @@ sub new {
         }
     }
 
-    return bless \%opt, $class;
+    my $self = bless \%opt, $class;
+
+    $self->{builddir} ||= joinpath($self->root, "build");
+
+    return $self;
 }
 
 sub parse_cmdline {
@@ -356,6 +373,7 @@ sub parse_cmdline {
         'shell=s',
         'no-patchperl',
 
+        "builddir=s",
 
         # options passed directly to Configure
         'D=s@',
@@ -373,7 +391,6 @@ sub parse_cmdline {
         'all-variations',
         'common-variations',
         @f,
-
 
         @ext
     )
@@ -413,7 +430,11 @@ sub current_lib {
 
 sub current_shell_is_bashish {
     my ( $self ) = @_;
-    return $self->current_shell =~ /(ba|z)?sh/;
+    if (($self->current_shell eq 'bash') or ($self->current_shell eq 'zsh')) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 sub current_shell {
@@ -556,7 +577,7 @@ sub find_similar_commands {
     return @commands;
 }
 
-# This mehtod is called in the 'run' loop
+# This method is called in the 'run' loop
 # and executes every specific action depending
 # on the type of command.
 #
@@ -740,17 +761,39 @@ sub _compgen {
 # multiplied by a negative factor (-1) in order
 # to make cperl being "less" in the ordered list
 # than a normal Perl installation.
+#
+# The returned string is made by four pieces of two digits each:
+# MMmmppbb
+# where:
+# MM is the major Perl version (e.g., 5 -> 05)
+# mm is the minor Perl version (e.g. 27 -> 27)
+# pp is the patch level (e.g., 4 -> 04)
+# bb is the blead flag: it is 00 for a "normal" release, or 01 for a blead one
 sub comparable_perl_version {
-    my ( $self, $perl_version ) = @_;
+    my ( $self, $perl_version )   = @_;
+    my ( $is_cperl, $is_blead )   = ( 0, 0 );
+    my ( $major, $minor, $patch ) = ( 0, 0, 0 );
     if ( $perl_version =~ /^(?:(c?perl)-?)?(\d)\.(\d+).(\d+).*/ ){
-        my $is_cperl = $1 && ($1 eq 'cperl');
-        return ( $is_cperl ? -1 : 1 )
-            * sprintf( '%02d%03d%03d',
-                       $2 + ( $is_cperl ? 6 : 0 ),             # major version
-                       $3,                                     # minor version
-                       $4 );                                   # patch level
+        $is_cperl = $1 && ($1 eq 'cperl');
+        $major    = $2 + ( $is_cperl ? 6 : 0 );             # major version
+        $minor    = $3;                                     # minor version
+        $patch    = $4;                                     # patch level
+
     }
-    return 0;
+    elsif ( $perl_version =~ /^(?:(c?perl)-?)?-?(blead)$/ ) {
+        # in the case of a blead release use a fake high number
+        # to assume it is the "latest" release number available
+        $is_cperl = $1 && ($1 eq 'cperl');
+        $is_blead = $2 && ($2 eq 'blead' );
+        ( $major, $minor, $patch ) = ( 5, 99, 99 );
+    }
+
+    return ( $is_cperl ? -1 : 1 )
+        * sprintf( '%02d%02d%02d%02d',
+                   $major + ( $is_cperl ? 6 : 0 ),             # major version
+                   $minor,                                     # minor version
+                   $patch,                                     # patch level
+                   $is_blead );                                # blead
 }
 
 # Internal method.
@@ -768,12 +811,14 @@ sub sort_perl_versions {
 }
 
 sub run_command_available {
-    my ( $self, $dist, $opts ) = @_;
+    my ( $self ) = @_;
+
 
     my $perls     = $self->available_perls_with_urls(@_);
     my @installed = $self->installed_perls(@_);
 
     my $is_installed;
+    my $is_verbose = $self->{verbose};
 
     # sort the keys of Perl installation (Randal to the rescue!)
     my @sorted_perls = $self->sort_perl_versions( keys %$perls );
@@ -791,11 +836,13 @@ sub run_command_available {
             }
         }
 
-        print sprintf "\n%1s %12s  %s <%s>",
+        print sprintf "\n%1s %12s  %s %s",
             $ctime ? 'i' : '',
             $available,
-            $ctime ? 'INSTALLED on ' . $ctime . ' via ' : 'available from ',
-            $url ;
+            ( $is_verbose
+              ? $ctime ? "INSTALLED on $ctime via"  : 'available from '
+              : '' ),
+            ( $is_verbose ? "<$url>" : '' ) ;
     }
 
     print "\n";
@@ -884,17 +931,18 @@ sub perl_release {
         }
     }
 
-    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
-    unless ($html) {
+    my $result;
+    unless ($json and $result = decode_json($json)->{hits}{hits}[0]) {
         die "ERROR: Failed to locate perl-${version} tarball.";
     }
 
     my ($dist_path, $dist_tarball) =
-        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+        $result->{_source}{download_url} =~ m[(/authors/id/.+/(perl-${version}.tar.(gz|bz2|xz)))$];
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
-    my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+    my $dist_tarball_url = "https://cpan.metacpan.org${dist_path}";
     return ($dist_tarball, $dist_tarball_url);
 }
 
@@ -959,17 +1007,18 @@ sub release_detail_perl_remote {
         }
     }
 
-    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
-    unless ($html) {
+    my $result;
+    unless ($json and $result = decode_json($json)->{hits}{hits}[0]) {
         die "ERROR: Failed to locate perl-${version} tarball.";
     }
 
     my ($dist_path, $dist_tarball) =
-        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+        $result->{_source}{download_url} =~ m[(/authors/id/.+/(perl-${version}.tar.(gz|bz2|xz)))$];
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
-    my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+    my $dist_tarball_url = "https://cpan.metacpan.org${dist_path}";
 
     $rd->{tarball_name} = $dist_tarball;
     $rd->{tarball_url} = $dist_tarball_url;
@@ -1196,9 +1245,7 @@ sub run_command_self_install {
 }
 
 sub do_install_git {
-    my $self = shift;
-    my $dist = shift;
-
+    my ($self, $dist) = @_;
     my $dist_name;
     my $dist_git_describe;
     my $dist_version;
@@ -1222,9 +1269,7 @@ sub do_install_git {
 }
 
 sub do_install_url {
-    my $self = shift;
-    my $dist = shift;
-
+    my ($self, $dist) = @_;
     my $dist_name = 'perl';
     # need the period to account for the file extension
     my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
@@ -1251,15 +1296,14 @@ sub do_install_url {
 }
 
 sub do_extract_tarball {
-    my $self = shift;
-    my $dist_tarball = shift;
+    my ($self, $dist_tarball) = @_;
 
     # Assuming the dir extracted from the tarball is named after the tarball.
     my $dist_tarball_basename = $dist_tarball;
     $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2|xz)$}{$1};
 
     # Note that this is incorrect for blead.
-    my $workdir = joinpath($self->root, "build", $dist_tarball_basename);
+    my $workdir = joinpath($self->{builddir}, $dist_tarball_basename);
     rmpath($workdir) if -d $workdir;
     mkpath($workdir);
     my $extracted_dir;
@@ -1286,6 +1330,14 @@ sub do_extract_tarball {
     return $extracted_dir;
 }
 
+# Search for directories inside a extracted tarball downloaded as perl "blead"
+# Use a Schwartzian Transform in case there are lots of dirs that
+# look like "perl-$SHA1", which is what's inside blead.tar.gz,
+# so we stat each one only once, ordering (descending )the directories per mtime
+# Expects as parameters:
+# - the path to the extracted "blead" tarball
+# - an array reference, that will be used to cache all contents from the read directory
+# Returns the most recent directory which name matches the expected one.
 sub search_blead_dir {
     my ($build_dir, $contents_ref) = @_;
     local *DIRH;
@@ -1293,9 +1345,6 @@ sub search_blead_dir {
     @{$contents_ref} = grep {!/^\./ && -d joinpath($build_dir, $_)} readdir DIRH;
     closedir DIRH or warn "Couldn't close ${build_dir}: $!";
     my @candidates = grep { m/^perl-blead-[0-9a-f]{4,40}$/ } @{$contents_ref};
-    # Use a Schwartzian Transform in case there are lots of dirs that
-    # look like "perl-$SHA1", which is what's inside blead.tar.gz,
-    # so we stat each one only once.
     @candidates =   map  { $_->[0] }
                     sort { $b->[1] <=> $a->[1] } # descending
                     map  { [ $_, (stat( joinpath($build_dir, $_) ))[9] ] } @candidates;
@@ -1312,26 +1361,26 @@ sub do_install_blead {
     my $dist_name           = 'perl';
     my $dist_git_describe   = 'blead';
     my $dist_version        = 'blead';
- 
+
     # We always blindly overwrite anything that's already there,
     # because blead is a moving target.
     my $dist_tarball = 'blead.tar.gz';
     my $dist_tarball_path = joinpath($self->root, "dists", $dist_tarball);
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
- 
+
     my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
- 
+
     if ($error) {
         die "\nERROR: Failed to download perl-blead tarball.\n\n";
     }
- 
+
     # Returns the wrong extracted dir for blead
     $self->do_extract_tarball($dist_tarball_path);
- 
-    my $build_dir = joinpath($self->root, "build");
+
+    my $build_dir = $self->{builddir};
     my @contents;
     my $dist_extracted_subdir = search_blead_dir($build_dir, \@contents);
-     
+
     # there might be an additional level on $build_dir
     unless (defined($dist_extracted_subdir)) {
         warn "No candidate found at $build_dir, trying a level deeper";
@@ -1730,8 +1779,10 @@ INSTALL
                 : ()
     );
 
+
+    my $make = $ENV{MAKE} || ($^O eq "solaris" ? 'gmake' : 'make');
     my @build_commands = (
-        "make " . ($self->{j} ? "-j$self->{j}" : "")
+        $make . ' ' . ($self->{j} ? "-j$self->{j}" : "")
     );
 
     # Test via "make test_harness" if available so we'll get
@@ -1746,8 +1797,8 @@ INSTALL
     local $ENV{TEST_JOBS}=$self->{j}
       if $test_target eq "test_harness" && ($self->{j}||1) > 1;
 
-    my @install_commands = ("make install" . ($destdir ? " DESTDIR=$destdir" : q||));
-    unshift @install_commands, "make $test_target" unless $self->{notest};
+    my @install_commands = ("${make} install" . ($destdir ? " DESTDIR=$destdir" : q||));
+    unshift @install_commands, "${make} $test_target" unless $self->{notest};
     # Whats happening here? we optionally join with && based on $self->{force}, but then subsequently join with && anyway?
     @install_commands    = join " && ", @install_commands unless($self->{force});
 
@@ -2046,14 +2097,17 @@ sub perlbrew_env {
 }
 
 sub run_command_list {
-    my $self = shift;
+    my $self       = shift;
+    my $is_verbose = $self->{verbose};
 
     for my $i ( $self->installed_perls ) {
-        print sprintf "%2s %-20s %-20s (installed on %s)\n",
+        print sprintf "%2s %-20s %-20s %s\n",
             $i->{is_current} ? '*' : '',
             $i->{name},
-            (index($i->{name}, $i->{version}) < 0) ? " ($i->{version})" : "",
-            $i->{ctime};
+            ( $is_verbose ?
+                (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
+              : '' ),
+            ( $is_verbose ? "(installed on $i->{ctime})" : '' );
 
 
         for my $lib (@{$i->{libs}}) {
@@ -2267,6 +2321,11 @@ sub run_command_install_cpanm {
     $self->do_install_program_from_url('https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm' => 'cpanm');
 }
 
+sub run_command_install_cpm {
+    my ($self) = @_;
+    $self->do_install_program_from_url('https://raw.githubusercontent.com/skaji/cpm/master/cpm' => 'cpm');
+}
+
 sub run_command_self_upgrade {
     my ($self) = @_;
     my $TMPDIR = $ENV{TMPDIR} || "/tmp";
@@ -2373,19 +2432,24 @@ sub run_command_exec {
         print "No perl installation found.\n" unless $self->{quiet};
     }
 
+    my $no_header = 0;
+    if (1 == @exec_with) {
+        $no_header = 1;
+    }
+
     my $overall_success = 1;
     for my $i ( @exec_with ) {
         next if -l joinpath($self->root, 'perls', $i->{name}); # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
-        local @ENV{ keys %env } = values %env;
-        local $ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
-        local $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
-        local $ENV{PERL5LIB} = $env{PERL5LIB} || "";
+        local %ENV = %ENV;
+        $ENV{$_} = defined $env{$_} ? $env{$_} : '' for keys %env;
+        $ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
+        $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
+        $ENV{PERL5LIB} = $env{PERL5LIB} || "";
 
-        print "$i->{name}\n==========\n" unless $self->{quiet};
-
+        print "$i->{name}\n==========\n" unless $no_header || $self->{quiet};
 
         if (my $err = $self->do_system_with_exit_code(@ARGV)) {
             my $exit_code = $err >> 8;
@@ -3313,7 +3377,7 @@ __END__
 
 =head1 NAME
 
-L<App::perlbrew> - Manage perl installations in your C<$HOME>
+App::perlbrew - Manage perl installations in your C<$HOME>
 
 =head2 SYNOPSIS
 
@@ -3458,7 +3522,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010-2016 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010-2017 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head3 LICENCE
 

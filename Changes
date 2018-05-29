@@ -1,442 +1,487 @@
-- Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Paul Cochrane
-- Fix regression of 'perlbrew install blead'
-
-0.81: # 2017-12-09T15:12:04+0900
-- Thanks to our contributors: Luca Ferrari, Zac Bentley, perlancar, Nicolas R, gregor herrmann, Paul Cochrane
-- New command: clone-modules
-- Recognize tarball in .tar.xz extension
-- The output of "availables" is now sorted by versions
-- Unbreak the integration with cperl releases
-- Make `perlbrew install` runs correctly on AIX
-- support the current perl blead (5.28)
-
-0.80: # 2017-06-30T07:40:45+0200
-- Fix version in META.yml in CPAN distribution. See: https://rt.cpan.org/Public/Bug/Display.html?id=122279
-
-0.79: # 2017-06-25T23:40:45+0200
-- deal with perl-5.26 change about @INC in Makefile.PL
-- "available" command now also shows the URLs
-
-0.78: # 2016-11-20T22:59:55+0100
-- Thanks to our contributors: Manuel Streuhofer, Sergey Aleynikov
-- More fixes to accomodate changes on perl5.git.perl.org
-
-0.77: # 2016-11-12T06:42:45+0100
-- Thanks to our contributors: Dennis Kaarsemaker, Roel Harbers
-- The "uninstall" command now requires confirmation.
-- Fix bug with csh when PATH entries contain spaces
-- Accommodate git commit abbrivation changes on perl5.git.perl.org. See GH #524 https://github.com/gugod/App-perlbrew/pull/524
-
-0.76: # 2016-06-21T23:02:44+0200
-- Start supporting cperl installation.
-- cperl releases are sourced from: https://github.com/perl11/cperl/releases
-- Deal with a regex warning when testing perlbrew with perl-5.25. See RT: https://rt.cpan.org/Ticket/Display.html?id=114871
-
-0.75: # 2016-03-16T23:41:41+0100
-- Thanks to our contributors: Dave Cross,  Dean Hamstead,  Mark J. Reed,  Mohammed El-Afifi,
-- Add '--no-patchperl' install option for skip running patchperl.
-- Add '--destdir' install option.
-- "uninstall" command now also delete associated libs.
-- "mirror" command is removed.
-- "config" command is removed.
-
-0.74: # 2015-11-24T20:55:02+0100
-- A big thanks for our contributers: Aristotle Pagaltzis, Dave Jacoby, Dylan Cali, John Krull, Kevin Johnson, Nathan Day, Paul Cochrane, Tudor Constantin, Yanick Champoux, tm604
-- support PERLBREW_LIB_PREFIX. https://github.com/gugod/App-perlbrew/commit/c29813cd4633683bd049964178a9ac96647986bc
-- prefer https and remove insecure download cli flags. https://github.com/gugod/App-perlbrew/commit/f49a908c1702942006de4654107edf77a48ead52
-- perlbrew now dies when switching to/use a lib that does not exist. https://github.com/gugod/App-perlbrew/issues/432
-- RHEL vendorlib fix https://github.com/gugod/App-perlbrew/issues/409
-- improvements with fish integration.
-- unbreak when running with perl 5.14 or earlier: "list" command now correctly display lib names.
-- retaining flags in upgrade-perl. https://github.com/gugod/App-perlbrew/commit/b8d466670bbfc8e214a9d3ff2e889a4860060d84
-- variour document clean up and improvements.
-
-0.73: # 2015-02-01T09:59:45+0100
-- fixes and improvements from Manuel Streuhofer, Aristotle Pagaltzis, Sebastian Willert, David Hand, Eric Enns,
-  Peter Roberts, Thomas Sibley, Ivan Baidakou, thanks!
-- fix 'perlbrew user' for fish users https://github.com/gugod/App-perlbrew/pull/429
-- fix sub-shell for bash users https://github.com/gugod/App-perlbrew/pull/435
-- clarify the 'perlbrew use' output: https://github.com/gugod/App-perlbrew/issues/439
-
-
-0.72: # 2014-10-27T21:38:19+0100
-- Fix 0.71 breakage on MacOSX when the shell is bash or zsh
-- Fix spelling mistake. by @gregoa++
-
-0.71: # 2014-09-13T19:59:15+0200
-- Fix a few bugs of having unwanted values in PERL5LIB when switching between libs
-
-0.70: # 2014-09-02T20:41:15+0900
-- download the fatpacked perlbrew from an http:// url.
-- protect fatpacked perlbrew from PERL5LIB, thanks to dagolden++
-- avoid several warnings, thanks to DabeDotCom++
-- making perlbrew a bit friendlier to init.d script, thanks to maxhq++ . see also https://github.com/gugod/App-perlbrew/pull/404
-- make it possible to override PERLBREWURL before invoking installers
-
-0.69: # 2014-06-10T23:32:05+0200
-- fix 'perlbrew env' breakage by just avoiding bad local::lib versions.
-
-0.68: # 2014-06-07T15:08:00+0200
-- disable SSL cert checks. GH #385.
-- "perlbrew download stable" works as on expects. GH #383
-- Many fish shell fixes. GH #376 #378 #379
-- make 5.21 installable. GH #396
-- various documentation fixes.
-
-0.67: # 2013-11-20T08:40:52+0100
-- Support fish shell. Thanks to @yenzie++
-- `info` command now takes an optional module name and show information for it. Thanks to @trcjr++
-- doc/bug fixes from @mmcclimon++, @mperry2++, and markstos++
-
-0.66: # 2013-08-03T00:22:29+0200
-- fix a bug the made download failed with curl program.
-
-0.65: # 2013-08-01T07:19:03+0200
-- exec command: error hadndling improvements. Thanks to @vsespb.
-- install command: add "--clang" option. Thanks to @salva
-- various bug fixes. thanks to @ironcamel and @gottreu
-
-0.64: # 2013-06-02T09:44:59+0200
-- The build directory is removed before a new build.
-- New command: `install-multiple`
-- `clean` command now also removes tarballs
-- `install` command has many extra convienent flags.
-- Use "http://www.cpan.org" as the default CPAN mirror instead of "http://search.cpan.org/CPAN"
-- Remove the --insecure/--no-check-certificate command bflags when invoking curl/wget.
-
-0.63: # 2013-05-06T16:53:48+0200
-- Remove `install-ack` command.
-  - Due to the new architecture of ack2, it does not make sense
-    to install the standalone executable anymore. Thus it's better not
-    to do the installation with perlbrew.
-- Fix the `use` and `switch` command when switching between binary incompatible perl installations. See GH #297
-
-0.62: # 2013-04-07T17:43:58+0800
-- Fix `list-modules` under lib env. It lists all modules in the lib, and in the base.
-- Use the original grep command to prevent aliases from breaking the content of init. GH #307
-- `perlbrew alias help` is now the same as `perlbrew help alias`
-- `perlbrew exec --with ...` now preserve the order of specified names.
-
-0.61:
-- Fix bashrc on various OS/shell. See GH #302
-
-0.60: # 2013-03-17T21:44:12+0100
-- Exit status handling in bash function. See ed29288ab50a15d7df86d69cfcbddf108674eb07 for more details.
-- Fix compatibility with recent local::lib version.
-- Delay the loading of server modules.
-- Fix warnings when runing `perlbrew off`
-
-
-0.59: # 2013-02-17T12:34:10+0100
-- New feature: "perlbrew install --switch $perl"
-- New feature: "perlbrew install stable"
-- Fix "--quiet" options for "exec" command
-- Fix mulitple test failures and warnings
-
-0.58: # 2012-11-16T08:45:18+0100
-- Fix infinite re-exec loop as identified in #263
-- Fix a case where PERL5LIB still contains previous entries after deactivating or activating other ones.
-
-0.57: # 2012-11-13T19:57:03+0100
-- Fix an infinite re-exec loop
-
-0.56: # 2012-11-11T23:10:30+0100
-- Fix GH #261, which breaks `off` and `swich-off` commands.
-
-0.55:
-- Revert the requirement of 5.8.8. Now require 5.8
-- Add PERLBREW_CPAN_MIRROR environment variable
-- Deal with a minor local::lib path problem. See GH #254.
-
-0.54: # 2012-10-24T21:21:25+0200
-- Now requires perl 5.8.8
-- Fix an issue with list-module command listing extra modules See GH #245
-- Tweak default Configure options for pre-5.6 versions
-- Fix an issue with warning messagse in 'upgrade-perl' command.
-
-0.53: # 2012-10-14T17:41:17+0200
-- New command: `info`.
-- requires CPAN::Perl::Releases 0.76 for 5.14.3 info.
-- Skip "." in @INC to deal with a `list-module` issue. GH #245.
-- Environment variable cleanups and minor bashrc rewrite.
-
-0.52: # 2012-10-04T21:30:40+0200
-- userelocatableinc is no longer default. Meanwhile PERLBREW_CONFIGURE_FLAGS can still be used.
-- Fix GH #197 again. Also make sure perlbrew-unrelated PERL5LIB values are preserved.
-- Fix an issue that MANPATH contains unwanted values even after switch/use/off.
-
-0.51: # 2012-09-29T09:17:14+0200
-- Fix a start-up warning message from bashrc when perlbrew is not active
-- Fix a breakage on CentOS due to the use of `manpath` command.
-
-0.50: # 2012-09-01T11:25:41+0200
-- properly remove perlbrew-related PERL5LIB entries. GH #197
-- minor documentation tweak.
-
-0.49: # 2012-08-25T22:32:22+0200
-- Fix the build for perl-5.12 and 5.14 -- userelocatableinc are not working properly. https://github.com/gugod/App-perlbrew/issues/232
-
-0.48: # 2012-08-24T07:07:52+0200
-- The build log output "build.log" is now named after the installation name for easier reference.
-- Fix the invokation configure command to actually contains -Duserelocatableinc
-- Experimental: bash/zsh users may put this to shell init instead: eval "$(~/perl5/perlbrew/bin/perlbrew init -)"
-- A few output message updates
-
-0.47: # 2012-08-23T07:59:53+0200
-- New command: download.
-- New env var: PERLBREW_CONFIGURE_FLAGS
-- userelocatableinc is enabled by default when the installing perl version is greater than or equals to 5.8.9. It should make some use cases easier. In particular, you can move PERLBREW_ROOT directory to another place.
-- fix https://github.com/gugod/App-perlbrew/issues/216 for bash users and zsh users
-
-0.46:
-- fix: The deprecation warning when running `self-upgrde`
-- fix: system MANPATH detection
-- improvement: Specifying multiple perl: `exec --with perl-5.14.2,perl-5.16.0`
-
-0.45:
-- New command: install-ack . This install the standalone version of ack under $PERLBREW_ROOT/bin
-- New command: list-modules
-- `exec` command now also iterates thourgh all the libs
-- Documented the `--with` argument of exec command. See `perlbrew help exec`
-
-0.44:
-- Notice: "self-install" command now alters the shebang to use system perl
-- Notice: "install-patchperl" command now alters the shebang to use system perl.
-- some documentation tweaks
-- fix: `perlbrew use` to/from a lib has not been working properly.
-
-0.43:
-- cpantester-error fixes
-- csh support. Big thanks to matzsoft.
-- support 'fetch' command on FreeBSD.
-- Fix a bug that perlbrew failed to resolve version number when dist path contain "perl5"
-
-0.42:
-- Improvement: die when running perlbrew (use|switch) with unknown installation name.
-- clean 'build.log' on install. ref: RT #69168.
-
-0.41:
-- Fix installation issue when the specified version is not listed in CPAN::Perl::Releases
-- Fix sub-shell invocation for 'switch' and 'use' command. This is particularly for csh users, but it should also work for bash users.
-
-0.40:
-- Make the stanalone perlbrew program smaller by using Perl::Strip
-- use CPAN::Perl::Releases to decide the location of perl tarball -- less HTTP hits
-- Prefer $PERLBREW_ROOT/bin/patchperl if it is there.
-
-0.39:
-- Fix GH #179. lib naming are more consistent.
-- Fix GH #171. bash users are suggestted to upgrad to this version.
-- Fix GH #152.
-
-0.38:
-- fix deps
-
-0.37:
-- fix ENV mess after switching to diffirent libs multiple times
-- add --sitecustomize option
-
-0.36:
-- fix test errors on freebsd that makes it uninstallable
-
-0.35:
-- fixes for cpantester failures
-- requiers local::lib version 1.008
-
-0.34:
-- Fix: remove duplicated items from the output of `perlbrew list`.
-- New Command: self-install.
-  - This is actually renamed from an undocumented command `install-perlbrew`
-  - Plus it gets documented.
-- Provide aditional bash completion control helper commands.
-- Documentation fixes / typo corrections.
-- alter MANPATHs, see GH #173
-- Allow the representation like '@lib' te mean "a lib name under current perl.". See GH #153
-
-0.33:
-- Remove Text::Levenshtein from the standalone executable.
-- Rearrange documentation so all perlbrew command usage document can be found in `perldoc perlbrew`
-  - In the future, App::perlbrew POD should only contain the API doc for the module.
-
-0.32:
-- A hotfix release: local::lib was not bundled in the previous release.
-
-0.31:
-- NOTICE: Remove $PERLBREW_ROOT/Conf.pm if it's there, and re-run `perlbrew mirror`
-- perlbrew help system is changing. `perlbrew help <command>` now displays brief documentation for the command.
-- Add a global `--root` argument for all commands that can be used as a quick alternative to set PERLBREW_ROOT env var.
-- Avoid display paths to external/system perl in the output of `perlbrew list`
-- Replace Text::Levenshtein with a minimal implementation -- the standalone executable get to be smaller.
-
-0.30:
-- New command: lib
-  - local::lib integration is done with this command.
-- New command: install-patchperl
-- skip runs of 'exec' on aliases https://github.com/gugod/App-perlbrew/pull/135
-- Respect -f flag when installing to replace an already installed perl.
-- Redefine the default value of -q flag to be false, and define it's meaning to be "complete silent"
-
-0.29:
-- The installer now honors $TMPDIR (RT #70850)
-- Fixd GH #108. `perlbrew use` has a fallback for users that does not use bash/csh -compitable shell.
-- Deprecate the command 'perlbrew use system' simply use 'perlbrew off' or 'perlbrew switch-off' instead.
-- Deprecate the special case of `perlbrew use /path/to/bin/perl` and `perlbrew switch /path/to/bin/perl
-  - perlbrew no longer cast magic to external perls. But there will be an alternative.
-
-0.28:
-- fixes for cpantester
-- Fix 'switch' and 'use' for bash users, by Woody2143++
-- The standalone `perlbrew` file is now packed with fatpacker, by running `dev-bin/build.sh`. `perl Makefile.PL` does no trigger a re-build anymore.
-- Update the installer to grab patchperl 0.46
-
-0.27:
-- Hotfix for `perlbrew install` command
-
-0.26:
-- Fix GH #119
-- Fix t/08.exit_status.t for cpantesters
-- Fix several bugs in `exec` command
-- Implement GH #103 - install -v shows build.log
-- Add -Dusedevel when installing blead perl
-
-0.25:
-- suggest when user types wrong commands. hoelzro++
-- Improvements about self-upgrade by hoelzro++
-- exit with non-zero status code when there's some sort of error. by punytan++
-- Added verification of existing alias before attempting unalias. johncm++
-- Fix `install-cpanm` for due to a recenet github cert update. kanetann++
-
-0.24:
-- Done GH #92 -- Show error messages on network errors.
-- Fix GH #82 -- deduplicate items in PATH for the `list` command.
-- Tests for various commands and methods.
-
-0.23:
-- dependency fixes
-- Fix auto-detection of curl
-- Support OpenBSD pdksh. The provided bashrc should be compatible with pdksh.
-- Small improvement of 'exec' command. `perlbrew exec perl -v` now works.
-
-0.22:
-- Fix ccache support on Linux with bash.. GH #87.
-- `install` command no longer clobbers existing installations.
-- New commands: uninstall, alias, self-upgrade
-- See more on http://perlbrew.pl/Release-0.22.html
-
-0.21:
-- oylenshpeegul++ Let version numbers alone mean installation names. For example, 5.12.3 means perl-5.12.3
-- audreyt++ fixed `perlbrew install <URL>` that might installs to a wrong path.
-- Fix RT #68241
-- Improve `perlbrew list` command output
-- Improve `perlbrew install` command. Now it takes a local .tar.gz filename
-- See more detail in http://perlbrew.pl/Release-0.21.html
-
-0.20:
-- For more detail release note, see https://github.com/gugod/App-perlbrew/wiki/Relesae-0.20
-- doherty++ FIX: stop when user specified an invalid perl version that cannot be found on cpan.
-- doherty++ specialized version installation: perlbrew install perl-blead / <URL>
-- am0c++ FIX: `perlbrew intsall /path/to/git/src/dir`
-
-0.19:
-- Auto run 'perlbrew init' after an install (or upgrade)
-- Symlink dev versions of executables. For example,'perl5.13.11' to 'perl', 'prove5.13.11' to 'prove'.
-- Automatically apply patches necessary to make older perls build again on
-  modern platforms with the help of Devel::PatchPerl.
-- A command "perlbrew available" to list recently available perls to build by trcjr
-
-0.18:
-- Spotted and fixed by chad.a.davis++, an issue when bash set "noclobber" option,
-  which breaks the creation of ~/.perlbrew/init. See https://rt.cpan.org/Ticket/Display.html?id=66518
-- A simple `perlbrew clean` command to clean build dir.
-- delegate `-j` arg value to `make test_harness`. by dagolden++
-- $HOME is replaced with "~" in many messages. https://rt.cpan.org/Ticket/Display.html?id=57668
-
-0.17:
-- UPDATE NOTES: you need to init, off and switch back to the version you want;
-- Fix "perlbrew use" to work even if we are switched to a specific version
-- Fix "perlbrew env" to use current version, sets PERLBREW_PERL and proper PATH
-- Feature: "perlbrew use" shows current version in use
-- Feature: "perlbrew switch /path/to/special/perl name-of-special-perl" names for adhoc perl's
-- 'perlbrew exec' now excludes those non-brewed perl by frankcuny++ according to the discussion here: https://github.com/gugod/App-perlbrew/pull/43
-
-0.16:
-- Use 'test_harness' for perl >= 5.7.3. avar++
-- Use gtar on Solaris - RT #61042. doherty++
-- Fix "perlbrew -f switch" by dalinaum++
-
-0.15:
-- DEPRECATE and REMOVE 'perlbrew installed' command.
-- Intrudoce a 'perlbrew exec' command
-- 'perlbrew use system' can be used to locally turn off perlbrew. yibe++
-
-0.14:
-- DEPRECATE `get_current_perl` function. Use `current_perl` instead
-- Show versions of non-perlbrew perls in the output of `perlbrew list`. Thanks to trcjr++
-- bashrc fixes from yibe++
-- Let help, -h and --help do the same thing -- showing full pod.
-
-0.13:
-- 'installed' command is renamed to 'list', and will be deprecated soon.
-- Requires curl or wget from now -- to fetch https URLs. polettix++
-
-0.12:
-- Fix: missing init file generation.
-
-0.11:
-- Avoid warning messages. Thanks Anno Siegel for the bug report and patch.
-- `-A` arguments are passed thru, thanks to gfx++.
-- Unbreak tests for older perls with older Test::Simple. Thanks to zaphod42++
-- Better bash Integration, no more 'hash -r'
-- New command for bash and zsh: 'perlbrew use'
-- Deprecating 'installed'. use 'list' instead.
-
-0.10:
-- Use File::Path::Tiny to avoid the api incompatibility of File::Path.
-- yanick++ and castaway++ fixes docmentation
-- gfx++ made it accept -Dopt style flags as Perl Configurate does.
-- (Danijel Tasov)++ added '-n' option -- no test!
-- xsawyerx++ fixes RT #57672, #60123, and GH #9
-- Fixes #59729
-
-0.09:
-- Use the proxy set in $ENV{http_proxy} if available.
-- Bypasses '-U' option to to configure. Thanks to chromatic++
-
-0.08:
-- Conf file + CPAN mirror support
-- Strip invalid dependency lines out of the makefile in older perl versions, to make them work with newer gcc versions
-- Add rudimentary pure-perl introspection, jrockway++
-- Documentation, castaway++
-
-0.07:
-- Document about PERLBREW_ROOT and the issue installing it with CPAN.
-- Handle an edge case whn the tarball is not found on the http server. Thanks to sekimura++
-- Improves 'switch' and 'off' command message. Thanks to Justin Davis.
-- PERL5OPT PERL5LIB are removed while configuring and testing a new perl. Thanks to Andrew Rodland.
-- fix a expression precedence bug. Thanks to Jesse Luehrs.
-
-0.06:
-- Fix -as option. Thanks to doy++ and jasonmay++
-
-0.05:
-- Now it brews from git. jasonmay++
-- Fix the uses of mkpath on various versions of perls.
-- Support the building of 5.13, and future developement versions
-
-0.04:
-- Use File::Path::mkpath instead of make_path to make in runnable with older versions of Perl
-- a few document typo fixes.
-
-0.03:
-- Fixed a bug that switch fail after 'off'
-
-0.02:
-- Officially prepare a standalone program for quick download.
-- license changed to "Same as Perl" due to the fact HTTP::Lite is included
-- The 'installed' command now also lists all the 'perl' found in your PATH
-- The 'switch' command can take an executable like /usr/bin/perl
-- Various program options by Chris Prather
-- Fixes from Tatsuhiko Miyagawa
-
-0.01:
-- First release. Installs perl-5.11.[12345] on my mac.
+0.83
+	- Released at 2018-05-30T08:04:43+0900
+	- Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Dan Book, Luca Ferrari, María Inés Parnisari, Mohammad S Anwar, Shoichi Kaji, sylints
+	- my respect to search.cpan.org
+	- MAKE env var can now be used to specify the "make" program.
+	- New command: install-cpm
+	- "install" command now has a "--builddir" option for specifying a work directory
+	- "list" command now takes "--verbose" option.
+	- "clone-modules" command is now better documented.
+
+0.82
+	- Released at 2017-12-17T09:53:00+0900
+	- Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Paul Cochrane
+	- Fix regression of 'perlbrew install blead'
+
+0.81
+	- Released at 2017-12-09T15:12:04+0900
+	- Thanks to our contributors: Luca Ferrari, Zac Bentley, perlancar, Nicolas R, gregor herrmann, Paul Cochrane
+	- New command: clone-modules
+	- Recognize tarball in .tar.xz extension
+	- The output of "availables" is now sorted by versions
+	- Unbreak the integration with cperl releases
+	- Make `perlbrew install` runs correctly on AIX
+	- support the current perl blead (5.28)
+
+0.80
+	- Released at 2017-06-30T07:40:45+0200
+	- Fix version in META.yml in CPAN distribution. See: https://rt.cpan.org/Public/Bug/Display.html?id=122279
+
+0.79
+	- Released at 2017-06-25T23:40:45+0200
+	- deal with perl-5.26 change about @INC in Makefile.PL
+	- "available" command now also shows the URLs
+
+0.78
+	- Released at 2016-11-20T22:59:55+0100
+	- Thanks to our contributors: Manuel Streuhofer, Sergey Aleynikov
+	- More fixes to accomodate changes on perl5.git.perl.org
+
+0.77
+	- Released at 2016-11-12T06:42:45+0100
+	- Thanks to our contributors: Dennis Kaarsemaker, Roel Harbers
+	- The "uninstall" command now requires confirmation.
+	- Fix bug with csh when PATH entries contain spaces
+	- Accommodate git commit abbrivation changes on perl5.git.perl.org. See GH #524 https://github.com/gugod/App-perlbrew/pull/524
+
+0.76
+	- Released at 2016-06-21T23:02:44+0200
+	- Start supporting cperl installation.
+	- cperl releases are sourced from: https://github.com/perl11/cperl/releases
+	- Deal with a regex warning when testing perlbrew with perl-5.25. See RT: https://rt.cpan.org/Ticket/Display.html?id=114871
+
+0.75
+	- Released at 2016-03-16T23:41:41+0100
+	- Thanks to our contributors: Dave Cross,  Dean Hamstead,  Mark J. Reed,  Mohammed El-Afifi,
+	- Add '--no-patchperl' install option for skip running patchperl.
+	- Add '--destdir' install option.
+	- "uninstall" command now also delete associated libs.
+	- "mirror" command is removed.
+	- "config" command is removed.
+
+0.74
+	- Released at 2015-11-24T20:55:02+0100
+	- A big thanks for our contributers: Aristotle Pagaltzis, Dave Jacoby, Dylan Cali, John Krull, Kevin Johnson, Nathan Day, Paul Cochrane, Tudor Constantin, Yanick Champoux, tm604
+	- support PERLBREW_LIB_PREFIX. https://github.com/gugod/App-perlbrew/commit/c29813cd4633683bd049964178a9ac96647986bc
+	- prefer https and remove insecure download cli flags. https://github.com/gugod/App-perlbrew/commit/f49a908c1702942006de4654107edf77a48ead52
+	- perlbrew now dies when switching to/use a lib that does not exist. https://github.com/gugod/App-perlbrew/issues/432
+	- RHEL vendorlib fix https://github.com/gugod/App-perlbrew/issues/409
+	- improvements with fish integration.
+	- unbreak when running with perl 5.14 or earlier: "list" command now correctly display lib names.
+	- retaining flags in upgrade-perl. https://github.com/gugod/App-perlbrew/commit/b8d466670bbfc8e214a9d3ff2e889a4860060d84
+	- variour document clean up and improvements.
+
+0.73
+	- Released at 2015-02-01T09:59:45+0100
+	- fixes and improvements from Manuel Streuhofer, Aristotle Pagaltzis, Sebastian Willert, David Hand, Eric Enns,
+	  Peter Roberts, Thomas Sibley, Ivan Baidakou, thanks!
+	- fix 'perlbrew user' for fish users https://github.com/gugod/App-perlbrew/pull/429
+	- fix sub-shell for bash users https://github.com/gugod/App-perlbrew/pull/435
+	- clarify the 'perlbrew use' output: https://github.com/gugod/App-perlbrew/issues/439
+
+
+0.72
+	- Released at 2014-10-27T21:38:19+0100
+	- Fix 0.71 breakage on MacOSX when the shell is bash or zsh
+	- Fix spelling mistake. by @gregoa++
+
+0.71
+	- Released at 2014-09-13T19:59:15+0200
+	- Fix a few bugs of having unwanted values in PERL5LIB when switching between libs
+
+0.70
+	- Released at 2014-09-02T20:41:15+0900
+	- download the fatpacked perlbrew from an http:// url.
+	- protect fatpacked perlbrew from PERL5LIB, thanks to dagolden++
+	- avoid several warnings, thanks to DabeDotCom++
+	- making perlbrew a bit friendlier to init.d script, thanks to maxhq++ . see also https://github.com/gugod/App-perlbrew/pull/404
+	- make it possible to override PERLBREWURL before invoking installers
+
+0.69
+	- Released at 2014-06-10T23:32:05+0200
+	- fix 'perlbrew env' breakage by just avoiding bad local::lib versions.
+
+0.68
+	- Released at 2014-06-07T15:08:00+0200
+	- disable SSL cert checks. GH #385.
+	- "perlbrew download stable" works as on expects. GH #383
+	- Many fish shell fixes. GH #376 #378 #379
+	- make 5.21 installable. GH #396
+	- various documentation fixes.
+
+0.67
+	- Released at 2013-11-20T08:40:52+0100
+	- Support fish shell. Thanks to @yenzie++
+	- `info` command now takes an optional module name and show information for it. Thanks to @trcjr++
+	- doc/bug fixes from @mmcclimon++, @mperry2++, and markstos++
+
+0.66
+	- Released at 2013-08-03T00:22:29+0200
+	- fix a bug the made download failed with curl program.
+
+0.65
+	- Released at 2013-08-01T07:19:03+0200
+	- exec command: error hadndling improvements. Thanks to @vsespb.
+	- install command: add "--clang" option. Thanks to @salva
+	- various bug fixes. thanks to @ironcamel and @gottreu
+
+0.64
+	- Released at 2013-06-02T09:44:59+0200
+	- The build directory is removed before a new build.
+	- New command: `install-multiple`
+	- `clean` command now also removes tarballs
+	- `install` command has many extra convienent flags.
+	- Use "http://www.cpan.org" as the default CPAN mirror instead of "http://search.cpan.org/CPAN"
+	- Remove the --insecure/--no-check-certificate command bflags when invoking curl/wget.
+
+0.63
+	- Released at 2013-05-06T16:53:48+0200
+	- Remove `install-ack` command.
+	  - Due to the new architecture of ack2, it does not make sense
+	    to install the standalone executable anymore. Thus it's better not
+	    to do the installation with perlbrew.
+	- Fix the `use` and `switch` command when switching between binary incompatible perl installations. See GH #297
+
+0.62
+	- Released at 2013-04-07T17:43:58+0800
+	- Fix `list-modules` under lib env. It lists all modules in the lib, and in the base.
+	- Use the original grep command to prevent aliases from breaking the content of init. GH #307
+	- `perlbrew alias help` is now the same as `perlbrew help alias`
+	- `perlbrew exec --with ...` now preserve the order of specified names.
+
+0.61
+	- Fix bashrc on various OS/shell. See GH #302
+
+0.60
+	- Released at 2013-03-17T21:44:12+0100
+	- Exit status handling in bash function. See ed29288ab50a15d7df86d69cfcbddf108674eb07 for more details.
+	- Fix compatibility with recent local::lib version.
+	- Delay the loading of server modules.
+	- Fix warnings when runing `perlbrew off`
+
+
+0.59
+	- Released at 2013-02-17T12:34:10+0100
+	- New feature: "perlbrew install --switch $perl"
+	- New feature: "perlbrew install stable"
+	- Fix "--quiet" options for "exec" command
+	- Fix mulitple test failures and warnings
+
+0.58
+	- Released at 2012-11-16T08:45:18+0100
+	- Fix infinite re-exec loop as identified in #263
+	- Fix a case where PERL5LIB still contains previous entries after deactivating or activating other ones.
+
+0.57
+	- Released at 2012-11-13T19:57:03+0100
+	- Fix an infinite re-exec loop
+
+0.56
+	- Released at 2012-11-11T23:10:30+0100
+	- Fix GH #261, which breaks `off` and `swich-off` commands.
+
+0.55
+	- Revert the requirement of 5.8.8. Now require 5.8
+	- Add PERLBREW_CPAN_MIRROR environment variable
+	- Deal with a minor local::lib path problem. See GH #254.
+
+0.54
+	- Released at 2012-10-24T21:21:25+0200
+	- Now requires perl 5.8.8
+	- Fix an issue with list-module command listing extra modules See GH #245
+	- Tweak default Configure options for pre-5.6 versions
+	- Fix an issue with warning messagse in 'upgrade-perl' command.
+
+0.53
+	- Released at 2012-10-14T17:41:17+0200
+	- New command: `info`.
+	- requires CPAN::Perl::Releases 0.76 for 5.14.3 info.
+	- Skip "." in @INC to deal with a `list-module` issue. GH #245.
+	- Environment variable cleanups and minor bashrc rewrite.
+
+0.52
+	- Released at 2012-10-04T21:30:40+0200
+	- userelocatableinc is no longer default. Meanwhile PERLBREW_CONFIGURE_FLAGS can still be used.
+	- Fix GH #197 again. Also make sure perlbrew-unrelated PERL5LIB values are preserved.
+	- Fix an issue that MANPATH contains unwanted values even after switch/use/off.
+
+0.51
+	- Released at 2012-09-29T09:17:14+0200
+	- Fix a start-up warning message from bashrc when perlbrew is not active
+	- Fix a breakage on CentOS due to the use of `manpath` command.
+
+0.50
+	- Released at 2012-09-01T11:25:41+0200
+	- properly remove perlbrew-related PERL5LIB entries. GH #197
+	- minor documentation tweak.
+
+0.49
+	- Released at 2012-08-25T22:32:22+0200
+	- Fix the build for perl-5.12 and 5.14 -- userelocatableinc are not working properly. https://github.com/gugod/App-perlbrew/issues/232
+
+0.48
+	- Released at 2012-08-24T07:07:52+0200
+	- The build log output "build.log" is now named after the installation name for easier reference.
+	- Fix the invokation configure command to actually contains -Duserelocatableinc
+	- Experimental: bash/zsh users may put this to shell init instead: eval "$(~/perl5/perlbrew/bin/perlbrew init -)"
+	- A few output message updates
+
+0.47
+	- Released at 2012-08-23T07:59:53+0200
+	- New command: download.
+	- New env var: PERLBREW_CONFIGURE_FLAGS
+	- userelocatableinc is enabled by default when the installing perl version is greater than or equals to 5.8.9. It should make some use cases easier. In particular, you can move PERLBREW_ROOT directory to another place.
+	- fix https://github.com/gugod/App-perlbrew/issues/216 for bash users and zsh users
+
+0.46
+	- fix: The deprecation warning when running `self-upgrde`
+	- fix: system MANPATH detection
+	- improvement: Specifying multiple perl: `exec --with perl-5.14.2,perl-5.16.0`
+
+0.45
+	- New command: install-ack . This install the standalone version of ack under $PERLBREW_ROOT/bin
+	- New command: list-modules
+	- `exec` command now also iterates thourgh all the libs
+	- Documented the `--with` argument of exec command. See `perlbrew help exec`
+
+0.44
+	- Notice: "self-install" command now alters the shebang to use system perl
+	- Notice: "install-patchperl" command now alters the shebang to use system perl.
+	- some documentation tweaks
+	- fix: `perlbrew use` to/from a lib has not been working properly.
+
+0.43
+	- cpantester-error fixes
+	- csh support. Big thanks to matzsoft.
+	- support 'fetch' command on FreeBSD.
+	- Fix a bug that perlbrew failed to resolve version number when dist path contain "perl5"
+
+0.42
+	- Improvement: die when running perlbrew (use|switch) with unknown installation name.
+	- clean 'build.log' on install. ref: RT #69168.
+
+0.41
+	- Fix installation issue when the specified version is not listed in CPAN::Perl::Releases
+	- Fix sub-shell invocation for 'switch' and 'use' command. This is particularly for csh users, but it should also work for bash users.
+
+0.40
+	- Make the stanalone perlbrew program smaller by using Perl::Strip
+	- use CPAN::Perl::Releases to decide the location of perl tarball -- less HTTP hits
+	- Prefer $PERLBREW_ROOT/bin/patchperl if it is there.
+
+0.39
+	- Fix GH #179. lib naming are more consistent.
+	- Fix GH #171. bash users are suggestted to upgrad to this version.
+	- Fix GH #152.
+
+0.38
+	- fix deps
+
+0.37
+	- fix ENV mess after switching to diffirent libs multiple times
+	- add --sitecustomize option
+
+0.36
+	- fix test errors on freebsd that makes it uninstallable
+
+0.35
+	- fixes for cpantester failures
+	- requiers local::lib version 1.008
+
+0.34
+	- Fix: remove duplicated items from the output of `perlbrew list`.
+	- New Command: self-install.
+	  - This is actually renamed from an undocumented command `install-perlbrew`
+	  - Plus it gets documented.
+	- Provide aditional bash completion control helper commands.
+	- Documentation fixes / typo corrections.
+	- alter MANPATHs, see GH #173
+	- Allow the representation like '@lib' te mean "a lib name under current perl.". See GH #153
+
+0.33
+	- Remove Text::Levenshtein from the standalone executable.
+	- Rearrange documentation so all perlbrew command usage document can be found in `perldoc perlbrew`
+	  - In the future, App::perlbrew POD should only contain the API doc for the module.
+
+0.32
+	- A hotfix release: local::lib was not bundled in the previous release.
+
+0.31
+	- NOTICE: Remove $PERLBREW_ROOT/Conf.pm if it's there, and re-run `perlbrew mirror`
+	- perlbrew help system is changing. `perlbrew help <command>` now displays brief documentation for the command.
+	- Add a global `--root` argument for all commands that can be used as a quick alternative to set PERLBREW_ROOT env var.
+	- Avoid display paths to external/system perl in the output of `perlbrew list`
+	- Replace Text::Levenshtein with a minimal implementation -- the standalone executable get to be smaller.
+
+0.30
+	- New command: lib
+	  - local::lib integration is done with this command.
+	- New command: install-patchperl
+	- skip runs of 'exec' on aliases https://github.com/gugod/App-perlbrew/pull/135
+	- Respect -f flag when installing to replace an already installed perl.
+	- Redefine the default value of -q flag to be false, and define it's meaning to be "complete silent"
+
+0.29
+	- The installer now honors $TMPDIR (RT #70850)
+	- Fixd GH #108. `perlbrew use` has a fallback for users that does not use bash/csh -compitable shell.
+	- Deprecate the command 'perlbrew use system' simply use 'perlbrew off' or 'perlbrew switch-off' instead.
+	- Deprecate the special case of `perlbrew use /path/to/bin/perl` and `perlbrew switch /path/to/bin/perl
+	  - perlbrew no longer cast magic to external perls. But there will be an alternative.
+
+0.28
+	- fixes for cpantester
+	- Fix 'switch' and 'use' for bash users, by Woody2143++
+	- The standalone `perlbrew` file is now packed with fatpacker, by running `dev-bin/build.sh`. `perl Makefile.PL` does no trigger a re-build anymore.
+	- Update the installer to grab patchperl 0.46
+
+0.27
+	- Hotfix for `perlbrew install` command
+
+0.26
+	- Fix GH #119
+	- Fix t/08.exit_status.t for cpantesters
+	- Fix several bugs in `exec` command
+	- Implement GH #103 - install -v shows build.log
+	- Add -Dusedevel when installing blead perl
+
+0.25
+	- suggest when user types wrong commands. hoelzro++
+	- Improvements about self-upgrade by hoelzro++
+	- exit with non-zero status code when there's some sort of error. by punytan++
+	- Added verification of existing alias before attempting unalias. johncm++
+	- Fix `install-cpanm` for due to a recenet github cert update. kanetann++
+
+0.24
+	- Done GH #92 -- Show error messages on network errors.
+	- Fix GH #82 -- deduplicate items in PATH for the `list` command.
+	- Tests for various commands and methods.
+
+0.23
+	- dependency fixes
+	- Fix auto-detection of curl
+	- Support OpenBSD pdksh. The provided bashrc should be compatible with pdksh.
+	- Small improvement of 'exec' command. `perlbrew exec perl -v` now works.
+
+0.22
+	- Fix ccache support on Linux with bash.. GH #87.
+	- `install` command no longer clobbers existing installations.
+	- New commands: uninstall, alias, self-upgrade
+	- See more on http://perlbrew.pl/Release-0.22.html
+
+0.21
+	- oylenshpeegul++ Let version numbers alone mean installation names. For example, 5.12.3 means perl-5.12.3
+	- audreyt++ fixed `perlbrew install <URL>` that might installs to a wrong path.
+	- Fix RT #68241
+	- Improve `perlbrew list` command output
+	- Improve `perlbrew install` command. Now it takes a local .tar.gz filename
+	- See more detail in http://perlbrew.pl/Release-0.21.html
+
+0.20
+	- For more detail release note, see https://github.com/gugod/App-perlbrew/wiki/Relesae-0.20
+	- doherty++ FIX: stop when user specified an invalid perl version that cannot be found on cpan.
+	- doherty++ specialized version installation: perlbrew install perl-blead / <URL>
+	- am0c++ FIX: `perlbrew intsall /path/to/git/src/dir`
+
+0.19
+	- Auto run 'perlbrew init' after an install (or upgrade)
+	- Symlink dev versions of executables. For example,'perl5.13.11' to 'perl', 'prove5.13.11' to 'prove'.
+	- Automatically apply patches necessary to make older perls build again on
+	  modern platforms with the help of Devel::PatchPerl.
+	- A command "perlbrew available" to list recently available perls to build by trcjr
+
+0.18
+	- Spotted and fixed by chad.a.davis++, an issue when bash set "noclobber" option,
+	  which breaks the creation of ~/.perlbrew/init. See https://rt.cpan.org/Ticket/Display.html?id=66518
+	- A simple `perlbrew clean` command to clean build dir.
+	- delegate `-j` arg value to `make test_harness`. by dagolden++
+	- $HOME is replaced with "~" in many messages. https://rt.cpan.org/Ticket/Display.html?id=57668
+
+0.17
+	- UPDATE NOTES: you need to init, off and switch back to the version you want;
+	- Fix "perlbrew use" to work even if we are switched to a specific version
+	- Fix "perlbrew env" to use current version, sets PERLBREW_PERL and proper PATH
+	- Feature: "perlbrew use" shows current version in use
+	- Feature: "perlbrew switch /path/to/special/perl name-of-special-perl" names for adhoc perl's
+	- 'perlbrew exec' now excludes those non-brewed perl by frankcuny++ according to the discussion here: https://github.com/gugod/App-perlbrew/pull/43
+
+0.16
+	- Use 'test_harness' for perl >= 5.7.3. avar++
+	- Use gtar on Solaris - RT #61042. doherty++
+	- Fix "perlbrew -f switch" by dalinaum++
+
+0.15
+	- DEPRECATE and REMOVE 'perlbrew installed' command.
+	- Intrudoce a 'perlbrew exec' command
+	- 'perlbrew use system' can be used to locally turn off perlbrew. yibe++
+
+0.14
+	- DEPRECATE `get_current_perl` function. Use `current_perl` instead
+	- Show versions of non-perlbrew perls in the output of `perlbrew list`. Thanks to trcjr++
+	- bashrc fixes from yibe++
+	- Let help, -h and --help do the same thing -- showing full pod.
+
+0.13
+	- 'installed' command is renamed to 'list', and will be deprecated soon.
+	- Requires curl or wget from now -- to fetch https URLs. polettix++
+
+0.12
+	- Fix: missing init file generation.
+
+0.11
+	- Avoid warning messages. Thanks Anno Siegel for the bug report and patch.
+	- `-A` arguments are passed thru, thanks to gfx++.
+	- Unbreak tests for older perls with older Test::Simple. Thanks to zaphod42++
+	- Better bash Integration, no more 'hash -r'
+	- New command for bash and zsh: 'perlbrew use'
+	- Deprecating 'installed'. use 'list' instead.
+
+0.10
+	- Use File::Path::Tiny to avoid the api incompatibility of File::Path.
+	- yanick++ and castaway++ fixes docmentation
+	- gfx++ made it accept -Dopt style flags as Perl Configurate does.
+	- (Danijel Tasov)++ added '-n' option -- no test!
+	- xsawyerx++ fixes RT #57672, #60123, and GH #9
+	- Fixes #59729
+
+0.09
+	- Use the proxy set in $ENV{http_proxy} if available.
+	- Bypasses '-U' option to to configure. Thanks to chromatic++
+
+0.08
+	- Conf file + CPAN mirror support
+	- Strip invalid dependency lines out of the makefile in older perl versions, to make them work with newer gcc versions
+	- Add rudimentary pure-perl introspection, jrockway++
+	- Documentation, castaway++
+
+0.07
+	- Document about PERLBREW_ROOT and the issue installing it with CPAN.
+	- Handle an edge case whn the tarball is not found on the http server. Thanks to sekimura++
+	- Improves 'switch' and 'off' command message. Thanks to Justin Davis.
+	- PERL5OPT PERL5LIB are removed while configuring and testing a new perl. Thanks to Andrew Rodland.
+	- fix a expression precedence bug. Thanks to Jesse Luehrs.
+
+0.06
+	- Fix -as option. Thanks to doy++ and jasonmay++
+
+0.05
+	- Now it brews from git. jasonmay++
+	- Fix the uses of mkpath on various versions of perls.
+	- Support the building of 5.13, and future developement versions
+
+0.04
+	- Use File::Path::mkpath instead of make_path to make in runnable with older versions of Perl
+	- a few document typo fixes.
+
+0.03
+	- Fixed a bug that switch fail after 'off'
+
+0.02
+	- Officially prepare a standalone program for quick download.
+	- license changed to "Same as Perl" due to the fact HTTP::Lite is included
+	- The 'installed' command now also lists all the 'perl' found in your PATH
+	- The 'switch' command can take an executable like /usr/bin/perl
+	- Various program options by Chris Prather
+	- Fixes from Tatsuhiko Miyagawa
+
+0.01
+	- First release. Installs perl-5.11.[12345] on my mac.

@@ -36,7 +36,7 @@ my %available_perls = (
 
 describe "available command output, when nothing installed locally," => sub {
     it "should display a list of perl versions" => sub {
-        my $app = App::perlbrew->new("available");
+        my $app = App::perlbrew->new("available", '--verbose');
         $app->expects( 'available_perls_with_urls' )->returns( \%available_perls );
 
         stdout_like sub { $app->run(); }, qr/^\s{3,}c?perl-?\d\.\d{1,3}[_.]\d{1,2}\s+(available from)\s+<https?:\/\/.+>/, 'Cannot find Perl in output'
@@ -45,7 +45,7 @@ describe "available command output, when nothing installed locally," => sub {
 
 describe "available command output, when something installed locally," => sub {
     it "should display a list of perl versions, with markers on installed versions" => sub {
-        my $app = App::perlbrew->new("available");
+        my $app = App::perlbrew->new("available", '--verbose');
 
 
         my @installed_perls = (

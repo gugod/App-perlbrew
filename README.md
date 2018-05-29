@@ -4,42 +4,44 @@
 
 ## SYNOPSIS
 
-    # Installation
-    curl -L https://install.perlbrew.pl | bash
+```bash
+# Installation
+curl -L https://install.perlbrew.pl | bash
 
-    # Initialize
-    perlbrew init
+# Initialize
+perlbrew init
 
-    # See what is available
-    perlbrew available
+# See what is available
+perlbrew available
 
-    # Install some Perls
-    perlbrew install 5.18.2
-    perlbrew install perl-5.8.1
-    perlbrew install perl-5.19.9
+# Install some Perls
+perlbrew install 5.18.2
+perlbrew install perl-5.8.1
+perlbrew install perl-5.19.9
 
-    # Install with thread support
-    perlbrew install -v perl-5.18.2 -Dusethreads
+# Install with thread support
+perlbrew install -v perl-5.18.2 -Dusethreads
 
-    # See what were installed
-    perlbrew list
+# See what were installed
+perlbrew list
 
-    # Swith to an installation and set it as default
-    perlbrew switch perl-5.18.2
+# Switch to an installation and set it as default
+perlbrew switch perl-5.18.2
 
-    # Temporarily use another version only in current shell.
-    perlbrew use perl-5.8.1
-    perl -v
+# Temporarily use another version only in current shell.
+perlbrew use perl-5.8.1
+perl -v
 
-    # Or turn it off completely. Useful when you messed up too deep.
-    # Or want to go back to the system Perl.
-    perlbrew off
+# Or turn it off completely. Useful when you messed up too deep.
+# Or want to go back to the system Perl.
+perlbrew off
 
-    # Use 'switch' command to turn it back on.
-    perlbrew switch perl-5.12.2
+# Use 'switch' command to turn it back on.
+perlbrew switch perl-5.12.2
 
-    # Exec something with all perlbrew-ed perls
-    perlbrew exec -- perl -E 'say $]'
+# Exec something with all perlbrew-ed perls
+perlbrew exec -- perl -E 'say $]'
+```
 
 ## DESCRIPTION
 
@@ -47,7 +49,7 @@
 easy way. It provides multiple isolated perl environments, and a mechanism
 for you to switch between them.
 
-Everything are installed unter `~/perl5/perlbrew`. You then need to include a
+Everything is installed under `~/perl5/perlbrew`. You then need to include a
 bashrc/cshrc provided by perlbrew to tweak the PATH for you. You then can
 benefit from not having to run `sudo` commands to install
 cpan modules because those are installed inside your `HOME` too.
