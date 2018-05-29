@@ -1,3 +1,13 @@
+0.83
+	- Released at 2018-05-30T08:04:43+0900
+	- Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Dan Book, Luca Ferrari, María Inés Parnisari, Mohammad S Anwar, Shoichi Kaji, sylints
+	- my respect to search.cpan.org
+	- MAKE env var can now be used to specify the "make" program.
+	- New command: install-cpm
+	- "install" command now has a "--builddir" option for specifying a work directory
+	- "list" command now takes "--verbose" option.
+	- "clone-modules" command is now better documented.
+
 0.82
 	- Released at 2017-12-17T09:53:00+0900
 	- Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Paul Cochrane

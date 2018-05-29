@@ -19,7 +19,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.82";
+  our $VERSION = "0.83";
   use Config;
   
   BEGIN {
@@ -12032,7 +12032,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '3.56';
+  $CPAN::Perl::Releases::VERSION = '3.58';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12250,6 +12250,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.24.4" => { id => 'SHAY' },
   "5.26.2" => { id => 'SHAY' },
   "5.27.11" => { id => 'XSAWYERX' },
+  "5.28.0-RC1" => { id => 'XSAWYERX' },
   };
   
   sub perl_tarballs {
@@ -12317,7 +12318,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 3.56
+  version 3.58
   
   =head1 SYNOPSIS
   
