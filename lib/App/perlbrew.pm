@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.82";
+our $VERSION = "0.83";
 use Config;
 
 BEGIN {
@@ -22,6 +22,7 @@ BEGIN {
 use File::Glob 'bsd_glob';
 use Getopt::Long ();
 use CPAN::Perl::Releases;
+use JSON::PP 'decode_json';
 
 sub min(@) {
     my $m = $_[0];
@@ -930,17 +931,18 @@ sub perl_release {
         }
     }
 
-    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
-    unless ($html) {
+    my $result;
+    unless ($json and $result = decode_json($json)->{hits}{hits}[0]) {
         die "ERROR: Failed to locate perl-${version} tarball.";
     }
 
     my ($dist_path, $dist_tarball) =
-        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+        $result->{_source}{download_url} =~ m[(/authors/id/.+/(perl-${version}.tar.(gz|bz2|xz)))$];
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
-    my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+    my $dist_tarball_url = "https://cpan.metacpan.org${dist_path}";
     return ($dist_tarball, $dist_tarball_url);
 }
 
@@ -1005,17 +1007,18 @@ sub release_detail_perl_remote {
         }
     }
 
-    my $html = http_get("http://search.cpan.org/dist/perl-${version}", { 'Cookie' => "cpan=$mirror" });
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
-    unless ($html) {
+    my $result;
+    unless ($json and $result = decode_json($json)->{hits}{hits}[0]) {
         die "ERROR: Failed to locate perl-${version} tarball.";
     }
 
     my ($dist_path, $dist_tarball) =
-        $html =~ m[<a href="(/CPAN/authors/id/.+/(perl-${version}.tar.(gz|bz2)))">Download</a>];
+        $result->{_source}{download_url} =~ m[(/authors/id/.+/(perl-${version}.tar.(gz|bz2|xz)))$];
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
-    my $dist_tarball_url = "http://search.cpan.org${dist_path}";
+    my $dist_tarball_url = "https://cpan.metacpan.org${dist_path}";
 
     $rd->{tarball_name} = $dist_tarball;
     $rd->{tarball_url} = $dist_tarball_url;

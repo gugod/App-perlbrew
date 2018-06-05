@@ -16,8 +16,10 @@ mv  lib/App/perlbrew.pm.new  lib/App/perlbrew.pm
 
 echo '# update Changes' 
 (
-    echo ${RELEASE_VERSION}: \# ${RELEASE_TIMESTAMP}
-    echo '- ' Thanks to our contributors: ${RELEASE_THANKS}
+    echo ${RELEASE_VERSION}
+    echo '	- Released at' ${RELEASE_TIMESTAMP}
+    echo '	- Thanks to our contributors:' ${RELEASE_THANKS}
+    echo
     cat Changes
 ) > Changes.new
 mv Changes.new Changes

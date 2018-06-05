@@ -10,6 +10,7 @@ use File::Temp qw(tempdir);
 use Test::Spec;
 use Test::Exception;
 use CPAN::Perl::Releases;
+use JSON::PP qw(encode_json);
 
 describe "App::perlbrew#perl_release method" => sub {
     describe "given a valid perl version" => sub {
@@ -31,14 +32,16 @@ describe "App::perlbrew#perl_release method" => sub {
 
         my $orig_sub = \&CPAN::Perl::Releases::perl_tarballs;
         *App::perlbrew::http_get = sub {
-            return qq{<a href="/CPAN/authors/id/SOMEONE/perl-${version}.tar.gz">Download</a>};
+            return encode_json({hits => {hits => [{_source =>
+                {download_url => "https://cpan.metacpan.org/authors/id/SOMEONE/perl-${version}.tar.gz"}
+            }]}});
         };
         *CPAN::Perl::Releases::perl_tarballs = sub {};
 
         my $app = App::perlbrew->new;
         my ($ball, $url) = $app->perl_release($version);
         like $ball, qr/^perl-?${version}.tar.(bz2|gz)$/, $ball;
-        like $url, qr#^https?://search\.cpan\.org/CPAN/authors/id/SOMEONE/${ball}$#, $url;
+        like $url, qr#^https?://cpan\.metacpan\.org/authors/id/SOMEONE/${ball}$#, $url;
 
         *CPAN::Perl::Releases::perl_tarballs = $orig_sub;
     };
