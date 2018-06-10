@@ -11,6 +11,8 @@ use File::Which qw(which);
 use App::perlbrew;
 use Test::More;
 
+chmod 0755, "$Bin/fake-bin/curl";
+
 diag "PATH=$ENV{PATH}";
 
 my $curl_path = which("curl");
