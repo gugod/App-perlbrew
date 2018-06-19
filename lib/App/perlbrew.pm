@@ -80,7 +80,6 @@ my @flavors = ( { d_option => 'usethreads',
                   opt      => 'clang' },
               );
 
-
 my %flavor;
 my $flavor_ix = 0;
 for (@flavors) {
@@ -94,7 +93,6 @@ for (@flavors) {
         $flavor{$implies}{implied_by} = $_->{name};
     }
 }
-
 
 ### functions
 
@@ -246,7 +244,6 @@ sub files_are_the_same {
         local $/;
         my $body = <$fh>;
         close $fh;
-
 
         # check if the download has failed and die automatically
         $commands{ $program }{ die_on_error }->( $? );
@@ -473,7 +470,7 @@ sub configure_args {
 
     my %arg;
     for(@output) {
-        my ($k,$v) = split " ", $_, 2;
+        my ($k, $v) = split " ", $_, 2;
         $arg{$k} = $v;
     }
 
@@ -511,7 +508,6 @@ sub is_shell_csh {
     return 1 if $self->env('SHELL') =~ /(t?csh)/;
     return 0;
 }
-
 
 # Entry point method: handles all the arguments
 # and dispatches to an appropriate internal
@@ -636,7 +632,6 @@ sub run_command_version {
     my $version = $self->VERSION;
     print "$0  - $package/$version\n";
 }
-
 
 # Provides help information about a command.
 # The idea is similar to the 'run_command' and 'run_command_$x' chain:
@@ -856,7 +851,6 @@ sub available_perls {
     return $self->sort_perl_versions( keys %$perls );
 }
 
-
 sub available_perls_with_urls {
     my ( $self, $dist, $opts ) = @_;
     my $perls = {};
@@ -897,8 +891,6 @@ sub available_perls_with_urls {
             warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
         }
     }
-
-
 
 
     return $perls;
@@ -1399,7 +1391,6 @@ sub do_install_blead {
     $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
     return;
 }
-
 
 sub resolve_stable_version {
     my ($self) = @_;
@@ -1945,7 +1936,7 @@ sub installed_perls {
     for my $installation_dir (<$root/perls/*>) {
         my ($name)       = $installation_dir =~ m/\/([^\/]+$)/;
         my $executable   = joinpath($installation_dir, 'bin', 'perl');
-        my $version_file = joinpath($installation_dir,'.version');
+        my $version_file = joinpath($installation_dir, '.version');
         my $ctime        = localtime( ( stat $executable )[ 10 ] ); # localtime in scalar context!
         my $orig_version;
         if ( -e $version_file ){
@@ -2265,7 +2256,7 @@ sub run_command_env {
 
     if ($self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/) {
         for (@statements) {
-            my ($o,$k,$v) = @$_;
+            my ($o, $k, $v) = @$_;
             if ($o eq 'unset') {
                 print "unset $k\n";
             } else {
@@ -2275,7 +2266,7 @@ sub run_command_env {
         }
     } else {
         for (@statements) {
-            my ($o,$k,$v) = @$_;
+            my ($o, $k, $v) = @$_;
             if ($o eq 'unset') {
                 print "unsetenv $k\n";
             } else {
@@ -2417,7 +2408,7 @@ sub run_command_exec {
 
         my $d = ($opts{with} =~ m/ /) ? qr( +) : qr(,+);
         my @with = grep { $_ } map {
-            my ($p,$l) = $self->resolve_installation_name($_);
+            my ($p, $l) = $self->resolve_installation_name($_);
             $p .= "\@$l" if $l;
             $p;
         } split $d, $opts{with};
@@ -2749,8 +2740,6 @@ sub run_command_list_modules {
     $app->run;
 }
 
-
-
 sub resolve_installation_name {
     my ($self, $name) = @_;
     die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
@@ -2770,7 +2759,6 @@ sub resolve_installation_name {
 
     return wantarray ? ($perl_name, $lib_name) : $perl_name;
 }
-
 
 # Implementation of the 'clone-modules' command.
 #
@@ -2795,7 +2783,6 @@ sub run_command_clone_modules {
     # current one as default
     $src_perl = $self->current_perl  if ( ! $src_perl || ! $self->resolve_installation_name( $src_perl ) );
 
-
     # check for the destination Perl to be installed
     undef $dst_perl if ( ! $self->resolve_installation_name( $dst_perl ) );
 
@@ -2805,7 +2792,6 @@ sub run_command_clone_modules {
         $self->run_command_help( 'clone_modules' );
         exit( -1 );
     }
-
 
     # I need to run the list-modules command on myself
     # and get the result back so to handle it and pass
@@ -2841,7 +2827,6 @@ sub run_command_clone_modules {
     $app->run;
 
 }
-
 
 sub format_info_output
 {
