@@ -140,7 +140,7 @@ __DATA__
         <td>5.13.11
         <td>Devel</td>
         <td>2011-03-20</td>
-        <td><a href="http://www.cpan.org/src/perl-5.13.11.tar.gz">perl-5.13.11.tar.gz</a></td>
+        <td><a href="https://www.cpan.org/src/perl-5.13.11.tar.gz">perl-5.13.11.tar.gz</a></td>
     </tr>
 
 

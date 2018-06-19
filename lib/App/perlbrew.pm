@@ -712,7 +712,7 @@ sub available_perls {
         }
         else {
             push @available_versions, $1
-                if m|<td><a href="http://www.cpan.org/src/.+?">(.+?)</a></td>|;
+                if m|<td><a href="http(?:s?)://www.cpan.org/src/.+?">(.+?)</a></td>|;
         }
     }
     s/\.tar\.gz// for @available_versions;
