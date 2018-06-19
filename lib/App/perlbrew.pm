@@ -855,8 +855,8 @@ sub available_perls_with_urls {
     my ( $self, $dist, $opts ) = @_;
     my $perls = {};
 
-    my $url = $self->{all}  ? "http://www.cpan.org/src/5.0/"
-                            : "http://www.cpan.org/src/README.html" ;
+    my $url = $self->{all}  ? "https://www.cpan.org/src/5.0/"
+                            : "https://www.cpan.org/src/README.html" ;
     my $html = http_get( $url, undef, undef );
     unless($html) {
         die "\nERROR: Unable to retrieve the list of perls.\n\n";
