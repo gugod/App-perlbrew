@@ -22,6 +22,9 @@ open my $out, '>', $test_file
 
 ok -e $test_file, 'Test file 3 created';
 my $extracted_dir = $pb->do_extract_tarball( File::Spec->catfile($FindBin::Bin, 'test.tar.gz') );
+diag $extracted_dir;
+
 is basename( $extracted_dir ) => 'test', 'Test tarball extracted as expected';
+
 ok !-e $test_file, 'Test file 3 was unlinked by tar';
-ok -e File::Spec->catfile( $test_dir, $_ ), "Test file $_ exists" for 1..2;
+ok -e File::Spec->catfile( $extracted_dir, $_ ), "Test file $_ exists" for 1..2;

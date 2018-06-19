@@ -1,4 +1,13 @@
 #!/bin/sh
 yes | cpanm --verbose local::lib
-cpanm -n Pod::Markdown Module::Install Module::Install::AuthorRequires Devel::Cover Devel::Cover::Report::Coveralls
-cpanm --verbose --notest --installdeps .
+
+if perl -e 'exit( ($] < 5.010) ? 0 : 1)'
+then
+    cpanm -n PJCJ/Devel-Cover-1.23.tar.gz
+else
+    cpanm -n Devel::Cover
+fi
+
+cpanm -n App::ModuleBuildTiny Devel::Cover::Report::Coveralls
+hash -r
+mbtiny listdeps | cpanm --verbose --notest

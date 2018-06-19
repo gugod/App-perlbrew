@@ -20,8 +20,8 @@ use App::perlbrew;
 plan tests => 9;
 
 my $app = App::perlbrew->new();
-
-is scalar $app->available_perls(), 8, "Correct number of releases found";
+my @vers = $app->available_perls();
+is scalar( @vers ), 8, "Correct number of releases found";
 
 my @known_perl_versions = (
     'perl-5.13.11', 'perl-5.12.3',  'perl-5.10.1',  'perl-5.8.9',
@@ -38,20 +38,20 @@ __DATA__
 <head>
     <title>Perl Source - www.cpan.org</title>
     <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />    <link rel="author" href="mailto:cpan+linkrelauthor@perl.org" />
-	<link rel="canonical" href="http://www.cpan.org/src/index.html" />	
-	<link type="text/css" rel="stylesheet" href="../misc/css/cpan.css" /> 
-	
+	<link rel="canonical" href="http://www.cpan.org/src/index.html" />
+	<link type="text/css" rel="stylesheet" href="../misc/css/cpan.css" />
+
 </head>
 <body class="section_source">
 
 <table id="wrapper" border="0" width="95%" cellspacing="0" cellpadding="2" align="center">
     <tr>
         <td id="header">
-        	
+
 			<div id="header_left">
 				<a href="../index.html"><img src="../misc/images/cpan.png" id="logo" alt="CPAN" /></a>
      		</div>
-			
+
 			<div id="header_right">
 			  <h1>Comprehensive Perl Archive Network</h1>
               <p id="strapline">Stop reinventing wheels, start building space rockets
@@ -61,7 +61,7 @@ __DATA__
            </div>
         </td>
     </tr>
-    <tr> 
+    <tr>
         <td id="menubar_holder">
 
             <ul class="menubar">
@@ -72,7 +72,7 @@ __DATA__
                 <li><a href="../misc/cpan-faq.html">FAQ</a></li>
                 <li><a href="../SITES.html">Mirrors</a></li>
 			</ul>
-			
+
 			<div id="searchbar">
 				<form method="get" action="http://search.cpan.org/search" name="f" class="searchbox menubar" id="f">
 					<input type="hidden" name="mode" value="all" />
@@ -86,8 +86,8 @@ __DATA__
     <tr>
         <td>
             <div id="content">
-			
-            
+
+
 
 <h1>Perl Source</h1>
 
@@ -114,7 +114,7 @@ __DATA__
      make install
 </pre>
 <p>
-    Read both INSTALL and README.<strong>yoursystem</strong> in 
+    Read both INSTALL and README.<strong>yoursystem</strong> in
     the <code>perl-5.12.3</code> directory for more detailed information.
 </p>
 
@@ -462,18 +462,18 @@ __DATA__
         <td id="footer">
             <div id="footer_copyright">
                 <p>Yours Eclectically, The Self-Appointed Master Librarians (<i>OOK!</i>) of the CPAN.<br/>
-                   &copy; 1995-2010 Jarkko Hietaniemi.  
-                   &copy; 2011 <a href="http://www.perl.org">Perl.org</a>.  
-                   All rights reserved. 
+                   &copy; 1995-2010 Jarkko Hietaniemi.
+                   &copy; 2011 <a href="http://www.perl.org">Perl.org</a>.
+                   All rights reserved.
                    <a href="../disclaimer.html">Disclaimer</a>.
                 </p>
             </div>
 
-            
+
             <div id="footer_mirror">
 			<p>Master mirror hosted by <a href="http://www.yellowbot.com/"><img alt="YellowBot" src="../misc/images/yellowbot.png" /></a></p>
             </div>
-            
+
 
 
         </td>

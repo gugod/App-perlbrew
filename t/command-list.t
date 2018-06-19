@@ -17,7 +17,7 @@ require "test_helpers.pl";
 use File::Temp qw( tempdir );
 use File::Spec::Functions qw( catdir );
 use Test::Spec;
-use Test::Output qw(stdout_is stdout_from);
+use Test::Output qw(stdout_is stdout_from stdout_like);
 
 mock_perlbrew_install("perl-5.12.3");
 mock_perlbrew_install("perl-5.12.4");
@@ -33,19 +33,7 @@ describe "list command," => sub {
     describe "when there no libs under PERLBREW_HOME,", sub {
         it "displays a list of perl installation names", sub {
             my $app = App::perlbrew->new("list");
-
-            my $out = stdout_from { $app->run; };
-
-            ## Remove paths to system perl from the list
-            $out =~ s/^[* ] \/.+$//mg;
-            $out =~ s/\n\n+/\n/;
-
-            is $out, <<"EOF";
-* perl-5.12.3
-  perl-5.12.4
-  perl-5.14.1
-  perl-5.14.2
-EOF
+            stdout_like sub { $app->run(); }, qr/^(\s\*)?\s{1,3}c?perl-?\d\.\d{1,3}[_.]\d{1,2}\s+/, 'Cannot find Perl in output'
         };
     };
 
@@ -61,42 +49,16 @@ EOF
 
         it "displays lib names" => sub {
             my $app = App::perlbrew->new("list");
-            my $out = stdout_from { $app->run };
-
-            ## Remove paths to system perl from the list
-            $out =~ s/^[* ] \/.+$//mg;
-            $out =~ s/\n\n+/\n/;
-
-            is $out, <<'OUT';
-* perl-5.12.3
-  perl-5.12.3@nobita
-  perl-5.12.3@shizuka
-  perl-5.12.4
-  perl-5.14.1
-  perl-5.14.2
-OUT
+            stdout_like sub { $app->run(); }, qr/^(\s\*)?\s{1,3}c?perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/, 'Cannot find Perl with libraries in output'
         };
 
         it "marks currently activated lib", sub {
             $ENV{PERLBREW_LIB} = "nobita";
             my $app = App::perlbrew->new("list");
-            my $out = stdout_from { $app->run };
-            ## Remove paths to system perl from the list
-            $out =~ s/^[* ] \/.+$//mg;
-            $out =~ s/\n\n+/\n/;
-
-            is $out, <<'OUT';
-  perl-5.12.3
-* perl-5.12.3@nobita
-  perl-5.12.3@shizuka
-  perl-5.12.4
-  perl-5.14.1
-  perl-5.14.2
-OUT
+            stdout_like sub { $app->run(); }, qr/^(\s\*)?\s{1,3}c?perl-?\d\.\d{1,3}[_.]\d{1,2}(\@nobita)?/, 'Cannot find Perl with libraries in output'
 
         };
     };
 };
 
 runtests unless caller;
-

@@ -1,0 +1,7 @@
+#!/bin/sh
+exit 127
+
+# This fake curl script is created to avoid
+# App::perlbrew::http_user_agent_program() from selecting "curl" as
+# the http ua program.
+

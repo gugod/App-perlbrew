@@ -3,7 +3,7 @@
 eval "$(perlbrew init-in-bash)"
 # source $HOME/perl5/perlbrew/etc/bashrc
 
-wanted_perl_installation="perl-5.8.8@perlbrew"
+wanted_perl_installation="perl-5.8.9@perlbrew"
 
 perlbrew use ${wanted_perl_installation}
 
@@ -12,6 +12,11 @@ if [ $? -eq 0 ]; then
 else
    echo "!!! Fail to use ${wanted_perl_installation} for building. Please prepare it first."
 fi
+
+cpanm File::Path App::FatPacker
+
+cd `dirname $0`/../
+cpanm --installdeps .
 
 cd `dirname $0`
 
@@ -24,26 +29,15 @@ else
     echo "--- Found fatpack at $fatpack_path"
 fi
 
+rm -rf fatlib/
+mkdir fatlib/
+
 rm -rf lib/App
 mkdir -p lib/App
 
 ./update-fatlib.pl
 
-if [[ -z "$PERLBREW_PERLSTRIP" ]]; then
-    PERLBREW_PERLSTRIP=1
-fi
-
-if type perlstrip >/dev/null 2>&1; then
-    if [[ $PERLBREW_PERLSTRIP -eq 1 ]]; then
-        perlstrip -s -o lib/App/perlbrew.pm ../lib/App/perlbrew.pm
-    else
-        cp ../lib/App/perlbrew.pm lib/App/perlbrew.pm
-        echo "... not perlstiripping"
-    fi
-else
-    cp ../lib/App/perlbrew.pm lib/App/perlbrew.pm
-    echo "--- perlstrip is not installed. The fatpacked executable will be really big."
-fi
+cp ../lib/App/perlbrew.pm lib/App/perlbrew.pm
 
 export PERL5LIB="lib":$PERL5LIB
 
