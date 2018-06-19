@@ -873,7 +873,7 @@ sub available_perls_with_urls {
             ( $current_perl, $current_url ) = ( $2, $1 ) if m|<a href="(perl.*?\.tar\.gz)">(.+?)</a>|;
         }
         else {
-            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<td><a href="(http://www.cpan.org/src/.+?)">(.+?)</a></td>|;
+            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<td><a href="(http(?:s?)://www.cpan.org/src/.+?)">(.+?)</a></td>|;
         }
 
         # if we have a $current_perl add it to the available hash of perls
