@@ -1,3 +1,9 @@
+0.84
+	- Released at 2018-06-24T08:26:14+0900
+	- Thanks to our contributors: Joelle Maslak
+        - Unbreak 'available' command after some updates from cpan.org web site.
+        - Unbreak the installation -- which missed "perlbrew" command due to a mistake when using mbtiny.
+
 0.83
 	- Released at 2018-05-30T08:04:43+0900
 	- Thanks to our contributors: Alceu Rodrigues de Freitas Junior, Dan Book, Luca Ferrari, María Inés Parnisari, Mohammad S Anwar, Shoichi Kaji, sylints
