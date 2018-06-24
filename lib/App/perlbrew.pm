@@ -874,7 +874,7 @@ sub available_perls_with_urls {
         # if we have a $current_perl add it to the available hash of perls
         if ( $current_perl ){
             $current_perl =~ s/\.tar\.gz//;
-            push @perllist, [ $current_perl, 'FROMCPAN' ];
+            push @perllist, [ $current_perl, $current_url ];
             $perls->{ $current_perl } = $current_url;
         }
     }
@@ -899,7 +899,11 @@ sub available_perls_with_urls {
         push @perllist, [ $current_perl, $current_url ];
     }
     foreach my $perl ( $self->filter_perl_available(\@perllist) ) {
-        $perls->{ $perl->[0] } = $perl->[1];
+        # We only want to add a Metacpan link if the www.cpan.org link
+        # doesn't exist, and this assures that we do that properly.
+        if (!exists($perls->{ $perl->[0] })) {
+            $perls->{ $perl->[0] } = $perl->[1];
+        }
     }
     
 
@@ -925,22 +929,20 @@ sub available_perls_with_urls {
 # $perllist is an arrayref of arrayrefs.  The inner arrayrefs are of the
 # format: [ <perl_name>, <perl_url> ]
 #   perl_name = something like perl-5.28.0
-#   perl_url  = URL the Perl is available from.  If the URL is
-#     "FROMCPAN", it is just used to make sure we don't include an older
-#     version from CPAN - but it won't ever appear in the output.
+#   perl_url  = URL the Perl is available from.
 #
 # If $self->{all} is true, this just returns a list of the contents of
-# the list referenced by $perllist, except where URL eq FROMCPAN.
+# the list referenced by $perllist
 #
 # Otherwise, this looks for even middle numbers in the version and no
 # suffix (like -RC1) following the URL, and returns the list of
-# arrayrefs that so match and don't have a URL of FROMCPAN.
+# arrayrefs that so match
 #
 # If any "newest" Perl has a 
 sub filter_perl_available {
     my ($self, $perllist) = @_;
 
-    if ($self->{all}) { return grep { $_ ne 'FROMCPAN' } @$perllist; }
+    if ($self->{all}) { return @$perllist; }
 
     my %max_release;
     foreach my $perl (@$perllist) {
@@ -955,7 +957,7 @@ sub filter_perl_available {
         $max_release{$release_line} = [ $minor, $perl ];
     }
 
-    return grep { $_->[1] ne 'FROMCPAN' } map { $_->[1] } values %max_release;
+    return map { $_->[1] } values %max_release;
 }
 
 sub perl_release {
