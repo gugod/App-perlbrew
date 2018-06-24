@@ -854,6 +854,7 @@ sub available_perls {
 sub available_perls_with_urls {
     my ( $self, $dist, $opts ) = @_;
     my $perls = {};
+    my @perllist;
 
     my $url = $self->{all}  ? "https://www.cpan.org/src/5.0/"
                             : "https://www.cpan.org/src/README.html" ;
@@ -873,9 +874,38 @@ sub available_perls_with_urls {
         # if we have a $current_perl add it to the available hash of perls
         if ( $current_perl ){
             $current_perl =~ s/\.tar\.gz//;
+            push @perllist, [ $current_perl, $current_url ];
             $perls->{ $current_perl } = $current_url;
         }
     }
+
+
+    # we got impatient waiting for cpan.org to get updated to show 5.28...
+    # So, we also fetch from metacpan for anything that looks perlish,
+    # and we do our own processing to filter out the development
+    # releases and minor versions when needed (using
+    # filter_perl_available)
+    $url = 'https://fastapi.metacpan.org/v1/release/_search'
+        . '\?q=distribution:perl%20AND%20archive:perl-5.%2A.%2A.tar.gz%20AND%20NOT%20status:backpan'
+        . '\&fields=download_url\&size=100';
+    $html = http_get( $url, undef, undef );
+    unless($html) {
+        $html = '';
+        warn "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
+    }
+    while ( $html =~ m|"(http(?:s?)://cpan\.metacpan\.org/[^"]+/(perl-5\.[0-9]+\.[0-9]+(?:-[A-Z0-9]+)?)\.tar\.gz)"|g ) {
+        my ( $current_perl, $current_url ) = ( $2, $1 );;
+
+        push @perllist, [ $current_perl, $current_url ];
+    }
+    foreach my $perl ( $self->filter_perl_available(\@perllist) ) {
+        # We only want to add a Metacpan link if the www.cpan.org link
+        # doesn't exist, and this assures that we do that properly.
+        if (!exists($perls->{ $perl->[0] })) {
+            $perls->{ $perl->[0] } = $perl->[1];
+        }
+    }
+    
 
     # cperl releases: https://github.com/perl11/cperl/tags
     my $cperl_remote        = 'https://github.com';
@@ -894,6 +924,40 @@ sub available_perls_with_urls {
 
 
     return $perls;
+}
+
+# $perllist is an arrayref of arrayrefs.  The inner arrayrefs are of the
+# format: [ <perl_name>, <perl_url> ]
+#   perl_name = something like perl-5.28.0
+#   perl_url  = URL the Perl is available from.
+#
+# If $self->{all} is true, this just returns a list of the contents of
+# the list referenced by $perllist
+#
+# Otherwise, this looks for even middle numbers in the version and no
+# suffix (like -RC1) following the URL, and returns the list of
+# arrayrefs that so match
+#
+# If any "newest" Perl has a 
+sub filter_perl_available {
+    my ($self, $perllist) = @_;
+
+    if ($self->{all}) { return @$perllist; }
+
+    my %max_release;
+    foreach my $perl (@$perllist) {
+        my $ver = $perl->[0];
+        if ($ver !~ m/^perl-5\.[0-9]*[02468]\.[0-9]+$/) { next; } # most likely TRIAL or RC, or a DEV release
+
+        my ($release_line, $minor) = $ver =~ m/^perl-5\.([0-9]+)\.([0-9]+)/;
+        if (exists $max_release{$release_line}) {
+            if ($max_release{$release_line}->[0] > $minor) { next; } # We have a newer release
+        }
+
+        $max_release{$release_line} = [ $minor, $perl ];
+    }
+
+    return map { $_->[1] } values %max_release;
 }
 
 sub perl_release {

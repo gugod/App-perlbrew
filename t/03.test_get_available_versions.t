@@ -7,23 +7,30 @@ use App::perlbrew;
 {
     no warnings 'redefine';
 
-    my $html;
+    my $html_cpan     = read_cpan_html();
+    my $html_metacpan = read_metacpan_html();
 
     sub App::perlbrew::http_get {
-        return $html if $html;
+        my $url = shift;
 
-        local $/ = undef;
-        $html = <DATA>;
+        if ($url =~ m/www\.cpan\.org/) {
+            return $html_cpan;
+        } elsif ($url =~ m/fastapi\.metacpan\.org/) {
+            return $html_metacpan;
+        } else {
+            return '';
+        }
     }
 }
 
-plan tests => 9;
+plan tests => 13;
 
 my $app = App::perlbrew->new();
 my @vers = $app->available_perls();
-is scalar( @vers ), 8, "Correct number of releases found";
+is scalar( @vers ), 12, "Correct number of releases found";
 
 my @known_perl_versions = (
+    'perl-5.28.0',  'perl-5.26.2',  'perl-5.24.4',  'perl-5.22.3',
     'perl-5.13.11', 'perl-5.12.3',  'perl-5.10.1',  'perl-5.8.9',
     'perl-5.6.2',   'perl5.005_04', 'perl5.004_05', 'perl5.003_07'
 );
@@ -32,7 +39,8 @@ for my $perl_version ( $app->available_perls() ) {
     ok grep( $_ eq $perl_version, @known_perl_versions ), "$perl_version found";
 }
 
-__DATA__
+sub read_cpan_html {
+    return <<'EOF';
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -483,3 +491,394 @@ __DATA__
 
 </body>
 </html>
+EOF
+}
+
+sub read_metacpan_html {
+    return <<'EOF';
+{
+   "hits" : {
+      "total" : 41,
+      "max_score" : 3.36797,
+      "hits" : [
+         {
+            "_score" : 3.36797,
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_id" : "cwysy_LCh_cU4sYkQq_XhqwRzVM",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RG/RGARCIA/perl-5.9.5.tar.gz"
+            }
+         },
+         {
+            "_id" : "6bF8joctVyZMfTxAK6oBCKXxrN0",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RG/RGARCIA/perl-5.9.3.tar.gz"
+            },
+            "_score" : 3.36797,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SR/SREZIC/perl-5.005-Tk-800.023-bin-0-arm-linux.tar.gz"
+            },
+            "_id" : "j6U8yM_m0OKRWGLvUfc_9nGKjoQ",
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.36797
+         },
+         {
+            "_id" : "g1FYWtQPcw6yrR5dXP2fYH6I1zo",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/G/GS/GSAR/perl-5.6.1.tar.gz"
+            },
+            "_score" : 3.36797,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.36797,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/G/GS/GSAR/perl-5.6.1-TRIAL3.tar.gz"
+            },
+            "_id" : "SIqDQs0lJGmbEPj_05cIPlPfR_A"
+         },
+         {
+            "_id" : "JuBrDjYXwrh_k_5_FMkZjseSuOw",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/G/GS/GSAR/perl-5.6.1-TRIAL2.tar.gz"
+            },
+            "_score" : 3.36797,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "_id" : "ElW8WK1SAx3LISaIm_GZ6WWly1M",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/A/AB/ABIGAIL/perl-5.27.8.tar.gz"
+            },
+            "_score" : 3.36797,
+            "_type" : "release",
+            "_index" : "cpan_v1_01"
+         },
+         {
+            "_id" : "bDbuaoHU6C4UjauBqFqovDALEJY",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.22.4-RC1.tar.gz"
+            },
+            "_score" : 3.36797,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.36797,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.24.3.tar.gz"
+            },
+            "_id" : "MLhHV7zvJ2zZ5e_I3MKfsk_iM6A"
+         },
+         {
+            "_id" : "fag73WWtL5Q1HZlFk_yryqfqnrE",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.27.5.tar.gz"
+            },
+            "_score" : 3.36797,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.36797,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.22.1.tar.gz"
+            },
+            "_id" : "36dFZmJHuKH4pMdUH0khXuWS2LE"
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.36797,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.24.2.tar.gz"
+            },
+            "_id" : "1rwJbxpit3uIv6lk5WcUe4zxxSA"
+         },
+         {
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.36797,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/X/XS/XSAWYERX/perl-5.27.11.tar.gz"
+            },
+            "_id" : "riJj4D3ZWS49kglzdtz8h19xp7Y"
+         },
+         {
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.36797,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/J/JH/JHI/perl-5.7.3.tar.gz"
+            },
+            "_id" : "Qb4oEns73TILHWaO9S3kY86yb4A"
+         },
+         {
+            "_score" : 3.36797,
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_id" : "IxX27a_qsQxaRHI883PqEOMNs9A",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.26.2-RC1.tar.gz"
+            }
+         },
+         {
+            "_id" : "MpJJPG9eHPVjo5LHWPyl7uIn2sU",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/X/XS/XSAWYERX/perl-5.28.0-RC1.tar.gz"
+            },
+            "_score" : 3.36797,
+            "_type" : "release",
+            "_index" : "cpan_v1_01"
+         },
+         {
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/X/XS/XSAWYERX/perl-5.28.0-RC2.tar.gz"
+            },
+            "_id" : "ykCB3f8FK_sNN4FuXiMsixTc4r0",
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.36797
+         },
+         {
+            "_score" : 3.36797,
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_id" : "SPMWYdPjP_a76kz9tjMfhGNBgaA",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.26.2.tar.gz"
+            }
+         },
+         {
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.36797,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/X/XS/XSAWYERX/perl-5.28.0.tar.gz"
+            },
+            "_id" : "6YbmfIXsv0IghoL8RsswA6Bcl8M"
+         },
+         {
+            "_id" : "H6QF57CTY4HWj4rx_Urxy2Kk5pA",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/G/GS/GSAR/perl-5.6.1-TRIAL1.tar.gz"
+            },
+            "_score" : 3.2532742,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.2532742,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/G/GS/GSAR/perl-5.6.0.tar.gz"
+            },
+            "_id" : "7MIXoXAMLZWlXfwWTs7L3w26rqk"
+         },
+         {
+            "_id" : "wXO4aI747e_DU6R7DNe3J8s7wsw",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/J/JH/JHI/perl-5.7.0.tar.gz"
+            },
+            "_score" : 3.2532742,
+            "_type" : "release",
+            "_index" : "cpan_v1_01"
+         },
+         {
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/J/JH/JHI/perl-5.8.0.tar.gz"
+            },
+            "_id" : "nNi1Knyqy7wSnH_mKvSfhl_deGo",
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.2532742
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.2532742,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RG/RGARCIA/perl-5.10.0.tar.gz"
+            },
+            "_id" : "wfc7JJwuCTJvmW9C4J4tZIActHM"
+         },
+         {
+            "_id" : "GhF4X5JX3OhldWnA_I1t_r4NipE",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RG/RGARCIA/perl-5.9.1.tar.gz"
+            },
+            "_score" : 3.2532742,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "_score" : 3.2532742,
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_id" : "9X4t_9wlwZJMS5d5jIUEdnL1SCA",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RG/RGARCIA/perl-5.6.2.tar.gz"
+            }
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.2532742,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/E/ET/ETHER/perl-5.27.6.tar.gz"
+            },
+            "_id" : "TwgEl_BI7dKp3BQvZkKqQia5qcU"
+         },
+         {
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/A/AB/ABIGAIL/perl-5.25.9.tar.gz"
+            },
+            "_id" : "VQfl2bwzqY1bl4tfZmxFaFRY5y8",
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.2532742
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.2532742,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.24.4-RC1.tar.gz"
+            },
+            "_id" : "ElYIbWVnjcBLopeXvYgo7HSk5Ic"
+         },
+         {
+            "_id" : "DitFBkE2r0aGkPcjH36PbRagPcs",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/X/XS/XSAWYERX/perl-5.28.0-RC3.tar.gz"
+            },
+            "_score" : 3.2532742,
+            "_index" : "cpan_v1_01",
+            "_type" : "release"
+         },
+         {
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.2532742,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/X/XS/XSAWYERX/perl-5.28.0-RC4.tar.gz"
+            },
+            "_id" : "zn33iw3HnI2_5phH9rAhFNmoUps"
+         },
+         {
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RE/RENEEB/perl-5.27.9.tar.gz"
+            },
+            "_id" : "AuenBK2ImZIVxVzxN0zgVjsunSs",
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.1751823
+         },
+         {
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/T/TO/TODDR/perl-5.27.10.tar.gz"
+            },
+            "_id" : "_SySZ7HuT9fCjnvKlyUlAAyA7WY",
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.1751823
+         },
+         {
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.24.4.tar.gz"
+            },
+            "_id" : "k4tD0K2qrojzSwtfXA5A_oxu074",
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_score" : 3.1751823
+         },
+         {
+            "_id" : "QfS1_HGycjW44MsCl73JLC8Is_s",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/J/JH/JHI/perl-5.8.1.tar.gz"
+            },
+            "_score" : 3.1751823,
+            "_type" : "release",
+            "_index" : "cpan_v1_01"
+         },
+         {
+            "_score" : 3.1751823,
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_id" : "CGvg1FBsux5HoXiu7leipfdMTEc",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/J/JH/JHI/perl-5.7.2.tar.gz"
+            }
+         },
+         {
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.1751823,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RG/RGARCIA/perl-5.9.2.tar.gz"
+            },
+            "_id" : "yvVmPixkFaUceARSy1aKqRPPDBs"
+         },
+         {
+            "_score" : 3.1751823,
+            "_index" : "cpan_v1_01",
+            "_type" : "release",
+            "_id" : "47VQmSAIhurcr84X44RXyKqUMdw",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RG/RGARCIA/perl-5.9.4.tar.gz"
+            }
+         },
+         {
+            "_score" : 3.1751823,
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_id" : "hTJckZ5tEZko8OdmnS8QbWKs10w",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/B/BI/BINGOS/perl-5.27.7.tar.gz"
+            }
+         },
+         {
+            "_type" : "release",
+            "_index" : "cpan_v1_01",
+            "_score" : 3.1751823,
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/R/RE/RENEEB/perl-5.25.10.tar.gz"
+            },
+            "_id" : "WAMqkmWfSSlBLcSwGZb5DlDD25U"
+         },
+         {
+            "_id" : "bMUgwm4eIPz1ljDFi6aBBFMf6dA",
+            "fields" : {
+               "download_url" : "https://cpan.metacpan.org/authors/id/S/SH/SHAY/perl-5.22.3.tar.gz"
+            },
+            "_score" : 3.1751823,
+            "_type" : "release",
+            "_index" : "cpan_v1_01"
+         }
+      ]
+   },
+   "_shards" : {
+      "failed" : 0,
+      "total" : 3,
+      "successful" : 3
+   },
+   "took" : 9,
+   "timed_out" : false
+}
+EOF
+}
