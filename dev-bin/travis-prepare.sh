@@ -8,5 +8,6 @@ else
     cpanm -n Devel::Cover
 fi
 
-cpanm -n Pod::Markdown Module::Install Module::Install::AuthorRequires Devel::Cover::Report::Coveralls
-cpanm --verbose --notest --installdeps .
+cpanm -n App::ModuleBuildTiny Devel::Cover::Report::Coveralls
+hash -r
+mbtiny listdeps | cpanm --verbose --notest

@@ -54,7 +54,7 @@ BEGIN {
 
 EOF
 
-(fatpack file; cat ../bin/perlbrew) >> perlbrew
+(fatpack file; cat ../script/perlbrew) >> perlbrew
 
 chmod +x perlbrew
 mv ./perlbrew ../

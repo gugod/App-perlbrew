@@ -11,7 +11,7 @@ use Test::More;
 use Test::Exception;
 use Path::Class;
 
-my $bin_perlbrew = file(__FILE__)->dir->parent->subdir("bin")->file("perlbrew");
+my $bin_perlbrew = file(__FILE__)->dir->parent->subdir("script")->file("perlbrew");
 
 throws_ok(
     sub {

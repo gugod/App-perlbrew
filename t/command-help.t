@@ -8,7 +8,7 @@ require "test_helpers.pl";
 
 use Test::Spec;
 
-my $bin_perlbrew = file(__FILE__)->dir->parent->subdir("bin")->file("perlbrew");
+my $bin_perlbrew = file(__FILE__)->dir->parent->subdir("script")->file("perlbrew");
 my $perl = $^X;
 
 #
