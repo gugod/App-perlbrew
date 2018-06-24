@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.83";
+our $VERSION = "0.84";
 use Config;
 
 BEGIN {
