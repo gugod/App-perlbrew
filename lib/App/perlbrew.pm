@@ -885,16 +885,14 @@ sub available_perls_with_urls {
     # and we do our own processing to filter out the development
     # releases and minor versions when needed (using
     # filter_perl_available)
-    $url = 'https://fastapi.metacpan.org/v1/release/_search'
-        . '\?q=distribution:perl%20AND%20archive:perl-5.%2A.%2A.tar.gz%20AND%20NOT%20status:backpan'
-        . '\&fields=download_url\&size=100';
+    $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
     $html = http_get( $url, undef, undef );
     unless($html) {
         $html = '';
         warn "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
     }
-    while ( $html =~ m|"(http(?:s?)://cpan\.metacpan\.org/[^"]+/(perl-5\.[0-9]+\.[0-9]+(?:-[A-Z0-9]+)?)\.tar\.gz)"|g ) {
-        my ( $current_perl, $current_url ) = ( $2, $1 );;
+    while ( $html =~ m{"(http(?:s?)://cpan\.metacpan\.org/[^"]+/(perl-5\.[0-9]+\.[0-9]+(?:-[A-Z0-9]+)?)\.tar\.(?:bz2|gz))"}g ) {
+        my ( $current_perl, $current_url ) = ( $2, $1 );
 
         push @perllist, [ $current_perl, $current_url ];
     }
