@@ -865,10 +865,10 @@ sub available_perls_with_urls {
     for ( split "\n", $html ) {
         my ( $current_perl, $current_url );
         if ( $self->{all} ) {
-            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<a href="(perl.*?\.tar\.gz)">(.+?)</a>|;
+            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<a href="(perl.*?\.tar\.gz)">\s*([^\s]+?)\s*</a>|;
         }
         else {
-            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<td><a href="(http(?:s?)://www.cpan.org/src/.+?)">(.+?)</a></td>|;
+            ( $current_perl, $current_url ) = ( $2, $1 ) if m|<td><a href="(http(?:s?)://www.cpan.org/src/.+?)">\s*([^\s]+?)\s*</a></td>|;
         }
 
         # if we have a $current_perl add it to the available hash of perls
