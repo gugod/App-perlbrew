@@ -1,0 +1,10 @@
+{
+    "x_static_install": true,
+    "resources": {
+        "repository": {
+            "web": "https://github.com/gugod/App-perlbrew",
+            "url": "https://github.com/gugod/App-perlbrew.git",
+            "type": "git"
+        }
+    }
+}
