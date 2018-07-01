@@ -807,12 +807,8 @@ sub sort_perl_versions {
 
 sub run_command_available {
     my ( $self ) = @_;
-
-
     my $perls     = $self->available_perls_with_urls(@_);
     my @installed = $self->installed_perls(@_);
-
-    my $is_installed;
     my $is_verbose = $self->{verbose};
 
     # sort the keys of Perl installation (Randal to the rescue!)
@@ -879,7 +875,6 @@ sub available_perls_with_urls {
         }
     }
 
-
     # we got impatient waiting for cpan.org to get updated to show 5.28...
     # So, we also fetch from metacpan for anything that looks perlish,
     # and we do our own processing to filter out the development
@@ -903,7 +898,6 @@ sub available_perls_with_urls {
             $perls->{ $perl->[0] } = $perl->[1];
         }
     }
-    
 
     # cperl releases: https://github.com/perl11/cperl/tags
     my $cperl_remote        = 'https://github.com';
@@ -919,7 +913,6 @@ sub available_perls_with_urls {
             warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
         }
     }
-
 
     return $perls;
 }
@@ -1826,7 +1819,6 @@ INSTALL
                 : ()
     );
 
-
     my $make = $ENV{MAKE} || ($^O eq "solaris" ? 'gmake' : 'make');
     my @build_commands = (
         $make . ' ' . ($self->{j} ? "-j$self->{j}" : "")
@@ -2156,7 +2148,6 @@ sub run_command_list {
               : '' ),
             ( $is_verbose ? "(installed on $i->{ctime})" : '' );
 
-
         for my $lib (@{$i->{libs}}) {
             print $lib->{is_current} ? "* " : "  ",
                 $lib->{name}, "\n"
@@ -2193,7 +2184,6 @@ way to work with perlbrew:
 
 --------------------------------------------------------------------------------
 WARNINGONMAC
-
 
         }
     }
@@ -2561,7 +2551,6 @@ sub run_command_alias {
             die "\nABORT: The installation `${alias}` already exists. Cannot override.\n\n";
         }
 
-
         unlink($path_alias) if -e $path_alias;
         symlink($path_name, $path_alias);
     }
@@ -2780,7 +2769,6 @@ sub run_command_list_modules {
         require File::Basename;
         $name = File::Basename::basename(readlink $path);
     }
-
 
     my $app = $class->new(
         qw(--quiet exec --with),
@@ -3562,7 +3550,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010-2017 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2010- Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head3 LICENCE
 
