@@ -1984,6 +1984,8 @@ sub installed_perls {
     for my $installation_dir (<$root/perls/*>) {
         my ($name)       = $installation_dir =~ m/\/([^\/]+$)/;
         my $executable   = joinpath($installation_dir, 'bin', 'perl');
+        next unless -f $executable;
+
         my $version_file = joinpath($installation_dir, '.version');
         my $ctime        = localtime( ( stat $executable )[ 10 ] ); # localtime in scalar context!
         my $orig_version;
