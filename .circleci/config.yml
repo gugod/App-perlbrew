@@ -5,7 +5,7 @@ jobs:
       - image: gugod/perlcritic:latest
     steps:
       - checkout
-      - run: perlcritic --profile .perlcriticrc .
+      - run: perlcritic --profile .perlcriticrc t lib script
   test:
     docker:
       - image: perl:5.28
