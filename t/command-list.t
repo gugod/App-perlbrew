@@ -14,10 +14,9 @@ use lib $FindBin::Bin;
 use App::perlbrew;
 require "test_helpers.pl";
 
-use File::Temp qw( tempdir );
 use File::Spec::Functions qw( catdir );
 use Test::Spec;
-use Test::Output qw(stdout_is stdout_from stdout_like);
+use Test::Output qw( stdout_like );
 
 mock_perlbrew_install("perl-5.12.3");
 mock_perlbrew_install("perl-5.12.4");
