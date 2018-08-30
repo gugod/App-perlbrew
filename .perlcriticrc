@@ -1,0 +1,5 @@
+color = 0
+verbose = %f:%l:%c:[%p] %m.\n
+
+only = 1
+include = RequireUseStrict
