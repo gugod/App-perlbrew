@@ -1117,7 +1117,7 @@ sub release_detail_cperl_remote {
 
 sub release_detail {
     my ($self, $dist) = @_;
-    my ($dist_type, $dist_version, $tarball_name, $tarball_url);
+    my ($dist_type, $dist_version);
 
     ($dist_type, $dist_version) = $dist =~ /^ (?: (c?perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
     $dist_type = "perl" if $dist_version && !$dist_type;
