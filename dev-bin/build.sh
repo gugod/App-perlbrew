@@ -44,6 +44,7 @@ export PERL5LIB="lib":$PERL5LIB
 cat - <<"EOF" > perlbrew
 #!/usr/bin/perl
 
+use strict;
 use Config;
 BEGIN {
     my @oldinc = @INC;

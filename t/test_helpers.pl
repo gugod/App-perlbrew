@@ -14,6 +14,7 @@ put 't/' dir to `@INC`.
 
 =cut
 
+use strict;
 use Test::More;
 use Path::Class;
 use IO::All;
