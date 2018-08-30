@@ -1,5 +1,5 @@
 color = 0
-verbose = %f:%l:%c:[%p] %m.\n
+verbose = %f:%l:%c:[%p] %m => %r\n
 
 only = 1
-include = RequireUseStrict
+include = RequireUseStrict ProhibitUnused
