@@ -2823,7 +2823,11 @@ sub resolve_installation_name {
 # and then read back the list to execute a 'cpanm' shell
 # with the argument list.
 sub run_command_clone_modules {
-    my ( $self, $dst_perl, $src_perl, @args ) = @_;
+    my $self = shift;
+
+    # Allows src_perl to be optional
+    my $dst_perl = pop @_;
+    my $src_perl = pop @_;
 
     # if no source perl installation has been specified, use the
     # current one as default
