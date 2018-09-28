@@ -2826,8 +2826,8 @@ sub run_command_clone_modules {
     my $self = shift;
 
     # Allows src_perl to be optional
-    my $dst_perl = pop @_;
-    my $src_perl = pop @_;
+    my $dst_perl = pop;
+    my $src_perl = pop;
 
     # if no source perl installation has been specified, use the
     # current one as default
