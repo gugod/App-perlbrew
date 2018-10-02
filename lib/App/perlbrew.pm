@@ -361,7 +361,7 @@ sub parse_cmdline {
         'quiet|q',
         'verbose|v',
         'as=s',
-      	'append=s',
+        'append=s',
         'help|h',
         'version',
         'root=s',
@@ -929,7 +929,7 @@ sub available_perls_with_urls {
 # suffix (like -RC1) following the URL, and returns the list of
 # arrayrefs that so match
 #
-# If any "newest" Perl has a 
+# If any "newest" Perl has a
 sub filter_perl_available {
     my ($self, $perllist) = @_;
 
@@ -1999,7 +1999,7 @@ sub installed_perls {
             if ( defined $orig_version and length $orig_version ){
                 if (open my $fh, '>', $version_file ){
                     print {$fh} $orig_version;
-		}
+                }
             }
         }
 
@@ -2831,7 +2831,7 @@ sub run_command_clone_modules {
 
     # if no source perl installation has been specified, use the
     # current one as default
-    $src_perl = $self->current_perl  if ( ! $src_perl || ! $self->resolve_installation_name( $src_perl ) );
+    $src_perl = $self->current_perl if ( ! $src_perl || ! $self->resolve_installation_name( $src_perl ) );
 
     # check for the destination Perl to be installed
     undef $dst_perl if ( ! $self->resolve_installation_name( $dst_perl ) );
