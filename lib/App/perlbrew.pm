@@ -341,8 +341,6 @@ sub new {
 
     my $self = bless \%opt, $class;
 
-    $self->{builddir} ||= joinpath($self->root, "build");
-
     return $self;
 }
 
@@ -411,6 +409,12 @@ sub home {
     }
 
     return $self->{home} || $PERLBREW_HOME;
+}
+
+sub builddir {
+	my ($self) = @_;
+
+    return $self->{builddir} || joinpath($self->root, "build");
 }
 
 sub current_perl {
@@ -1344,7 +1348,7 @@ sub do_extract_tarball {
     $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2|xz)$}{$1};
 
     # Note that this is incorrect for blead.
-    my $workdir = joinpath($self->{builddir}, $dist_tarball_basename);
+    my $workdir = joinpath($self->builddir, $dist_tarball_basename);
     rmpath($workdir) if -d $workdir;
     mkpath($workdir);
     my $extracted_dir;
@@ -1418,7 +1422,7 @@ sub do_install_blead {
     # Returns the wrong extracted dir for blead
     $self->do_extract_tarball($dist_tarball_path);
 
-    my $build_dir = $self->{builddir};
+    my $build_dir = $self->builddir;
     my @contents;
     my $dist_extracted_subdir = search_blead_dir($build_dir, \@contents);
 
