@@ -341,6 +341,10 @@ sub new {
 
     my $self = bless \%opt, $class;
 
+	# Treat --root option same way as env variable PERLBREW_ROOT (with higher priority)
+	$ENV{PERLBREW_ROOT} = $self->root ($opt{root})
+		if $opt{root};
+
     return $self;
 }
 
@@ -396,6 +400,7 @@ sub root {
 
     if (defined($new_root)) {
         $self->{root} = $new_root;
+		$PERLBREW_ROOT = $new_root;
     }
 
     return $self->{root} || $PERLBREW_ROOT;
