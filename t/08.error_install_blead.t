@@ -9,7 +9,6 @@ require 'test_helpers.pl';
 
 use Test::More;
 use Test::Exception;
-use Path::Class;
 
 use App::perlbrew;
 {

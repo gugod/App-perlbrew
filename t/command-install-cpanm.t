@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use Test::Spec;
 use Path::Class;
-use IO::All;
 use File::Temp qw( tempdir );
 
 use App::perlbrew;
