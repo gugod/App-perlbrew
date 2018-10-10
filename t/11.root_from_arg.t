@@ -44,7 +44,7 @@ sub looks_like_perlbrew_root {
 
 	my ($ok, $stack);
 
-	($ok, $stack) = Test::Deep::cmp_details $got, $expected;
+	($ok, $stack) = Test::Deep::cmp_details "$got", "$expected";
 	unless ($ok) {
 		fail;
 		diag "Return value comparison failed";
@@ -52,7 +52,7 @@ sub looks_like_perlbrew_root {
 		return;
 	}
 
-	($ok, $stack) = Test::Deep::cmp_details $got, $App::perlbrew::PERLBREW_ROOT;
+	($ok, $stack) = Test::Deep::cmp_details "$got", "$App::perlbrew::PERLBREW_ROOT";
 	unless ($ok) {
 		fail;
 		diag "Global \$PERLBREW_ROOT comparison failed";
@@ -60,6 +60,6 @@ sub looks_like_perlbrew_root {
 		return;
 	}
 
-	return pass;
+	return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path');
 }
 

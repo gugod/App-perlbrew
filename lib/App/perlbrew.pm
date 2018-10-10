@@ -24,6 +24,8 @@ use Getopt::Long ();
 use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
 
+use App::Perlbrew::Path;
+
 sub min(@) {
     my $m = $_[0];
     for(@_) {
@@ -398,22 +400,37 @@ sub parse_cmdline {
 sub root {
     my ($self, $new_root) = @_;
 
+	unless ($self->{root}) {
+		$new_root ||= $PERLBREW_ROOT;
+	}
+
     if (defined($new_root)) {
         $self->{root} = $new_root;
 		$PERLBREW_ROOT = $new_root;
     }
 
-    return $self->{root} || $PERLBREW_ROOT;
+	$self->{root} = App::Perlbrew::Path->new ($self->{root})
+		unless ref $self->{root};
+
+    return $self->{root};
 }
 
 sub home {
     my ($self, $new_home) = @_;
 
+	unless ($self->{home}) {
+		$new_home ||= $PERLBREW_HOME;
+	}
+
     if (defined($new_home)) {
         $self->{home} = $new_home;
+		$PERLBREW_HOME = $new_home;
     }
 
-    return $self->{home} || $PERLBREW_HOME;
+	$self->{home} = App::Perlbrew::Path->new ($self->{home})
+		unless ref $self->{home};
+
+    return $self->{home};
 }
 
 sub builddir {
