@@ -30,8 +30,8 @@ describe 'perlbrew exec perl -E "say 42"' => sub {
 
                 my $perl_installation = shift @perls;
 
-                is $perlbrew_bin_path,      file($App::perlbrew::PERLBREW_ROOT, "bin");
-                is $perlbrew_perl_bin_path, file($App::perlbrew::PERLBREW_ROOT, "perls", $perl_installation->{name}, "bin"), "perls/". $perl_installation->{name} . "/bin";
+                is $perlbrew_bin_path,      App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "bin");
+                is $perlbrew_perl_bin_path, App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "perls", $perl_installation->{name}, "bin"), "perls/". $perl_installation->{name} . "/bin";
 
                 return 0;
             }
@@ -53,8 +53,8 @@ describe 'perlbrew exec --with perl-5.12.3 perl -E "say 42"' => sub {
 
                 my ($perlbrew_bin_path, $perlbrew_perl_bin_path, @paths) = split(":", $ENV{PATH});
 
-                is $perlbrew_bin_path,      file($App::perlbrew::PERLBREW_ROOT, "bin");
-                is $perlbrew_perl_bin_path, file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.3", "bin");
+                is $perlbrew_bin_path,      App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "bin");
+                is $perlbrew_perl_bin_path, App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.3", "bin");
 
                 return 0;
             }
@@ -81,9 +81,9 @@ describe 'perlbrew exec --with perl-5.14.1,perl-5.12.3,perl-5.14.2 perl -E "say 
         $app->run;
 
         is_deeply \@perl_paths, [
-            file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
-            file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.3", "bin"),
-            file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.2", "bin"),
+            App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
+            App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.3", "bin"),
+            App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.2", "bin"),
         ];
     };
 };
@@ -105,7 +105,7 @@ describe 'perlbrew exec --with perl-5.14.1,perl-foobarbaz, ' => sub {
         $app->run;
 
         is_deeply \@perl_paths, [
-            file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
+            App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
         ];
     };
 };
@@ -127,8 +127,8 @@ describe 'perlbrew exec --with perl-5.14.1,5.14.1 ' => sub {
         $app->run;
 
         is_deeply \@perl_paths, [
-            file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
-            file($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
+            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
+            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
         ];
     };
 };

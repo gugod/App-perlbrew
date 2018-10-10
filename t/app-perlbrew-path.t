@@ -16,13 +16,13 @@ describe "App::Perlbrew::Path" => sub {
 		it "should accept one parameter" => sub {
 			my $path = App::Perlbrew::Path->new ("foo/bar/baz");
 
-			looks_like_perlbrew_path $path, "foo/bar/baz";
+			cmp_deeply $path, looks_like_perlbrew_path "foo/bar/baz";
 		};
 
 		it "should concatenate multiple parameters into single path" => sub {
 			my $path = App::Perlbrew::Path->new ("foo", "bar/baz");
 
-			looks_like_perlbrew_path $path, "foo/bar/baz";
+			cmp_deeply $path, looks_like_perlbrew_path "foo/bar/baz";
 		};
 
 		it "should die with undefined element" => sub {
@@ -35,7 +35,27 @@ describe "App::Perlbrew::Path" => sub {
 		it "should concatenate long (root) path" => sub {
 			my $path = App::Perlbrew::Path->new ('', qw(this is a long path to check if it is joined ok));
 
-			looks_like_perlbrew_path $path, '/this/is/a/long/path/to/check/if/it/is/joined/ok';
+			cmp_deeply $path, looks_like_perlbrew_path '/this/is/a/long/path/to/check/if/it/is/joined/ok';
+		};
+	};
+
+	describe "child()" => sub {
+		it "should create direct child" => sub {
+			my $path = App::Perlbrew::Path->new ("foo/bar")->child (1);
+
+			cmp_deeply $path, looks_like_perlbrew_path "foo/bar/1";
+		};
+
+		it "should accept multiple children" => sub {
+			my $path = App::Perlbrew::Path->new ("foo/bar")->child (1, 2);
+
+			cmp_deeply $path, looks_like_perlbrew_path "foo/bar/1/2";
+		};
+
+		it "should return chainable object" => sub {
+			my $path = App::Perlbrew::Path->new ("foo/bar")->child (1, 2)->child (3);
+
+			cmp_deeply $path, looks_like_perlbrew_path "foo/bar/1/2/3";
 		};
 	};
 
@@ -45,9 +65,9 @@ describe "App::Perlbrew::Path" => sub {
 runtests unless caller;
 
 sub looks_like_perlbrew_path {
-	my ($got, $expected) = @_;
+	my ($expected) = @_;
 
-	cmp_deeply $got, all (
+	all (
 		methods (stringify => $expected),
 		obj_isa ('App::Perlbrew::Path'),
 	);

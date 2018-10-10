@@ -7,7 +7,6 @@ use lib $FindBin::Bin;
 use App::perlbrew;
 require 'test_helpers.pl';
 
-use Path::Class;
 use Test::More;
 use Capture::Tiny qw( capture_stdout );
 
@@ -81,7 +80,7 @@ subtest "Exports PERLBREW_HOME when needed", sub {
         return;
     }
     my $out = capture_stdout {
-        local $App::perlbrew::PERLBREW_HOME = App::perlbrew::joinpath($ENV{HOME}, ".perlbrew");
+        local $App::perlbrew::PERLBREW_HOME = App::Perlbrew::Path->new ($ENV{HOME}, ".perlbrew");
         my $app = App::perlbrew->new('self-install');
         $app->current_shell("bash");
         $app->run;

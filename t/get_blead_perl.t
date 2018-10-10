@@ -14,11 +14,11 @@ my $blead = 'perl-blead-e7e8ce8';
 mkdir("$dir/build/blead/$blead");
 
 my @content;
-my $found_dir = App::perlbrew::search_blead_dir( "$dir/build", \@content );
+my $found_dir = App::perlbrew::search_blead_dir( App::Perlbrew::Path->new ("$dir/build"), \@content );
 is( $found_dir,       undef, 'no candidate directory is found' );
 is( scalar(@content), 1,     'there are only directories on content cache' );
 is( $content[0], 'blead', 'have the expected directory in the content cache' );
-$found_dir = App::perlbrew::search_blead_dir( "$dir/build/blead", \@content );
+$found_dir = App::perlbrew::search_blead_dir( App::Perlbrew::Path->new ("$dir/build/blead"), \@content );
 is( $found_dir,       $blead, 'the expected directory is found' );
 is( scalar(@content), 1,      'there are only directories on content cache' );
 is( $content[0], $blead, 'have the expected directory in the content cache' );

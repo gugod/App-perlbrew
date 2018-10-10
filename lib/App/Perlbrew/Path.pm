@@ -38,11 +38,3 @@ sub stringify {
 
 1;
 
-__END__
-
-=head1 NAME
-
-App::Perlbrew::Path - minimalistic path abstraction
-
-=head1 DESCRIPTION
-
