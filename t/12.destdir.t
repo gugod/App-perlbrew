@@ -93,7 +93,6 @@ subtest "mock installing" => sub {
     my ($output,$error) = capture { $app->run };
 
     my @installed = grep { !$_->{is_external} } $app->installed_perls;
-use Data::Dumper; print Dumper \@installed;
     is 0+@installed, 0, "found 0 installed perl (as it's installed in DESTDIR)";
 
     my $root = dir($DESTDIR, $ENV{PERLBREW_ROOT});

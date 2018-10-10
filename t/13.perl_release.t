@@ -8,7 +8,6 @@ require "test_helpers.pl";
 
 
 use Test::Spec;
-use Test::Exception;
 use CPAN::Perl::Releases;
 use JSON::PP qw(encode_json);
 

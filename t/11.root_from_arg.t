@@ -8,7 +8,6 @@ require "test_helpers.pl";
 
 use File::Temp qw(tempdir);
 use Test::Spec;
-use Test::Exception;
 
 describe "App::perlbrew#root method" => sub {
     it "should return \$App::perlbrew::PERLBREW_ROOT normally" => sub {
