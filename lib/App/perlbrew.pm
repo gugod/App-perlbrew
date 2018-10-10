@@ -104,16 +104,6 @@ sub splitpath {
     split "/", $path;
 }
 
-sub mkpath {
-    require File::Path;
-    File::Path::mkpath([@_], 0, 0777);
-}
-
-sub rmpath {
-    require File::Path;
-    File::Path::rmtree([@_], 0, 0);
-}
-
 sub files_are_the_same {
     ## Check dev and inode num. Not useful on Win32.
     ## The for loop should always return false on Win32, as a result.
@@ -1175,7 +1165,7 @@ sub run_command_init {
         exit 0;
     }
 
-    mkpath($_) for (grep { ! -d $_ } map { $self->root->child ($_) } qw(perls dists build etc bin));
+    $_->mkpath for (grep { ! -d $_ } map { $self->root->child ($_) } qw(perls dists build etc bin));
 
     my ($f, $fh) = @_;
 
@@ -1284,7 +1274,7 @@ sub run_command_self_install {
         exit;
     }
 
-    mkpath( $self->root->child ("bin"));
+    $self->root->child ("bin")->mkpath;
 
     open my $fh, "<", $executable;
     my @lines =  <$fh>;
@@ -1366,8 +1356,8 @@ sub do_extract_tarball {
 
     # Note that this is incorrect for blead.
     my $workdir = $self->builddir->child ($dist_tarball_basename);
-    rmpath($workdir) if -d $workdir;
-    mkpath($workdir);
+    $workdir->rmpath;
+    $workdir->mkpath;
     my $extracted_dir;
 
     # Was broken on Solaris, where GNU tar is probably
@@ -1893,8 +1883,9 @@ INSTALL
             my $capture = $self->do_capture("$newperl -V:sitelib");
             my ($sitelib) = $capture =~ m/sitelib='([^']*)';/;
             $sitelib = $destdir . $sitelib if $destdir;
-            mkpath($sitelib) unless -d $sitelib;
-            my $target = App::Perlbrew::Path->new ($sitelib, "sitecustomize.pl");
+			$sitelib = App::Perlbrew::Path->new ($sitelib);
+            $sitelib->mkpath;
+            my $target = $sitelib->child ("sitecustomize.pl");
             open my $dst, ">", $target
                 or die "Could not open '$target' for writing: $!\n";
             open my $src, "<", $sitecustomize
@@ -1955,7 +1946,7 @@ sub do_install_program_from_url {
         $body = $body_filter->($body);
     }
 
-    mkpath($self->root->child ("bin")) unless -d $self->root->child ("bin");
+    $self->root->child ("bin")->mkpath;
     open my $OUT, '>', $out or die "cannot open file($out): $!";
     print $OUT $body;
     close $OUT;
@@ -2278,7 +2269,7 @@ sub switch_to {
         my $HOME = $self->env('HOME');
         my $pb_home = $self->home;
 
-        mkpath($pb_home);
+        $pb_home->mkpath;
         system("$0 env $dist > " . $pb_home->child ("init"));
 
         print "Switched to $dist.\n\n";
@@ -2297,7 +2288,7 @@ sub run_command_switch_off {
     my $self = shift;
     my $pb_home = $self->home;
 
-    mkpath($pb_home);
+    $pb_home->mkpath;
     system("env PERLBREW_PERL= $0 env > " . $pb_home->child ("init"));
 
     print "\nperlbrew is switched off. Please exit this shell and start a new one to make it effective.\n";
@@ -2448,7 +2439,7 @@ sub run_command_uninstall {
     if ($ans =~ /^Y/i) {
         for (@dir_to_delete) {
             print "Deleting: $_\n" unless $self->{quiet};
-            rmpath($_);
+            App::Perlbrew::Path->new ($_)->rmpath;
             print "Deleted:  $_\n" unless $self->{quiet};
         }
     } else {
@@ -2539,7 +2530,7 @@ sub run_command_clean {
 
     for my $dir (@build_dirs) {
         print "Removing $dir\n";
-        rmpath($dir);
+        App::Perlbrew::Path->new ($dir)->rmpath;
     }
 
     my @tarballs = <$root/dists/*>;
@@ -2656,7 +2647,7 @@ sub run_command_lib_create {
         die "$fullname is already there.\n";
     }
 
-    mkpath($dir);
+    $dir->mkpath;
 
     print "lib '$fullname' is created.\n"
         unless $self->{quiet};
@@ -2685,7 +2676,7 @@ sub run_command_lib_delete {
             die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
         }
 
-        rmpath($dir);
+        $dir->rmpath;
 
         print "lib '$fullname' is deleted.\n"
             unless $self->{quiet};

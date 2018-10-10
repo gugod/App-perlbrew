@@ -13,7 +13,10 @@ use Test::More;
 
 ## setup
 
-App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
+App::Perlbrew::Path
+	->new ($ENV{PERLBREW_ROOT})
+	->rmpath
+	;
 
 ## mock
 
@@ -46,8 +49,8 @@ sub App::perlbrew::do_install_release {
 
     my $root = App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT});
     my $installation_dir = $root->child("perls", $name);
-    App::perlbrew::mkpath($installation_dir);
-    App::perlbrew::mkpath($root->child("perls", $name, "bin"));
+    $installation_dir->mkpath;
+    $root->child("perls", $name, "bin")->mkpath;
 
     my $perl = $root->child("perls", $name, "bin")->child("perl");
     io($perl)->print("#!/bin/sh\nperl \"\$@\";\n");

@@ -3,6 +3,8 @@
 use strict;
 use warnings;
 
+use File::Temp qw[];
+
 use Test::Spec;
 use Test::Exception;
 use Test::Deep;
@@ -10,6 +12,7 @@ use Test::Deep;
 use App::Perlbrew::Path;
 
 sub looks_like_perlbrew_path;
+sub arrange_testdir;
 
 describe "App::Perlbrew::Path" => sub {
 	describe "new()" => sub {
@@ -59,6 +62,53 @@ describe "App::Perlbrew::Path" => sub {
 		};
 	};
 
+	describe "mkpath()" => sub {
+		it "should create recursive path" => sub {
+			my $path = arrange_testdir ("foo/bar/baz");
+			$path->mkpath;
+
+			ok -d $path;
+		};
+
+		it "should not die when path already exists" => sub {
+			my $path = arrange_testdir ("foo/bar/baz");
+
+			$path->mkpath;
+
+			lives_ok { $path->mkpath };
+		};
+
+		it "should return self" => sub {
+			my $path = arrange_testdir ("foo/bar/baz");
+
+			cmp_deeply $path->mkpath, looks_like_perlbrew_path "$path";
+		};
+	};
+
+	describe "rmpath()" => sub {
+		it "should remove path recursively" => sub {
+			my $path = arrange_testdir ("foo");
+			my $child = $path->child ("bar/baz");
+
+			$child->mkpath;
+			$path->rmpath;
+
+			ok ! -d $path;
+		};
+
+		it "should not die when path doesn't exist" => sub {
+			my $path = arrange_testdir ("foo");
+
+			lives_ok { $path->rmpath };
+		};
+
+		it "should return self" => sub {
+			my $path = arrange_testdir ("foo/bar/baz");
+
+			cmp_deeply $path, looks_like_perlbrew_path "$path";
+		};
+	};
+
 	return;
 };
 
@@ -71,4 +121,10 @@ sub looks_like_perlbrew_path {
 		methods (stringify => $expected),
 		obj_isa ('App::Perlbrew::Path'),
 	);
+}
+
+sub arrange_testdir {
+	my (@path) = @_;
+
+	App::Perlbrew::Path->new (File::Temp::tempdir (CLEANUP => 1), @path);
 }

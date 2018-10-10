@@ -4,6 +4,8 @@ use warnings;
 
 package App::Perlbrew::Path;
 
+require File::Path;
+
 use overload (
 	'""' => \& stringify,
 	fallback => 1,
@@ -17,7 +19,6 @@ sub _joinpath {
     return join "/", @_;
 }
 
-
 sub new {
 	my ($class, @path) = @_;
 
@@ -28,6 +29,18 @@ sub child {
 	my ($self, @path) = @_;
 
 	return __PACKAGE__->new ($self->{path}, @path);
+}
+
+sub mkpath {
+	my ($self) = @_;
+    File::Path::mkpath ([$self->stringify], 0, 0777);
+	return $self;
+}
+
+sub rmpath {
+	my ($self) = @_;
+    File::Path::rmtree([$self->stringify], 0, 0);
+	return $self;
 }
 
 sub stringify {

@@ -60,7 +60,7 @@ describe "lib command," => sub {
         };
 
         after each => sub {
-            dir ("$libdir")->rmtree;
+            $libdir->rmpath;
         };
 
         describe "with a bare lib name," => sub {
@@ -121,9 +121,10 @@ describe "lib command," => sub {
 
     describe "`delete` sub-command," => sub {
         before each => sub {
-            App::perlbrew::mkpath(
-                App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
-            );
+			App::Perlbrew::Path
+				->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
+				->mkpath
+				;
         };
 
         it "deletes the local::lib folder" => sub {

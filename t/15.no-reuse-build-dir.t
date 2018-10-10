@@ -2,7 +2,6 @@ use strict;
 use warnings;
 use Test::More tests => 6;
 use File::Basename qw(basename);
-use File::Path qw(mkpath);
 
 use FindBin;
 use lib $FindBin::Bin;
@@ -15,7 +14,7 @@ my $pb = new_ok('App::perlbrew');
 
 my $test_dir = App::Perlbrew::Path->new ($pb->root, qw/build test/);
 my $test_file = App::Perlbrew::Path->new ( $test_dir, 3 );
-mkpath( "$test_dir" );
+$test_dir->mkpath;
 open my $out, '>', $test_file
     or die "Couldn't create $test_file: $!";
 

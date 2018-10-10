@@ -12,9 +12,9 @@ $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 
-App::perlbrew::mkpath( App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT})->child ("perls") );
-App::perlbrew::mkpath( App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT})->child ("build") );
-App::perlbrew::mkpath( App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT})->child ("dists") );
+App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT})->child ("perls")->mkpath;
+App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT})->child ("build")->mkpath;
+App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT})->child ("dists")->mkpath;
 
 no warnings 'redefine';
 sub App::perlbrew::http_download { return "ERROR" }
