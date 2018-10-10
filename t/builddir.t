@@ -6,9 +6,7 @@ use lib $FindBin::Bin;
 use App::perlbrew;
 require "test_helpers.pl";
 
-use File::Temp qw(tempdir);
 use Test::Spec;
-use Test::Exception;
 
 describe "App::perlbrew#builddir method" => sub {
     it "should return path in \$App::perlbrew::PERLBREW_ROOT normally" => sub {
