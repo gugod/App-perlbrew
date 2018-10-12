@@ -39,10 +39,10 @@ describe "App::perlbrew" => sub {
         it "accepts a path to perl tarball and perform installation process." => sub {
             my $app = App::perlbrew->new;
 
-            my $e1 = $app->expects("do_extract_tarball")->returns("/a/fake/path/to/perl-5.12.3");
+            my $e1 = $app->expects("do_extract_tarball")->returns(App::Perlbrew::Path->new ("/a/fake/path/to/perl-5.12.3"));
             my $e2 = $app->expects("do_install_this")->returns("");
 
-            $app->do_install_archive("/a/fake/path/to/perl-5.12.3.tar.gz");
+            $app->do_install_archive(App::Perlbrew::Path->new ("/a/fake/path/to/perl-5.12.3.tar.gz"));
 
             ok $e1->verify, "do_extract_tarball is called";
             ok $e2->verify, "do_install_this is called";

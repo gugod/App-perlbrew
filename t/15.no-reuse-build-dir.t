@@ -22,7 +22,7 @@ ok -e $test_file, 'Test file 3 created';
 my $extracted_dir = $pb->do_extract_tarball( App::Perlbrew::Path->new ($FindBin::Bin, 'test.tar.gz') );
 diag $extracted_dir;
 
-is basename( $extracted_dir ) => 'test', 'Test tarball extracted as expected';
+is $extracted_dir->basename => 'test', 'Test tarball extracted as expected';
 
 ok !-e $test_file, 'Test file 3 was unlinked by tar';
 ok -e App::Perlbrew::Path->new ( $extracted_dir, $_ ), "Test file $_ exists" for 1..2;

@@ -4,6 +4,7 @@ use warnings;
 
 package App::Perlbrew::Path;
 
+require File::Basename;
 require File::Glob;
 require File::Path;
 
@@ -24,6 +25,12 @@ sub new {
 	my ($class, @path) = @_;
 
 	bless { path => _joinpath (@path) }, $class;
+}
+
+sub basename {
+	my ($self, $suffix) = @_;
+
+	return scalar File::Basename::fileparse ($self, ($suffix) x!! defined $suffix);
 }
 
 sub child {

@@ -42,6 +42,20 @@ describe "App::Perlbrew::Path" => sub {
 		};
 	};
 
+	describe "basename()" => sub {
+		it "should return basename" => sub {
+			my $path = App::Perlbrew::Path->new ("foo/bar/baz.tar.gz");
+
+			is $path->basename, "baz.tar.gz";
+		};
+
+		it "should trim provided suffix match" => sub {
+			my $path = App::Perlbrew::Path->new ("foo/bar/baz.tar.gz");
+
+			is $path->basename (qr/\.tar\.(?:gz|bz2|xz)$/), "baz";
+		};
+	};
+
 	describe "child()" => sub {
 		it "should create direct child" => sub {
 			my $path = App::Perlbrew::Path->new ("foo/bar")->child (1);

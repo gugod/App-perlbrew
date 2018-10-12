@@ -97,12 +97,6 @@ for (@flavors) {
 
 ### functions
 
-sub splitpath {
-    my $path = shift;
-    die 'Cannot receive an undefined path as parameter' unless(defined($path));
-    split "/", $path;
-}
-
 sub files_are_the_same {
     ## Check dev and inode num. Not useful on Win32.
     ## The for loop should always return false on Win32, as a result.
@@ -448,7 +442,7 @@ sub current_shell {
     my ($self, $x) = @_;
     $self->{current_shell} = $x if $x;
     return $self->{current_shell} ||= do {
-        my $shell_name = (splitpath($self->{shell} || $self->env('SHELL')))[-1];
+        my $shell_name = App::Perlbrew::Path->new ($self->{shell} || $self->env('SHELL'))->basename;
         $shell_name =~ s/\d+$//;
         $shell_name;
     };
@@ -1350,8 +1344,7 @@ sub do_extract_tarball {
     my ($self, $dist_tarball) = @_;
 
     # Assuming the dir extracted from the tarball is named after the tarball.
-    my $dist_tarball_basename = $dist_tarball;
-    $dist_tarball_basename =~ s{.*/([^/]+)\.tar\.(?:gz|bz2|xz)$}{$1};
+    my $dist_tarball_basename = $dist_tarball->basename (qr/\.tar\.(?:gz|bz2|xz)$/);
 
     # Note that this is incorrect for blead.
     my $workdir = $self->builddir->child ($dist_tarball_basename);
@@ -1730,7 +1723,7 @@ sub do_install_archive {
     my $dist_version;
     my $installation_name;
 
-    if (File::Basename::basename($dist_tarball_path) =~ m{(c?perl)-?(5.+)\.tar\.(gz|bz2|xz)\Z}) {
+    if ($dist_tarball_path->basename =~ m{(c?perl)-?(5.+)\.tar\.(gz|bz2|xz)\Z}) {
         my $perl_variant = $1;
         $dist_version = $2;
         $installation_name = "${perl_variant}-${dist_version}";
@@ -1993,7 +1986,7 @@ sub installed_perls {
     my $root = $self->root;
 
     for my $installation_dir ($root->child ('perls')->children) {
-        my ($name)       = $installation_dir =~ m/\/([^\/]+$)/;
+        my $name         = $installation_dir->basename;
         my $executable   = $installation_dir->child ('bin', 'perl');
         next unless -f $executable;
 
@@ -2037,7 +2030,7 @@ sub local_libs {
 
     my $current = $self->current_env;
     my @libs = map {
-        my $name = substr($_, length($self->home) + 6);
+        my $name = $_->basename;
         my ($p, $l) = split(/@/, $name);
         +{
             name       => $name,
@@ -2338,7 +2331,7 @@ sub run_command_symlink_executables {
     my $root = $self->root;
 
     unless (@perls) {
-        @perls = map { m{/([^/]+)$} } grep { -d $_ && ! -l $_ } $root->child ('perls')->children;
+        @perls = map { $_->basename } grep { -d $_ && ! -l $_ } $root->child ('perls')->children;
     }
 
     for my $perl (@perls) {
@@ -2777,8 +2770,7 @@ sub run_command_list_modules {
 
     my $name = $self->current_env;
     if (-l (my $path = $self->root->child ('perls', $name))) {
-        require File::Basename;
-        $name = File::Basename::basename($path->readlink);
+        $name = $path->readlink->basename;
     }
 
     my $app = $class->new(
