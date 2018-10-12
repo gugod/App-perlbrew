@@ -43,7 +43,7 @@ sub uniq {
 # set $ENV{SHELL} to executable path of parent process (= shell) if it's missing
 # (e.g. if this script was executed by a daemon started with "service xxx start")
 # ref: https://github.com/gugod/App-perlbrew/pull/404
-$ENV{SHELL} ||= readlink App::Perlbrew::Path->new ("/proc", getppid, "exe") if -d "/proc";
+$ENV{SHELL} ||= App::Perlbrew::Path->new ("/proc", getppid, "exe")->readlink if -d "/proc";
 
 local $SIG{__DIE__} = sub {
     my $message = shift;
@@ -2780,7 +2780,7 @@ sub run_command_list_modules {
     my $name = $self->current_env;
     if (-l (my $path = $self->root->child ('perls', $name))) {
         require File::Basename;
-        $name = File::Basename::basename(readlink $path);
+        $name = File::Basename::basename($path->readlink);
     }
 
     my $app = $class->new(

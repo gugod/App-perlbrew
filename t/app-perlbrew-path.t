@@ -85,6 +85,46 @@ describe "App::Perlbrew::Path" => sub {
 		};
 	};
 
+	describe "readlink()" => sub {
+		my $test_root;
+		my $link;
+
+		before each => sub {
+			$test_root = arrange_testdir;
+			$link = $test_root->child ('link');
+		};
+
+		context "when path doesn't exist" => sub {
+			it "should return undef" => sub {
+				is $link->readlink, undef;
+			};
+		};
+
+		context "when path isn't a symlink" => sub {
+			before each => sub { $link->mkpath };
+
+			it "should return undef" => sub {
+				is $link->readlink, undef;
+			};
+		};
+
+		context "should return path object of link content" => sub {
+			my $dest;
+
+			before each => sub {
+				$dest = $test_root->child ('dest');
+				$dest->mkpath;
+				symlink $dest, $link;
+			};
+
+			it "should return link path" => sub {
+				my $read = $link->readlink;
+
+				cmp_deeply $read, looks_like_perlbrew_path "$dest";
+			};
+		};
+	};
+
 	describe "rmpath()" => sub {
 		it "should remove path recursively" => sub {
 			my $path = arrange_testdir ("foo");

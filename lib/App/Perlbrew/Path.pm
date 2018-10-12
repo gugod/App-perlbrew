@@ -37,6 +37,15 @@ sub mkpath {
 	return $self;
 }
 
+sub readlink {
+	my ($self) = @_;
+
+	my $link = readlink $self->stringify;
+	$link = __PACKAGE__->new ($link) if defined $link;
+
+	return $link;
+}
+
 sub rmpath {
 	my ($self) = @_;
     File::Path::rmtree([$self->stringify], 0, 0);
