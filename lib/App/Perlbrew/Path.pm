@@ -74,5 +74,11 @@ sub stringify {
 	return $self->{path};
 }
 
+sub unlink {
+	my ($self) = @_;
+
+	unlink ($self);
+}
+
 1;
 

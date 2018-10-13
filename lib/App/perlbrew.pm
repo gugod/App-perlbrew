@@ -195,11 +195,11 @@ sub files_are_the_same {
 
         my $status = system($download_command);
         if ($partial) {
-            unlink($path) if -f $path;
+            $path->unlink;
             return "ERROR: Interrupted.";
         }
         unless ($status == 0) {
-            unlink($path) if -f $path;
+            $path->unlink;
             return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
         }
         return 0;
@@ -1852,7 +1852,7 @@ INSTALL
         @install_commands
     );
 
-    unlink($self->{log_file});
+    $self->{log_file}->unlink;
 
     if($self->{verbose}) {
         $cmd = "($cmd) 2>&1 | tee $self->{log_file}";
@@ -1889,7 +1889,7 @@ INSTALL
           $self->root->child ('perls', $installation_name, '.version' );
 
         if ( -e $version_file ) {
-            unlink($version_file)
+            $version_file->unlink
               or die "Could not unlink $version_file file: $!\n";
         }
 
@@ -2398,7 +2398,7 @@ sub run_command_self_upgrade {
         return;
     }
     system $TMP_PERLBREW, "self-install";
-    unlink $TMP_PERLBREW;
+    $TMP_PERLBREW->unlink;
 }
 
 sub run_command_uninstall {
@@ -2527,7 +2527,7 @@ sub run_command_clean {
     my @tarballs = $root->child ('dists')->children;
     for my $file ( @tarballs ) {
         print "Removing $file\n";
-        unlink($file);
+        $file->unlink;
     }
 
     print "\nDone\n";
@@ -2555,7 +2555,7 @@ sub run_command_alias {
             die "\nABORT: The installation `${alias}` already exists. Cannot override.\n\n";
         }
 
-        unlink($path_alias) if -e $path_alias;
+        $path_alias->unlink;
         symlink($path_name, $path_alias);
     }
     elsif($cmd eq 'delete') {
@@ -2565,7 +2565,7 @@ sub run_command_alias {
             die "\nABORT: The installation name `$name` is not an alias, cannot remove.\n\n";
         }
 
-        unlink($path_name);
+        $path_name->unlink;
     }
     elsif($cmd eq 'rename') {
         $self->assert_known_installation($name);

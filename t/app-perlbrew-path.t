@@ -183,6 +183,31 @@ describe "App::Perlbrew::Path" => sub {
 		};
 	};
 
+	describe "unlink()" => sub {
+		it "should not report failure if file doesn't exist" => sub {
+			my $root = arrange_testdir;
+			my $file = $root->child ('file');
+
+			$file->unlink;
+
+			ok ! -e $file;
+		};
+
+		it "should remove file" => sub {
+			my $root = arrange_testdir;
+			my $file = $root->child ('file');
+
+			open my $fh, '>>', $file or die $!;
+
+			fail and diag ("file doesn't exist yet") and return
+				unless -e $file;
+
+			$file->unlink;
+
+			ok ! -e $file;
+		};
+	};
+
 	return;
 };
 
