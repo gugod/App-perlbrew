@@ -2338,8 +2338,9 @@ sub run_command_symlink_executables {
         for my $executable ($root->child ('perls', $perl, 'bin')->children) {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
             next unless $version;
-            system("ln -fs $executable $root/perls/$perl/bin/$name");
-            system("ln -fs $executable $root/perls/$perl/bin/perl") if $name eq "cperl";
+
+			$executable->symlink ($root->child ('perls', $perl, 'bin', $name));
+			$executable->symlink ($root->child ('perls', $perl, 'bin', 'perl')) if $name eq "cperl";
         }
     }
 }
@@ -2556,7 +2557,7 @@ sub run_command_alias {
         }
 
         $path_alias->unlink;
-        symlink($path_name, $path_alias);
+        $path_name->symlink ($path_alias);
     }
     elsif($cmd eq 'delete') {
         $self->assert_known_installation($name);

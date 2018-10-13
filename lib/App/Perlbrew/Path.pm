@@ -74,10 +74,21 @@ sub stringify {
 	return $self->{path};
 }
 
+sub symlink {
+	my ($self, $destination, $force) = @_;
+	$destination = App::Perlbrew::Path->new ($destination)
+		unless ref $destination;
+
+	CORE::unlink $destination
+		if $force && (-e $destination || -l $destination);
+
+	$destination if CORE::symlink $self, $destination;
+}
+
 sub unlink {
 	my ($self) = @_;
 
-	unlink ($self);
+	CORE::unlink ($self);
 }
 
 1;

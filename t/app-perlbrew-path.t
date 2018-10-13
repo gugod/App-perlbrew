@@ -183,6 +183,81 @@ describe "App::Perlbrew::Path" => sub {
 		};
 	};
 
+	describe "symlink()" => sub {
+		it "should create symlink" => sub {
+			my $root = arrange_testdir;
+			my $file = $root->child ('file');
+
+			open my $fh, '>>', $file or die $!;
+
+			my $symlink = $file->symlink ($root->child ('symlink'));
+
+			unless ($symlink) {
+				fail;
+				diag "Symlink failed: $!";
+				return;
+			}
+
+			unless ($symlink eq $root->child ("symlink")) {
+				fail;
+				diag "is should return symlink object";
+				diag "got     : $symlink";
+				diag "expected: $root/symlink";
+				return;
+			}
+
+			my $readlink = $symlink->readlink;
+
+			unless ($readlink eq $file) {
+				fail;
+				diag "it should point to origin file";
+				diag "got     : $readlink";
+				diag "expected: $root/file";
+				return;
+			}
+
+			pass;
+		};
+
+		it "should replace existing file in force mode" => sub {
+			my $root = arrange_testdir;
+			my $file = $root->child ('file');
+
+			open my $fh, '>>', $file or die $!;
+
+			$root->child ('foo')->symlink ($root->child ('symlink'))
+				or diag "init failed: $!";
+
+			my $symlink = $file->symlink ($root->child ('symlink'), 'force');
+
+			unless ($symlink) {
+				fail;
+				diag "Symlink failed: $!";
+				return;
+			}
+
+			unless ($symlink eq $root->child ("symlink")) {
+				fail;
+				diag "is should return symlink object";
+				diag "got     : $symlink";
+				diag "expected: $root/symlink";
+				return;
+			}
+
+			my $readlink = $symlink->readlink;
+
+			unless ($readlink eq $file) {
+				fail;
+				diag "it should point to origin file";
+				diag "got     : $readlink";
+				diag "expected: $root/file";
+				return;
+			}
+
+			pass;
+		};
+	};
+
 	describe "unlink()" => sub {
 		it "should not report failure if file doesn't exist" => sub {
 			my $root = arrange_testdir;
