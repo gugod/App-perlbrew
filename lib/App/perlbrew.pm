@@ -500,13 +500,6 @@ sub env {
     return \%ENV;
 }
 
-sub path_with_tilde {
-    my ($self, $dir) = @_;
-    my $home = $self->env('HOME');
-    $dir =~ s!\Q$home/\E!~/! if $home;
-    return $dir;
-}
-
 sub is_shell_csh {
     my ($self) = @_;
     return 1 if $self->env('SHELL') =~ /(t?csh)/;
@@ -1190,7 +1183,7 @@ sub run_command_init {
         }
     }
 
-    my $root_dir = $self->path_with_tilde($self->root);
+    my $root_dir = $self->root->stringify_with_tilde;
     # Skip this if we are running in a shell that already 'source's perlbrew.
     # This is true during a self-install/self-init.
     # Ref. https://github.com/gugod/App-perlbrew/issues/525
@@ -1226,7 +1219,7 @@ sub run_command_init {
         }
 
         if ($self->home ne App::Perlbrew::Path->new ($self->env('HOME'), ".perlbrew")) {
-            my $pb_home_dir = $self->path_with_tilde($self->home);
+            my $pb_home_dir = $self->home->stringify_with_tilde;
             if ( $shell =~ m/fish/ ) {
                 $code = "set -x PERLBREW_HOME $pb_home_dir\n    $code";
             } else {
@@ -1281,7 +1274,7 @@ sub run_command_self_install {
 
     chmod(0755, $target);
 
-    my $path = $self->path_with_tilde($target);
+    my $path = $target->stringify_with_tilde;
 
     print "perlbrew is installed: $path\n" unless $self->{quiet};
 
@@ -1794,11 +1787,11 @@ sub do_install_this {
         }
     }
 
-    print "Installing $dist_extracted_dir into " . $self->path_with_tilde ($self->root->child ("perls", $installation_name)) . "\n\n";
+    print "Installing $dist_extracted_dir into " . $self->root->child ("perls", $installation_name)->stringify_with_tilde . "\n\n";
     print <<INSTALL if !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
 
-  tail -f @{[ $self->path_with_tilde($self->{log_file}) ]}
+  tail -f ${\ $self->{log_file}->stringify_with_tilde }
 
 INSTALL
 

@@ -183,6 +183,22 @@ describe "App::Perlbrew::Path" => sub {
 		};
 	};
 
+	describe "stringify_with_tilde" => sub {
+		it "should expand leading homedir" => sub {
+			local $ENV{HOME} = "/home/perlbrew";
+			my $path = App::Perlbrew::Path->new ("/home/perlbrew/.root");
+
+			is $path->stringify_with_tilde, "~/.root";
+		};
+
+		it "should not expand leading homedir prefix" => sub {
+			local $ENV{HOME} = "/home/perlbrew";
+			my $path = App::Perlbrew::Path->new ("/home/perlbrew-stable/.root");
+
+			is $path->stringify_with_tilde, "/home/perlbrew-stable/.root";
+		};
+	};
+
 	describe "symlink()" => sub {
 		it "should create symlink" => sub {
 			my $root = arrange_testdir;

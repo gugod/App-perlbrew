@@ -74,6 +74,14 @@ sub stringify {
 	return $self->{path};
 }
 
+sub stringify_with_tilde {
+    my ($self) = @_;
+	my $path = $self->stringify;
+    my $home = $ENV{HOME};
+    $path =~ s!\Q$home/\E!~/! if $home;
+    return $path;
+}
+
 sub symlink {
 	my ($self, $destination, $force) = @_;
 	$destination = App::Perlbrew::Path->new ($destination)
