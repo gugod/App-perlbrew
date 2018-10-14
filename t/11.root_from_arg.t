@@ -60,6 +60,6 @@ sub looks_like_perlbrew_root {
 		return;
 	}
 
-	return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path');
+	return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path::Root');
 }
 

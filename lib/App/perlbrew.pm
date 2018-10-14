@@ -24,6 +24,7 @@ use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
 
 use App::Perlbrew::Path;
+use App::Perlbrew::Path::Root;
 
 sub min(@) {
     my $m = $_[0];
@@ -387,8 +388,11 @@ sub root {
 		$PERLBREW_ROOT = $new_root;
     }
 
-	$self->{root} = App::Perlbrew::Path->new ($self->{root})
+	$self->{root} = App::Perlbrew::Path::Root->new ($self->{root})
 		unless ref $self->{root};
+
+	$self->{root} = App::Perlbrew::Path::Root->new ($self->{root}->stringify)
+		unless $self->{root}->isa ('App::Perlbrew::Path::Root');
 
     return $self->{root};
 }
@@ -414,7 +418,7 @@ sub home {
 sub builddir {
 	my ($self) = @_;
 
-    return $self->{builddir} || $self->root->child ("build");
+    return $self->{builddir} || $self->root->build;
 }
 
 sub current_perl {
@@ -459,7 +463,7 @@ sub installed_perl_executable {
     my ($self, $name) = @_;
     die unless $name;
 
-    my $executable = $self->root->child ("perls", $name, "bin", "perl");
+    my $executable = $self->root->perls ($name, "bin", "perl");
     return $executable if -e $executable;
     return "";
 }
@@ -1151,11 +1155,11 @@ sub run_command_init {
         exit 0;
     }
 
-    $_->mkpath for (grep { ! -d $_ } map { $self->root->child ($_) } qw(perls dists build etc bin));
+    $_->mkpath for (grep { ! -d $_ } map { $self->root->$_ } qw(perls dists build etc bin));
 
     my ($f, $fh) = @_;
 
-    my $etc_dir = $self->root->child ("etc");
+    my $etc_dir = $self->root->etc;
 
     for (["bashrc", "BASHRC_CONTENT"],
          ["cshrc", "CSHRC_CONTENT"],
@@ -1253,14 +1257,14 @@ sub run_command_self_install {
     my $self = shift;
 
     my $executable = $0;
-    my $target = $self->root->child ("bin", "perlbrew");
+    my $target = $self->root->bin ("perlbrew");
 
     if (files_are_the_same($executable, $target)) {
         print "You are already running the installed perlbrew:\n\n    $executable\n";
         exit;
     }
 
-    $self->root->child ("bin")->mkpath;
+    $self->root->bin->mkpath;
 
     open my $fh, "<", $executable;
     my @lines =  <$fh>;
@@ -1313,7 +1317,7 @@ sub do_install_url {
     my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
     my ($dist_tarball) = $dist =~ m{/([^/]*)$};
 
-    my $dist_tarball_path = $self->root->child ("dists", $dist_tarball);
+    my $dist_tarball_path = $self->root->dists ($dist_tarball);
     my $dist_tarball_url  = $dist;
     $dist = "$dist_name-$dist_version"; # we install it as this name later
 
@@ -1402,7 +1406,7 @@ sub do_install_blead {
     # We always blindly overwrite anything that's already there,
     # because blead is a moving target.
     my $dist_tarball = 'blead.tar.gz';
-    my $dist_tarball_path = $self->root->child ("dists", $dist_tarball);
+    my $dist_tarball_path = $self->root->dists ($dist_tarball);
     print "Fetching $dist_git_describe as $dist_tarball_path\n";
 
     my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
@@ -1465,7 +1469,7 @@ sub do_install_release {
 
     my $dist_tarball = $rd->{tarball_name};
     my $dist_tarball_url = $rd->{tarball_url};
-    my $dist_tarball_path = $self->root->child ("dists", $dist_tarball);
+    my $dist_tarball_path = $self->root->dists ($dist_tarball);
 
     if (-f $dist_tarball_path) {
         print "Using the previously fetched ${dist_tarball}\n"
@@ -1646,7 +1650,7 @@ sub run_command_download {
 
     my $dist_tarball = $rd->{tarball_name};
     my $dist_tarball_url = $rd->{tarball_url};
-    my $dist_tarball_path = $self->root->child ("dists", $dist_tarball);
+    my $dist_tarball_path = $self->root->dists ($dist_tarball);
 
     if (-f $dist_tarball_path && !$self->{force}) {
         print "$dist_tarball already exists\n";
@@ -1765,8 +1769,8 @@ sub do_install_this {
         $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
     }
 
-    my $perlpath = $self->root->child ("perls", $installation_name);
-    my $patchperl = $self->root->child ("bin", "patchperl");
+    my $perlpath = $self->root->perls ($installation_name);
+    my $patchperl = $self->root->bin ("patchperl");
 
     unless (-x $patchperl && -f _) {
         $patchperl = "patchperl";
@@ -1787,7 +1791,7 @@ sub do_install_this {
         }
     }
 
-    print "Installing $dist_extracted_dir into " . $self->root->child ("perls", $installation_name)->stringify_with_tilde . "\n\n";
+    print "Installing $dist_extracted_dir into " . $self->root->perls ($installation_name)->stringify_with_tilde . "\n\n";
     print <<INSTALL if !$self->{verbose};
 This could take a while. You can run the following command on another shell to track the status:
 
@@ -1857,7 +1861,7 @@ INSTALL
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH);
 
     if ($self->do_system($cmd)) {
-        my $newperl = $self->root->child ("perls", $installation_name, "bin", "perl");
+        my $newperl = $self->root->perls ($installation_name, "bin", "perl");
         unless (-e $newperl) {
             $self->run_command_symlink_executables($installation_name);
         }
@@ -1879,7 +1883,7 @@ INSTALL
         }
 
         my $version_file =
-          $self->root->child ('perls', $installation_name, '.version' );
+          $self->root->perls ($installation_name, '.version' );
 
         if ( -e $version_file ) {
             $version_file->unlink
@@ -1898,7 +1902,7 @@ INSTALL
 sub do_install_program_from_url {
     my ($self, $url, $program_name, $body_filter) = @_;
 
-    my $out = $self->root->child ("bin", $program_name);
+    my $out = $self->root->bin ($program_name);
 
     if (-f $out && !$self->{force} && !$self->{yes}) {
         require ExtUtils::MakeMaker;
@@ -1931,7 +1935,7 @@ sub do_install_program_from_url {
         $body = $body_filter->($body);
     }
 
-    $self->root->child ("bin")->mkpath;
+    $self->root->bin->mkpath;
     open my $OUT, '>', $out or die "cannot open file($out): $!";
     print $OUT $body;
     close $OUT;
@@ -1978,7 +1982,7 @@ sub installed_perls {
     my @result;
     my $root = $self->root;
 
-    for my $installation_dir ($root->child ('perls')->children) {
+    for my $installation_dir ($root->perls->children) {
         my $name         = $installation_dir->basename;
         my $executable   = $installation_dir->child ('bin', 'perl');
         next unless -f $executable;
@@ -2070,7 +2074,7 @@ sub perlbrew_env {
 
     my %env = (
         PERLBREW_VERSION => $VERSION,
-        PERLBREW_PATH    => $self->root->child ("bin"),
+        PERLBREW_PATH    => $self->root->bin,
         PERLBREW_MANPATH => "",
         PERLBREW_ROOT => $self->root
     );
@@ -2085,10 +2089,10 @@ sub perlbrew_env {
     }
 
     if ($perl_name) {
-        if(-d $self->root->child ("perls", $perl_name, "bin")) {
+        if(-d $self->root->perls ($perl_name, "bin")) {
             $env{PERLBREW_PERL}    = $perl_name;
-            $env{PERLBREW_PATH}   .= ":" . $self->root->child ("perls", $perl_name, "bin");
-            $env{PERLBREW_MANPATH} = $self->root->child ("perls", $perl_name, "man")
+            $env{PERLBREW_PATH}   .= ":" . $self->root->perls ($perl_name, "bin");
+            $env{PERLBREW_MANPATH} = $self->root->perls ($perl_name, "man")
         }
 
         if ($lib_name) {
@@ -2246,7 +2250,7 @@ sub switch_to {
     die "Cannot use for alias something that starts with 'perl-'\n"
       if $alias && $alias =~ /^perl-/;
 
-    die "${dist} is not installed\n" unless -d $self->root->child ("perls", $dist);
+    die "${dist} is not installed\n" unless -d $self->root->perls ($dist);
 
     if ($self->env("PERLBREW_SHELLRC_VERSION") && $self->current_shell_is_bashish) {
         local $ENV{PERLBREW_PERL} = $dist;
@@ -2324,16 +2328,16 @@ sub run_command_symlink_executables {
     my $root = $self->root;
 
     unless (@perls) {
-        @perls = map { $_->basename } grep { -d $_ && ! -l $_ } $root->child ('perls')->children;
+        @perls = map { $_->basename } grep { -d $_ && ! -l $_ } $root->perls->children;
     }
 
     for my $perl (@perls) {
-        for my $executable ($root->child ('perls', $perl, 'bin')->children) {
+        for my $executable ($root->perls ($perl, 'bin')->children) {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
             next unless $version;
 
-			$executable->symlink ($root->child ('perls', $perl, 'bin', $name));
-			$executable->symlink ($root->child ('perls', $perl, 'bin', 'perl')) if $name eq "cperl";
+			$executable->symlink ($root->perls ($perl, 'bin', $name));
+			$executable->symlink ($root->perls ($perl, 'bin', 'perl')) if $name eq "cperl";
         }
     }
 }
@@ -2474,7 +2478,7 @@ sub run_command_exec {
 
     my $overall_success = 1;
     for my $i ( @exec_with ) {
-        next if -l $self->root->child ('perls', $i->{name}); # Skip Aliases
+        next if -l $self->root->perls ($i->{name}); # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
@@ -2511,14 +2515,14 @@ sub run_command_exec {
 sub run_command_clean {
     my ($self) = @_;
     my $root = $self->root;
-    my @build_dirs = $root->child ('build')->children;
+    my @build_dirs = $root->build->children;
 
     for my $dir (@build_dirs) {
         print "Removing $dir\n";
         App::Perlbrew::Path->new ($dir)->rmpath;
     }
 
-    my @tarballs = $root->child ('dists')->children;
+    my @tarballs = $root->dists->children;
     for my $file ( @tarballs ) {
         print "Removing $file\n";
         $file->unlink;
@@ -2535,8 +2539,8 @@ sub run_command_alias {
         exit(-1);
     }
 
-    my $path_name  = $self->root->child ("perls", $name) if $name;
-    my $path_alias = $self->root->child ("perls", $alias) if $alias;
+    my $path_name  = $self->root->perls ($name) if $name;
+    my $path_alias = $self->root->perls ($alias) if $alias;
 
     if ($alias && -e $path_alias && !-l $path_alias) {
         die "\nABORT: The installation name `$alias` is not an alias, cannot override.\n\n";
@@ -2763,7 +2767,7 @@ sub run_command_list_modules {
     undef $output_filename if ( ! scalar( $output_filename ) );
 
     my $name = $self->current_env;
-    if (-l (my $path = $self->root->child ('perls', $name))) {
+    if (-l (my $path = $self->root->perls ($name))) {
         $name = $path->readlink->basename;
     }
 
