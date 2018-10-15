@@ -21,6 +21,20 @@ sub _joinpath {
     return join "/", @_;
 }
 
+sub _child {
+	my ($self, $package, @path) = @_;
+
+	$package->new ($self->{path}, @path);
+}
+
+sub _children {
+	my ($self, $package) = @_;
+
+	return map $package->new ($_),
+		File::Glob::bsd_glob ($self->child ("*"))
+		;
+}
+
 sub new {
 	my ($class, @path) = @_;
 
@@ -36,15 +50,13 @@ sub basename {
 sub child {
 	my ($self, @path) = @_;
 
-	return __PACKAGE__->new ($self->{path}, @path);
+	return $self->_child (__PACKAGE__, @path);
 }
 
 sub children {
 	my ($self) = @_;
 
-	return map __PACKAGE__->new ($_),
-		File::Glob::bsd_glob ($self->child ("*"))
-		;
+	return $self->_children (__PACKAGE__);
 }
 
 sub mkpath {

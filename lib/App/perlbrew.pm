@@ -463,7 +463,7 @@ sub installed_perl_executable {
     my ($self, $name) = @_;
     die unless $name;
 
-    my $executable = $self->root->perls ($name, "bin", "perl");
+    my $executable = $self->root->perls ($name)->perl;
     return $executable if -e $executable;
     return "";
 }
@@ -1861,7 +1861,7 @@ INSTALL
     delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH);
 
     if ($self->do_system($cmd)) {
-        my $newperl = $self->root->perls ($installation_name, "bin", "perl");
+        my $newperl = $self->root->perls ($installation_name)->perl;
         unless (-e $newperl) {
             $self->run_command_symlink_executables($installation_name);
         }
@@ -1883,7 +1883,7 @@ INSTALL
         }
 
         my $version_file =
-          $self->root->perls ($installation_name, '.version' );
+          $self->root->perls ($installation_name)->version_file;
 
         if ( -e $version_file ) {
             $version_file->unlink
@@ -1982,12 +1982,12 @@ sub installed_perls {
     my @result;
     my $root = $self->root;
 
-    for my $installation_dir ($root->perls->children) {
-        my $name         = $installation_dir->basename;
-        my $executable   = $installation_dir->child ('bin', 'perl');
+    for my $installation ($root->perls->list) {
+        my $name         = $installation->name;
+        my $executable   = $installation->perl;
         next unless -f $executable;
 
-        my $version_file = $installation_dir->child ('.version');
+        my $version_file = $installation->version_file;
         my $ctime        = localtime( ( stat $executable )[ 10 ] ); # localtime in scalar context!
         my $orig_version;
         if ( -e $version_file ){
@@ -2011,7 +2011,7 @@ sub installed_perls {
             is_current  => ($self->current_perl eq $name) && !($self->current_lib),
             libs => [ $self->local_libs($name) ],
             executable  => $executable,
-            dir => $installation_dir,
+            dir => $installation,
             comparable_version => $self->comparable_perl_version( $orig_version ),
             ctime        => $ctime,
         };
@@ -2089,10 +2089,11 @@ sub perlbrew_env {
     }
 
     if ($perl_name) {
-        if(-d $self->root->perls ($perl_name, "bin")) {
+		my $installation = $self->root->perls ($perl_name);
+        if(-d $installation->child ( "bin")) {
             $env{PERLBREW_PERL}    = $perl_name;
-            $env{PERLBREW_PATH}   .= ":" . $self->root->perls ($perl_name, "bin");
-            $env{PERLBREW_MANPATH} = $self->root->perls ($perl_name, "man")
+            $env{PERLBREW_PATH}   .= ":" . $installation->child ("bin");
+            $env{PERLBREW_MANPATH} = $installation->child ("man")
         }
 
         if ($lib_name) {
@@ -2328,16 +2329,16 @@ sub run_command_symlink_executables {
     my $root = $self->root;
 
     unless (@perls) {
-        @perls = map { $_->basename } grep { -d $_ && ! -l $_ } $root->perls->children;
+        @perls = map { $_->name } grep { -d $_ && ! -l $_ } $root->perls->list;
     }
 
     for my $perl (@perls) {
-        for my $executable ($root->perls ($perl, 'bin')->children) {
+        for my $executable ($root->perls ($perl)->bin->children) {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
             next unless $version;
 
-			$executable->symlink ($root->perls ($perl, 'bin', $name));
-			$executable->symlink ($root->perls ($perl, 'bin', 'perl')) if $name eq "cperl";
+			$executable->symlink ($root->perls ($perl)->bin->($name));
+			$executable->symlink ($root->perls ($perl)->perl) if $name eq "cperl";
         }
     }
 }
