@@ -2028,7 +2028,7 @@ sub installed_perls {
 sub local_libs {
     my ($self, $perl_name) = @_;
 
-    my $current = $self->current_perl . '@' . ($self->env("PERLBREW_LIB") || '');
+    my $current = $self->current_env;
     my @libs = map {
         my $name = substr($_, length($self->home) + 6);
         my ($p, $l) = split(/@/, $name);
@@ -2221,8 +2221,7 @@ sub run_command_use {
     my $perl = shift;
 
     if ( !$perl ) {
-        my $current = $self->current_perl;
-        $current .= '@' . $self->current_lib if ($self->current_lib);
+        my $current = $self->current_env;
         if ($current) {
             print "Currently using $current\n";
         } else {
@@ -2239,8 +2238,7 @@ sub run_command_switch {
     my ( $self, $dist, $alias ) = @_;
 
     unless ( $dist ) {
-        my $current = $self->current_perl;
-        $current .= '@' . $self->current_lib if ($self->current_lib);
+        my $current = $self->current_env;
         printf "Currently switched %s\n",
             ( $current ? "to $current" : 'off' );
         return;
@@ -2659,7 +2657,7 @@ sub run_command_lib_delete {
 
     my $fullname = $perl_name . '@' . $lib_name;
 
-    my $current  = $self->current_perl . '@' . $self->current_lib;
+    my $current  = $self->current_env;
 
     my $dir = joinpath($self->home,  "libs", $fullname);
 
