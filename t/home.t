@@ -12,11 +12,32 @@ use Test::Spec;
 
 sub looks_like_perlbrew_home;
 
+local $App::perlbrew::PERLBREW_HOME = '/perlbrew/home';
+local $ENV{PERLBREW_HOME} = '/env/home';
+local $ENV{HOME} = '/home';
+
 describe "App::perlbrew#home method" => sub {
-    it "should return \$App::perlbrew::PERLBREW_HOME normally" => sub {
+    it "should return \$App::perlbrew::PERLBREW_HOME if provided" => sub {
         my $app = App::perlbrew->new;
 
-        looks_like_perlbrew_home $app->home, $App::perlbrew::PERLBREW_HOME;
+        looks_like_perlbrew_home $app->home, '/perlbrew/home';
+    };
+
+    it "should default to \$ENV{PERLBREW_HOME} if provided" => sub {
+		local $App::perlbrew::PERLBREW_HOME;
+
+        my $app = App::perlbrew->new;
+
+        looks_like_perlbrew_home $app->home, '/env/home';
+    };
+
+    it "should default to \$ENV{HOME} subpath" => sub {
+		local $App::perlbrew::PERLBREW_HOME;
+		local $ENV{PERLBREW_HOME};
+
+        my $app = App::perlbrew->new;
+
+        looks_like_perlbrew_home $app->home, '/home/.perlbrew';
     };
 
     it "should return the instance property of 'home' if set" => sub {

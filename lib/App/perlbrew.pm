@@ -52,8 +52,8 @@ local $SIG{__DIE__} = sub {
 };
 
 our $CONFIG;
-our $PERLBREW_ROOT = $ENV{PERLBREW_ROOT} || App::Perlbrew::Path->new ($ENV{HOME}, "perl5", "perlbrew")->stringify;
-our $PERLBREW_HOME = $ENV{PERLBREW_HOME} || App::Perlbrew::Path->new ($ENV{HOME}, ".perlbrew")->stringify;
+our $PERLBREW_ROOT;
+our $PERLBREW_HOME;
 
 my @flavors = ( { d_option => 'usethreads',
                   implies  => 'multi',
@@ -326,6 +326,10 @@ sub new {
 	$self->{builddir} = App::Perlbrew::Path->new ($self->{builddir})
 		if $opt{builddir};
 
+	# Ensure propagation of $PERLBREW_HOME and $PERLBREW_ROOT
+	$self->root;
+	$self->home;
+
     return $self;
 }
 
@@ -379,14 +383,13 @@ sub parse_cmdline {
 sub root {
     my ($self, $new_root) = @_;
 
-	unless ($self->{root}) {
-		$new_root ||= $PERLBREW_ROOT;
-	}
+	$new_root ||= $PERLBREW_ROOT
+		|| $ENV{PERLBREW_ROOT}
+		|| App::Perlbrew::Path->new ($ENV{HOME}, "perl5", "perlbrew")->stringify
+		unless $self->{root};
 
-    if (defined($new_root)) {
-        $self->{root} = $new_root;
-		$PERLBREW_ROOT = $new_root;
-    }
+	$self->{root} = $PERLBREW_ROOT = $new_root
+		if defined $new_root;
 
 	$self->{root} = App::Perlbrew::Path::Root->new ($self->{root})
 		unless ref $self->{root};
@@ -400,14 +403,13 @@ sub root {
 sub home {
     my ($self, $new_home) = @_;
 
-	unless ($self->{home}) {
-		$new_home ||= $PERLBREW_HOME;
-	}
+	$new_home ||= $PERLBREW_HOME
+		|| $ENV{PERLBREW_HOME}
+		|| App::Perlbrew::Path->new ($ENV{HOME}, ".perlbrew")->stringify
+		unless $self->{home};
 
-    if (defined($new_home)) {
-        $self->{home} = $new_home;
-		$PERLBREW_HOME = $new_home;
-    }
+	$self->{home} = $PERLBREW_HOME = $new_home
+		if defined $new_home;
 
 	$self->{home} = App::Perlbrew::Path->new ($self->{home})
 		unless ref $self->{home};
