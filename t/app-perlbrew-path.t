@@ -62,6 +62,26 @@ describe "App::Perlbrew::Path" => sub {
 		};
 	};
 
+	describe "children()" => sub {
+		it "should return empty list on empty match" => sub {
+			my $root = arrange_testdir;
+
+			cmp_deeply [ $root->children ], [];
+		};
+
+		it "should return Path instances" => sub {
+			my $root = arrange_testdir;
+
+			$root->child ($_)->mkpath for qw[ aa ab ba ];
+
+			cmp_deeply [ $root->children ], [
+				looks_like_perlbrew_path ($root->child ('aa')->stringify),
+				looks_like_perlbrew_path ($root->child ('ab')->stringify),
+				looks_like_perlbrew_path ($root->child ('ba')->stringify),
+			];
+		};
+	};
+
 	describe "mkpath()" => sub {
 		it "should create recursive path" => sub {
 			my $path = arrange_testdir ("foo/bar/baz");

@@ -4,6 +4,7 @@ use warnings;
 
 package App::Perlbrew::Path;
 
+require File::Glob;
 require File::Path;
 
 use overload (
@@ -29,6 +30,14 @@ sub child {
 	my ($self, @path) = @_;
 
 	return __PACKAGE__->new ($self->{path}, @path);
+}
+
+sub children {
+	my ($self) = @_;
+
+	return map __PACKAGE__->new ($_),
+		File::Glob::bsd_glob ($self->child ("*"))
+		;
 }
 
 sub mkpath {

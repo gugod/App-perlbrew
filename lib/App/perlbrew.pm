@@ -19,7 +19,6 @@ BEGIN {
     @INC = @oldinc;
 }
 
-use File::Glob 'bsd_glob';
 use Getopt::Long ();
 use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
@@ -1370,7 +1369,7 @@ sub do_extract_tarball {
     my $extract_command = "cd $workdir; $tarx $dist_tarball";
     die "Failed to extract $dist_tarball" if system($extract_command);
 
-    my @things = <$workdir/*>;
+    my @things = $workdir->children;
     if (@things == 1) {
         $extracted_dir = App::Perlbrew::Path->new ($things[0]);
     }
@@ -1993,8 +1992,7 @@ sub installed_perls {
     my @result;
     my $root = $self->root;
 
-    for my $installation_dir (<$root/perls/*>) {
-		$installation_dir = App::Perlbrew::Path->new ($installation_dir);
+    for my $installation_dir ($root->child ('perls')->children) {
         my ($name)       = $installation_dir =~ m/\/([^\/]+$)/;
         my $executable   = $installation_dir->child ('bin', 'perl');
         next unless -f $executable;
@@ -2048,7 +2046,7 @@ sub local_libs {
             lib_name   => $l,
             dir        => $_,
         }
-    } bsd_glob($self->home->child ("libs", "*"));
+    } $self->home->child ("libs")->children;
     if ($perl_name) {
         @libs = grep { $perl_name eq $_->{perl_name} } @libs;
     }
@@ -2340,11 +2338,11 @@ sub run_command_symlink_executables {
     my $root = $self->root;
 
     unless (@perls) {
-        @perls = map { m{/([^/]+)$} } grep { -d $_ && ! -l $_ } <$root/perls/*>;
+        @perls = map { m{/([^/]+)$} } grep { -d $_ && ! -l $_ } $root->child ('perls')->children;
     }
 
     for my $perl (@perls) {
-        for my $executable (<$root/perls/$perl/bin/*>) {
+        for my $executable ($root->child ('perls', $perl, 'bin')->children) {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
             next unless $version;
             system("ln -fs $executable $root/perls/$perl/bin/$name");
@@ -2526,14 +2524,14 @@ sub run_command_exec {
 sub run_command_clean {
     my ($self) = @_;
     my $root = $self->root;
-    my @build_dirs = <$root/build/*>;
+    my @build_dirs = $root->child ('build')->children;
 
     for my $dir (@build_dirs) {
         print "Removing $dir\n";
         App::Perlbrew::Path->new ($dir)->rmpath;
     }
 
-    my @tarballs = <$root/dists/*>;
+    my @tarballs = $root->child ('dists')->children;
     for my $file ( @tarballs ) {
         print "Removing $file\n";
         unlink($file);
