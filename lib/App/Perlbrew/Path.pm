@@ -59,6 +59,12 @@ sub children {
 	return $self->_children (__PACKAGE__);
 }
 
+sub dirname {
+	my ($self) = @_;
+
+	return App::Perlbrew::Path->new (File::Basename::dirname ($self));
+}
+
 sub mkpath {
 	my ($self) = @_;
     File::Path::mkpath ([$self->stringify], 0, 0777);

@@ -16,9 +16,16 @@ put 't/' dir to `@INC`.
 
 use strict;
 use Test::More;
-use Path::Class;
 use IO::All;
 use File::Temp qw( tempdir );
+
+sub dir {
+	App::Perlbrew::Path->new (@_);
+}
+
+sub file {
+	App::Perlbrew::Path->new (@_);
+}
 
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
