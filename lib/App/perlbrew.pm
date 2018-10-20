@@ -2024,13 +2024,33 @@ sub installed_perls {
                   : ( $b->{comparable_version} <=> $a->{comparable_version} or $a->{name} cmp $b->{name} ) )   } @result;
 }
 
+sub compose_locallib {
+	my ($self, $perl_name, $lib_name) = @_;
+
+	return join '@', $perl_name, $lib_name;
+}
+
+sub decompose_locallib {
+	my ($self, $name) = @_;
+
+	return split '@', $name;
+}
+
+sub enforce_localib {
+	my ($self, $name) = @_;
+
+    $name =~ s/^/@/ unless $name =~ m/@/;
+
+	return $name;
+}
+
 sub local_libs {
     my ($self, $perl_name) = @_;
 
     my $current = $self->current_env;
     my @libs = map {
         my $name = $_->basename;
-        my ($p, $l) = split(/@/, $name);
+        my ($p, $l) = $self->decompose_locallib ($name);
         +{
             name       => $name,
             is_current => $name eq $current,
@@ -2623,16 +2643,16 @@ sub run_command_lib_create {
 
     die "ERROR: No lib name\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
-    $name =~ s/^/@/ unless $name =~ /@/;
+    $name = $self->enforce_localib ($name);
 
     my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
     if (!$perl_name) {
-        my ($perl_name, $lib_name) = split('@', $name);
+        my ($perl_name, $lib_name) = $self->decompose_locallib ($name);
         die "ERROR: '$perl_name' is not installed yet, '$name' cannot be created.\n";
     }
 
-    my $fullname = $perl_name . '@' . $lib_name;
+    my $fullname = $self->compose_locallib ($perl_name, $lib_name);
     my $dir = $self->home->child ("libs", $fullname);
 
     if (-d $dir) {
@@ -2652,11 +2672,11 @@ sub run_command_lib_delete {
 
     die "ERROR: No lib to delete\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
-    $name =~ s/^/@/ unless $name =~ /@/;
+    $name = $self->enforce_localib ($name);
 
     my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
-    my $fullname = $perl_name . '@' . $lib_name;
+    my $fullname = $self->compose_locallib ($perl_name, $lib_name);
 
     my $current  = $self->current_env;
 
@@ -2792,7 +2812,7 @@ sub resolve_installation_name {
     my ($self, $name) = @_;
     die "App::perlbrew->resolve_installation_name requires one argument." unless $name;
 
-    my ($perl_name, $lib_name) = split('@', $name);
+    my ($perl_name, $lib_name) = $self->decompose_locallib ($name);
     $perl_name = $name unless $lib_name;
     $perl_name ||= $self->current_perl;
 
