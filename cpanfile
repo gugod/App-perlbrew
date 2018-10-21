@@ -13,7 +13,6 @@ on test => sub {
     requires 'File::Which'          => '1.21';
     requires 'IO::All'              => '0.51';
     requires 'Path::Class'          => '0.33';
-    requires 'Pod::Markdown'        => '2.002';
     requires 'Test::Exception'      => '0.32';
     requires 'Test::More'           => '1.001002';
     requires 'Test::NoWarnings'     => '1.04';
@@ -26,4 +25,3 @@ on test => sub {
 on develop => sub {
     requires 'Pod::Markdown' => '2.002';
 };
-
