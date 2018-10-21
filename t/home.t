@@ -6,7 +6,6 @@ use lib $FindBin::Bin;
 use App::perlbrew;
 require "test_helpers.pl";
 
-use File::Temp qw(tempdir);
 use Test::Deep qw[];
 use Test::Spec;
 
