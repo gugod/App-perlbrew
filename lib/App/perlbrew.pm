@@ -2838,6 +2838,12 @@ sub run_command_clone_modules {
         $src_perl = pop;
     }
 
+    # does the user specified the same versions?
+    unless ( $src_perl ne $dst_perl ){
+        print "Cannot clone modules on the very same version!\n";
+        exit( -1 );
+    }
+
     # check source and destination do exist
     undef $src_perl if (! $self->resolve_installation_name($src_perl));
     undef $dst_perl if (! $self->resolve_installation_name($dst_perl));
