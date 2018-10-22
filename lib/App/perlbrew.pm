@@ -2805,34 +2805,49 @@ sub resolve_installation_name {
 # $app->run_command_clone_modules($perl_a, $perl_b);
 # installs all modules that have been installed on Perl A
 # to the instance of Perl B.
+# The source instance is optional, that is if the method
+# is invoked with a single argument, the currently
+# running instance is used as source. Therefore the
+# two following calls are the same:
+#
+# $app->run_command_clone_modules( $self->current_perl, $perl_b );
+# $app->run_command_clone_modules( $perl_b );
 #
 # Of course, both Perl installation must exist on this
 # perlbrew enviroment.
 #
-# The method performs a list-modules command on the
-# source Perl installation, save the list on a temporary file
-# and then read back the list to execute a 'cpanm' shell
-# with the argument list.
+# The method extracts the modules installed on the source Perl
+# instance and put them on a temporary file, such file is then
+# passed to another instance of the application to
+# execute cpanm on it. The final result is the installation
+# of source modules into the destination instance.
 sub run_command_clone_modules {
     my $self = shift;
 
-    # Allows src_perl to be optional
-    my $dst_perl = pop;
-    my $src_perl = pop;
+    my $dst_perl = $self->current_perl;
+    my $src_perl = $self->current_perl;
 
-    # if no source perl installation has been specified, use the
-    # current one as default
-    $src_perl = $self->current_perl if (! $src_perl || ! $self->resolve_installation_name($src_perl));
+    if ( @_ == 1 ){
+        # only one argument, consider it as a destination
+        $dst_perl = shift;
+        print "Using current $src_perl as source for cloning modules into $dst_perl";
+    }
+    else {
+        # at least two arguments, use src as first one
+        $dst_perl = pop;
+        $src_perl = pop;
+    }
 
-    # check for the destination Perl to be installed
+    # check source and destination do exist
+    undef $src_perl if (! $self->resolve_installation_name($src_perl));
     undef $dst_perl if (! $self->resolve_installation_name($dst_perl));
 
-    # check that the user has provided a dest installation
-    # to which copy all the modules
-    unless ($dst_perl) {
+    if ( ! $src_perl || ! $dst_perl ){
+        # cannot understand from where to where...
         $self->run_command_help('clone_modules');
         exit(-1);
     }
+
 
     # I need to run an application to do the module listing.
     # and get the result back so to handle it and pass

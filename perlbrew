@@ -43242,11 +43242,14 @@ This command re-installs all CPAN modules found from one installation to another
 
 Usage:
     perlbrew clone-modules <src_version> <dst_version>
+    perlbrew clone-modules <dst_version>
 
 for example
 
     perlbrew clone-modules 5.26.1 5.27.7
 
+If no source version is specified, the currently used instance
+will be used as source.
 
 =head1 SEE ALSO
 
