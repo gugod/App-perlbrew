@@ -2776,38 +2776,6 @@ sub run_command_upgrade_perl {
     $self->do_install_release($dist, $dist_version);
 }
 
-# Executes the list-modules command.
-# This routine launches a new perl instance that, thru
-# ExtUtils::Installed prints out all the modules
-# in the system. If an argument is passed to the
-# subroutine it is managed as a filename
-# to which prints the list of modules.
-sub run_command_list_modules {
-    my ($self, $output_filename) = @_;
-    my $class = ref($self) || __PACKAGE__;
-
-    # avoid something that does not seem as a filename to print
-    # output to...
-    undef $output_filename if (! scalar($output_filename));
-
-    my $name = $self->current_env;
-    if (-l (my $path = $self->root->perls ($name))) {
-        $name = $path->readlink->basename;
-    }
-
-    my $app = $class->new(
-        qw(--quiet exec --with),
-        $name,
-        'perl',
-        '-MExtUtils::Installed',
-        '-le',
-        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for ExtUtils::Installed->new->modules;',
-                $output_filename ? sprintf('open my $output_fh, \'>\', "%s"; ', $output_filename) : '',
-                $output_filename ? '$output_fh' : 'STDOUT')
-        );
-
-    $app->run;
-}
 
 sub resolve_installation_name {
     my ($self, $name) = @_;
@@ -2866,16 +2834,28 @@ sub run_command_clone_modules {
         exit(-1);
     }
 
-    # I need to run the list-modules command on myself
+    # I need to run an application to do the module listing.
     # and get the result back so to handle it and pass
     # to the exec subroutine. The solution I found so far
     # is to store the result in a temp file (the list_modules
     # uses a sub-perl process, so there is no way to pass a
     # filehandle or something similar).
-
+    my $class = ref($self);
     require File::Temp;
     my $modules_fh = File::Temp->new;
-    $self->run_command_list_modules($modules_fh->filename);
+
+    # list all the modules and place them in the output file
+    my $src_app = $class->new(
+        qw(--quiet exec --with),
+        $src_perl,
+        'perl',
+        '-MExtUtils::Installed',
+        '-le',
+        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; open my $output_fh, ">", "%s"; print {$output_fh} $_ for ExtUtils::Installed->new->modules;',
+                $modules_fh->filename )
+        );
+
+    $src_app->run;
 
     # here I should have the list of modules into the
     # temporary file name, so I can ask the destination
@@ -2889,7 +2869,7 @@ sub run_command_clone_modules {
 
     # create a new application to 'exec' the 'cpanm'
     # with the specified module list
-    my $class = ref($self);
+
     my $app = $class->new(
         qw(--quiet exec --with),
         $dst_perl,
