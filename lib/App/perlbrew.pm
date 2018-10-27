@@ -2461,6 +2461,20 @@ sub run_command_uninstall {
     }
 }
 
+sub _install_perlbrew_env {
+	my ($self, $name) = @_;
+
+	my %env = $self->perlbrew_env ($name);
+	return unless $env{PERLBREW_PERL};
+
+	$ENV{$_} = defined $env{$_} ? $env{$_} : '' for keys %env;
+	$ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
+	$ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
+	$ENV{PERL5LIB} = $env{PERL5LIB} || "";
+
+	return 1;
+}
+
 sub run_command_exec {
     my $self = shift;
     my %opts;
@@ -2503,14 +2517,9 @@ sub run_command_exec {
     my $overall_success = 1;
     for my $i ( @exec_with ) {
         next if -l $self->root->perls ($i->{name}); # Skip Aliases
-        my %env = $self->perlbrew_env($i->{name});
-        next if !$env{PERLBREW_PERL};
 
         local %ENV = %ENV;
-        $ENV{$_} = defined $env{$_} ? $env{$_} : '' for keys %env;
-        $ENV{PATH}    = join(':', $env{PERLBREW_PATH}, $ENV{PATH});
-        $ENV{MANPATH} = join(':', $env{PERLBREW_MANPATH}, $ENV{MANPATH}||"");
-        $ENV{PERL5LIB} = $env{PERL5LIB} || "";
+		next unless $self->_install_perlbrew_env ($i->{name});
 
         print "$i->{name}\n==========\n" unless $no_header || $self->{quiet};
 
