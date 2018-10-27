@@ -2706,6 +2706,9 @@ sub run_command_lib_delete {
 
     my $fullname = $self->_library_resolve_fullname ($name);
 
+	die "ERROR: '$name' is not valid library name (invalid perl name)"
+		unless $fullname;
+
     my $current  = $self->current_env;
 
     if ($self->_library_exists ($fullname)) {

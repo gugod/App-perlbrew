@@ -145,6 +145,14 @@ describe "lib command," => sub {
                 $app->run;
             } qr{^ERROR: 'perl-5\.14\.2\@yoga' does not exist\.};
         };
+
+		it "should report error when called with invalid perl's library" => sub {
+			throws_ok {
+                my $app = App::perlbrew->new("lib", "delete", 'invalid-perl@yoga');
+                $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
+                $app->run;
+			} qr{^ERROR: 'invalid-perl\@yoga' is not valid library name \(invalid perl name\)}, '';
+		};
     };
 };
 
