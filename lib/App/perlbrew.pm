@@ -51,6 +51,7 @@ local $SIG{__DIE__} = sub {
     exit(1);
 };
 
+our $LIBRARY_DZIL = 'system@dzil';
 our $CONFIG;
 our $PERLBREW_ROOT;
 our $PERLBREW_HOME;
@@ -1968,6 +1969,12 @@ sub do_capture {
   });
 }
 
+sub do_capture_merged {
+	my ($self, @cmd) = @_;
+	require Capture::Tiny;
+	return Capture::Tiny::capture_merged (sub { $self->do_system(@cmd) });
+}
+
 sub format_perl_version {
     my $self    = shift;
     my $version = shift;
@@ -2629,6 +2636,91 @@ sub run_command_display_cshrc {
 
 sub run_command_display_installation_failure_message {
     my ($self) = @_;
+}
+
+sub _ensure_library {
+	my ($self, $fullname) = @_;
+
+	return if $self->current_env eq $fullname;
+
+	my $exists = $self->_library_exists ($fullname);
+
+	$self->_library_create ($fullname)
+		unless $exists;
+
+	$self->_install_perlbrew_env ($fullname);
+
+	# returns true if library was just created
+	return ! $exists;
+}
+
+sub _ensure_installed_cpanm {
+	my ($self) = @_;
+
+	$self->run_command_install_cpanm
+		unless -f $self->root->bin ('cpanm');
+}
+
+sub _install_dzil {
+	my ($self) =  @_;
+
+	die "Dist::Zilla installation failed"
+		unless $self->do_system (qw[ cpanm install Dist::Zilla ]);
+}
+
+sub _install_dzil_authordeps {
+	my ($self, $command, $force) = @_;
+
+	return unless $command || $force;
+
+	my %skip_authordeps = (
+		authordeps => 1,
+		commands   => 1,
+		help       => 1,
+		new        => 1,
+		nop        => 1,
+		setup      => 1,
+	);
+	return if $command && exists $skip_authordeps{$command};
+
+	my ($capture, $result) = $self->do_capture_merged (qw[ dzil nop ]);
+
+	$force ||= $capture =~ m/dzil authordeps/
+		unless $result;
+
+	return
+		unless $force;
+
+	$capture = $self->do_capture (qw[ dzil authordeps ]);
+
+	die "Dist::Zilla authordeps installation failed"
+		unless $self->do_system (qw[ cpanm --quiet ], split m/\s+/, $capture);
+
+	return;
+}
+
+sub run_command_dzil {
+	my ($self, @args) = @_;
+	my $self_upgrade = @args && $args[0] eq 'self-upgrade';
+
+	local %ENV = %ENV;
+
+	my $install_dzil = $self->_ensure_library ($LIBRARY_DZIL);
+
+	$self->_ensure_installed_cpanm;
+
+	$self->_install_dzil
+		if $install_dzil || $self_upgrade;
+
+	$self->_install_dzil_authordeps ($args[0], $self_upgrade);
+
+	return
+		if $self_upgrade;
+
+	return
+		if @args && $args[0] eq 'install-authordeps';
+
+	$self->do_system (dzil => @args);
 }
 
 sub run_command_lib {

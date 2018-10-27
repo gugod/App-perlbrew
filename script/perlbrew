@@ -37,6 +37,8 @@ Commands:
     exec           exec programs with specified perl environments.
     clone-modules  re-installs all CPAN modules from one installation to another
 
+    dzil           run Dist::Zilla from its own library
+
     self-install       Install perlbrew itself under PERLBREW_ROOT/bin
     self-upgrade       Upgrade perlbrew itself.
 
@@ -629,6 +631,32 @@ for example
 
     perlbrew clone-modules 5.26.1 5.27.7
 
+
+=head1 COMMAND: DZIL
+
+Run L<Dist::Zilla> from single library - C<system@dzil>.
+Library is silently created on demand.
+L<Dist::Zilla> as well as any author dependencies are also installed on demand.
+
+Usage:
+    perlbrew dzil new
+    perlbrew dzil build
+
+Command also recognizes additional commands
+
+=over
+
+=item self-upgrade
+
+Upgrade C<Dist::Zilla> and current project's (C<dist.ini>) author dependencies.
+
+    perlbrew dzil self-upgrade
+
+=item install-authordeps
+
+Install current project's (C<dist.ini>) author dependencies.
+
+=back
 
 =head1 SEE ALSO
 
