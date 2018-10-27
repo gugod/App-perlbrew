@@ -2663,6 +2663,12 @@ sub _library_exists {
 	return -d $self->_library_location ($fullname);
 }
 
+sub _library_create {
+	my ($self, $fullname) = @_;
+
+	$self->_library_location ($fullname)->mkpath;
+}
+
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
@@ -2675,13 +2681,11 @@ sub run_command_lib_create {
         die "ERROR: '$perl_name' is not installed yet, '$name' cannot be created.\n";
     }
 
-    my $dir = $self->_library_location ($fullname);
-
     if ($self->_library_exists ($fullname)) {
         die "$fullname is already there.\n";
     }
 
-    $dir->mkpath;
+    $self->_library_create ($fullname);
 
     print "lib '$fullname' is created.\n"
         unless $self->{quiet};
