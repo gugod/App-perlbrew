@@ -2639,21 +2639,30 @@ sub run_command_lib {
     }
 }
 
-sub run_command_lib_create {
-    my ($self, $name) = @_;
-
-    die "ERROR: No lib name\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
+sub _library_resolve_fullname {
+	my ($self, $name) = @_;
 
     $name = $self->enforce_localib ($name);
 
     my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
 
-    if (!$perl_name) {
+	return unless $perl_name;
+
+    return $self->compose_locallib ($perl_name, $lib_name);
+}
+
+sub run_command_lib_create {
+    my ($self, $name) = @_;
+
+    die "ERROR: No lib name\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
+
+    my $fullname = $self->_library_resolve_fullname ($name);
+
+    unless ($fullname) {
         my ($perl_name, $lib_name) = $self->decompose_locallib ($name);
         die "ERROR: '$perl_name' is not installed yet, '$name' cannot be created.\n";
     }
 
-    my $fullname = $self->compose_locallib ($perl_name, $lib_name);
     my $dir = $self->home->child ("libs", $fullname);
 
     if (-d $dir) {
@@ -2673,11 +2682,7 @@ sub run_command_lib_delete {
 
     die "ERROR: No lib to delete\n", $self->run_command_help("lib", undef, 'return_text') unless $name;
 
-    $name = $self->enforce_localib ($name);
-
-    my ($perl_name, $lib_name) = $self->resolve_installation_name($name);
-
-    my $fullname = $self->compose_locallib ($perl_name, $lib_name);
+    my $fullname = $self->_library_resolve_fullname ($name);
 
     my $current  = $self->current_env;
 
