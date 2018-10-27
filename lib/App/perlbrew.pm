@@ -2709,22 +2709,19 @@ sub run_command_lib_delete {
 	die "ERROR: '$name' is not valid library name (invalid perl name)"
 		unless $fullname;
 
+	die "ERROR: '$fullname' does not exist.\n"
+		unless $self->_library_exists ($fullname);
+
     my $current  = $self->current_env;
 
-    if ($self->_library_exists ($fullname)) {
+	if ($fullname eq $current) {
+		die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
+	}
 
-        if ($fullname eq $current) {
-            die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
-        }
+	$self->_library_delete ($fullname);
 
-        $self->_library_delete ($fullname);
-
-        print "lib '$fullname' is deleted.\n"
-            unless $self->{quiet};
-    }
-    else {
-        die "ERROR: '$fullname' does not exist.\n";
-    }
+	print "lib '$fullname' is deleted.\n"
+		unless $self->{quiet};
 
     return;
 }
