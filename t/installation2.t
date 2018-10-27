@@ -78,7 +78,7 @@ describe "App::perlbrew" => sub {
                 'do_system' => $app->expects("do_system")->returns(0),
             );
             
-            throws_ok( sub {$app->do_install_this('', '5.12.3', 'perl-5.12.3')}, qr/Installation process failed/);
+            throws_ok( sub {$app->do_install_this('', '5.12.3', 'perl-5.12.3')}, qr/Installation process failed/, '');
             open(my $log_handle, '<', $app->{log_file});
             like(<$log_handle>, qr/##### Brew Failed #####/, 'Failure message shows in log');
 

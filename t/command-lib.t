@@ -37,14 +37,14 @@ describe "lib command," => sub {
             throws_ok {
                 $app->{args} = [ "lib", "create"];
                 $app->run;
-            } qr/ERROR: /i;
+            } qr/ERROR: /i, '';
         };
         it "delte errs gracefully showing usage" => sub {
             my $app = App::perlbrew->new;
             throws_ok {
                 $app->{args} = [ "lib", "delete"];
                 $app->run;
-            } qr/ERROR: /i;
+            } qr/ERROR: /i, '';
         };
     };
 
@@ -111,7 +111,7 @@ describe "lib command," => sub {
                     ## perl-5.8.8 is not mock-installed
                     $app->{args} = [ "lib", "create", 'perl-5.8.8@nobita' ];
                     $app->run;
-                } qr{^ERROR: 'perl-5.8.8' is not installed yet, 'perl-5.8.8\@nobita' cannot be created.\n};
+                } qr{^ERROR: 'perl-5.8.8' is not installed yet, 'perl-5.8.8\@nobita' cannot be created.\n}, '';
 
                 $libdir = App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.8.8@nobita');
                 ok !-d $libdir;
@@ -143,7 +143,7 @@ describe "lib command," => sub {
                 my $app = App::perlbrew->new("lib", "delete", "yoga");
                 $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
                 $app->run;
-            } qr{^ERROR: 'perl-5\.14\.2\@yoga' does not exist\.};
+            } qr{^ERROR: 'perl-5\.14\.2\@yoga' does not exist\.}, '';
         };
 
 		it "should report error when called with invalid perl's library" => sub {
