@@ -2657,6 +2657,12 @@ sub _library_location {
 	return $self->home->child (libs => $fullname);
 }
 
+sub _library_exists {
+	my ($self, $fullname) = @_;
+
+	return -d $self->_library_location ($fullname);
+}
+
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
@@ -2671,7 +2677,7 @@ sub run_command_lib_create {
 
     my $dir = $self->_library_location ($fullname);
 
-    if (-d $dir) {
+    if ($self->_library_exists ($fullname)) {
         die "$fullname is already there.\n";
     }
 
@@ -2694,7 +2700,7 @@ sub run_command_lib_delete {
 
     my $dir = $self->_library_location ($fullname);
 
-    if (-d $dir) {
+    if ($self->_library_exists ($fullname)) {
 
         if ($fullname eq $current) {
             die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
