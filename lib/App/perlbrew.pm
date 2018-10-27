@@ -2669,6 +2669,12 @@ sub _library_create {
 	$self->_library_location ($fullname)->mkpath;
 }
 
+sub _library_delete {
+	my ($self, $fullname) = @_;
+
+	$self->_library_location ($fullname)->rmpath;
+}
+
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
@@ -2702,15 +2708,13 @@ sub run_command_lib_delete {
 
     my $current  = $self->current_env;
 
-    my $dir = $self->_library_location ($fullname);
-
     if ($self->_library_exists ($fullname)) {
 
         if ($fullname eq $current) {
             die "$fullname is currently being used in the current shell, it cannot be deleted.\n";
         }
 
-        $dir->rmpath;
+        $self->_library_delete ($fullname);
 
         print "lib '$fullname' is deleted.\n"
             unless $self->{quiet};
