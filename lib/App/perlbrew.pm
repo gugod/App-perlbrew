@@ -2122,7 +2122,7 @@ sub perlbrew_env {
         if ($lib_name) {
             $current_local_lib_context = $current_local_lib_context->deactivate($_) for @perlbrew_local_lib_root;
 
-            my $base = $self->home->child ("libs", "${perl_name}\@${lib_name}");
+            my $base = $self->_library_location ("${perl_name}\@${lib_name}");
 
             if (-d $base) {
                 $current_local_lib_context = $current_local_lib_context->activate($base);
@@ -2651,6 +2651,12 @@ sub _library_resolve_fullname {
     return $self->compose_locallib ($perl_name, $lib_name);
 }
 
+sub _library_location {
+	my ($self, $fullname) = @_;
+
+	return $self->home->child (libs => $fullname);
+}
+
 sub run_command_lib_create {
     my ($self, $name) = @_;
 
@@ -2663,7 +2669,7 @@ sub run_command_lib_create {
         die "ERROR: '$perl_name' is not installed yet, '$name' cannot be created.\n";
     }
 
-    my $dir = $self->home->child ("libs", $fullname);
+    my $dir = $self->_library_location ($fullname);
 
     if (-d $dir) {
         die "$fullname is already there.\n";
@@ -2686,7 +2692,7 @@ sub run_command_lib_delete {
 
     my $current  = $self->current_env;
 
-    my $dir = $self->home->child ("libs", $fullname);
+    my $dir = $self->_library_location ($fullname);
 
     if (-d $dir) {
 
