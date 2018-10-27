@@ -2728,16 +2728,11 @@ sub run_command_lib_delete {
 
 sub run_command_lib_list {
     my ($self) = @_;
-    my $dir = $self->home->child ("libs");
-    return unless -d $dir;
-
-    opendir my $dh, $dir or die "open $dir failed: $!";
-    my @libs = grep { !/^\./ && /\@/ } readdir($dh);
 
     my $current = $self->current_env;
-    for (@libs) {
-        print $current eq $_ ? "* " : "  ";
-        print "$_\n";
+	for my $library ($self->local_libs) {
+        print $current eq $library->{name} ? "* " : "  ";
+        print "$library->{name}\n";
     }
 }
 
