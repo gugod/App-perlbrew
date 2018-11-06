@@ -2824,32 +2824,25 @@ sub resolve_installation_name {
 sub run_command_clone_modules {
     my $self = shift;
 
-    my $dst_perl = $self->current_perl;
-    my $src_perl = $self->current_perl;
+    # default to use the currently installation
+    my ( $dst_perl, $src_perl );
 
-    if ( @_ == 1 ){
-        # only one argument, consider it as a destination
-        $dst_perl = shift;
-        print "Using current $src_perl as source for cloning modules into $dst_perl";
-    }
-    else {
-        # at least two arguments, use src as first one
-        $dst_perl = pop;
-        $src_perl = pop;
-    }
+    # the first argument is the destination, the second
+    # optional argument is the source version, default
+    # to use the current installation
+    $dst_perl = pop || $self->current_perl;
+    $src_perl = pop || $self->current_perl;
 
-    # does the user specified the same versions?
-    unless ( $src_perl ne $dst_perl ){
-        print "Cannot clone modules on the very same version!\n";
-        exit( -1 );
-    }
 
     # check source and destination do exist
     undef $src_perl if (! $self->resolve_installation_name($src_perl));
     undef $dst_perl if (! $self->resolve_installation_name($dst_perl));
 
-    if ( ! $src_perl || ! $dst_perl ){
-        # cannot understand from where to where...
+    if ( ! $src_perl
+         || ! $dst_perl
+         || $src_perl eq $dst_perl ){
+        # cannot understand from where to where or
+        # the user did specify the same versions
         $self->run_command_help('clone_modules');
         exit(-1);
     }
