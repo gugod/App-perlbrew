@@ -2875,7 +2875,7 @@ sub run_command_clone_modules {
          || $src_perl eq $dst_perl ){
         # cannot understand from where to where or
         # the user did specify the same versions
-        $self->run_command_help('clone_modules');
+        $self->run_command_help('clone-modules');
         exit(-1);
     }
 
