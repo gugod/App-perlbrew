@@ -2776,6 +2776,38 @@ sub run_command_upgrade_perl {
     $self->do_install_release($dist, $dist_version);
 }
 
+# Executes the list-modules command.
+# This routine launches a new perl instance that, thru
+# ExtUtils::Installed prints out all the modules
+# in the system. If an argument is passed to the
+# subroutine it is managed as a filename
+# to which prints the list of modules.
+sub run_command_list_modules {
+    my ($self, $output_filename) = @_;
+    my $class = ref($self) || __PACKAGE__;
+
+    # avoid something that does not seem as a filename to print
+    # output to...
+    undef $output_filename if (! scalar($output_filename));
+
+    my $name = $self->current_env;
+    if (-l (my $path = $self->root->perls ($name))) {
+        $name = $path->readlink->basename;
+    }
+
+    my $app = $class->new(
+        qw(--quiet exec --with),
+        $name,
+        'perl',
+        '-MExtUtils::Installed',
+        '-le',
+        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for ExtUtils::Installed->new->modules;',
+                $output_filename ? sprintf('open my $output_fh, \'>\', "%s"; ', $output_filename) : '',
+                $output_filename ? '$output_fh' : 'STDOUT')
+    );
+
+    $app->run;
+}
 
 sub resolve_installation_name {
     my ($self, $name) = @_;
