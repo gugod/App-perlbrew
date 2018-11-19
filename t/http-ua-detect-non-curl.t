@@ -27,7 +27,9 @@ elsif (which("fetch")) {
     $expected_ua = "fetch";
 }
 
-my $detected_ua = App::perlbrew::http_user_agent_program();
-is $detected_ua, $expected_ua, "UA: $detected_ua";
+if ($expected_ua) {
+    my $detected_ua = App::perlbrew::http_user_agent_program();
+    is $detected_ua, $expected_ua, "UA: $detected_ua";
+}
 
 done_testing;
