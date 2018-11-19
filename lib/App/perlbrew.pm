@@ -2862,8 +2862,8 @@ sub run_command_clone_modules {
     # the first argument is the destination, the second
     # optional argument is the source version, default
     # to use the current installation
-    $dst_perl = pop || $self->current_perl;
-    $src_perl = pop || $self->current_perl;
+    $dst_perl = pop || $self->current_env;
+    $src_perl = pop || $self->current_env;
 
 
     # check source and destination do exist
