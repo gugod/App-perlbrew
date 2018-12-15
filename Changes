@@ -1,8 +1,8 @@
 0.85
 	- Released at 2018-12-15T23:24:15+0900
 	- Thanks to our contributors: Branislav Zahradník, Guido Flohr, Joelle Maslak, Luca Ferrari, rage311
-        - Fix the behaviour of 'clone-modules'
-        - Various internal refactoring
+	- Fix the behaviour of 'clone-modules'
+	- Various internal refactoring
 
 0.84
 	- Released at 2018-06-24T08:26:14+0900
