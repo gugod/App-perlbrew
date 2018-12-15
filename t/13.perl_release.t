@@ -6,9 +6,8 @@ use lib $FindBin::Bin;
 use App::perlbrew;
 require "test_helpers.pl";
 
-use File::Temp qw(tempdir);
+
 use Test::Spec;
-use Test::Exception;
 use CPAN::Perl::Releases;
 use JSON::PP qw(encode_json);
 

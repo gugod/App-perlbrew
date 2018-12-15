@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 use Test::Spec;
-use Path::Class;
-use IO::All;
 use File::Temp qw( tempdir );
 
 use App::perlbrew;
@@ -31,7 +29,7 @@ describe "App::perlbrew->install_cpanm" => sub {
             $error_produced = 1;
         };
 
-        my $cpanm = file($perlbrew_root, "bin", "cpanm")->absolute;
+        my $cpanm = App::Perlbrew::Path->new($perlbrew_root, "bin", "cpanm");
         ok $error_produced, "generated an error: $error";
         ok !(-f $cpanm), "cpanm is not produced. $cpanm";
     };

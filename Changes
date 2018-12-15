@@ -1,8 +1,14 @@
+0.85
+	- Released at 2018-12-15T23:24:15+0900
+	- Thanks to our contributors: Branislav Zahradník, Guido Flohr, Joelle Maslak, Luca Ferrari, rage311
+        - Fix the behaviour of 'clone-modules'
+        - Various internal refactoring
+
 0.84
 	- Released at 2018-06-24T08:26:14+0900
 	- Thanks to our contributors: Joelle Maslak
-        - Unbreak 'available' command after some updates from cpan.org web site.
-        - Unbreak the installation -- which missed "perlbrew" command due to a mistake when using mbtiny.
+	- Unbreak 'available' command after some updates from cpan.org web site.
+	- Unbreak the installation -- which missed "perlbrew" command due to a mistake when using mbtiny.
 
 0.83
 	- Released at 2018-05-30T08:04:43+0900

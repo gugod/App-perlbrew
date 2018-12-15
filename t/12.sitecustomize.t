@@ -1,6 +1,5 @@
 #!perl
 use strict;
-use Path::Class;
 use Capture::Tiny qw/capture/;
 use IO::All;
 use App::perlbrew;
@@ -14,7 +13,10 @@ use Test::More;
 
 ## setup
 
-App::perlbrew::rmpath( $ENV{PERLBREW_ROOT} );
+App::Perlbrew::Path
+	->new ($ENV{PERLBREW_ROOT})
+	->rmpath
+	;
 
 ## mock
 
@@ -45,12 +47,12 @@ sub App::perlbrew::do_install_release {
     my $name = $dist;
     $name = $self->{as} if $self->{as};
 
-    my $root = dir($ENV{PERLBREW_ROOT});
-    my $installation_dir = $root->subdir("perls", $name);
-    App::perlbrew::mkpath($installation_dir);
-    App::perlbrew::mkpath($root->subdir("perls", $name, "bin"));
+    my $root = App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT});
+    my $installation_dir = $root->child("perls", $name);
+    $installation_dir->mkpath;
+    $root->child("perls", $name, "bin")->mkpath;
 
-    my $perl = $root->subdir("perls", $name, "bin")->file("perl");
+    my $perl = $root->child("perls", $name, "bin")->child("perl");
     io($perl)->print("#!/bin/sh\nperl \"\$@\";\n");
     chmod 0755, $perl;
 
@@ -92,9 +94,9 @@ subtest "mock installing" => sub {
     is 0+@installed, 1, "found 1 installed perl";
 
     is $installed[0]->{name}, "perl-5.14.2", "found expected perl";
-    my $root = dir($ENV{PERLBREW_ROOT});
-    my $perldir = $root->subdir("perls", "perl-5.14.2");
-    my $installedsite = $perldir->file('lib', 'site_perl', '5.14.2', 'sitecustomize.pl');
+    my $root = App::Perlbrew::Path->new ($ENV{PERLBREW_ROOT});
+    my $perldir = $root->child("perls", "perl-5.14.2");
+    my $installedsite = $perldir->child('lib', 'site_perl', '5.14.2', 'sitecustomize.pl');
     ok( -f $installedsite, "sitecustomize.pl installed" );
 
     my $guts = do { local (@ARGV, $/) = $installedsite; <> };

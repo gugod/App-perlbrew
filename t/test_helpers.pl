@@ -14,18 +14,28 @@ put 't/' dir to `@INC`.
 
 =cut
 
+use strict;
 use Test::More;
-use Path::Class;
 use IO::All;
 use File::Temp qw( tempdir );
+
+sub dir {
+	App::Perlbrew::Path->new (@_);
+}
+
+sub file {
+	App::Perlbrew::Path->new (@_);
+}
 
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 delete $ENV{PERLBREW_LIB};
-App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("perls") );
-App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("build") );
-App::perlbrew::mkpath( dir($ENV{PERLBREW_ROOT})->subdir("dists") );
+
+my $root = App::Perlbrew::Path::Root->new ($ENV{PERLBREW_ROOT});
+$root->perls->mkpath;
+$root->build->mkpath;
+$root->dists->mkpath;
 
 no warnings 'redefine';
 
@@ -34,15 +44,15 @@ sub App::perlbrew::do_install_release {
 
     $name = $self->{as} if $self->{as};
 
-    my $root = dir($App::perlbrew::PERLBREW_ROOT);
-    my $installation_dir = $root->subdir("perls", $name);
+    my $root = $self->root;
+    my $installation_dir = $root->perls ($name);
 
     $self->{installation_name} = $name;
 
-    App::perlbrew::mkpath($installation_dir);
-    App::perlbrew::mkpath($root->subdir("perls", $name, "bin"));
+    $installation_dir->mkpath;
+    $root->perls ($name, "bin")->mkpath;
 
-    my $perl = $root->subdir("perls", $name, "bin")->file("perl");
+    my $perl = $root->perls ($name, "bin")->child ("perl");
     io($perl)->print(<<'CODE');
 #!/usr/bin/env perl
 use File::Basename;
@@ -64,7 +74,10 @@ sub mock_perlbrew_install {
 
 sub mock_perlbrew_lib_create {
     my $name = shift;
-    App::perlbrew::mkpath(dir($App::perlbrew::PERLBREW_HOME, "libs", $name));
+    App::Perlbrew::Path
+		->new ($App::perlbrew::PERLBREW_HOME, "libs", $name)
+		->mkpath
+		;
 }
 
 1;

@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 use Test::Spec;
-use Path::Class;
-use IO::All;
 use File::Temp qw( tempdir );
 
 use App::perlbrew;
@@ -24,7 +22,7 @@ describe "App::perlbrew->install_patchperl" => sub {
         my $app = App::perlbrew->new("install-patchperl", "-q");
         $app->run();
 
-        my $patchperl = file($perlbrew_root, "bin", "patchperl")->absolute;
+        my $patchperl = App::Perlbrew::Path->new ($perlbrew_root, "bin", "patchperl");
         ok -f $patchperl, "patchperl is produced. $patchperl";
         ok -x $patchperl, "patchperl should be an executable.";
     };

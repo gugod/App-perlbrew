@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 use Test::Spec;
-use Path::Class;
-use IO::All;
 use File::Temp qw( tempdir );
 
 use App::perlbrew;
@@ -24,7 +22,7 @@ describe "App::perlbrew->install_cpanm" => sub {
         my $app = App::perlbrew->new("install-cpanm", "-q");
         $app->run();
 
-        my $cpanm = file($perlbrew_root, "bin", "cpanm")->absolute;
+        my $cpanm = App::Perlbrew::Path->new ($perlbrew_root, "bin", "cpanm");
         ok -f $cpanm, "cpanm is produced. $cpanm";
         ok -x $cpanm, "cpanm should be an executable.";
     };

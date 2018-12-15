@@ -9,8 +9,6 @@ use lib $FindBin::Bin;
 use App::perlbrew;
 require "test_helpers.pl";
 
-use File::Temp qw( tempdir );
-use File::Spec::Functions qw( catdir );
 use Test::Spec;
 use Test::Output;
 use Config;

@@ -38,12 +38,14 @@ mkdir -p lib/App
 ./update-fatlib.pl
 
 cp ../lib/App/perlbrew.pm lib/App/perlbrew.pm
+cp -r ../lib/App/Perlbrew lib/App/
 
 export PERL5LIB="lib":$PERL5LIB
 
 cat - <<"EOF" > perlbrew
 #!/usr/bin/perl
 
+use strict;
 use Config;
 BEGIN {
     my @oldinc = @INC;

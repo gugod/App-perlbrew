@@ -2,8 +2,6 @@
 use strict;
 use warnings;
 use Test::Spec;
-use Path::Class;
-use IO::All;
 use File::Temp qw( tempdir );
 
 $ENV{PERLBREW_ROOT} = my $perlbrew_root = tempdir( CLEANUP => 1 );
