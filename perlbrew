@@ -254,7 +254,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.84";
+  our $VERSION = "0.85";
   use Config;
   
   BEGIN {
@@ -3114,8 +3114,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       # the first argument is the destination, the second
       # optional argument is the source version, default
       # to use the current installation
-      $dst_perl = pop || $self->current_perl;
-      $src_perl = pop || $self->current_perl;
+      $dst_perl = pop || $self->current_env;
+      $src_perl = pop || $self->current_env;
   
   
       # check source and destination do exist
@@ -3127,7 +3127,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
            || $src_perl eq $dst_perl ){
           # cannot understand from where to where or
           # the user did specify the same versions
-          $self->run_command_help('clone_modules');
+          $self->run_command_help('clone-modules');
           exit(-1);
       }
   
