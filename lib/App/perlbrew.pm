@@ -2531,7 +2531,7 @@ sub run_command_exec {
 
             $self->do_exit_with_error_code($exit_code) if ($opts{'halt-on-error'});
         }
-        print "\n\n" unless $self->{quiet};
+        print "\n" unless $self->{quiet} || $no_header;
     }
     $self->do_exit_with_error_code(1) unless $overall_success;
 }
