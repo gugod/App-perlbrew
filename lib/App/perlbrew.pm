@@ -2360,7 +2360,7 @@ sub run_command_symlink_executables {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
             next unless $version;
 
-			$executable->symlink ($root->perls ($perl)->bin->($name));
+			$executable->symlink ($root->perls ($perl)->bin($name));
 			$executable->symlink ($root->perls ($perl)->perl) if $name eq "cperl";
         }
     }
