@@ -3443,7 +3443,7 @@ You might also want to try upgrading patchperl before trying again:
   perlbrew install-patchperl
 
 Generally, if you need to install a perl distribution known to have minor test
-failures, do one of these command to avoid seeing this message
+failures, do one of these commands to avoid seeing this message:
 
   perlbrew --notest install $self->{dist_name}
   perlbrew --force install $self->{dist_name}
