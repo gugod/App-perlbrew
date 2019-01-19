@@ -254,7 +254,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.85";
+  our $VERSION = "0.86";
   use Config;
   
   BEGIN {
@@ -2612,7 +2612,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
               my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
               next unless $version;
   
-  			$executable->symlink ($root->perls ($perl)->bin->($name));
+  			$executable->symlink ($root->perls ($perl)->bin($name));
   			$executable->symlink ($root->perls ($perl)->perl) if $name eq "cperl";
           }
       }
@@ -2783,7 +2783,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
               $self->do_exit_with_error_code($exit_code) if ($opts{'halt-on-error'});
           }
-          print "\n\n" unless $self->{quiet};
+          print "\n" unless $self->{quiet} || $no_header;
       }
       $self->do_exit_with_error_code(1) unless $overall_success;
   }
@@ -3695,7 +3695,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
     perlbrew install-patchperl
   
   Generally, if you need to install a perl distribution known to have minor test
-  failures, do one of these command to avoid seeing this message
+  failures, do one of these commands to avoid seeing this message:
   
     perlbrew --notest install $self->{dist_name}
     perlbrew --force install $self->{dist_name}

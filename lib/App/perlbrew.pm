@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.85";
+our $VERSION = "0.86";
 use Config;
 
 BEGIN {
@@ -2360,7 +2360,7 @@ sub run_command_symlink_executables {
             my ($name, $version) = $executable =~ m/bin\/(.+?)(5\.\d.*)?$/;
             next unless $version;
 
-			$executable->symlink ($root->perls ($perl)->bin->($name));
+			$executable->symlink ($root->perls ($perl)->bin($name));
 			$executable->symlink ($root->perls ($perl)->perl) if $name eq "cperl";
         }
     }
@@ -2531,7 +2531,7 @@ sub run_command_exec {
 
             $self->do_exit_with_error_code($exit_code) if ($opts{'halt-on-error'});
         }
-        print "\n\n" unless $self->{quiet};
+        print "\n" unless $self->{quiet} || $no_header;
     }
     $self->do_exit_with_error_code(1) unless $overall_success;
 }
@@ -3443,7 +3443,7 @@ You might also want to try upgrading patchperl before trying again:
   perlbrew install-patchperl
 
 Generally, if you need to install a perl distribution known to have minor test
-failures, do one of these command to avoid seeing this message
+failures, do one of these commands to avoid seeing this message:
 
   perlbrew --notest install $self->{dist_name}
   perlbrew --force install $self->{dist_name}
