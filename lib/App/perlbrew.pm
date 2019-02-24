@@ -3291,14 +3291,14 @@ sub CSH_WRAPPER_CONTENT {
     return <<'WRAPPER';
 set perlbrew_exit_status=0
 
-if ( $1 =~ -* ) then
-    set perlbrew_short_option=$1
+if ( "$1" =~ -* ) then
+    set perlbrew_short_option="$1"
     shift
 else
     set perlbrew_short_option=""
 endif
 
-switch ( $1 )
+switch ( "$1" )
     case use:
         if ( $%2 == 0 ) then
             if ( $?PERLBREW_PERL == 0 ) then
@@ -3312,8 +3312,8 @@ switch ( $1 )
             endif
         else
             set perlbrew_line_count=0
-            foreach perlbrew_line ( "`\perlbrew env $2`" )
-                eval $perlbrew_line
+            foreach perlbrew_line ( "`\perlbrew env $2:q`" )
+                eval "$perlbrew_line"
                 @ perlbrew_line_count++
             end
             if ( $perlbrew_line_count == 0 ) then
@@ -3328,27 +3328,27 @@ switch ( $1 )
         if ( $%2 == 0 ) then
             \perlbrew switch
         else
-            perlbrew use $2 && source $PERLBREW_ROOT/etc/csh_reinit $2
+            perlbrew use "$2" && source "$PERLBREW_ROOT/etc/csh_reinit" "$2"
         endif
         breaksw
 
     case off:
         unsetenv PERLBREW_PERL
         foreach perlbrew_line ( "`\perlbrew env`" )
-            eval $perlbrew_line
+            eval "$perlbrew_line"
         end
-        source $PERLBREW_ROOT/etc/csh_set_path
+        source "$PERLBREW_ROOT/etc/csh_set_path"
         echo "perlbrew is turned off."
         breaksw
 
     case switch-off:
         unsetenv PERLBREW_PERL
-        source $PERLBREW_ROOT/etc/csh_reinit ''
+        source "$PERLBREW_ROOT/etc/csh_reinit" ''
         echo "perlbrew is switched off."
         breaksw
 
     default:
-        \perlbrew $perlbrew_short_option $argv
+        \perlbrew $perlbrew_short_option:q $argv:q
         set perlbrew_exit_status=$?
         breaksw
 endsw
@@ -3412,7 +3412,7 @@ if ( $?PERLBREW_PATH == 0 ) then
 endif
 
 source "$PERLBREW_ROOT/etc/csh_set_path"
-alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
+alias perlbrew 'source "$PERLBREW_ROOT/etc/csh_wrapper"'
 CSHRC
 
 }
