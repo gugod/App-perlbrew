@@ -23,20 +23,9 @@ use Getopt::Long ();
 use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
 
+use App::Perlbrew::Util;
 use App::Perlbrew::Path;
 use App::Perlbrew::Path::Root;
-
-sub min(@) {
-    my $m = $_[0];
-    for(@_) {
-        $m = $_ if $_ < $m;
-    }
-    return $m;
-}
-
-sub uniq {
-    my %seen; grep { !$seen{$_}++ } @_;
-}
 
 ### global variables
 
@@ -246,29 +235,7 @@ sub perl_version_to_integer {
     return $v[1]*1000000 + $v[2]*1000 + $v[3];
 }
 
-# straight copy of Wikipedia's "Levenshtein Distance"
-sub editdist {
-    my @a = split //, shift;
-    my @b = split //, shift;
-
-    # There is an extra row and column in the matrix. This is the
-    # distance from the empty string to a substring of the target.
-    my @d;
-    $d[$_][0] = $_ for (0 .. @a);
-    $d[0][$_] = $_ for (0 .. @b);
-
-    for my $i (1 .. @a) {
-        for my $j (1 .. @b) {
-            $d[$i][$j] = ($a[$i-1] eq $b[$j-1] ? $d[$i-1][$j-1]
-                : 1 + min($d[$i-1][$j], $d[$i][$j-1], $d[$i-1][$j-1]));
-        }
-    }
-
-    return $d[@a][@b];
-}
-
 ### methods
-
 sub new {
     my($class, @argv) = @_;
 
