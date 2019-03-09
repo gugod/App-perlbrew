@@ -22,7 +22,7 @@ cd `dirname $0`
 
 fatpack_path=`which fatpack`
 
-if [ ! -f $fatpack_path ]; then
+if [ ! -f "$fatpack_path" ]; then
     echo "!!! fatpack is missing"
     exit 2
 else
