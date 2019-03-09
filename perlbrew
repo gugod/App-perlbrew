@@ -249,6 +249,52 @@ $fatpacked{"App/Perlbrew/Path/Root.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
 APP_PERLBREW_PATH_ROOT
 
+$fatpacked{"App/Perlbrew/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_PERLBREW_UTIL';
+  package App::Perlbrew::Util;
+  use strict;
+  use warnings;
+  use 5.008;
+  
+  use Exporter 'import';
+  our @EXPORT = qw(uniq min editdist);
+  
+  sub uniq {
+      my %seen;
+      grep { !$seen{$_}++ } @_;
+  }
+  
+  sub min(@) {
+      my $m = $_[0];
+      for(@_) {
+          $m = $_ if $_ < $m;
+      }
+      return $m;
+  }
+  
+  # straight copy of Wikipedia's "Levenshtein Distance"
+  sub editdist {
+      my @a = split //, shift;
+      my @b = split //, shift;
+  
+      # There is an extra row and column in the matrix. This is the
+      # distance from the empty string to a substring of the target.
+      my @d;
+      $d[$_][0] = $_ for (0 .. @a);
+      $d[0][$_] = $_ for (0 .. @b);
+  
+      for my $i (1 .. @a) {
+          for my $j (1 .. @b) {
+              $d[$i][$j] = ($a[$i-1] eq $b[$j-1] ? $d[$i-1][$j-1]
+                  : 1 + min($d[$i-1][$j], $d[$i][$j-1], $d[$i-1][$j-1]));
+          }
+      }
+  
+      return $d[@a][@b];
+  }
+  
+  1;
+APP_PERLBREW_UTIL
+
 $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_PERLBREW';
   package App::perlbrew;
   use strict;
@@ -275,20 +321,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use CPAN::Perl::Releases;
   use JSON::PP 'decode_json';
   
+  use App::Perlbrew::Util;
   use App::Perlbrew::Path;
   use App::Perlbrew::Path::Root;
-  
-  sub min(@) {
-      my $m = $_[0];
-      for(@_) {
-          $m = $_ if $_ < $m;
-      }
-      return $m;
-  }
-  
-  sub uniq {
-      my %seen; grep { !$seen{$_}++ } @_;
-  }
   
   ### global variables
   
@@ -498,29 +533,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       return $v[1]*1000000 + $v[2]*1000 + $v[3];
   }
   
-  # straight copy of Wikipedia's "Levenshtein Distance"
-  sub editdist {
-      my @a = split //, shift;
-      my @b = split //, shift;
-  
-      # There is an extra row and column in the matrix. This is the
-      # distance from the empty string to a substring of the target.
-      my @d;
-      $d[$_][0] = $_ for (0 .. @a);
-      $d[0][$_] = $_ for (0 .. @b);
-  
-      for my $i (1 .. @a) {
-          for my $j (1 .. @b) {
-              $d[$i][$j] = ($a[$i-1] eq $b[$j-1] ? $d[$i-1][$j-1]
-                  : 1 + min($d[$i-1][$j], $d[$i][$j-1], $d[$i-1][$j-1]));
-          }
-      }
-  
-      return $d[@a][@b];
-  }
-  
   ### methods
-  
   sub new {
       my($class, @argv) = @_;
   
@@ -980,8 +993,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   }
   
   sub _firstrcfile {
-      my ($self) = @_;
-      foreach my $path (@_) {
+      my ($self, @files) = @_;
+      foreach my $path (@files) {
           return $path if -f App::Perlbrew::Path->new ($self->env('HOME'), $path);
       }
       return;
@@ -12350,7 +12363,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '3.66';
+  $CPAN::Perl::Releases::VERSION = '3.90';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12573,10 +12586,22 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.28.0-RC3" => { id => 'XSAWYERX' },
   "5.28.0-RC4" => { id => 'XSAWYERX' },
   "5.28.0" => { id => 'XSAWYERX' },
+  "5.29.0" => { id => 'XSAWYERX' },
+  "5.29.1" => { id => 'SHAY' },
+  "5.29.2" => { id => 'BINGOS' },
+  "5.29.3" => { id => 'GENEHACK' },
+  "5.29.4" => { id => 'ARC' },
+  "5.29.5" => { id => 'ETHER' },
+  "5.26.3" => { id => 'SHAY' },
+  "5.28.1" => { id => 'SHAY' },
+  "5.29.6" => { id => 'ABIGAIL' },
+  "5.29.7" => { id => 'ABIGAIL' },
+  "5.29.8" => { id => 'ATOOMIC' },
   };
   
   sub perl_tarballs {
     my $vers = shift;
+    return unless defined $vers;
     $vers = shift if eval { $vers->isa(__PACKAGE__) };
     return unless exists $data->{ $vers };
     if ( exists $cache->{ $vers } ) {
@@ -12640,7 +12665,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 3.66
+  version 3.90
   
   =head1 SYNOPSIS
   
@@ -12699,15 +12724,13 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   L<http://www.cpan.org/src/5.0/>
   
-  L<http://search.cpan.org/faq.html#Is_there_a_API?>
-  
   =head1 AUTHOR
   
   Chris Williams <chris@bingosnet.co.uk>
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2018 by Chris Williams.
+  This software is copyright (c) 2019 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
