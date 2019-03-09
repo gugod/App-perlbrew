@@ -728,8 +728,8 @@ sub run_command_compgen {
 }
 
 sub _firstrcfile {
-    my ($self) = @_;
-    foreach my $path (@_) {
+    my ($self, @files) = @_;
+    foreach my $path (@files) {
         return $path if -f App::Perlbrew::Path->new ($self->env('HOME'), $path);
     }
     return;
