@@ -6,10 +6,9 @@ if [ -z "${PERLBREWURL}" ]; then
 fi
 
 clean_exit () {
-    [ ! -z "$LOCALINSTALLER" -a -f $LOCALINSTALLER ] && rm $LOCALINSTALLER
+    [ ! -z "$LOCALINSTALLER" -a -f "$LOCALINSTALLER" ] && rm $LOCALINSTALLER
     exit $1
 }
-
 
 if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ]; then
     if [ -d "/tmp" ]; then
@@ -24,10 +23,6 @@ fi
 cd $TMPDIR || clean_exit 1
 LOCALINSTALLER=$(mktemp perlbrew.XXXXXX)
 
-
-
-
-
 echo
 if type curl >/dev/null 2>&1; then
   PERLBREWDOWNLOAD="curl -f -sS -Lo $LOCALINSTALLER $PERLBREWURL"
@@ -39,7 +34,6 @@ else
   echo "Need either wget, fetch or curl to use $0"
   clean_exit
 fi
-
 
 echo "## Download the latest perlbrew"
 $PERLBREWDOWNLOAD || clean_exit 1
@@ -58,12 +52,12 @@ if [ ! -x "$PERL" ]; then
   clean_exit 2
 fi
 
-[ ! -x $LOCALINSTALLER ] && chmod +x $LOCALINSTALLER
-$PERL $LOCALINSTALLER self-install || clean_exit 3
+[ ! -x "$LOCALINSTALLER" ] && chmod +x "$LOCALINSTALLER"
+$PERL "$LOCALINSTALLER" self-install || clean_exit 3
 
 echo "## Installing patchperl"
-$PERL $LOCALINSTALLER -f -q install-patchperl || clean_exit 4
+$PERL "$LOCALINSTALLER" -f -q install-patchperl || clean_exit 4
 
 echo
 echo "## Done."
-rm ./$LOCALINSTALLER
+rm "./$LOCALINSTALLER"
