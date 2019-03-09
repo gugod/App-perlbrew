@@ -15,12 +15,12 @@ fi
 
 cpanm File::Path App::FatPacker
 
-cd `dirname $0`/../
+cd $(dirname $0)/../
 cpanm --installdeps .
 
-cd `dirname $0`
+cd $(dirname $0)
 
-fatpack_path=`which fatpack`
+fatpack_path=$(which fatpack)
 
 if [ ! -f "$fatpack_path" ]; then
     echo "!!! fatpack is missing"
