@@ -1275,7 +1275,7 @@ sub do_install_git {
 
     require File::Spec;
     my $dist_extracted_dir = File::Spec->rel2abs($dist);
-    $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
+    $self->do_install_this(App::Perlbrew::Path->new ($dist_extracted_dir), $dist_version, "$dist_name-$dist_version");
     return;
 }
 
@@ -1490,7 +1490,7 @@ sub run_command_install {
         $self->do_install_git($dist);
     }
     elsif (-f $dist) {
-        $self->do_install_archive($dist);
+        $self->do_install_archive(App::Perlbrew::Path->new ($dist));
     }
     elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
         $self->do_install_url($dist);
