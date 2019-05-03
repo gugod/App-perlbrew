@@ -80,4 +80,9 @@ sub mock_perlbrew_lib_create {
 		;
 }
 
+sub list_locally_installed_perls {
+    my ($app) = @_;
+    grep { !$_->{is_external} } $app->installed_perls;
+}
+
 1;

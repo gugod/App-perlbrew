@@ -67,12 +67,17 @@ use warnings;
 
 ## main
 
+sub list_locally_installed_perls {
+    my ($app) = @_;
+    grep { !$_->{is_external} } $app->installed_perls;
+}
+
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 note "DESTDIR set to $DESTDIR";
 
 subtest "No perls yet installed" => sub {
     my $app = App::perlbrew->new;
-    my @installed = grep { !$_->{is_external} } $app->installed_perls;
+    my @installed = list_locally_installed_perls ($app);
     is 0+@installed, 0, "no perls installed";
 };
 
@@ -94,7 +99,7 @@ subtest "mock installing" => sub {
     );
     my ($output,$error) = capture { $app->run };
 
-    my @installed = grep { !$_->{is_external} } $app->installed_perls;
+    my @installed = list_locally_installed_perls ($app);
     is 0+@installed, 0, "found 0 installed perl (as it's installed in DESTDIR)";
 
     my $root = App::Perlbrew::Path->new ($DESTDIR, $ENV{PERLBREW_ROOT});

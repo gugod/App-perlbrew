@@ -12,13 +12,15 @@ use Test::Output qw( stdout_from );
 
 $ENV{PERLBREW_DEBUG_COMPLETION} = 0;
 
-my @perls = qw(
+my @mock_perls = qw(
     perl-5.12.3
     perl-5.12.4
     perl-5.14.1
     perl-5.14.2
 );
-mock_perlbrew_install($_) for @perls;
+mock_perlbrew_install($_) for @mock_perls;
+
+my @perls = (@mock_perls, 'system');
 
 {
     no warnings 'redefine';

@@ -18,7 +18,7 @@ describe 'perlbrew exec perl -E "say 42"' => sub {
     it "invokes all perls" => sub {
         my $app = App::perlbrew->new(qw(exec perl -E), "say 42");
 
-        my @perls = $app->installed_perls;
+        my @perls = grep { $_->{name} ne $App::perlbrew::SYSTEM_PERL_NAME } $app->installed_perls;
 
         $app->expects("do_system_with_exit_code")->exactly(4)->returns(
             sub {

@@ -32,7 +32,7 @@ plan tests => 3;
     my $app = App::perlbrew->new("install", "--switch", "perl-stable");
     $app->run;
 
-    my @installed = $app->installed_perls;
+    my @installed = list_locally_installed_perls ($app);
     is 0+@installed, 1, "install perl-stable installs one perl";
 
     is $installed[0]{name}, "perl-5.16.2",

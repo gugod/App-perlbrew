@@ -15,7 +15,7 @@ use Test::Exception;
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 {
     my $app = App::perlbrew->new;
-    my @installed = grep { !$_->{is_external} } $app->installed_perls;
+    my @installed = list_locally_installed_perls ($app);
     is 0+@installed, 0;
 }
 
@@ -23,7 +23,7 @@ note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
     my $app = App::perlbrew->new("install", "perl-5.14.0");
     $app->run;
 
-    my @installed = grep { !$_->{is_external} } $app->installed_perls;
+    my @installed = list_locally_installed_perls ($app);
     is 0+@installed, 1;
 
     is $installed[0]->{name}, "perl-5.14.0";
@@ -45,7 +45,7 @@ subtest "do not clobber exitsing user-specified name." => sub {
     my $app = App::perlbrew->new("install", "perl-5.14.0", "--as", "the-dude");
     $app->run;
 
-    my @installed = grep { !$_->{is_external} } $app->installed_perls;
+    my @installed = list_locally_installed_perls ($app);
     is 0+@installed, 2;
 
     ok grep { $_->{name} eq 'the-dude' } $app->installed_perls;

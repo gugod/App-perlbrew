@@ -251,6 +251,8 @@ By default, all installations are configured after their name like this:
 
     sh Configure -de -Dprefix=$PERLBREW_ROOT/perls/<name>
 
+C<system> installation name refers to system perl.
+
 =head1 COMMAND: INSTALL-MULTIPLE
 
 Usage: perlbrew install-multiple [options] <perl-version-1> <perl-version-2> ...
@@ -314,6 +316,8 @@ Usage: perlbrew B<use> [perl-<version> | <version> | <name>]
 Use the given version perl in current shell. This will not effect newly opened
 shells.
 
+You can use C<system> to use system perl.
+
 Without a parameter, shows the version of perl currently in use.
 
 =head1 COMMAND: SWITCH
@@ -335,6 +339,8 @@ environment variable. By default, the value is C<~/perl5/perlbrew>.
 If there are libs associated to some perl installations, they will be included
 as part of the name. The output items in this list can be the argument in
 various other commands.
+
+Command always lists system perl under installation name C<system>.
 
 =head1 COMMAND: AVAILABLE
 
@@ -373,6 +379,8 @@ Re-enables the default system Perl, whatever that is.
 Usage: perlbrew alias [-f] create <name> <alias>
 
     Create an alias for the installation named <name>.
+
+    Alias C<system> is reserverd for system perl.
 
 Usage: perlbrew alias [-f] rename <old_alias> <new_alias>
 

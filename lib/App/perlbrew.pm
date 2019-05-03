@@ -51,6 +51,7 @@ local $SIG{__DIE__} = sub {
     exit(1);
 };
 
+our $SYSTEM_PERL_NAME = 'system';
 our $CONFIG;
 our $PERLBREW_ROOT;
 our $PERLBREW_HOME;
@@ -426,7 +427,7 @@ sub builddir {
 sub current_perl {
     my ($self, $v) = @_;
     $self->{current_perl} = $v if $v;
-    return $self->{current_perl} || $self->env('PERLBREW_PERL')  || '';
+    return $self->{current_perl} || $self->env('PERLBREW_PERL') || $SYSTEM_PERL_NAME;
 }
 
 sub current_lib {
@@ -1978,10 +1979,48 @@ sub format_perl_version {
 
 }
 
+sub _build_installed_perl_struct {
+    my ($self, %params) = @_;
+
+    my $name         = $params{name};
+    my $executable   = $params{executable};
+    my $installation = $params{installation};
+    my $orig_version = $params{orig_version};
+    my $ctime        = localtime((stat $executable)[ 10 ]);
+
+    # do_capture collides with capture used in tests
+    $orig_version ||= `$executable -e 'print \$]'`
+        unless $orig_version;
+    $installation ||= '';
+
+    return {
+        name        => $name,
+        orig_version=> $orig_version,
+        version     => $self->format_perl_version($orig_version),
+        is_current  => (($self->current_perl || $SYSTEM_PERL_NAME) eq $name) && !($self->current_lib),
+        libs => [ $self->local_libs($name) ],
+        executable  => $executable,
+        dir => $installation,
+        comparable_version => $self->comparable_perl_version($orig_version),
+        ctime        => $ctime,
+        is_external  => $params{is_external},
+    };
+}
+
+sub installed_system_perl {
+    my ($self) = @_;
+
+    return $self->_build_installed_perl_struct (
+        name        => $SYSTEM_PERL_NAME,
+        executable  => $self->system_perl_executable,
+        is_external => 1,
+    );
+}
+
 sub installed_perls {
     my $self    = shift;
 
-    my @result;
+    my @result = $self->installed_system_perl;
     my $root = $self->root;
 
     for my $installation ($root->perls->list) {
@@ -2007,17 +2046,12 @@ sub installed_perls {
             }
         }
 
-        push @result, {
-            name        => $name,
-            orig_version=> $orig_version,
-            version     => $self->format_perl_version($orig_version),
-            is_current  => ($self->current_perl eq $name) && !($self->current_lib),
-            libs => [ $self->local_libs($name) ],
-            executable  => $executable,
-            dir => $installation,
-            comparable_version => $self->comparable_perl_version($orig_version),
-            ctime        => $ctime,
-        };
+        push @result, $self->_build_installed_perl_struct (
+            name         => $name,
+            orig_version => $orig_version,
+            executable   => $executable,
+            installation => $installation,
+        );
     }
 
     return sort { ( $self->{reverse}
@@ -2069,6 +2103,7 @@ sub local_libs {
 sub is_installed {
     my ($self, $name) = @_;
 
+    return 1 if $name eq $SYSTEM_PERL_NAME;
     return grep { $name eq $_->{name} } $self->installed_perls;
 }
 
@@ -2488,7 +2523,10 @@ sub run_command_exec {
         @exec_with = map { $installed{$_} } @with;
     }
     else {
-        @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
+        @exec_with = map { ($_, @{$_->{libs}}) }
+            # by default don't use system perl neither its libraries
+            grep { $_->{name} ne $SYSTEM_PERL_NAME }
+            $self->installed_perls;
     }
 
     if (0 == @exec_with) {
@@ -2815,7 +2853,7 @@ sub resolve_installation_name {
 
     my ($perl_name, $lib_name) = $self->decompose_locallib ($name);
     $perl_name = $name unless $lib_name;
-    $perl_name ||= $self->current_perl;
+    $perl_name ||= $self->current_perl || $SYSTEM_PERL_NAME;
 
     if (!$self->is_installed($perl_name)) {
         if ($self->is_installed("perl-${perl_name}") ) {

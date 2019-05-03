@@ -43,6 +43,13 @@ describe "current perl" => sub {
             is $app->current_perl, $v;
         }
     };
+
+    it "defaults to system perl" => sub {
+        local $ENV{PERLBREW_PERL};
+
+        my $app = App::perlbrew->new;
+        is $app->current_perl, $App::perlbrew::SYSTEM_PERL_NAME;
+    };
 };
 
 runtests unless caller;
