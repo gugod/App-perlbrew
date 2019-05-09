@@ -2435,7 +2435,7 @@ sub run_command_exec {
     local (@ARGV) = @{$self->{original_argv}};
 
     Getopt::Long::Configure ('require_order');
-    my @command_options = ('with=s', 'halt-on-error');
+    my @command_options = ('with=s', 'halt-on-error', 'min=s', 'max=s');
 
     $self->parse_cmdline (\%opts, @command_options);
     shift @ARGV; # "exec"
@@ -2457,6 +2457,16 @@ sub run_command_exec {
     else {
         @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
     }
+
+    if ($opts{min}) {
+        # TODO use comparable version.
+        # For now, it doesn't produce consistent results for 5.026001 and 5.26.1
+        @exec_with = grep { $_->{orig_version} >= $opts{min} } @exec_with;
+    };
+
+    if ($opts{max}) {
+        @exec_with = grep { $_->{orig_version} <= $opts{max} } @exec_with;
+    };
 
     if (0 == @exec_with) {
         print "No perl installation found.\n" unless $self->{quiet};
