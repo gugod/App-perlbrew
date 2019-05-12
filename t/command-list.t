@@ -32,7 +32,7 @@ describe "list command," => sub {
     describe "when there no libs under PERLBREW_HOME,", sub {
         it "displays a list of perl installation names", sub {
             my $app = App::perlbrew->new("list");
-            stdout_like sub { $app->run(); }, qr/^(\s\*)?\s{1,3}c?perl-?\d\.\d{1,3}[_.]\d{1,2}\s+/, 'Cannot find Perl in output'
+            stdout_like sub { $app->run(); }, qr/^(\s|\*)\sc?perl-?\d\.\d{1,3}[_.]\d{1,2}\s+/, 'Cannot find Perl in output'
         };
     };
 
@@ -48,13 +48,13 @@ describe "list command," => sub {
 
         it "displays lib names" => sub {
             my $app = App::perlbrew->new("list");
-            stdout_like sub { $app->run(); }, qr/^(\s\*)?\s{1,3}c?perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/, 'Cannot find Perl with libraries in output'
+            stdout_like sub { $app->run(); }, qr/^(\s|\*)\sc?perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/, 'Cannot find Perl with libraries in output'
         };
 
         it "marks currently activated lib", sub {
             $ENV{PERLBREW_LIB} = "nobita";
             my $app = App::perlbrew->new("list");
-            stdout_like sub { $app->run(); }, qr/^(\s\*)?\s{1,3}c?perl-?\d\.\d{1,3}[_.]\d{1,2}(\@nobita)?/, 'Cannot find Perl with libraries in output'
+            stdout_like sub { $app->run(); }, qr/^(\s|\*)\sc?perl-?\d\.\d{1,3}[_.]\d{1,2}(\@nobita)?/, 'Cannot find Perl with libraries in output'
 
         };
     };
