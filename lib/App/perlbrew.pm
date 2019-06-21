@@ -2133,7 +2133,7 @@ sub run_command_list {
     my $is_verbose = $self->{verbose};
 
     for my $i ($self->installed_perls) {
-        printf "%2s %-20s %-20s %s\n",
+        printf "%-2s%-20s %-20s %s\n",
             $i->{is_current} ? '*' : '',
             $i->{name},
             ( $is_verbose ?
