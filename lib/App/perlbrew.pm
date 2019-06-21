@@ -2777,7 +2777,7 @@ sub run_command_list_modules {
         'perl',
         '-MExtUtils::Installed',
         '-le',
-        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for ExtUtils::Installed->new->modules;',
+        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for grep {$_ ne q!Perl!} ExtUtils::Installed->new->modules;',
                 $output_filename ? sprintf('open my $output_fh, \'>\', "%s"; ', $output_filename) : '',
                 $output_filename ? '$output_fh' : 'STDOUT')
     );
