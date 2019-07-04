@@ -948,7 +948,7 @@ sub perl_release {
         }
     }
 
-    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
+    my $json = http_get("'https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}'");
 
     my $result;
     unless ($json and $result = decode_json($json)->{hits}{hits}[0]) {
@@ -1024,7 +1024,7 @@ sub release_detail_perl_remote {
         }
     }
 
-    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
+    my $json = http_get("'https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}'");
 
     my $result;
     unless ($json and $result = decode_json($json)->{hits}{hits}[0]) {
