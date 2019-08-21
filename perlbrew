@@ -1573,7 +1573,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       require File::Spec;
       my $dist_extracted_dir = File::Spec->rel2abs($dist);
-      $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
+      $self->do_install_this(App::Perlbrew::Path->new ($dist_extracted_dir), $dist_version, "$dist_name-$dist_version");
       return;
   }
   
@@ -1765,7 +1765,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my ($dist_type, $dist_version);
       if (($dist_type, $dist_version) = $dist =~ /^(?:(c?perl)-?)?([\d._]+(?:-RC\d+)?|git|stable|blead)$/) {
-          my $dist_version = ($dist_version eq 'stable' ? $self->resolve_stable_version : $2);
           $dist_version = $self->resolve_stable_version if $dist_version eq 'stable';
           $dist_type ||= "perl";
           $dist = "${dist_type}-${dist_version}"; # normalize dist name
@@ -1788,7 +1787,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           $self->do_install_git($dist);
       }
       elsif (-f $dist) {
-          $self->do_install_archive($dist);
+          $self->do_install_archive(App::Perlbrew::Path->new ($dist));
       }
       elsif ($dist =~ m/^(?:https?|ftp|file)/) { # more protocols needed?
           $self->do_install_url($dist);
@@ -2070,7 +2069,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           "cd $dist_extracted_dir",
           "rm -f config.sh Policy.sh",
       );
-      push @preconfigure_commands, $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
+      push @preconfigure_commands, 'chmod -R +w .', $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
   
       my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
   
@@ -2432,7 +2431,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my $is_verbose = $self->{verbose};
   
       for my $i ($self->installed_perls) {
-          printf "%2s %-20s %-20s %s\n",
+          printf "%-2s%-20s %-20s %s\n",
               $i->{is_current} ? '*' : '',
               $i->{name},
               ( $is_verbose ?
@@ -2733,7 +2732,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       local (@ARGV) = @{$self->{original_argv}};
   
       Getopt::Long::Configure ('require_order');
-      my @command_options = ('with=s', 'halt-on-error');
+      my @command_options = ('with=s', 'halt-on-error', 'min=s', 'max=s');
   
       $self->parse_cmdline (\%opts, @command_options);
       shift @ARGV; # "exec"
@@ -2755,6 +2754,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       else {
           @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
       }
+  
+      if ($opts{min}) {
+          # TODO use comparable version.
+          # For now, it doesn't produce consistent results for 5.026001 and 5.26.1
+          @exec_with = grep { $_->{orig_version} >= $opts{min} } @exec_with;
+      };
+  
+      if ($opts{max}) {
+          @exec_with = grep { $_->{orig_version} <= $opts{max} } @exec_with;
+      };
   
       if (0 == @exec_with) {
           print "No perl installation found.\n" unless $self->{quiet};
@@ -3066,7 +3075,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           'perl',
           '-MExtUtils::Installed',
           '-le',
-          sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for ExtUtils::Installed->new->modules;',
+          sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for grep {$_ ne q!Perl!} ExtUtils::Installed->new->modules;',
                   $output_filename ? sprintf('open my $output_fh, \'>\', "%s"; ', $output_filename) : '',
                   $output_filename ? '$output_fh' : 'STDOUT')
       );
@@ -3556,14 +3565,14 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       return <<'WRAPPER';
   set perlbrew_exit_status=0
   
-  if ( $1 =~ -* ) then
-      set perlbrew_short_option=$1
+  if ( "$1" =~ -* ) then
+      set perlbrew_short_option="$1"
       shift
   else
       set perlbrew_short_option=""
   endif
   
-  switch ( $1 )
+  switch ( "$1" )
       case use:
           if ( $%2 == 0 ) then
               if ( $?PERLBREW_PERL == 0 ) then
@@ -3577,8 +3586,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
               endif
           else
               set perlbrew_line_count=0
-              foreach perlbrew_line ( "`\perlbrew env $2`" )
-                  eval $perlbrew_line
+              foreach perlbrew_line ( "`\perlbrew env $2:q`" )
+                  eval "$perlbrew_line"
                   @ perlbrew_line_count++
               end
               if ( $perlbrew_line_count == 0 ) then
@@ -3593,27 +3602,27 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           if ( $%2 == 0 ) then
               \perlbrew switch
           else
-              perlbrew use $2 && source $PERLBREW_ROOT/etc/csh_reinit $2
+              perlbrew use "$2" && source "$PERLBREW_ROOT/etc/csh_reinit" "$2"
           endif
           breaksw
   
       case off:
           unsetenv PERLBREW_PERL
           foreach perlbrew_line ( "`\perlbrew env`" )
-              eval $perlbrew_line
+              eval "$perlbrew_line"
           end
-          source $PERLBREW_ROOT/etc/csh_set_path
+          source "$PERLBREW_ROOT/etc/csh_set_path"
           echo "perlbrew is turned off."
           breaksw
   
       case switch-off:
           unsetenv PERLBREW_PERL
-          source $PERLBREW_ROOT/etc/csh_reinit ''
+          source "$PERLBREW_ROOT/etc/csh_reinit" ''
           echo "perlbrew is switched off."
           breaksw
   
       default:
-          \perlbrew $perlbrew_short_option $argv
+          \perlbrew $perlbrew_short_option:q $argv:q
           set perlbrew_exit_status=$?
           breaksw
   endsw
@@ -3677,7 +3686,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   endif
   
   source "$PERLBREW_ROOT/etc/csh_set_path"
-  alias perlbrew 'source $PERLBREW_ROOT/etc/csh_wrapper'
+  alias perlbrew 'source "$PERLBREW_ROOT/etc/csh_wrapper"'
   CSHRC
   
   }
@@ -12363,7 +12372,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '3.90';
+  $CPAN::Perl::Releases::VERSION = '4.12';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12597,6 +12606,17 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.29.6" => { id => 'ABIGAIL' },
   "5.29.7" => { id => 'ABIGAIL' },
   "5.29.8" => { id => 'ATOOMIC' },
+  "5.29.9" => { id => 'ZAKAME' },
+  "5.28.2-RC1" => { id => 'SHAY' },
+  "5.28.2" => { id => 'SHAY' },
+  "5.29.10" => { id => 'XSAWYERX' },
+  "5.30.0-RC1" => { id => 'XSAWYERX' },
+  "5.30.0-RC2" => { id => 'XSAWYERX' },
+  "5.30.0" => { id => 'XSAWYERX' },
+  "5.31.0" => { id => 'XSAWYERX' },
+  "5.31.1" => { id => 'ETHER' },
+  "5.31.2" => { id => 'SHAY' },
+  "5.31.3" => { id => 'TOMHUKINS' },
   };
   
   sub perl_tarballs {
@@ -12665,7 +12685,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 3.90
+  version 4.12
   
   =head1 SYNOPSIS
   
@@ -43056,7 +43076,15 @@ Usage: perlbrew alias delete <alias>
 
 =head1 COMMAND: EXEC
 
-Usage: perlbrew exec [--with perl-name[,perl-name...]] <command> <args...>
+Usage: perlbrew exec [options] <command> <args...>
+
+Options for C<exec> command:
+
+    --with perl-version,... - only use these versions
+    --min n.nnnnn           - minimum perl version
+                              (format is the same as in 'use 5.012')
+    --max n.nnnnn           - maximum perl version
+    --halt-on-error         - stop on first nonzero exit status
 
 Execute command for each perl installations, one by one.
 
