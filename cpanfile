@@ -1,4 +1,4 @@
-requires 'CPAN::Perl::Releases' => '3.96';
+requires 'CPAN::Perl::Releases' => '4.12';
 requires 'Capture::Tiny'        => '0.36';
 requires 'Devel::PatchPerl'     => '1.54';
 requires 'Pod::Parser'          => '1.63';
@@ -7,7 +7,7 @@ requires 'File::Temp'           => '0.2304';
 requires 'JSON::PP'             => '0';
 requires 'local::lib'           => '2.000014';
 requires 'ExtUtils::MakeMaker'  => '7.22';
-    
+
 on test => sub {
     requires 'File::Temp'           => '0.2304';
     requires 'File::Which'          => '1.21';
