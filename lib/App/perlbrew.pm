@@ -385,7 +385,7 @@ sub home {
 }
 
 sub builddir {
-	my ($self) = @_;
+    my ($self) = @_;
 
     return $self->{builddir} || $self->root->build;
 }
@@ -1350,17 +1350,24 @@ sub do_extract_tarball {
 # Returns the most recent directory which name matches the expected one.
 sub search_blead_dir {
     my ($build_dir, $contents_ref) = @_;
+
+    my $blead_dir = $build_dir->child("blead");
+    return unless -d $blead_dir;
+
     local *DIRH;
-    opendir DIRH, $build_dir or die "Couldn't open ${build_dir}: $!";
-    @{$contents_ref} = grep {!/^\./ && -d $build_dir->child ($_)} readdir DIRH;
-    closedir DIRH or warn "Couldn't close ${build_dir}: $!";
-    my @candidates = grep { m/^perl-blead-[0-9a-f]{4,40}$/ } @{$contents_ref};
+    opendir DIRH, $blead_dir or die "Couldn't open ${blead_dir}: $!";
+    @{$contents_ref} = grep { !/^\./ && -d $blead_dir->child($_) } readdir DIRH;
+    closedir DIRH or warn "Couldn't close ${blead_dir}: $!";
+
+    my @candidates = grep { m/^Perl-perl5-[0-9a-f]{4,40}$/ } @{$contents_ref};
+
     @candidates =   map  { $_->[0] }
                     sort { $b->[1] <=> $a->[1] } # descending
-                    map  { [ $_, (stat( $build_dir->child ($_) ))[9] ] } @candidates;
+                    map  { [ $_, (stat( $blead_dir->child ($_) ))[9] ] } @candidates;
+
     if (scalar(@candidates) > 0) {
         # take the newest one
-        return $candidates[0];
+        return $blead_dir->child($candidates[0]);
     } else {
         return;
     }
@@ -1369,16 +1376,15 @@ sub search_blead_dir {
 sub do_install_blead {
     my ($self, $dist) = @_;
     my $dist_name           = 'perl';
-    my $dist_git_describe   = 'blead';
     my $dist_version        = 'blead';
 
     # We always blindly overwrite anything that's already there,
     # because blead is a moving target.
     my $dist_tarball = 'blead.tar.gz';
-    my $dist_tarball_path = $self->root->dists ($dist_tarball);
-    print "Fetching $dist_git_describe as $dist_tarball_path\n";
+    my $dist_tarball_path = $self->root->dists($dist_tarball);
+    print "Downloading blead from https://github.com/Perl/perl5/tarball/blead as $dist_tarball_path\n";
 
-    my $error = http_download("http://perl5.git.perl.org/perl.git/snapshot/$dist_tarball", $dist_tarball_path);
+    my $error = http_download("https://github.com/Perl/perl5/tarball/blead", $dist_tarball_path);
 
     if ($error) {
         die "\nERROR: Failed to download perl-blead tarball.\n\n";
@@ -1388,25 +1394,10 @@ sub do_install_blead {
     $self->do_extract_tarball($dist_tarball_path);
 
     my $build_dir = $self->builddir;
-    my @contents;
-    my $dist_extracted_subdir = search_blead_dir($build_dir, \@contents);
-
-    # there might be an additional level on $build_dir
-    unless (defined($dist_extracted_subdir)) {
-        warn "No candidate found at $build_dir, trying a level deeper";
-        for my $item (@contents) {
-            my $another_sub = $build_dir->child ($item);
-            $dist_extracted_subdir = search_blead_dir($another_sub);
-            if (defined($dist_extracted_subdir)) {
-               $build_dir = $another_sub;
-                last;
-            }
-        }
-    }
+    my $dist_extracted_subdir = search_blead_dir($build_dir);
 
     die "Could not identify where is the source code to build under $build_dir, aborting..." unless (defined($dist_extracted_subdir));
-    my $dist_extracted_dir = $build_dir->child ($dist_extracted_subdir);
-    $self->do_install_this($dist_extracted_dir, $dist_version, "$dist_name-$dist_version");
+    $self->do_install_this($dist_extracted_subdir, $dist_version, "$dist_name-$dist_version");
     return;
 }
 
