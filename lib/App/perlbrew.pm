@@ -1172,11 +1172,11 @@ sub run_command_init {
         elsif ($shell =~ m/zsh\d?$/) {
             $code = "source $root_dir/etc/bashrc";
             $yourshrc = $self->_firstrcfile(qw(
-                zshenv
+                .zshenv
                 .bash_profile
                 .bash_login
                 .profile
-            )) || "zshenv";
+            )) || ".zshenv";
         }
         elsif ($shell =~ m/fish/) {
             $code = ". $root_dir/etc/perlbrew.fish";
