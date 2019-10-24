@@ -1341,25 +1341,23 @@ sub do_extract_tarball {
 }
 
 # Search for directories inside a extracted tarball downloaded as perl "blead"
-# Use a Schwartzian Transform in case there are lots of dirs that
-# look like "perl-$SHA1", which is what's inside blead.tar.gz,
-# so we stat each one only once, ordering (descending )the directories per mtime
-# Expects as parameters:
-# - the path to the extracted "blead" tarball
-# - an array reference, that will be used to cache all contents from the read directory
-# Returns the most recent directory which name matches the expected one.
+# This pattern has to what's inside the extracted tarball from: https://github.com/Perl/perl5/tarball/blead
+# Parameters:
+# - $build_dir: A directory for building perls. It is supposed to have "blead" subdir inside.
+# Returs:
+# - A path to the extracted "blead" tarball. This should be a subdir inside "${build_dir}/blead"
 sub search_blead_dir {
-    my ($build_dir, $contents_ref) = @_;
+    my ($build_dir) = @_;
 
     my $blead_dir = $build_dir->child("blead");
     return unless -d $blead_dir;
 
     local *DIRH;
     opendir DIRH, $blead_dir or die "Couldn't open ${blead_dir}: $!";
-    @{$contents_ref} = grep { !/^\./ && -d $blead_dir->child($_) } readdir DIRH;
+    my @contents = grep { !/^\./ && -d $blead_dir->child($_) } readdir DIRH;
     closedir DIRH or warn "Couldn't close ${blead_dir}: $!";
 
-    my @candidates = grep { m/^Perl-perl5-[0-9a-f]{4,40}$/ } @{$contents_ref};
+    my @candidates = grep { m/^Perl-perl5-[0-9a-f]{4,40}$/ } @contents;
 
     @candidates =   map  { $_->[0] }
                     sort { $b->[1] <=> $a->[1] } # descending
