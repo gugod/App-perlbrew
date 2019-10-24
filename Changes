@@ -2,7 +2,7 @@
 	- Add `--min` and `--max` options to `exec` command. Github PR #656
 	- Fix "ERROR: Cannot find the tarball for perl-$version". Github PR #669
 	- Fix calling patchperl on readonly files. Github PR #674 
-        - Internal refactoring. PR #667
+        - Internal refactoring. Github PR #667, #662
 	- Various corrections of documentation. Github PR #676, #660
 
 0.86
