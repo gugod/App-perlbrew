@@ -1,3 +1,10 @@
+	- Use the new official repo url for fetching perl blead. Github issue #677
+	- Add `--min` and `--max` options to `exec` command. Github PR #656
+	- Fix "ERROR: Cannot find the tarball for perl-$version". Github PR #669
+	- Fix calling patchperl on readonly files. Github PR #674 
+        - Internal refactoring. PR #667
+	- Various corrections of documentation. Github PR #676, #660
+
 0.86
 	- Released at 2019-01-19T09:39:55+0900
 	- Thanks to our contributors: Olaf Alders, Paul Cochrane
