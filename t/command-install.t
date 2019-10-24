@@ -45,8 +45,7 @@ describe "command install" => sub {
 
 	it "should install blead perl" => sub {
         arrange_command_line install => 'perl-blead';
-
-		expect_dispatch_via do_install_blead => [ 'perl-blead' ];
+		expect_dispatch_via do_install_blead => [];
 	};
 
 	it "should install git checkout" => sub {
