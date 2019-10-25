@@ -21,7 +21,7 @@ throws_ok(
         my $app = App::perlbrew->new("install", "perl-blead");
         $app->run;
     },
-    qr[ERROR: Failed to download perl-blead tarball.]
+    qr[ERROR: Failed to download https://.+/blead\.tar\.gz]
 );
 
 throws_ok(
@@ -29,7 +29,7 @@ throws_ok(
         my $app = App::perlbrew->new("install", "blead");
         $app->run;
     },
-    qr[ERROR: Failed to download perl-blead tarball.]
+    qr[ERROR: Failed to download https://.+/blead\.tar\.gz]
 );
 
 done_testing;

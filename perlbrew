@@ -1584,7 +1584,11 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my ($dist_version) = $dist =~ m/-([\d.]+(?:-RC\d+)?|git)\./;
       my ($dist_tarball) = $dist =~ m{/([^/]*)$};
   
-      my $dist_tarball_path = $self->root->dists ($dist_tarball);
+      if (! $dist_version && $dist =~ /blead\.tar.gz$/) {
+          $dist_version = "blead";
+      }
+  
+      my $dist_tarball_path = $self->root->dists($dist_tarball);
       my $dist_tarball_url  = $dist;
       $dist = "$dist_name-$dist_version"; # we install it as this name later
   
@@ -1638,63 +1642,15 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       return $extracted_dir;
   }
   
-  # Search for directories inside a extracted tarball downloaded as perl "blead"
-  # This pattern has to what's inside the extracted tarball from: https://github.com/Perl/perl5/tarball/blead
-  # Parameters:
-  # - $build_dir: A directory for building perls. It is supposed to have "blead" subdir inside.
-  # Returs:
-  # - A path to the extracted "blead" tarball. This should be a subdir inside "${build_dir}/blead"
-  sub search_blead_dir {
-      my ($build_dir) = @_;
-  
-      my $blead_dir = $build_dir->child("blead");
-      return unless -d $blead_dir;
-  
-      local *DIRH;
-      opendir DIRH, $blead_dir or die "Couldn't open ${blead_dir}: $!";
-      my @contents = grep { !/^\./ && -d $blead_dir->child($_) } readdir DIRH;
-      closedir DIRH or warn "Couldn't close ${blead_dir}: $!";
-  
-      my @candidates = grep { m/^Perl-perl5-[0-9a-f]{4,40}$/ } @contents;
-  
-      @candidates =   map  { $_->[0] }
-                      sort { $b->[1] <=> $a->[1] } # descending
-                      map  { [ $_, (stat( $blead_dir->child ($_) ))[9] ] } @candidates;
-  
-      if (scalar(@candidates) > 0) {
-          # take the newest one
-          return $blead_dir->child($candidates[0]);
-      } else {
-          return;
-      }
-  }
-  
   sub do_install_blead {
-      my ($self, $dist) = @_;
-      my $dist_name           = 'perl';
-      my $dist_version        = 'blead';
+      my ($self) = @_;
   
       # We always blindly overwrite anything that's already there,
       # because blead is a moving target.
-      my $dist_tarball = 'blead.tar.gz';
-      my $dist_tarball_path = $self->root->dists($dist_tarball);
-      print "Downloading blead from https://github.com/Perl/perl5/tarball/blead as $dist_tarball_path\n";
+      my $dist_tarball_path = $self->root->dists("blead.tar.gz");
+      unlink($dist_tarball_path) if -f $dist_tarball_path;
   
-      my $error = http_download("https://github.com/Perl/perl5/tarball/blead", $dist_tarball_path);
-  
-      if ($error) {
-          die "\nERROR: Failed to download perl-blead tarball.\n\n";
-      }
-  
-      # Returns the wrong extracted dir for blead
-      $self->do_extract_tarball($dist_tarball_path);
-  
-      my $build_dir = $self->builddir;
-      my $dist_extracted_subdir = search_blead_dir($build_dir);
-  
-      die "Could not identify where is the source code to build under $build_dir, aborting..." unless (defined($dist_extracted_subdir));
-      $self->do_install_this($dist_extracted_subdir, $dist_version, "$dist_name-$dist_version");
-      return;
+      $self->do_install_url("https://github.com/Perl/perl5/archive/blead.tar.gz");
   }
   
   sub resolve_stable_version {
@@ -1764,7 +1720,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           }
   
           if ($dist_type eq 'perl' && $dist_version eq 'blead') {
-              $self->do_install_blead($dist);
+              $self->do_install_blead();
           }
           else {
               $self->do_install_release($dist, $dist_version);
@@ -1986,8 +1942,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
+  
       $self->do_install_this($dist_extracted_path, $dist_version, $installation_name);
-      return;
   }
   
   sub do_install_this {
