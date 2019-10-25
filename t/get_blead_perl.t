@@ -1,6 +1,6 @@
 use warnings;
 use strict;
-use Test::More tests => 6;
+use Test::More tests => 2;
 use App::perlbrew;
 use Test::TempDir::Tiny 0.016;
 
@@ -9,19 +9,15 @@ mkdir("$dir/build");
 mkdir("$dir/build/blead");
 touch( "$dir/build/blead", 'OYFTV_51234' );
 touch( "$dir/build/blead", 'Hwefwo8124' );
-touch( "$dir/build/blead", 'perl-blead-hsf743r' );
-my $blead = 'perl-blead-e7e8ce8';
+touch( "$dir/build/blead", 'Perl-perl5-hsf743r' );
+my $blead = 'Perl-perl5-e7e8ce8';
 mkdir("$dir/build/blead/$blead");
 
-my @content;
-my $found_dir = App::perlbrew::search_blead_dir( App::Perlbrew::Path->new ("$dir/build"), \@content );
-is( $found_dir,       undef, 'no candidate directory is found' );
-is( scalar(@content), 1,     'there are only directories on content cache' );
-is( $content[0], 'blead', 'have the expected directory in the content cache' );
-$found_dir = App::perlbrew::search_blead_dir( App::Perlbrew::Path->new ("$dir/build/blead"), \@content );
-is( $found_dir,       $blead, 'the expected directory is found' );
-is( scalar(@content), 1,      'there are only directories on content cache' );
-is( $content[0], $blead, 'have the expected directory in the content cache' );
+my $found_dir = App::perlbrew::search_blead_dir( App::Perlbrew::Path->new ("$dir/build"));
+is( $found_dir,       "$dir/build/blead/$blead", 'Found the correct directory' );
+
+$found_dir = App::perlbrew::search_blead_dir( App::Perlbrew::Path->new ("$dir/build/blead") );
+is( $found_dir,       undef, 'Nothing is found.' );
 
 # creating files to make sure search_blead_dir only considers directories
 sub touch {

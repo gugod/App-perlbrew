@@ -1,13 +1,13 @@
-requires 'CPAN::Perl::Releases' => '3.66';
+requires 'CPAN::Perl::Releases' => '4.12';
 requires 'Capture::Tiny'        => '0.36';
-requires 'Devel::PatchPerl'     => '1.52';
+requires 'Devel::PatchPerl'     => '1.54';
 requires 'Pod::Parser'          => '1.63';
 requires 'Pod::Usage'           => '1.68';
 requires 'File::Temp'           => '0.2304';
 requires 'JSON::PP'             => '0';
 requires 'local::lib'           => '2.000014';
-requires 'ExtUtils::MakeMaker'  => '6.86';
-    
+requires 'ExtUtils::MakeMaker'  => '7.22';
+
 on test => sub {
     requires 'File::Temp'           => '0.2304';
     requires 'File::Which'          => '1.21';

@@ -2,14 +2,13 @@
 use strict;
 use warnings;
 use Test::More;
-use App::perlbrew;
+use App::Perlbrew::Util qw< editdist >;
 
-*ed = *App::perlbrew::editdist;
-is ed(qw/Joe Jim/), 2;
-is ed(qw/Jack Jill/), 3;
-is ed(qw/Jim Jimmy/), 2;
-is ed(qw/superman supergirl/), 4;
-is ed(qw/supercalifragilisticexpyalligocious superman/), 29;
-is ed(qw/foo bar/), 3;
+is editdist(qw/Joe Jim/), 2;
+is editdist(qw/Jack Jill/), 3;
+is editdist(qw/Jim Jimmy/), 2;
+is editdist(qw/superman supergirl/), 4;
+is editdist(qw/supercalifragilisticexpyalligocious superman/), 29;
+is editdist(qw/foo bar/), 3;
 
 done_testing;

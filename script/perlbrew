@@ -384,7 +384,15 @@ Usage: perlbrew alias delete <alias>
 
 =head1 COMMAND: EXEC
 
-Usage: perlbrew exec [--with perl-name[,perl-name...]] <command> <args...>
+Usage: perlbrew exec [options] <command> <args...>
+
+Options for C<exec> command:
+
+    --with perl-version,... - only use these versions
+    --min n.nnnnn           - minimum perl version
+                              (format is the same as in 'use 5.012')
+    --max n.nnnnn           - maximum perl version
+    --halt-on-error         - stop on first nonzero exit status
 
 Execute command for each perl installations, one by one.
 

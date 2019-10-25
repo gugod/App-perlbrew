@@ -265,7 +265,49 @@ OUT
     };
 };
 
+describe "minimal perl version" => sub {
+    it "only executes the needed version" => sub {
 
+        my @perl_paths;
+        my $app = App::perlbrew->new(qw(exec --min 5.014), qw(perl -E), "say 42");
+        $app->expects("do_system_with_exit_code")->exactly(2)->returns(sub {
+            my ($self, @args) = @_;
+            my ($perlbrew_bin_path, $perlbrew_perl_bin_path, @paths) = split(":", $ENV{PATH});
+            push @perl_paths, $perlbrew_perl_bin_path;
+            return 0;
+        });
+
+        $app->run;
+
+        # Don't care about the order, just the fact all of them were visited
+        is_deeply [sort @perl_paths], [sort (
+            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.2", "bin"),
+            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin"),
+        )];
+    };
+};
+
+describe "maximum perl version" => sub {
+    it "only executes the needed version" => sub {
+
+        my @perl_paths;
+        my $app = App::perlbrew->new(qw(exec --max 5.014), qw(perl -E), "say 42");
+        $app->expects("do_system_with_exit_code")->exactly(2)->returns(sub {
+            my ($self, @args) = @_;
+            my ($perlbrew_bin_path, $perlbrew_perl_bin_path, @paths) = split(":", $ENV{PATH});
+            push @perl_paths, $perlbrew_perl_bin_path;
+            return 0;
+        });
+
+        $app->run;
+
+        # Don't care about the order, just the fact all of them were visited
+        is_deeply [sort @perl_paths], [sort (
+            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.4", "bin"),
+            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.3", "bin"),
+        )];
+    };
+};
 
 
 runtests unless caller;
