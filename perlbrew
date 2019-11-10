@@ -12317,7 +12317,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '4.16';
+  $CPAN::Perl::Releases::VERSION = '4.20';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12564,6 +12564,8 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.31.3" => { id => 'TOMHUKINS' },
   "5.31.4" => { id => 'CORION' },
   "5.31.5" => { id => 'SHAY' },
+  "5.30.1-RC1" => { id => 'SHAY' },
+  "5.30.1" => { id => 'SHAY' },
   };
   
   sub perl_tarballs {
@@ -12632,7 +12634,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 4.16
+  version 4.20
   
   =head1 SYNOPSIS
   
