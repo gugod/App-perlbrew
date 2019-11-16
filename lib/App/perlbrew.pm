@@ -1302,7 +1302,7 @@ sub do_install_url {
     else {
         print "Fetching $dist as $dist_tarball_path\n";
         my $error = http_download($dist_tarball_url, $dist_tarball_path);
-        die "ERROR: Failed to download $dist_tarball_url\n" if $error;
+        die "ERROR: Failed to download $dist_tarball_url\n$error\n" if $error;
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -1572,7 +1572,7 @@ sub run_command_download {
         print "Download $dist_tarball_url to $dist_tarball_path\n" unless $self->{quiet};
         my $error = http_download($dist_tarball_url, $dist_tarball_path);
         if ($error) {
-            die "ERROR: Failed to download $dist_tarball_url\n";
+            die "ERROR: Failed to download $dist_tarball_url\n$error\n";
         }
     }
 }
