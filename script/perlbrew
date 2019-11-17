@@ -516,7 +516,7 @@ Usage: perlbrew self-install
 
 NOTICE: You should not need to run this command in your daily routine.
 
-This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
+This command installs perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
 be used by the perlbrew installer. However, you could manually do the following
 to re-install only the C<perlbrew> executable:
 
