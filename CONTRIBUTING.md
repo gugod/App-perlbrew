@@ -9,7 +9,7 @@ get your work released:
 - Send a pull request to @gugod and make an offer that he cannot reject (optional :-)
 
 Notice that the "master" branch is a stable branch, while the "develop" branch is the default target
-for pull requests. The master branch should only be moved forward on CPAN releasees and a there
+for pull requests. The master branch should only be moved forward on CPAN releases and there
 should also be a corresponding git tag for each release, which is the part only @gugod has to worry
 about. It is suggested, but not required, that you create your own topic branch first and work on
 the feature, this way it makes it a little bit easier when there are conflicts.
