@@ -839,7 +839,7 @@ sub available_perls_with_urls {
 
         # if we have a $current_perl add it to the available hash of perls
         if ($current_perl) {
-            $current_perl =~ s/\.tar\.gz//;
+            $current_perl =~ s/\.tar\.(bz2|gz)//;
             push @perllist, [ $current_perl, $current_url ];
             $perls->{$current_perl} = $current_url;
         }
