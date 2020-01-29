@@ -300,7 +300,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.87";
+  our $VERSION = "0.88";
   use Config;
   
   BEGIN {
@@ -1137,7 +1137,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
           # if we have a $current_perl add it to the available hash of perls
           if ($current_perl) {
-              $current_perl =~ s/\.tar\.gz//;
+              $current_perl =~ s/\.tar\.(bz2|gz)//;
               push @perllist, [ $current_perl, $current_url ];
               $perls->{$current_perl} = $current_url;
           }
@@ -1600,7 +1600,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       else {
           print "Fetching $dist as $dist_tarball_path\n";
           my $error = http_download($dist_tarball_url, $dist_tarball_path);
-          die "ERROR: Failed to download $dist_tarball_url\n" if $error;
+          die "ERROR: Failed to download $dist_tarball_url\n$error\n" if $error;
       }
   
       my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -1870,7 +1870,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           print "Download $dist_tarball_url to $dist_tarball_path\n" unless $self->{quiet};
           my $error = http_download($dist_tarball_url, $dist_tarball_path);
           if ($error) {
-              die "ERROR: Failed to download $dist_tarball_url\n";
+              die "ERROR: Failed to download $dist_tarball_url\n$error\n";
           }
       }
   }
@@ -12317,7 +12317,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '4.16';
+  $CPAN::Perl::Releases::VERSION = '5.20200120';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12564,6 +12564,11 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.31.3" => { id => 'TOMHUKINS' },
   "5.31.4" => { id => 'CORION' },
   "5.31.5" => { id => 'SHAY' },
+  "5.30.1-RC1" => { id => 'SHAY' },
+  "5.30.1" => { id => 'SHAY' },
+  "5.31.6" => { id => 'BINGOS' },
+  "5.31.7" => { id => 'ATOOMIC' },
+  "5.31.8" => { id => 'WOLFSAGE' },
   };
   
   sub perl_tarballs {
@@ -12632,7 +12637,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 4.16
+  version 5.20200120
   
   =head1 SYNOPSIS
   
@@ -12697,7 +12702,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2019 by Chris Williams.
+  This software is copyright (c) 2020 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
@@ -42986,7 +42991,7 @@ and is not the list of *all* perl versions ever released in the past.
 
 To get a list of all perls ever released, use the C<--all> option.
 
-NOTICE: This command might be gone in the future and becomes an option of 'list' command.
+NOTICE: This command might be gone in the future and become an option of 'list' command.
 
 =head1 COMMAND: OFF
 
@@ -43155,7 +43160,7 @@ Usage: perlbrew self-install
 
 NOTICE: You should not need to run this command in your daily routine.
 
-This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
+This command installs perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
 be used by the perlbrew installer. However, you could manually do the following
 to re-install only the C<perlbrew> executable:
 

@@ -347,7 +347,7 @@ and is not the list of *all* perl versions ever released in the past.
 
 To get a list of all perls ever released, use the C<--all> option.
 
-NOTICE: This command might be gone in the future and becomes an option of 'list' command.
+NOTICE: This command might be gone in the future and become an option of 'list' command.
 
 =head1 COMMAND: OFF
 
@@ -516,7 +516,7 @@ Usage: perlbrew self-install
 
 NOTICE: You should not need to run this command in your daily routine.
 
-This command install perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
+This command installs perlbrew itself to C<$PERLBREW_ROOT/bin>. It is intended to
 be used by the perlbrew installer. However, you could manually do the following
 to re-install only the C<perlbrew> executable:
 

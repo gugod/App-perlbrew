@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.87";
+our $VERSION = "0.88";
 use Config;
 
 BEGIN {
@@ -839,7 +839,7 @@ sub available_perls_with_urls {
 
         # if we have a $current_perl add it to the available hash of perls
         if ($current_perl) {
-            $current_perl =~ s/\.tar\.gz//;
+            $current_perl =~ s/\.tar\.(bz2|gz)//;
             push @perllist, [ $current_perl, $current_url ];
             $perls->{$current_perl} = $current_url;
         }
@@ -1302,7 +1302,7 @@ sub do_install_url {
     else {
         print "Fetching $dist as $dist_tarball_path\n";
         my $error = http_download($dist_tarball_url, $dist_tarball_path);
-        die "ERROR: Failed to download $dist_tarball_url\n" if $error;
+        die "ERROR: Failed to download $dist_tarball_url\n$error\n" if $error;
     }
 
     my $dist_extracted_path = $self->do_extract_tarball($dist_tarball_path);
@@ -1572,7 +1572,7 @@ sub run_command_download {
         print "Download $dist_tarball_url to $dist_tarball_path\n" unless $self->{quiet};
         my $error = http_download($dist_tarball_url, $dist_tarball_path);
         if ($error) {
-            die "ERROR: Failed to download $dist_tarball_url\n";
+            die "ERROR: Failed to download $dist_tarball_url\n$error\n";
         }
     }
 }

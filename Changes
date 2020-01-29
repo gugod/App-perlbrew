@@ -1,3 +1,9 @@
+0.88
+	- Released at 2020-01-29T21:40:07+0900
+	- Thanks to our contributors: Dave Rolsky, Gil Magno, Zhu Sheng Li
+	- `install` command now shows errors message from http_downlod. Github PR #681.
+        - Fix: The .tar.bz2 suffix are removed from the output ouf `available` PR #685
+
 0.87
 	- Released at 2019-10-25T22:55:40+0900
 	- Thanks to our contributors: Branislav Zahradník, Christopher Chavez, Jon Jacobson, Konstantin S. Uvarin, Pali, Shoichi Kaji, Tomasz Konojacki, jkjacobson, rage311
