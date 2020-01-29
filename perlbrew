@@ -300,7 +300,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.87";
+  our $VERSION = "0.88";
   use Config;
   
   BEGIN {
