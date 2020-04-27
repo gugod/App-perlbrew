@@ -1,12 +1,15 @@
 #!/bin/bash
 
-# Assumes `cpanm` exists
-
 cd $(dirname $0)/..
-mkdir -p .build
+mkdir -p .build/bin
 
-cpanm -L .build/pp/ --installdeps .
-cpanm -L .build/pp/ PAR::Packer
+if [[ ! -f .build/bin/cpanm ]]; then
+    curl https://cpanmin.us/ > .build/bin/cpanm
+    chmod +x .build/bin/cpanm
+fi
+
+.build/bin/cpanm -L .build/pp/ --installdeps .
+.build/bin/cpanm -L .build/pp/ PAR::Packer
 
 export PERL5LIB="lib":".build/pp/lib/perl5":$PERL5LIB
 
