@@ -3,6 +3,7 @@ requires 'Capture::Tiny'        => '0.36';
 requires 'Devel::PatchPerl'     => '1.80';
 requires 'Pod::Parser'          => '1.63';
 requires 'Pod::Usage'           => '1.68';
+requires 'File::Copy'           => '0';
 requires 'File::Temp'           => '0.2304';
 requires 'JSON::PP'             => '0';
 requires 'local::lib'           => '2.000014';

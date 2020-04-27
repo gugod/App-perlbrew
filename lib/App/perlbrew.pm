@@ -22,6 +22,7 @@ BEGIN {
 use Getopt::Long ();
 use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
+use File::Copy 'copy';
 
 use App::Perlbrew::Util;
 use App::Perlbrew::Path;
@@ -1236,14 +1237,25 @@ sub run_command_self_install {
     $self->root->bin->mkpath;
 
     open my $fh, "<", $executable;
-    my @lines =  <$fh>;
-    close $fh;
 
-    $lines[0] = $self->system_perl_shebang . "\n";
+    my $head;
+    read($fh, $head, 3, 0);
 
-    open $fh, ">", $target;
-    print $fh $_ for @lines;
-    close $fh;
+    if ($head eq "#!/") {
+        seek($fh, 0, 0);
+        my @lines =  <$fh>;
+        close $fh;
+
+        $lines[0] = $self->system_perl_shebang . "\n";
+
+        open $fh, ">", $target;
+        print $fh $_ for @lines;
+        close $fh;
+    } else {
+        close($fh);
+
+        copy($executable, $target);
+    }
 
     chmod(0755, $target);
 
