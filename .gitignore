@@ -19,3 +19,4 @@ dev-bin/fatlib/
 dev-bin/lib/
 .tracker.json
 .prove
+.build/
