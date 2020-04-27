@@ -2230,9 +2230,7 @@ sub run_command_env {
             $v =~ s/(\\")/\\$1/g;
             push @statements, ["set", $k, $v];
         } else {
-            if (exists $ENV{$k}) {
-                push @statements, ["unset", $k];
-            }
+            push @statements, ["unset", $k];
         }
     }
 
