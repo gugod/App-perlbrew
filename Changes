@@ -512,7 +512,6 @@
 
 0.02
 	- Officially prepare a standalone program for quick download.
-	- license changed to "Same as Perl" due to the fact HTTP::Lite is included
 	- The 'installed' command now also lists all the 'perl' found in your PATH
 	- The 'switch' command can take an executable like /usr/bin/perl
 	- Various program options by Chris Prather
