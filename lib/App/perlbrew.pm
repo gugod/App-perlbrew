@@ -1328,8 +1328,16 @@ sub do_extract_tarball {
     # Assuming the dir extracted from the tarball is named after the tarball.
     my $dist_tarball_basename = $dist_tarball->basename (qr/\.tar\.(?:gz|bz2|xz)$/);
 
-    # Note that this is incorrect for blead.
-    my $workdir = $self->builddir->child ($dist_tarball_basename);
+    my $workdir;
+    if ( $self->{as} ) {
+        # TODO: Should we instead use the installation_name (see run_command_install()):
+        #    $destdir = $self->{as} . $self->{variation} . $self->{append};
+        $workdir = $self->builddir->child ($self->{as});
+    }
+    else {
+        # Note that this is incorrect for blead.
+        $workdir = $self->builddir->child ($dist_tarball_basename);
+    }
     $workdir->rmpath;
     $workdir->mkpath;
     my $extracted_dir;
