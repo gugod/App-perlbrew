@@ -1,3 +1,5 @@
+	- Make the bashrc compatible with 'bash -u'. Github PR #694
+
 0.88
 	- Released at 2020-01-29T21:40:07+0900
 	- Thanks to our contributors: Dave Rolsky, Gil Magno, Zhu Sheng Li
