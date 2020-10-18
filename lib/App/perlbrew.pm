@@ -1673,10 +1673,10 @@ sub do_install_this {
 
     my $variation = $self->{variation};
     my $append = $self->{append};
-    my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /\/ cperl- /x;
+    my $looks_like_we_are_installing_cperl = $dist_extracted_dir =~ /\/ cperl- /x;
 
     $self->{dist_extracted_dir} = $dist_extracted_dir;
-    $self->{log_file} = $self->root->child ("build.${installation_name}${variation}${append}.log");
+    $self->{log_file} = $self->root->child("build.${installation_name}${variation}${append}.log");
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
@@ -1702,12 +1702,7 @@ sub do_install_this {
         $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
     }
 
-    my $perlpath = $self->root->perls ($installation_name);
-    my $patchperl = $self->root->bin ("patchperl");
-
-    unless (-x $patchperl && -f _) {
-        $patchperl = "patchperl";
-    }
+    my $perlpath = $self->root->perls($installation_name);
 
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
@@ -1736,7 +1731,16 @@ INSTALL
         "cd $dist_extracted_dir",
         "rm -f config.sh Policy.sh",
     );
-    push @preconfigure_commands, 'chmod -R +w .', $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
+
+    unless ($self->{"no-patchperl"} || $looks_like_we_are_installing_cperl) {
+        my $patchperl = $self->root->bin("patchperl");
+
+        unless (-x $patchperl && -f _) {
+            $patchperl = "patchperl";
+        }
+
+        push @preconfigure_commands, 'chmod -R +w .', $patchperl;
+    }
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
