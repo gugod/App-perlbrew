@@ -300,7 +300,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.88";
+  our $VERSION = "0.89";
   use Config;
   
   BEGIN {
@@ -1626,8 +1626,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       # Assuming the dir extracted from the tarball is named after the tarball.
       my $dist_tarball_basename = $dist_tarball->basename (qr/\.tar\.(?:gz|bz2|xz)$/);
   
-      # Note that this is incorrect for blead.
-      my $workdir = $self->builddir->child ($dist_tarball_basename);
+      my $workdir;
+      if ( $self->{as} ) {
+          # TODO: Should we instead use the installation_name (see run_command_install()):
+          #    $destdir = $self->{as} . $self->{variation} . $self->{append};
+          $workdir = $self->builddir->child ($self->{as});
+      }
+      else {
+          # Note that this is incorrect for blead.
+          $workdir = $self->builddir->child ($dist_tarball_basename);
+      }
       $workdir->rmpath;
       $workdir->mkpath;
       my $extracted_dir;
@@ -1963,10 +1971,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my $variation = $self->{variation};
       my $append = $self->{append};
-      my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /\/ cperl- /x;
+      my $looks_like_we_are_installing_cperl = $dist_extracted_dir =~ /\/ cperl- /x;
   
       $self->{dist_extracted_dir} = $dist_extracted_dir;
-      $self->{log_file} = $self->root->child ("build.${installation_name}${variation}${append}.log");
+      $self->{log_file} = $self->root->child("build.${installation_name}${variation}${append}.log");
   
       my @d_options = @{ $self->{D} };
       my @u_options = @{ $self->{U} };
@@ -1992,12 +2000,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
       }
   
-      my $perlpath = $self->root->perls ($installation_name);
-      my $patchperl = $self->root->bin ("patchperl");
-  
-      unless (-x $patchperl && -f _) {
-          $patchperl = "patchperl";
-      }
+      my $perlpath = $self->root->perls($installation_name);
   
       unshift @d_options, qq(prefix=$perlpath);
       push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
@@ -2026,7 +2029,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           "cd $dist_extracted_dir",
           "rm -f config.sh Policy.sh",
       );
-      push @preconfigure_commands, 'chmod -R +w .', $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
+  
+      unless ($self->{"no-patchperl"} || $looks_like_we_are_installing_cperl) {
+          my $patchperl = $self->root->bin("patchperl");
+  
+          unless (-x $patchperl && -f _) {
+              $patchperl = "patchperl";
+          }
+  
+          push @preconfigure_commands, 'chmod -R +w .', $patchperl;
+      }
   
       my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
   
@@ -3240,7 +3252,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
   
       if [[ -n "${PERLBREW_PERL:-}" ]]; then
-          __perlbrew_set_env "${PERLBREW_PERL:-}${PERLBREW_LIB:+@}$PERLBREW_LIB"
+            __perlbrew_set_env "${PERLBREW_PERL:-}${PERLBREW_LIB:+@}$PERLBREW_LIB"
       fi
   
       __perlbrew_set_path
@@ -3315,7 +3327,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       fi
   fi
   
-
   if [[ -f "${PERLBREW_ROOT:-}/bin/perlbrew" ]]; then
       perlbrew_command="${PERLBREW_ROOT:-}/bin/perlbrew"
   else
@@ -12326,7 +12337,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20200120';
+  $CPAN::Perl::Releases::VERSION = '5.20200920';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12578,6 +12589,21 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.31.6" => { id => 'BINGOS' },
   "5.31.7" => { id => 'ATOOMIC' },
   "5.31.8" => { id => 'WOLFSAGE' },
+  "5.31.9" => { id => 'RENEEB' },
+  "5.30.2-RC1" => { id => 'SHAY' },
+  "5.30.2" => { id => 'SHAY' },
+  "5.31.10" => { id => 'XSAWYERX' },
+  "5.31.11" => { id => 'XSAWYERX' },
+  "5.32.0-RC0" => { id => 'XSAWYERX' },
+  "5.28.3-RC1" => { id => 'XSAWYERX' },
+  "5.28.3" => { id => 'XSAWYERX' },
+  "5.30.3-RC1" => { id => 'XSAWYERX' },
+  "5.30.3" => { id => 'XSAWYERX' },
+  "5.32.0-RC1" => { id => 'XSAWYERX' },
+  "5.32.0" => { id => 'XSAWYERX' },
+  "5.33.0" => { id => 'XSAWYERX' },
+  "5.33.1" => { id => 'ETHER' },
+  "5.33.2" => { id => 'XSAWYERX' },
   };
   
   sub perl_tarballs {
@@ -12646,7 +12672,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20200120
+  version 5.20200920
   
   =head1 SYNOPSIS
   
