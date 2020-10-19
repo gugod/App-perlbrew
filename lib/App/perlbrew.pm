@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.88";
+our $VERSION = "0.89";
 use Config;
 
 BEGIN {
@@ -22,6 +22,7 @@ BEGIN {
 use Getopt::Long ();
 use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
+use File::Copy 'copy';
 
 use App::Perlbrew::Util;
 use App::Perlbrew::Path;
@@ -1236,14 +1237,25 @@ sub run_command_self_install {
     $self->root->bin->mkpath;
 
     open my $fh, "<", $executable;
-    my @lines =  <$fh>;
-    close $fh;
 
-    $lines[0] = $self->system_perl_shebang . "\n";
+    my $head;
+    read($fh, $head, 3, 0);
 
-    open $fh, ">", $target;
-    print $fh $_ for @lines;
-    close $fh;
+    if ($head eq "#!/") {
+        seek($fh, 0, 0);
+        my @lines =  <$fh>;
+        close $fh;
+
+        $lines[0] = $self->system_perl_shebang . "\n";
+
+        open $fh, ">", $target;
+        print $fh $_ for @lines;
+        close $fh;
+    } else {
+        close($fh);
+
+        copy($executable, $target);
+    }
 
     chmod(0755, $target);
 
@@ -1316,8 +1328,16 @@ sub do_extract_tarball {
     # Assuming the dir extracted from the tarball is named after the tarball.
     my $dist_tarball_basename = $dist_tarball->basename (qr/\.tar\.(?:gz|bz2|xz)$/);
 
-    # Note that this is incorrect for blead.
-    my $workdir = $self->builddir->child ($dist_tarball_basename);
+    my $workdir;
+    if ( $self->{as} ) {
+        # TODO: Should we instead use the installation_name (see run_command_install()):
+        #    $destdir = $self->{as} . $self->{variation} . $self->{append};
+        $workdir = $self->builddir->child ($self->{as});
+    }
+    else {
+        # Note that this is incorrect for blead.
+        $workdir = $self->builddir->child ($dist_tarball_basename);
+    }
     $workdir->rmpath;
     $workdir->mkpath;
     my $extracted_dir;
@@ -1653,10 +1673,10 @@ sub do_install_this {
 
     my $variation = $self->{variation};
     my $append = $self->{append};
-    my $looks_like_we_are_installing_cperl =  $dist_extracted_dir =~ /\/ cperl- /x;
+    my $looks_like_we_are_installing_cperl = $dist_extracted_dir =~ /\/ cperl- /x;
 
     $self->{dist_extracted_dir} = $dist_extracted_dir;
-    $self->{log_file} = $self->root->child ("build.${installation_name}${variation}${append}.log");
+    $self->{log_file} = $self->root->child("build.${installation_name}${variation}${append}.log");
 
     my @d_options = @{ $self->{D} };
     my @u_options = @{ $self->{U} };
@@ -1682,12 +1702,7 @@ sub do_install_this {
         $self->{$flavor} and push @d_options, $flavor{$flavor}{d_option}
     }
 
-    my $perlpath = $self->root->perls ($installation_name);
-    my $patchperl = $self->root->bin ("patchperl");
-
-    unless (-x $patchperl && -f _) {
-        $patchperl = "patchperl";
-    }
+    my $perlpath = $self->root->perls($installation_name);
 
     unshift @d_options, qq(prefix=$perlpath);
     push @d_options, "usedevel" if $dist_version =~ /5\.\d[13579]|git|blead/;
@@ -1716,7 +1731,16 @@ INSTALL
         "cd $dist_extracted_dir",
         "rm -f config.sh Policy.sh",
     );
-    push @preconfigure_commands, 'chmod -R +w .', $patchperl unless $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl;
+
+    unless ($self->{"no-patchperl"} || $looks_like_we_are_installing_cperl) {
+        my $patchperl = $self->root->bin("patchperl");
+
+        unless (-x $patchperl && -f _) {
+            $patchperl = "patchperl";
+        }
+
+        push @preconfigure_commands, 'chmod -R +w .', $patchperl;
+    }
 
     my $configure_flags = $self->env("PERLBREW_CONFIGURE_FLAGS") || '-de';
 
@@ -2230,9 +2254,7 @@ sub run_command_env {
             $v =~ s/(\\")/\\$1/g;
             push @statements, ["set", $k, $v];
         } else {
-            if (exists $ENV{$k}) {
-                push @statements, ["unset", $k];
-            }
+            push @statements, ["unset", $k];
         }
     }
 
@@ -2917,7 +2939,7 @@ __perlbrew_purify () {
 }
 
 __perlbrew_set_path () {
-    export MANPATH=$PERLBREW_MANPATH${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath 2>/dev/null)")
+    export MANPATH=${PERLBREW_MANPATH:-}${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath 2>/dev/null)")
     export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
     hash -r
 }
@@ -2931,8 +2953,8 @@ __perlbrew_set_env() {
 __perlbrew_activate() {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
-    if [[ -n "$PERLBREW_PERL" ]]; then
-        __perlbrew_set_env "$PERLBREW_PERL${PERLBREW_LIB:+@}$PERLBREW_LIB"
+    if [[ -n "${PERLBREW_PERL:-}" ]]; then
+          __perlbrew_set_env "${PERLBREW_PERL:-}${PERLBREW_LIB:+@}$PERLBREW_LIB"
     fi
 
     __perlbrew_set_path
@@ -2998,22 +3020,20 @@ perlbrew () {
     return ${exit_status:-0}
 }
 
-[[ -z "$PERLBREW_ROOT" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
-[[ -z "$PERLBREW_HOME" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
+[[ -z "${PERLBREW_ROOT:-}" ]] && export PERLBREW_ROOT="$HOME/perl5/perlbrew"
+[[ -z "${PERLBREW_HOME:-}" ]] && export PERLBREW_HOME="$HOME/.perlbrew"
 
-if [[ ! -n "$PERLBREW_SKIP_INIT" ]]; then
-    if [[ -f "$PERLBREW_HOME/init" ]]; then
+if [[ ! -n "${PERLBREW_SKIP_INIT:-}" ]]; then
+    if [[ -f "${PERLBREW_HOME:-}/init" ]]; then
         . "$PERLBREW_HOME/init"
     fi
 fi
 
-perlbrew_bin_path="${PERLBREW_ROOT}/bin"
-if [[ -f $perlbrew_bin_path/perlbrew ]]; then
-    perlbrew_command="$perlbrew_bin_path/perlbrew"
+if [[ -f "${PERLBREW_ROOT:-}/bin/perlbrew" ]]; then
+    perlbrew_command="${PERLBREW_ROOT:-}/bin/perlbrew"
 else
     perlbrew_command="perlbrew"
 fi
-unset perlbrew_bin_path
 
 __perlbrew_activate
 

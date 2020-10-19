@@ -1,3 +1,9 @@
+0.89
+	- Released at 2020-10-19T09:26:19+0900
+	- Thanks to our contributors: Håkon Hægland, Nicolas R, Peter Tripp
+	- Make the bashrc compatible with 'bash -u'. Github PR #694
+	- Prevent build directory from being overwritten. Github PR #683
+
 0.88
 	- Released at 2020-01-29T21:40:07+0900
 	- Thanks to our contributors: Dave Rolsky, Gil Magno, Zhu Sheng Li
@@ -384,7 +390,7 @@
 	- Improvements about self-upgrade by hoelzro++
 	- exit with non-zero status code when there's some sort of error. by punytan++
 	- Added verification of existing alias before attempting unalias. johncm++
-	- Fix `install-cpanm` for due to a recenet github cert update. kanetann++
+	- Fix `install-cpanm` for due to a recent github cert update. kanetann++
 
 0.24
 	- Done GH #92 -- Show error messages on network errors.
@@ -512,7 +518,6 @@
 
 0.02
 	- Officially prepare a standalone program for quick download.
-	- license changed to "Same as Perl" due to the fact HTTP::Lite is included
 	- The 'installed' command now also lists all the 'perl' found in your PATH
 	- The 'switch' command can take an executable like /usr/bin/perl
 	- Various program options by Chris Prather

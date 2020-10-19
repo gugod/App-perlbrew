@@ -33,11 +33,14 @@ describe "env command," => sub {
             stdout_is {
                 $app->run;
             } <<"OUT";
+unset PERL5LIB
+unset PERLBREW_LIB
 export PERLBREW_MANPATH="$App::perlbrew::PERLBREW_ROOT/perls/perl-5.14.1/man"
 export PERLBREW_PATH="$App::perlbrew::PERLBREW_ROOT/bin:$App::perlbrew::PERLBREW_ROOT/perls/perl-5.14.1/bin"
 export PERLBREW_PERL="perl-5.14.1"
 export PERLBREW_ROOT="$App::perlbrew::PERLBREW_ROOT"
 export PERLBREW_VERSION="$App::perlbrew::VERSION"
+unset PERL_LOCAL_LIB_ROOT
 OUT
         };
     };

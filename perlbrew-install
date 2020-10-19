@@ -6,11 +6,11 @@ if [ -z "${PERLBREWURL}" ]; then
 fi
 
 clean_exit () {
-    [ ! -z "$LOCALINSTALLER" -a -f "$LOCALINSTALLER" ] && rm $LOCALINSTALLER
+    [ ! -z "${LOCALINSTALLER:-}" -a -f "${LOCALINSTALLER:-}" ] && rm ${LOCALINSTALLER:-}
     exit $1
 }
 
-if [ -z "$TMPDIR" -o ! -d "$TMPDIR" ]; then
+if [ -z "${TMPDIR:-}" -o ! -d "${TMPDIR:-}" ]; then
     if [ -d "/tmp" ]; then
         TMPDIR="/tmp"
     else
