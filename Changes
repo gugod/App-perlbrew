@@ -1,4 +1,5 @@
 	- Make the bashrc compatible with 'bash -u'. Github PR #694
+	- Prevent build directory from being overwritten. Github PR #683
 
 0.88
 	- Released at 2020-01-29T21:40:07+0900
