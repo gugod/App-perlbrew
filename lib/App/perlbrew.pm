@@ -842,7 +842,7 @@ sub available_perl_distributions {
                             : "https://www.cpan.org/src/README.html" ;
     my $html = http_get($url, undef, undef);
     unless ($html) {
-        die "\nERROR: Unable to retrieve the list of perls.\n\n";
+        die "\nERROR: Unable to retrieve the list of perls from $url\n\n";
     }
     for (split "\n", $html) {
         my ($current_perl, $current_url);
@@ -898,13 +898,14 @@ sub available_cperl_distributions {
     my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/tags';
 
     my $html = http_get($url_cperl_release_list);
+
+    unless ($html) {
+        die "\nERROR: Unable to retrieve the list of cperl releases from ${url_cperl_release_list}\n";
+    }
+
     if ($html) {
         while ($html =~ m{href="(/perl11/cperl/archive/cperl-(5.+?)\.tar\.gz)"}xg) {
             $dist{ "cperl-$2" } = $cperl_remote . $1;
-        }
-    } else {
-        if ($self->{verbose}) {
-            warn "\nWARN: Unable to retrieve the list of cperl releases.\n\n";
         }
     }
 
