@@ -287,16 +287,18 @@ sub new {
 
     my $self = bless \%opt, $class;
 
-	# Treat --root option same way as env variable PERLBREW_ROOT (with higher priority)
-	$ENV{PERLBREW_ROOT} = $self->root ($opt{root})
-		if $opt{root};
+    # Treat --root option same way as env variable PERLBREW_ROOT (with higher priority)
+    if ($opt{root}) {
+        $ENV{PERLBREW_ROOT} = $self->root($opt{root});
+    }
 
-	$self->{builddir} = App::Perlbrew::Path->new ($self->{builddir})
-		if $opt{builddir};
+    if ($opt{builddir}) {
+        $self->{builddir} = App::Perlbrew::Path->new($self->{builddir});
+    }
 
-	# Ensure propagation of $PERLBREW_HOME and $PERLBREW_ROOT
-	$self->root;
-	$self->home;
+    # Ensure propagation of $PERLBREW_HOME and $PERLBREW_ROOT
+    $self->root;
+    $self->home;
 
     return $self;
 }
@@ -351,19 +353,19 @@ sub parse_cmdline {
 sub root {
     my ($self, $new_root) = @_;
 
-	$new_root ||= $PERLBREW_ROOT
-		|| $ENV{PERLBREW_ROOT}
-		|| App::Perlbrew::Path->new ($ENV{HOME}, "perl5", "perlbrew")->stringify
-		unless $self->{root};
+    $new_root ||= $PERLBREW_ROOT
+        || $ENV{PERLBREW_ROOT}
+        || App::Perlbrew::Path->new ($ENV{HOME}, "perl5", "perlbrew")->stringify
+        unless $self->{root};
 
-	$self->{root} = $PERLBREW_ROOT = $new_root
-		if defined $new_root;
+    $self->{root} = $PERLBREW_ROOT = $new_root
+        if defined $new_root;
 
-	$self->{root} = App::Perlbrew::Path::Root->new ($self->{root})
-		unless ref $self->{root};
+    $self->{root} = App::Perlbrew::Path::Root->new ($self->{root})
+        unless ref $self->{root};
 
-	$self->{root} = App::Perlbrew::Path::Root->new ($self->{root}->stringify)
-		unless $self->{root}->isa ('App::Perlbrew::Path::Root');
+    $self->{root} = App::Perlbrew::Path::Root->new ($self->{root}->stringify)
+        unless $self->{root}->isa ('App::Perlbrew::Path::Root');
 
     return $self->{root};
 }
@@ -371,16 +373,16 @@ sub root {
 sub home {
     my ($self, $new_home) = @_;
 
-	$new_home ||= $PERLBREW_HOME
-		|| $ENV{PERLBREW_HOME}
-		|| App::Perlbrew::Path->new ($ENV{HOME}, ".perlbrew")->stringify
-		unless $self->{home};
+    $new_home ||= $PERLBREW_HOME
+        || $ENV{PERLBREW_HOME}
+        || App::Perlbrew::Path->new ($ENV{HOME}, ".perlbrew")->stringify
+        unless $self->{home};
 
-	$self->{home} = $PERLBREW_HOME = $new_home
-		if defined $new_home;
+    $self->{home} = $PERLBREW_HOME = $new_home
+        if defined $new_home;
 
-	$self->{home} = App::Perlbrew::Path->new ($self->{home})
-		unless ref $self->{home};
+    $self->{home} = App::Perlbrew::Path->new ($self->{home})
+        unless ref $self->{home};
 
     return $self->{home};
 }
