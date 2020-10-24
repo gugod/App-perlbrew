@@ -571,7 +571,7 @@ sub run_command {
     }
     elsif (!$x) {
         $x = 'help';
-        @args = (0, $self->{help} ? 2 : 0);
+        @args = (0, 0);
     }
     elsif ($x eq 'help') {
         @args = (0, 2) unless @args;
