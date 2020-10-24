@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-use lib qw(lib);
+
 use App::perlbrew;
 use Test::More;
 use Test::Exception;
