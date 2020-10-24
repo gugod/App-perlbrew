@@ -778,48 +778,63 @@ sub sort_perl_versions {
 
 sub run_command_available {
     my ($self) = @_;
-    my $perls     = $self->available_perls_with_urls(@_);
+
     my @installed = $self->installed_perls(@_);
     my $is_verbose = $self->{verbose};
 
-    # sort the keys of Perl installation (Randal to the rescue!)
-    my @sorted_perls = $self->sort_perl_versions(keys %$perls);
+    my @sections = (
+        [ 'perl', 'available_perl_distributions'],
+        [ 'cperl', 'available_cperl_distributions'],
+    );
 
-    for my $available (@sorted_perls) {
-        my $url = $perls->{$available};
-        my $ctime;
+    for (@sections) {
+        my ($header, $method) = @$_;
 
-        for my $installed (@installed) {
-            my $name = $installed->{name};
-            my $cur  = $installed->{is_current};
-            if ($available eq $installed->{name}) {
-                $ctime = $installed->{ctime};
-                last;
+        print "# $header\n";
+
+        my $perls = $self->$method;
+        # sort the keys of Perl installation (Randal to the rescue!)
+        my @sorted_perls = $self->sort_perl_versions(keys %$perls);
+
+        for my $available (@sorted_perls) {
+            my $url = $perls->{$available};
+            my $ctime;
+
+            for my $installed (@installed) {
+                my $name = $installed->{name};
+                my $cur  = $installed->{is_current};
+                if ($available eq $installed->{name}) {
+                    $ctime = $installed->{ctime};
+                    last;
+                }
             }
-        }
 
-        printf "\n%1s %12s  %s %s",
+            printf "%1s %12s  %s %s\n",
             $ctime ? 'i' : '',
             $available,
             ( $is_verbose
               ? $ctime ? "INSTALLED on $ctime via"  : 'available from '
               : ''),
-            ( $is_verbose ? "<$url>" : '' ) ;
+              ( $is_verbose ? "<$url>" : '' ) ;
+        }
+        print "\n\n";
     }
 
-    print "\n";
-
-    return @sorted_perls;
+    return;
 }
 
 sub available_perls {
     my ($self) = @_;
-    my $perls    = $self->available_perls_with_urls;
-    return $self->sort_perl_versions(keys %$perls);
+    my %dists = (
+        %{ $self->available_perl_distributions },
+        %{ $self->available_cperl_distributions },
+    );
+    return $self->sort_perl_versions(keys %dists);
 }
 
-sub available_perls_with_urls {
-    my ($self, $dist, $opts) = @_;
+# -> Map[ NameVersion =>  URL ]
+sub available_perl_distributions {
+    my ($self) = @_;
     my $perls = {};
     my @perllist;
 
@@ -870,14 +885,22 @@ sub available_perls_with_urls {
         }
     }
 
+    return $perls;
+}
+
+# -> Map[ NameVersion =>  URL ]
+sub available_cperl_distributions {
+    my ($self) = @_;
+    my %dist;
+
     # cperl releases: https://github.com/perl11/cperl/tags
     my $cperl_remote           = 'https://github.com';
     my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/tags';
 
-    $html = http_get($url_cperl_release_list);
+    my $html = http_get($url_cperl_release_list);
     if ($html) {
         while ($html =~ m{href="(/perl11/cperl/archive/cperl-(5.+?)\.tar\.gz)"}xg) {
-            $perls->{ "cperl-$2" } = $cperl_remote . $1;
+            $dist{ "cperl-$2" } = $cperl_remote . $1;
         }
     } else {
         if ($self->{verbose}) {
@@ -885,7 +908,7 @@ sub available_perls_with_urls {
         }
     }
 
-    return $perls;
+    return \%dist;
 }
 
 # $perllist is an arrayref of arrayrefs.  The inner arrayrefs are of the

@@ -1,3 +1,5 @@
+	- The output of 'available' command is split into sections of different type of distributions. Github issue #646.
+
 0.89
 	- Released at 2020-10-19T09:26:19+0900
 	- Thanks to our contributors: Håkon Hægland, Nicolas R, Peter Tripp
