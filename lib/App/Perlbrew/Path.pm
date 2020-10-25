@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 
@@ -9,12 +8,12 @@ require File::Glob;
 require File::Path;
 
 use overload (
-	'""' => \& stringify,
-	fallback => 1,
+    '""' => \& stringify,
+    fallback => 1,
 );
 
 sub _joinpath {
-    for my $entry(@_) {
+    for my $entry (@_) {
         no warnings 'uninitialized';
         die 'Received an undefined entry as a parameter (all parameters are: '. join(', ', @_). ')' unless (defined($entry));
     }
@@ -22,99 +21,96 @@ sub _joinpath {
 }
 
 sub _child {
-	my ($self, $package, @path) = @_;
+    my ($self, $package, @path) = @_;
 
-	$package->new ($self->{path}, @path);
+    $package->new($self->{path}, @path);
 }
 
 sub _children {
-	my ($self, $package) = @_;
+    my ($self, $package) = @_;
 
-	return map $package->new ($_),
-		File::Glob::bsd_glob ($self->child ("*"))
-		;
+    return map $package->new($_),
+    File::Glob::bsd_glob($self->child("*"))
 }
 
 sub new {
-	my ($class, @path) = @_;
+    my ($class, @path) = @_;
 
-	bless { path => _joinpath (@path) }, $class;
+    bless { path => _joinpath (@path) }, $class;
 }
 
 sub basename {
-	my ($self, $suffix) = @_;
+    my ($self, $suffix) = @_;
 
-	return scalar File::Basename::fileparse ($self, ($suffix) x!! defined $suffix);
+    return scalar File::Basename::fileparse ($self, ($suffix) x!! defined $suffix);
 }
 
 sub child {
-	my ($self, @path) = @_;
+    my ($self, @path) = @_;
 
-	return $self->_child (__PACKAGE__, @path);
+    return $self->_child(__PACKAGE__, @path);
 }
 
 sub children {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	return $self->_children (__PACKAGE__);
+    return $self->_children(__PACKAGE__);
 }
 
 sub dirname {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	return App::Perlbrew::Path->new (File::Basename::dirname ($self));
+    return App::Perlbrew::Path->new(File::Basename::dirname ($self));
 }
 
 sub mkpath {
-	my ($self) = @_;
+    my ($self) = @_;
     File::Path::mkpath ([$self->stringify], 0, 0777);
-	return $self;
+    return $self;
 }
 
 sub readlink {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	my $link = readlink $self->stringify;
-	$link = __PACKAGE__->new ($link) if defined $link;
+    my $link = readlink $self->stringify;
+    $link = __PACKAGE__->new($link) if defined $link;
 
-	return $link;
+    return $link;
 }
 
 sub rmpath {
-	my ($self) = @_;
+    my ($self) = @_;
     File::Path::rmtree([$self->stringify], 0, 0);
-	return $self;
+    return $self;
 }
 
 sub stringify {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	return $self->{path};
+    return $self->{path};
 }
 
 sub stringify_with_tilde {
     my ($self) = @_;
-	my $path = $self->stringify;
+    my $path = $self->stringify;
     my $home = $ENV{HOME};
     $path =~ s!\Q$home/\E!~/! if $home;
     return $path;
 }
 
 sub symlink {
-	my ($self, $destination, $force) = @_;
-	$destination = App::Perlbrew::Path->new ($destination)
-		unless ref $destination;
+    my ($self, $destination, $force) = @_;
+    $destination = App::Perlbrew::Path->new($destination) unless ref $destination;
 
-	CORE::unlink $destination
-		if $force && (-e $destination || -l $destination);
+    CORE::unlink $destination if $force && (-e $destination || -l $destination);
 
-	$destination if CORE::symlink $self, $destination;
+    $destination if CORE::symlink $self, $destination;
 }
 
 sub unlink {
-	my ($self) = @_;
+    my ($self) = @_;
 
-	CORE::unlink ($self);
+    CORE::unlink ($self);
 }
 
 1;

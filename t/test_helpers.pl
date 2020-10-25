@@ -20,11 +20,11 @@ use IO::All;
 use File::Temp qw( tempdir );
 
 sub dir {
-	App::Perlbrew::Path->new (@_);
+    App::Perlbrew::Path->new(@_);
 }
 
 sub file {
-	App::Perlbrew::Path->new (@_);
+    App::Perlbrew::Path->new(@_);
 }
 
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
@@ -50,7 +50,7 @@ sub App::perlbrew::do_install_release {
     $self->{installation_name} = $name;
 
     $installation_dir->mkpath;
-    $root->perls ($name, "bin")->mkpath;
+    $root->perls($name, "bin")->mkpath;
 
     my $perl = $root->perls ($name, "bin")->child ("perl");
     io($perl)->print(<<'CODE');
@@ -74,10 +74,7 @@ sub mock_perlbrew_install {
 
 sub mock_perlbrew_lib_create {
     my $name = shift;
-    App::Perlbrew::Path
-		->new ($App::perlbrew::PERLBREW_HOME, "libs", $name)
-		->mkpath
-		;
+    App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", $name)->mkpath;
 }
 
 1;

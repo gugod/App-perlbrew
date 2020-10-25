@@ -1,4 +1,3 @@
-#!/usr/bin/env perl
 use strict;
 use warnings;
 use FindBin;
@@ -56,7 +55,7 @@ describe "lib command," => sub {
             $app = App::perlbrew->new;
             $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
 
-            $libdir = App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
+            $libdir = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
         };
 
         after each => sub {
@@ -102,7 +101,7 @@ describe "lib command," => sub {
                     $app->run;
                 } qq{lib 'perl-5.14.1\@nobita' is created.\n};
 
-                $libdir = App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.1@nobita');
+                $libdir = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.1@nobita');
                 ok -d $libdir;
             };
 
@@ -113,7 +112,7 @@ describe "lib command," => sub {
                     $app->run;
                 } qr{^ERROR: 'perl-5.8.8' is not installed yet, 'perl-5.8.8\@nobita' cannot be created.\n};
 
-                $libdir = App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.8.8@nobita');
+                $libdir = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.8.8@nobita');
                 ok !-d $libdir;
             };
         };
@@ -121,10 +120,10 @@ describe "lib command," => sub {
 
     describe "`delete` sub-command," => sub {
         before each => sub {
-			App::Perlbrew::Path
-				->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
-				->mkpath
-				;
+            App::Perlbrew::Path
+            ->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
+            ->mkpath
+            ;
         };
 
         it "deletes the local::lib folder" => sub {
@@ -134,8 +133,8 @@ describe "lib command," => sub {
                 $app->run;
             } qq{lib 'perl-5.14.2\@nobita' is deleted.\n};
 
-            ok !-d App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
-            ok !-e App::Perlbrew::Path->new ($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
+            ok !-d App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
+            ok !-e App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
         };
 
         it "shows errors when the given lib does not exists " => sub {

@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 
@@ -9,23 +8,23 @@ require App::Perlbrew::Path;
 our @ISA = qw( App::Perlbrew::Path );
 
 sub name {
-	$_[0]->basename;
+    $_[0]->basename;
 }
 
 sub bin {
-	shift->child (bin => @_);
+    shift->child(bin => @_);
 }
 
 sub man {
-	shift->child (man => @_);
+    shift->child(man => @_);
 }
 
 sub perl {
-	shift->bin ('perl');
+    shift->bin('perl');
 }
 
 sub version_file {
-	shift->child ('.version');
+    shift->child('.version');
 }
 
 1;

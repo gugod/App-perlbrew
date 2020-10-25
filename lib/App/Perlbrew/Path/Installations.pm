@@ -1,4 +1,3 @@
-
 use strict;
 use warnings;
 
@@ -10,21 +9,21 @@ require App::Perlbrew::Path::Installation;
 our @ISA = qw( App::Perlbrew::Path );
 
 sub child {
-	my ($self, @params) = @_;
+    my ($self, @params) = @_;
 
-	my $return = $self;
-	$return = $return->_child ('App::Perlbrew::Path::Installation' => shift @params) if @params;
-	$return = $return->child (@params) if @params;
+    my $return = $self;
+    $return = $return->_child('App::Perlbrew::Path::Installation' => shift @params) if @params;
+    $return = $return->child(@params) if @params;
 
-	$return;
+    $return;
 }
 
 sub children {
-	shift->_children ('App::Perlbrew::Path::Installation' => @_);
+    shift->_children('App::Perlbrew::Path::Installation' => @_);
 }
 
 sub list {
-	shift->children;
+    shift->children;
 }
 
 1;

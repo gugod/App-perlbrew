@@ -24,7 +24,7 @@ describe "App::perlbrew#root method" => sub {
     };
 
     it "should default to \$ENV{PERLBREW_ROOT} if provided" => sub {
-		local $App::perlbrew::PERLBREW_ROOT;
+        local $App::perlbrew::PERLBREW_ROOT;
 
         my $app = App::perlbrew->new;
 
@@ -32,8 +32,8 @@ describe "App::perlbrew#root method" => sub {
     };
 
     it "should default to \$ENV{HOME} subpath" => sub {
-		local $App::perlbrew::PERLBREW_ROOT;
-		local $ENV{PERLBREW_ROOT};
+        local $App::perlbrew::PERLBREW_ROOT;
+        local $ENV{PERLBREW_ROOT};
 
         my $app = App::perlbrew->new;
 
@@ -61,26 +61,26 @@ describe "App::perlbrew->new" => sub {
 runtests unless caller;
 
 sub looks_like_perlbrew_root {
-	my ($got, $expected) = @_;
+    my ($got, $expected) = @_;
 
-	my ($ok, $stack);
+    my ($ok, $stack);
 
-	($ok, $stack) = Test::Deep::cmp_details "$got", "$expected";
-	unless ($ok) {
-		fail;
-		diag "Return value comparison failed";
-		diag Test::Deep::deep_diag $stack;
-		return;
-	}
+    ($ok, $stack) = Test::Deep::cmp_details "$got", "$expected";
+    unless ($ok) {
+        fail;
+        diag "Return value comparison failed";
+        diag Test::Deep::deep_diag $stack;
+        return;
+    }
 
-	($ok, $stack) = Test::Deep::cmp_details "$got", "$App::perlbrew::PERLBREW_ROOT";
-	unless ($ok) {
-		fail;
-		diag "Global \$PERLBREW_ROOT comparison failed";
-		diag Test::Deep::deep_diag $stack;
-		return;
-	}
+    ($ok, $stack) = Test::Deep::cmp_details "$got", "$App::perlbrew::PERLBREW_ROOT";
+    unless ($ok) {
+        fail;
+        diag "Global \$PERLBREW_ROOT comparison failed";
+        diag Test::Deep::deep_diag $stack;
+        return;
+    }
 
-	return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path::Root');
+    return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path::Root');
 }
 
