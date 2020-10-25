@@ -24,18 +24,26 @@ describe "`perlbrew`" => sub {
     };
 };
 
+describe "`perlbrew -h`" => sub {
+    it "should print short version of help message and instruct user to read longer version" => sub {
+        my $out1 = `$perl -Ilib $bin_perlbrew --help`;
+        my $out2 = `$perl -Ilib $bin_perlbrew -h`;
+
+        is $out2, $out1;
+        like $out1, qr/^    See `perlbrew help` for the full documentation/m;
+        unlike $out1, qr/^CONFIGURATION$/m;
+    };
+};
+
 describe "`perlbrew help`" => sub {
+    it "should should the lengthy version " => sub {
+        my $out = `$perl -Ilib $bin_perlbrew help`;
+        like $out, qr/^CONFIGURATION$/m;
+    };
+
     it "should instruct user to read help for individual commands." => sub {
         my $out = `$perl -Ilib $bin_perlbrew help`;
         like $out, qr/perlbrew help <command>/si;
-    };
-
-    it "should be the same as doing `perlbrew -h` or `perlbrew --help`" => sub {
-        my $out1 = `$perl -Ilib $bin_perlbrew help`;
-        my $out2 = `$perl -Ilib $bin_perlbrew -h`;
-        my $out3 = `$perl -Ilib $bin_perlbrew --help`;
-        is $out1, $out2;
-        is $out1, $out3;
     };
 };
 
