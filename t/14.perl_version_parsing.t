@@ -1,6 +1,9 @@
 #!perl
 use strict;
+
 use App::perlbrew;
+use App::Perlbrew::Util qw(perl_version_to_integer);
+
 use File::Temp qw( tempdir );
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
@@ -123,7 +126,7 @@ use Test::More;
 subtest "perl_version_to_integer" =>  sub {
     plan tests => (@versions - 1);
 
-    my @versions_i = map { App::perlbrew::perl_version_to_integer($_) } @versions;
+    my @versions_i = map { perl_version_to_integer($_) } @versions;
     for my $i (0 .. $#versions_i-1) {
         ok( $versions_i[$i] < $versions_i[$i+1], "$versions[$i] < $versions[$i+1]");
     }
