@@ -1,5 +1,6 @@
 #!/bin/bash
 
+SHELL=/bin/bash
 eval "$(perlbrew init-in-bash)"
 # source $HOME/perl5/perlbrew/etc/bashrc
 
