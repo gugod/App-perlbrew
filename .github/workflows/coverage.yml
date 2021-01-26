@@ -23,3 +23,5 @@ jobs:
       - run: cpanm --quiet --notest App::Yath Devel::Cover Devel::Cover::Report::Coveralls
       - run: PERL5OPT=-MDevel::Cover yath test --qvf t/
       - run: cover -report coveralls
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
