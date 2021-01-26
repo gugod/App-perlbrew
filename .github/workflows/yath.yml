@@ -1,6 +1,10 @@
 name: yath
 
-on: pull_request
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
 
 jobs:
   build:
