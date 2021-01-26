@@ -1800,7 +1800,7 @@ INSTALL
             my $capture = $self->do_capture("$newperl -V:sitelib");
             my ($sitelib) = $capture =~ m/sitelib='([^']*)';/;
             $sitelib = $destdir . $sitelib if $destdir;
-			$sitelib = App::Perlbrew::Path->new ($sitelib);
+            $sitelib = App::Perlbrew::Path->new($sitelib);
             $sitelib->mkpath;
             my $target = $sitelib->child ("sitecustomize.pl");
             open my $dst, ">", $target
@@ -1814,8 +1814,8 @@ INSTALL
           $self->root->perls ($installation_name)->version_file;
 
         if (-e $version_file) {
-            $version_file->unlink
-              or die "Could not unlink $version_file file: $!\n";
+            $version_file->unlink()
+                or die "Could not unlink $version_file file: $!\n";
         }
 
         print "$installation_name is successfully installed.\n";
@@ -1898,10 +1898,9 @@ sub format_perl_version {
     my $self    = shift;
     my $version = shift;
     return sprintf "%d.%d.%d",
-      substr($version, 0, 1),
-      substr($version, 2, 3),
-      substr($version, 5) || 0;
-
+        substr($version, 0, 1),
+        substr($version, 2, 3),
+        substr($version, 5) || 0;
 }
 
 sub installed_perls {
@@ -1952,23 +1951,19 @@ sub installed_perls {
 }
 
 sub compose_locallib {
-	my ($self, $perl_name, $lib_name) = @_;
-
-	return join '@', $perl_name, $lib_name;
+    my ($self, $perl_name, $lib_name) = @_;
+    return join '@', $perl_name, $lib_name;
 }
 
 sub decompose_locallib {
-	my ($self, $name) = @_;
-
-	return split '@', $name;
+    my ($self, $name) = @_;
+    return split '@', $name;
 }
 
 sub enforce_localib {
-	my ($self, $name) = @_;
-
+    my ($self, $name) = @_;
     $name =~ s/^/@/ unless $name =~ m/@/;
-
-	return $name;
+    return $name;
 }
 
 sub local_libs {
