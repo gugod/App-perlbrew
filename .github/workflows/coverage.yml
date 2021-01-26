@@ -1,4 +1,4 @@
-name: yath
+name: coverage
 
 on:
   push:
