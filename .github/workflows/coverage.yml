@@ -20,6 +20,6 @@ jobs:
         with:
           perl-version: ${{ matrix.perl }}
       - run: cpanm --installdeps .
-      - run: cpanm App::Yath Devel::Cover
+      - run: cpanm --notest App::Yath Devel::Cover Devel::Cover::Report::Coveralls
       - run: PERL5OPT=-MDevel::Cover yath test --qvf t/
       - run: cover -report coveralls
