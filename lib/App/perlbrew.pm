@@ -1877,21 +1877,22 @@ sub do_exit_with_error_code {
 }
 
 sub do_system_with_exit_code {
-  my ($self, @cmd) = @_;
-  return system(@cmd);
+    my ($self, @cmd) = @_;
+    return system(@cmd);
 }
 
 sub do_system {
-  my ($self, @cmd) = @_;
-  return ! $self->do_system_with_exit_code(@cmd);
+    my ($self, @cmd) = @_;
+    return ! $self->do_system_with_exit_code(@cmd);
 }
 
 sub do_capture {
-  my ($self, @cmd) = @_;
-  require Capture::Tiny;
-  return Capture::Tiny::capture(sub {
-    $self->do_system(@cmd);
-  });
+    my ($self, @cmd) = @_;
+    require Capture::Tiny;
+    return Capture::Tiny::capture(
+        sub {
+            $self->do_system(@cmd);
+        });
 }
 
 sub format_perl_version {
