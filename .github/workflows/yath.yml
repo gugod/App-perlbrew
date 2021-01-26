@@ -17,6 +17,6 @@ jobs:
         with:
           perl-version: ${{ matrix.perl }}
       - run: perl -V
-      - run: cpanm --installdeps .
-      - run: cpanm App::Yath
+      - run: cpanm --quite --notest --installdeps .
+      - run: cpanm --quite --notest App::Yath
       - run: yath test --qvf t/
