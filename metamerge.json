@@ -1,6 +1,9 @@
 {
     "x_static_install": true,
     "resources": {
+        "bugtracker": {
+            "web": "https://github.com/gugod/App-perlbrew/issues"
+        },
         "repository": {
             "web": "https://github.com/gugod/App-perlbrew",
             "url": "https://github.com/gugod/App-perlbrew.git",

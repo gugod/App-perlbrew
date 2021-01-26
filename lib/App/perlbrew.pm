@@ -3519,8 +3519,7 @@ Set the C<current_perl> object attribute to the given value.
 =head2 PROJECT DEVELOPMENT
 
 L<perlbrew project|https://perlbrew.pl/> uses github
-L<https://github.com/gugod/App-perlbrew/issues> and RT
-<https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
+L<https://github.com/gugod/App-perlbrew/issues> for issue
 tracking. Issues sent to these two systems will eventually be reviewed
 and handled.
 
