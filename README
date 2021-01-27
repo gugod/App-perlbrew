@@ -128,10 +128,8 @@ NAME
  PROJECT DEVELOPMENT
 
     perlbrew project <https://perlbrew.pl/> uses github
-    https://github.com/gugod/App-perlbrew/issues and RT
-    <https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
-    tracking. Issues sent to these two systems will eventually be reviewed
-    and handled.
+    https://github.com/gugod/App-perlbrew/issues for issue tracking. Issues
+    sent to these two systems will eventually be reviewed and handled.
 
     See https://github.com/gugod/App-perlbrew/contributors for a list of
     project contributors.
