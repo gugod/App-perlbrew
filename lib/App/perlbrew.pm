@@ -425,7 +425,7 @@ sub configure_args {
 sub cpan_mirror {
     my ($self) = @_;
     unless($self->{cpan_mirror}) {
-        $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "http://www.cpan.org";
+        $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "https://www.cpan.org";
         $self->{cpan_mirror} =~ s{/+$}{};
     }
     return $self->{cpan_mirror};
@@ -924,7 +924,7 @@ sub perl_release {
     }
 
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
-    my $index = http_get("http://www.cpan.org/src/5.0/");
+    my $index = http_get("https://www.cpan.org/src/5.0/");
     if ($index) {
         for my $prefix ("perl-", "perl") {
             for my $suffix (".tar.bz2", ".tar.gz") {
@@ -996,7 +996,7 @@ sub release_detail_perl_remote {
     my $version = $rd->{version};
 
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
-    my $index = http_get("http://www.cpan.org/src/5.0/");
+    my $index = http_get("https://www.cpan.org/src/5.0/");
     if ($index) {
         for my $prefix ("perl-", "perl") {
             for my $suffix (".tar.bz2", ".tar.gz") {
