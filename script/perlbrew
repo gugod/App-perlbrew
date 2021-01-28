@@ -158,61 +158,59 @@ If a module is given the version and location of the module is displayed.
 
 =head1 COMMAND: INSTALL
 
+Usage:
+
+    perlbrew install [options] <perl-release>
+    perlbrew install [options] /path/to/perl-5.14.0.tar.gz
+    perlbrew install [options] /path/to/perl/git/checkout/dir
+    perlbrew install [options] http://example.com/mirror/perl-5.12.3.tar.gz
+
+Build and install the wanted perl. The last argument can be a short string designating a specific version which can be known from the output of C<perlbrew available>, a path to a pre-downloaded tarball, a path to a git-checkout of perl5 repo, or a URL to a tarball.
+
+The format of <perl-release> looks like:
+
 =over 4
 
-=item B<install> [options] perl-<version>
+=item perl-<version>
 
-=item B<install> [options] <version>
+=item perl-stable
 
-Build and install the given version of perl.
+=item perl-blead
 
-Version numbers usually look like "5.x.xx", or
-"perl-5.xx.x-RCx" for release candidates.
+=item <version>
+
+=item stable
+
+=item blead
+
+=item cperl-<version>
+
+=back
+
+Version numbers usually look like "5.x.xx", or "perl-5.xx.x-RCx" for
+release candidates.
+
+Version "stable" is a special token that means whatever the latest
+stable version is at the moment.
+
+Version "blead" is also a special token that means whatever the latest
+version in the repository, which is downloaded from this specific URL
+regardless of mirror settings:
+
+    http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
 
 The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
-Add '--mirror $URL' to specify the URL of mirror site.
+Version number alone without the "perl-" prefix means the official
+release provided by perl5 porters.
 
-=item B<install> [options] cperl-<version>
-
-Install the cperl distribution released from:
+The prefix "cperl" is a special release provided not by perl5 porters,
+but from the community. The cperl distributions are downloaded from:
 
     https://github.com/perl11/cperl/releases
 
-See  http://perl11.org/cperl/ for more information about cperl distribution.
-
-=item B<install> [options]  perl-stable
-
-=item B<install> [options]  stable
-
-A convenient way to install the most recent stable version of Perl, of those
-that are available.
-
-=item B<install> [options]  perl-blead
-
-=item B<install> [options]  blead
-
-A special way to install the blead version of perl, which is downloaded from
-this specific URL regardless of mirror settings:
-
-    http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
-
-=item B<install>  [options] /path/to/perl/git/checkout/dir
-
-Build and install from the given git checkout dir.
-
-
-=item B<install>  [options] /path/to/perl-5.14.0.tar.gz
-
-Build and install from the given archive file.
-
-=item B<install>  [options] http://example.com/mirror/perl-5.12.3.tar.gz
-
-Build and install from the given URL. Supported URL schemes are C<http://>,
-C<https://>, C<ftp://> and C<file://>.
-
-=back
+See http://perl11.org/cperl/ for more information about cperl distribution.
 
 Options for C<install> command:
 
@@ -246,6 +244,9 @@ Options for C<install> command:
 
     --sitecustomize $filename
                    Specify a file to be installed as sitecustomize.pl
+
+    --mirror $URL
+        Specify a CPAN-mirror URL. The default value of this is "https://www.cpan.org"
 
 By default, all installations are configured after their name like this:
 
@@ -585,8 +586,9 @@ Here are some a brief examples to invoke the `lib` command:
     # Delete lib perl-5.12.3@shizuka
     perlbrew lib delete perl-5.12.3@shizuka
 
-Short lib names are local to current perl. A lib name 'nobita' can refer to
-'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', depending on your current perl.
+Short lib names are local to current perl. A lib name 'nobita' can
+refer to 'perl-5.12.3@nobita' or 'perl-5.14.2@nobita', whichever is
+activated in the current shell.
 
 When C<use>ing or C<switch>ing to a lib, always provide the long name. A simple
 rule: the argument to C<use> or C<switch> command should appear in the output of
@@ -596,24 +598,33 @@ C<perlbrew list>.
 
 Usage: perlbrew upgrade-perl
 
+Running this command upgrades the currently activated perl to its
+latest released brothers. If you have a shell with 5.32.0 activated,
+it upgrades it to 5.32.1.
+
 Minor Perl releases (ex. 5.x.*) are binary compatible with one another, so this
 command offers you the ability to upgrade older perlbrew environments in place.
-
-It upgrades the currently activated perl to its latest released brothers. If you
-have a shell with 5.14.0 activated, it upgrades it to 5.14.2.
 
 =head1 COMMAND: DOWNLOAD
 
 Usage:
+    perlbrew download <perl-release>
 
+Examples:
     perlbrew download perl-5.14.2
     perlbrew download perl-5.16.1
     perlbrew download perl-5.17.3
 
-Download the specified version of perl distribution tarball under C<<
-$PERLBREW_ROOT/dists/ >> directory.
+Download the specified version of perl distribution tarball under
+the directory C<< $PERLBREW_ROOT/dists/ >>.
+
+The argument C<perl-release> should be one of the items from
+C<perlbrew available> command.
 
 =head1 COMMAND: LIST-MODULES
+
+Usage:
+    perlbrew list-modules
 
 List all installed cpan modules for the current perl.
 
@@ -628,12 +639,10 @@ which are not necessarily the I<same> module versions you had installed previous
 
 =head1 COMMAND: CLONE-MODULES
 
-This command re-installs all CPAN modules found from one installation to another.
-
 Usage:
     perlbrew clone-modules <src_version> <dst_version>
 
-for example
+This command re-installs all CPAN modules found from one installation to another. For example, this list all modules under '5.26.1' and re-install them under '5.27.7':
 
     perlbrew clone-modules 5.26.1 5.27.7
 
