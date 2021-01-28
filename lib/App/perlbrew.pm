@@ -372,11 +372,7 @@ sub current_lib {
 
 sub current_shell_is_bashish {
     my ($self) = @_;
-    if (($self->current_shell eq 'bash') or ($self->current_shell eq 'zsh')) {
-        return 1;
-    } else {
-        return 0;
-    }
+    return ($self->current_shell eq 'bash') || ($self->current_shell eq 'zsh');
 }
 
 sub current_shell {
