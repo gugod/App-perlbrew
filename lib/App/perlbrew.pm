@@ -258,7 +258,7 @@ sub new {
     }
 
     if ($opt{builddir}) {
-        $self->{builddir} = App::Perlbrew::Path->new($self->{builddir});
+        $self->{builddir} = App::Perlbrew::Path->new($opt{builddir});
     }
 
     # Ensure propagation of $PERLBREW_HOME and $PERLBREW_ROOT
