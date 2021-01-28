@@ -3398,26 +3398,26 @@ App::perlbrew - Manage perl installations in your C<$HOME>
     perlbrew available
 
     # Install some Perls
-    perlbrew install 5.18.2
-    perlbrew install perl-5.8.1
-    perlbrew install perl-5.19.9
+    perlbrew install 5.32.1
+    perlbrew install perl-5.28.3
+    perlbrew install perl-5.33.6
 
     # See what were installed
     perlbrew list
 
     # Swith to an installation and set it as default
-    perlbrew switch perl-5.18.2
+    perlbrew switch perl-5.32.1
 
     # Temporarily use another version only in current shell.
-    perlbrew use perl-5.8.1
+    perlbrew use perl-5.28.3
     perl -v
 
-    # Or turn it off completely. Useful when you messed up too deep.
-    # Or want to go back to the system Perl.
+    # Turn it off and go back to the system perl.
     perlbrew off
 
-    # Use 'switch' command to turn it back on.
-    perlbrew switch perl-5.12.2
+    # Turn it back on with 'switch', or 'use'
+    perlbrew switch perl-5.32.1
+    perlbrew use perl-5.32.1
 
     # Exec something with all perlbrew-ed perls
     perlbrew exec -- perl -E 'say $]'
@@ -3455,7 +3455,7 @@ should follow the instruction on screen to modify your shell rc file to put it
 in your PATH.
 
 The installed perlbrew command is a standalone executable that can be run with
-system perl. The minimum system perl version requirement is 5.8.0, which should
+system perl. The minimum required version of system perl is 5.8.0, which should
 be good enough for most of the OSes these days.
 
 A fat-packed version of L<patchperl> is also installed to
@@ -3496,21 +3496,6 @@ C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
 The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
 command, but it is also easy to upgrade perlbrew by running C<cpan App::perlbrew>
 again.
-
-=head2 METHODS
-
-=over 4
-
-=item (Str) current_perl
-
-Return the "current perl" object attribute string, or, if absent, the value of
-C<PERLBREW_PERL> environment variable.
-
-=item (Str) current_perl (Str)
-
-Set the C<current_perl> object attribute to the given value.
-
-=back
 
 =head2 PROJECT DEVELOPMENT
 
