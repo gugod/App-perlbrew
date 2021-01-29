@@ -1,3 +1,11 @@
+0.90
+	- Released at 2021-01-29T09:43:17+0900
+	- Thanks to our contributors: Mose Schmiedel, gucchisk
+	- The output of 'available' command is split into sections of different type of distributions. Github issue #646.
+        - Let the output of `perlbrew -h` be the short usage. Github issue #647
+        - Unbreak env script for fish users. GitHub PR #698 and #708
+        - Prefer https URLs of www.cpan.org
+
 0.89
 	- Released at 2020-10-19T09:26:19+0900
 	- Thanks to our contributors: Håkon Hægland, Nicolas R, Peter Tripp

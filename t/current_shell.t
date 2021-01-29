@@ -18,6 +18,6 @@ for my $shell (qw(bash zsh)) {
 for my $shell (qw(ksh sh)) {
     note("Testing with $shell");
     $self->current_shell($shell);
-    is($self->current_shell_is_bashish(), 0, 'current_shell_is_bashish() returns false');
+    ok( (! $self->current_shell_is_bashish()), 'current_shell_is_bashish() returns false');
 }
 

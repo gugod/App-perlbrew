@@ -3,7 +3,6 @@ use strict;
 use warnings;
 use English qw( -no_match_vars );
 use Test::More;
-use lib qw(lib);
 
 use App::perlbrew;
 use Test::NoWarnings;

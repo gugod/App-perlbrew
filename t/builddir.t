@@ -12,7 +12,7 @@ sub looks_like_perlbrew_builddir;
 
 describe "App::perlbrew#builddir method" => sub {
     it "should return path in \$App::perlbrew::PERLBREW_ROOT normally" => sub {
-		local $App::perlbrew::PERLBREW_ROOT = '/perlbrew/root';
+        local $App::perlbrew::PERLBREW_ROOT = '/perlbrew/root';
         my $app = App::perlbrew->new;
 
         looks_like_perlbrew_builddir $app->builddir, '/perlbrew/root/build';
@@ -28,7 +28,7 @@ describe "App::perlbrew#builddir method" => sub {
 
 describe "App::perlbrew->new" => sub {
     it "should accept --builddir args" => sub {
-		local $App::perlbrew::PERLBREW_ROOT = '/perlbrew/root';
+        local $App::perlbrew::PERLBREW_ROOT = '/perlbrew/root';
         my $app = App::perlbrew->new("--builddir" => "/perlbrew/buildroot");
 
         looks_like_perlbrew_builddir $app->builddir, "/perlbrew/buildroot";
@@ -38,17 +38,16 @@ describe "App::perlbrew->new" => sub {
 runtests unless caller;
 
 sub looks_like_perlbrew_builddir {
-	my ($got, $expected) = @_;
+    my ($got, $expected) = @_;
 
-	my ($ok, $stack);
+    my ($ok, $stack);
 
-	($ok, $stack) = Test::Deep::cmp_details "$got", "$expected";
-	unless ($ok) {
-		fail;
-		diag Test::Deep::deep_diag $stack;
-		return;
-	}
+    ($ok, $stack) = Test::Deep::cmp_details "$got", "$expected";
+    unless ($ok) {
+        fail;
+        diag Test::Deep::deep_diag $stack;
+        return;
+    }
 
-	return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path');
+    return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path');
 }
-

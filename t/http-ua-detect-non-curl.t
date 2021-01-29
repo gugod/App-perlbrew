@@ -30,6 +30,8 @@ elsif (which("fetch")) {
 if ($expected_ua) {
     my $detected_ua = App::perlbrew::http_user_agent_program();
     is $detected_ua, $expected_ua, "UA: $detected_ua";
+} else {
+    pass("Neither wget nor fetch can be found. This test requers at least one of them to be there.");
 }
 
 done_testing;

@@ -26,7 +26,8 @@ use App::perlbrew;
 plan tests => 17;
 
 my $app = App::perlbrew->new();
-my @vers = $app->available_perls();
+my $dists = $app->available_perl_distributions();
+my @vers = $app->sort_perl_versions(keys %$dists);
 is scalar( @vers ), 16, "Correct number of releases found";
 
 my @known_perl_versions = (
@@ -36,7 +37,7 @@ my @known_perl_versions = (
     'perl-5.6.2',   'perl5.005_04', 'perl5.004_05', 'perl5.003_07'
 );
 
-for my $perl_version ( $app->available_perls() ) {
+for my $perl_version ( @vers ) {
     ok grep( $_ eq $perl_version, @known_perl_versions ), "$perl_version found";
 }
 
