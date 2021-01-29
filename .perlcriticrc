@@ -2,4 +2,4 @@ color = 0
 verbose = %f:%l:%c:[%p] %m => %r\n
 
 only = 1
-include = RequireUseStrict ProhibitUnused
+include = RequireUseStrict ProhibitUnusedVariables ProhibitUnreachableCode ProhibitUnusedConstant ProhibitUnusedInclude ProhibitUnusedImport  ProhibitDuplicateHashKeys ProhibitExcessiveColons ProhibitDuplicatedSub ProhibitTrailingWhitespace
