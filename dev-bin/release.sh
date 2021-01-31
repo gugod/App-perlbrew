@@ -27,6 +27,9 @@ mv Changes.new Changes
 echo '# rebuild'
 ./dev-bin/build.sh
 
+echo '# mbtiny regenerate'
+mbtiny regenerate
+
 echo '# ' Now, check them:
 echo '> git status '
 git status
