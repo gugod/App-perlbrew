@@ -1,9 +1,18 @@
-name: yath
+name: CI
 
 on: pull_request
 
 jobs:
-  build:
+  perlcritic:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: perlcritic
+        uses: gugod/actions-perlcritic@fun
+        with:
+          directory: "lib script t dev-bin"
+
+  yath:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
