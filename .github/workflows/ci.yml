@@ -10,7 +10,7 @@ jobs:
       - name: perlcritic
         uses: gugod/actions-perlcritic@fun
         with:
-          directory: "lib script t dev-bin"
+          paths: "lib script t dev-bin"
 
   yath:
     runs-on: ${{ matrix.os }}
