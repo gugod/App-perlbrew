@@ -9,7 +9,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: gugod/actions-perlcritic@fun
         with:
-          entrypoint: perlcritic --quiet --profile .perlcriticrc lib script t dev-bin
+          entrypoint: ['perlcritic', '--quiet', '--profile', '.perlcriticrc', 'lib', 'script', 't', 'dev-bin']
 
   yath:
     runs-on: ${{ matrix.os }}
