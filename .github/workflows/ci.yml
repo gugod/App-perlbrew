@@ -8,7 +8,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: gugod/actions-perlcritic@fun
-        run: perlcritic --quiet --profile .perlcriticrc lib script t dev-bin
+        with:
+          entrypoint: perlcritic --quiet --profile .perlcriticrc lib script t dev-bin
 
   yath:
     runs-on: ${{ matrix.os }}
