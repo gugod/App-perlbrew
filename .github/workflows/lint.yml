@@ -9,4 +9,5 @@ jobs:
       - uses: actions/checkout@v2
       - uses: gugod/actions-perlcritic@fun
         with:
-          entrypoint: ['perlcritic', '--quiet', '--profile', '.perlcriticrc', 'lib', 'script', 't', 'dev-bin']
+          options: --quiet -p .perlcriticrc
+          paths: lib script t dev-bin
