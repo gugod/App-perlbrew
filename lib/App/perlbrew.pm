@@ -30,6 +30,8 @@ use App::Perlbrew::Path::Root;
 
 ### global variables
 
+my $unused_global_var;
+
 # set $ENV{SHELL} to executable path of parent process (= shell) if it's missing
 # (e.g. if this script was executed by a daemon started with "service xxx start")
 # ref: https://github.com/gugod/App-perlbrew/pull/404
