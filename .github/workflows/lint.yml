@@ -5,8 +5,6 @@ on: pull_request
 jobs:
   perlcritic:
     runs-on: ubuntu-latest
-    outputs:
-      perlcritic: ${{ steps.perlcritic.output }}
     steps:
       - uses: actions/checkout@v2
       - uses: gugod/action-perlcritic@fun
