@@ -8,3 +8,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: gugod/action-perlcritic@fun
+        with:
+          reporter: github-pr-review
