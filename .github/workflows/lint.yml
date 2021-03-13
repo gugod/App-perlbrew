@@ -8,5 +8,3 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: gugod/action-perlcritic@fun
-        with:
-          perlcritic_args: -p .perlcriticrc lib t scripts dev-bin
