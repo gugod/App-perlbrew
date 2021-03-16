@@ -1168,7 +1168,7 @@ sub run_command_init {
         }
         elsif ($shell =~ m/fish/) {
             $code = ". $root_dir/etc/perlbrew.fish";
-            $yourshrc = 'config/fish/config.fish';
+            $yourshrc = '.config/fish/config.fish';
         }
         else {
             $code = "source $root_dir/etc/bashrc";
