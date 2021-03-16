@@ -3,14 +3,23 @@ name: CI
 on: pull_request
 
 jobs:
-  perlcritic:
+  lint:
     runs-on: ubuntu-latest
+    container:
+      image: perl:5.32
     steps:
       - uses: actions/checkout@v2
-      - name: perlcritic
-        uses: gugod/actions-perlcritic@fun
+      - uses: gugod/action-perlcritic@fun
         with:
           directory: "lib script t dev-bin"
+      - name: install perlnitpick
+        run: cpanm --notest --quiet https://github.com/gugod/App-PerlNitpick.git
+      - name: run perlnitpick
+        run: perlnitpick --inplace --rules=RemoveTrailingWhitespace,RemoveUnusedVariables,RemoveUnusedInclude,RemoveUnusedImport .
+      - name: suggester
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: perlnitpick
 
   yath:
     runs-on: ${{ matrix.os }}
