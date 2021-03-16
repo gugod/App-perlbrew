@@ -291,6 +291,7 @@ sub parse_cmdline {
         'all',
         'shell=s',
         'no-patchperl',
+        'no-decoration',
 
         "builddir=s",
 
@@ -2084,18 +2085,27 @@ sub run_command_list {
     my $self       = shift;
     my $is_verbose = $self->{verbose};
 
-    for my $i ($self->installed_perls) {
-        printf "%-2s%-20s %-20s %s\n",
-            $i->{is_current} ? '*' : '',
-            $i->{name},
-            ( $is_verbose ?
-                (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
-              : '' ),
-            ( $is_verbose ? "(installed on $i->{ctime})" : '' );
+    if ($self->{'no-decoration'}) {
+        for my $i ($self->installed_perls) {
+            print $i->{name} . "\n";
+            for my $lib (@{$i->{libs}}) {
+                print $lib->{name} . "\n";
+            }
+        }
+    } else {
+        for my $i ($self->installed_perls) {
+            printf "%-2s%-20s %-20s %s\n",
+                $i->{is_current} ? '*' : '',
+                $i->{name},
+                ( $is_verbose ?
+                  (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
+                  : '' ),
+                  ( $is_verbose ? "(installed on $i->{ctime})" : '' );
 
-        for my $lib (@{$i->{libs}}) {
-            print $lib->{is_current} ? "* " : "  ",
-                $lib->{name}, "\n"
+            for my $lib (@{$i->{libs}}) {
+                print $lib->{is_current} ? "* " : "  ",
+                    $lib->{name}, "\n"
+            }
         }
     }
 
