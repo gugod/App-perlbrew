@@ -615,6 +615,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           'all',
           'shell=s',
           'no-patchperl',
+          'no-decoration',
   
           "builddir=s",
   
@@ -1182,7 +1183,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       # cperl releases: https://github.com/perl11/cperl/tags
       my $cperl_remote           = 'https://github.com';
-      my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/tags';
+      my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/releases';
   
       my $html = http_get($url_cperl_release_list);
   
@@ -1191,7 +1192,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       if ($html) {
-          while ($html =~ m{href="(/perl11/cperl/archive/cperl-(5.+?)\.tar\.gz)"}xg) {
+          while ($html =~ m{href="(/perl11/cperl/releases/download/cperl-(5.+?)/cperl-.+?\.tar\.gz)"}g) {
               $dist{ "cperl-$2" } = $cperl_remote . $1;
           }
       }
@@ -1365,9 +1366,12 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           "cperl-5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
           "cperl-5.24.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.24.2.tar.gz",
           "cperl-5.25.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.25.2.tar.gz",
-          "cperl-5.26.0" => "https://github.com/perl11/cperl/archive/cperl-5.26.0.tar.gz",
-          "cperl-5.26.0-RC1" => "https://github.com/perl11/cperl/archive/cperl-5.26.0-RC1.tar.gz",
-          "cperl-5.27.0" => "https://github.com/perl11/cperl/archive/cperl-5.27.0.tar.gz",
+          "cperl-5.26.4" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.4/cperl-5.26.4.tar.gz",
+          "cperl-5.26.5" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.5/cperl-5.26.5.tar.gz",
+          "cperl-5.28.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.28.2/cperl-5.28.2.tar.gz",
+          "cperl-5.29.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.0/cperl-5.29.0.tar.gz",
+          "cperl-5.29.1" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.1/cperl-5.29.1.tar.gz",
+          "cperl-5.30.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.30.0/cperl-5.30.0.tar.gz",
       );
   
       my $error = 1;
@@ -1383,17 +1387,19 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my ($self, $dist, $rd) = @_;
       $rd ||= {};
   
-      my $expect_href = "/perl11/cperl/archive/${dist}.tar.gz";
-      my $html = http_get('https://github.com/perl11/cperl/releases/tag/' . $dist);
+      my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
       my $error = 1;
+  
+      my $html = eval {
+          http_get('https://github.com/perl11/cperl/releases/tag/' . $dist);
+      } || "";
   
       if ($html =~ m{ <a \s+ href="($expect_href)" }xsi) {
           $rd->{tarball_name} = "${dist}.tar.gz";
           $rd->{tarball_url}  = "https://github.com" . $1;
           $error = 0;
-      } else {
-          $error = 1;
       }
+  
       return ($error, $rd);
   }
   
@@ -1492,7 +1498,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           }
           elsif ($shell =~ m/fish/) {
               $code = ". $root_dir/etc/perlbrew.fish";
-              $yourshrc = 'config/fish/config.fish';
+              $yourshrc = '.config/fish/config.fish';
           }
           else {
               $code = "source $root_dir/etc/bashrc";
@@ -2408,18 +2414,27 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my $self       = shift;
       my $is_verbose = $self->{verbose};
   
-      for my $i ($self->installed_perls) {
-          printf "%-2s%-20s %-20s %s\n",
-              $i->{is_current} ? '*' : '',
-              $i->{name},
-              ( $is_verbose ?
-                  (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
-                : '' ),
-              ( $is_verbose ? "(installed on $i->{ctime})" : '' );
+      if ($self->{'no-decoration'}) {
+          for my $i ($self->installed_perls) {
+              print $i->{name} . "\n";
+              for my $lib (@{$i->{libs}}) {
+                  print $lib->{name} . "\n";
+              }
+          }
+      } else {
+          for my $i ($self->installed_perls) {
+              printf "%-2s%-20s %-20s %s\n",
+                  $i->{is_current} ? '*' : '',
+                  $i->{name},
+                  ( $is_verbose ?
+                    (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
+                    : '' ),
+                    ( $is_verbose ? "(installed on $i->{ctime})" : '' );
   
-          for my $lib (@{$i->{libs}}) {
-              print $lib->{is_current} ? "* " : "  ",
-                  $lib->{name}, "\n"
+              for my $lib (@{$i->{libs}}) {
+                  print $lib->{is_current} ? "* " : "  ",
+                      $lib->{name}, "\n"
+              }
           }
       }
   
@@ -42875,7 +42890,7 @@ Version "blead" is also a special token that means whatever the latest
 version in the repository, which is downloaded from this specific URL
 regardless of mirror settings:
 
-    http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
+    https://github.com/Perl/perl5/archive/blead.tar.gz
 
 The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
