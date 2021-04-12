@@ -1060,7 +1060,7 @@ sub release_detail_cperl_remote {
     my ($self, $dist, $rd) = @_;
     $rd ||= {};
 
-    my $expect_href = "/perl11/cperl/archive/${dist}.tar.gz";
+    my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
     my $error = 1;
 
     my $html = eval {

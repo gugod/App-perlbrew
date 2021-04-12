@@ -20,15 +20,17 @@ subtest 'Unknown version, expecting error', sub {
     ok defined($rd);
 };
 
-subtest 'Known version, expecting success', sub {
-    my $rd = { type => "cperl", "version" => "5.27.1" };
-    $app->release_detail_cperl_remote("cperl-5.27.1", $rd);
+for my $version ("5.27.1", "5.30.0") {
+    subtest "Known version ($version), expecting success", sub {
+        my $rd = { type => "cperl", "version" => $version };
+        $app->release_detail_cperl_remote("cperl-${version}", $rd);
 
-    ok defined( $rd->{tarball_url} );
-    ok defined( $rd->{tarball_name} );
+        ok defined( $rd->{tarball_url} );
+        ok defined( $rd->{tarball_name} );
 
-    is $rd->{tarball_url}, "https://github.com/perl11/cperl/archive/cperl-5.27.1.tar.gz";
-    is $rd->{tarball_name}, "cperl-5.27.1.tar.gz";
-};
+        is $rd->{tarball_url}, "https://github.com/perl11/cperl/releases/download/cperl-${version}/cperl-${version}.tar.gz";
+        is $rd->{tarball_name}, "cperl-${version}.tar.gz";
+    }
+}
 
 done_testing;
