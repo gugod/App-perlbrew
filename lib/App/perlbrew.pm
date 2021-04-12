@@ -859,7 +859,7 @@ sub available_cperl_distributions {
 
     # cperl releases: https://github.com/perl11/cperl/tags
     my $cperl_remote           = 'https://github.com';
-    my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/tags';
+    my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/releases';
 
     my $html = http_get($url_cperl_release_list);
 
@@ -868,7 +868,7 @@ sub available_cperl_distributions {
     }
 
     if ($html) {
-        while ($html =~ m{href="(/perl11/cperl/archive/cperl-(5.+?)\.tar\.gz)"}xg) {
+        while ($html =~ m{href="(/perl11/cperl/releases/download/cperl-(5.+?)/cperl-.+?\.tar\.gz)"}g) {
             $dist{ "cperl-$2" } = $cperl_remote . $1;
         }
     }
