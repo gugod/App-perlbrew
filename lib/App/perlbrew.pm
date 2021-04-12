@@ -1061,16 +1061,18 @@ sub release_detail_cperl_remote {
     $rd ||= {};
 
     my $expect_href = "/perl11/cperl/archive/${dist}.tar.gz";
-    my $html = http_get('https://github.com/perl11/cperl/releases/tag/' . $dist);
     my $error = 1;
+
+    my $html = eval {
+        http_get('https://github.com/perl11/cperl/releases/tag/' . $dist);
+    } || "";
 
     if ($html =~ m{ <a \s+ href="($expect_href)" }xsi) {
         $rd->{tarball_name} = "${dist}.tar.gz";
         $rd->{tarball_url}  = "https://github.com" . $1;
         $error = 0;
-    } else {
-        $error = 1;
     }
+
     return ($error, $rd);
 }
 

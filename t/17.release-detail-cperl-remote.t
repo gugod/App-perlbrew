@@ -14,13 +14,21 @@ unless ($ENV{TEST_LIVE}) {
 
 my $app = App::perlbrew->new();
 
-my $rd = { type => "cperl", "version" => "5.27.1" };
-$app->release_detail_cperl_remote("cperl-5.27.1", $rd);
+subtest 'Unknown version, expecting error', sub {
+    my ($error, $rd) = $app->release_detail_cperl_remote("xxx");
+    ok $error, "Errored, as expected";
+    ok defined($rd);
+};
 
-ok defined( $rd->{tarball_url} );
-ok defined( $rd->{tarball_name} );
+subtest 'Known version, expecting success', sub {
+    my $rd = { type => "cperl", "version" => "5.27.1" };
+    $app->release_detail_cperl_remote("cperl-5.27.1", $rd);
 
-is $rd->{tarball_url}, "https://github.com/perl11/cperl/archive/cperl-5.27.1.tar.gz";
-is $rd->{tarball_name}, "cperl-5.27.1.tar.gz";
+    ok defined( $rd->{tarball_url} );
+    ok defined( $rd->{tarball_name} );
+
+    is $rd->{tarball_url}, "https://github.com/perl11/cperl/archive/cperl-5.27.1.tar.gz";
+    is $rd->{tarball_name}, "cperl-5.27.1.tar.gz";
+};
 
 done_testing;
