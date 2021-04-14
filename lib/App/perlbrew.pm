@@ -2857,15 +2857,15 @@ sub run_command_clone_modules {
     # create a new application to 'exec' the 'cpanm'
     # with the specified module list
 
-    my $app = $class->new(
+    my @args = (
         qw(--quiet exec --with),
         $dst_perl,
-        'cpanm',
-        @modules_to_install
-        );
+        'cpanm'
+    );
+    push @args, '--notest' if $self->{notest};
+    push @args, @modules_to_install;
 
-    $app->run;
-
+    $class->new(@args)->run;
 }
 
 sub format_info_output
