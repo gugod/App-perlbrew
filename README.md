@@ -2,7 +2,7 @@
 
 App::perlbrew - Manage perl installations in your `$HOME`
 
-## SYNOPSIS
+# SYNOPSIS
 
     # Installation
     curl -L https://install.perlbrew.pl | bash
@@ -14,31 +14,31 @@ App::perlbrew - Manage perl installations in your `$HOME`
     perlbrew available
 
     # Install some Perls
-    perlbrew install 5.18.2
-    perlbrew install perl-5.8.1
-    perlbrew install perl-5.19.9
+    perlbrew install 5.32.1
+    perlbrew install perl-5.28.3
+    perlbrew install perl-5.33.6
 
     # See what were installed
     perlbrew list
 
     # Swith to an installation and set it as default
-    perlbrew switch perl-5.18.2
+    perlbrew switch perl-5.32.1
 
     # Temporarily use another version only in current shell.
-    perlbrew use perl-5.8.1
+    perlbrew use perl-5.28.3
     perl -v
 
-    # Or turn it off completely. Useful when you messed up too deep.
-    # Or want to go back to the system Perl.
+    # Turn it off and go back to the system perl.
     perlbrew off
 
-    # Use 'switch' command to turn it back on.
-    perlbrew switch perl-5.12.2
+    # Turn it back on with 'switch', or 'use'
+    perlbrew switch perl-5.32.1
+    perlbrew use perl-5.32.1
 
     # Exec something with all perlbrew-ed perls
     perlbrew exec -- perl -E 'say $]'
 
-## DESCRIPTION
+# DESCRIPTION
 
 [perlbrew](https://metacpan.org/pod/perlbrew) is a program to automate the building and installation of perl in an
 easy way. It provides multiple isolated perl environments, and a mechanism
@@ -55,7 +55,7 @@ or by visiting [perlbrew's official website](https://perlbrew.pl/). The followin
 features the API of `App::perlbrew` module, and may not be remotely
 close to what your want to read.
 
-## INSTALLATION
+# INSTALLATION
 
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
@@ -71,7 +71,7 @@ should follow the instruction on screen to modify your shell rc file to put it
 in your PATH.
 
 The installed perlbrew command is a standalone executable that can be run with
-system perl. The minimum system perl version requirement is 5.8.0, which should
+system perl. The minimum required version of system perl is 5.8.0, which should
 be good enough for most of the OSes these days.
 
 A fat-packed version of [patchperl](https://metacpan.org/pod/patchperl) is also installed to
@@ -113,22 +113,10 @@ The `self-upgrade` command will not upgrade the perlbrew installed by cpan
 command, but it is also easy to upgrade perlbrew by running `cpan App::perlbrew`
 again.
 
-## METHODS
-
-- (Str) current\_perl
-
-    Return the "current perl" object attribute string, or, if absent, the value of
-    `PERLBREW_PERL` environment variable.
-
-- (Str) current\_perl (Str)
-
-    Set the `current_perl` object attribute to the given value.
-
-## PROJECT DEVELOPMENT
+# PROJECT DEVELOPMENT
 
 [perlbrew project](https://perlbrew.pl/) uses github
-[https://github.com/gugod/App-perlbrew/issues](https://github.com/gugod/App-perlbrew/issues) and RT
-<https://rt.cpan.org/Dist/Display.html?Queue=App-perlbrew> for issue
+[https://github.com/gugod/App-perlbrew/issues](https://github.com/gugod/App-perlbrew/issues) for issue
 tracking. Issues sent to these two systems will eventually be reviewed
 and handled.
 
@@ -141,13 +129,13 @@ Kang-min Liu  `<gugod@gugod.org>`
 
 # COPYRIGHT
 
-Copyright (c) 2010- Kang-min Liu `<gugod@gugod.org>`.
+Copyright (c) 2021 Kang-min Liu `<gugod@gugod.org>`.
 
-### LICENCE
+# LICENCE
 
 The MIT License
 
-## DISCLAIMER OF WARRANTY
+# DISCLAIMER OF WARRANTY
 
 BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
 FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN

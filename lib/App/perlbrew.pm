@@ -3401,7 +3401,7 @@ __END__
 
 App::perlbrew - Manage perl installations in your C<$HOME>
 
-=head2 SYNOPSIS
+=head1 SYNOPSIS
 
     # Installation
     curl -L https://install.perlbrew.pl | bash
@@ -3437,7 +3437,7 @@ App::perlbrew - Manage perl installations in your C<$HOME>
     # Exec something with all perlbrew-ed perls
     perlbrew exec -- perl -E 'say $]'
 
-=head2 DESCRIPTION
+=head1 DESCRIPTION
 
 L<perlbrew> is a program to automate the building and installation of perl in an
 easy way. It provides multiple isolated perl environments, and a mechanism
@@ -3454,7 +3454,7 @@ or by visiting L<perlbrew's official website|https://perlbrew.pl/>. The followin
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 
-=head2 INSTALLATION
+=head1 INSTALLATION
 
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
@@ -3512,7 +3512,7 @@ The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
 command, but it is also easy to upgrade perlbrew by running C<cpan App::perlbrew>
 again.
 
-=head2 PROJECT DEVELOPMENT
+=head1 PROJECT DEVELOPMENT
 
 L<perlbrew project|https://perlbrew.pl/> uses github
 L<https://github.com/gugod/App-perlbrew/issues> for issue
@@ -3530,11 +3530,11 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 Copyright (c) 2021 Kang-min Liu C<< <gugod@gugod.org> >>.
 
-=head3 LICENCE
+=head1 LICENCE
 
 The MIT License
 
-=head2 DISCLAIMER OF WARRANTY
+=head1 DISCLAIMER OF WARRANTY
 
 BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
 FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
