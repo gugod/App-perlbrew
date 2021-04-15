@@ -36,3 +36,7 @@
 ^.prove$
 ^.travis.yml$
 ^doc/notes.org$
+^.build
+^.circleci
+^.perlcriticrc
+^metamerge.json
