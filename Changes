@@ -1,3 +1,10 @@
+0.92
+	- Released at 2021-04-15T23:53:55+0900
+	- Thanks to our contributors: chee
+	- Fix a message mentioning fish config. GitHub PR #712
+	- Fetch cperl releases from https://github.com/perl11/cperl/releases instead
+	- Let `clone-modules` command accept `--notest` and skip running module tests
+
 0.91
 	- Released at 2021-01-31T17:10:27+0900
 	- Fix META info included in 0.90. No other feature changes.

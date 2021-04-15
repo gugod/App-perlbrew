@@ -2,7 +2,7 @@ NAME
 
     App::perlbrew - Manage perl installations in your $HOME
 
- SYNOPSIS
+SYNOPSIS
 
         # Installation
         curl -L https://install.perlbrew.pl | bash
@@ -38,7 +38,7 @@ NAME
         # Exec something with all perlbrew-ed perls
         perlbrew exec -- perl -E 'say $]'
 
- DESCRIPTION
+DESCRIPTION
 
     perlbrew is a program to automate the building and installation of perl
     in an easy way. It provides multiple isolated perl environments, and a
@@ -55,7 +55,7 @@ NAME
     following documentation features the API of App::perlbrew module, and
     may not be remotely close to what your want to read.
 
- INSTALLATION
+INSTALLATION
 
     It is the simplest to use the perlbrew installer, just paste this
     statement to your terminal:
@@ -114,7 +114,7 @@ NAME
     cpan command, but it is also easy to upgrade perlbrew by running cpan
     App::perlbrew again.
 
- PROJECT DEVELOPMENT
+PROJECT DEVELOPMENT
 
     perlbrew project <https://perlbrew.pl/> uses github
     https://github.com/gugod/App-perlbrew/issues for issue tracking. Issues
@@ -129,13 +129,13 @@ AUTHOR
 
 COPYRIGHT
 
-    Copyright (c) 2010- Kang-min Liu <gugod@gugod.org>.
+    Copyright (c) 2021 Kang-min Liu <gugod@gugod.org>.
 
-  LICENCE
+LICENCE
 
     The MIT License
 
- DISCLAIMER OF WARRANTY
+DISCLAIMER OF WARRANTY
 
     BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
     FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT

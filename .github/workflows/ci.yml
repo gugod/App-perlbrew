@@ -1,0 +1,40 @@
+name: CI
+
+on: pull_request
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: perl:5.32
+    steps:
+      - uses: actions/checkout@v2
+      - uses: gugod/action-perlcritic@fun
+        with:
+          directory: "lib script t dev-bin"
+      - name: install perlnitpick
+        run: cpanm --notest --quiet https://github.com/gugod/App-PerlNitpick.git
+      - name: run perlnitpick
+        run: perlnitpick --inplace --rules=RemoveTrailingWhitespace,RemoveUnusedVariables,RemoveUnusedInclude,RemoveUnusedImport .
+      - name: suggester
+        uses: reviewdog/action-suggester@v1
+        with:
+          tool_name: perlnitpick
+
+  yath:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: ['ubuntu-18.04', 'ubuntu-16.04']
+        perl: [ '5.32', '5.30' ]
+    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up perl
+        uses: shogo82148/actions-setup-perl@v1
+        with:
+          perl-version: ${{ matrix.perl }}
+      - run: perl -V
+      - run: cpanm --quite --notest --installdeps .
+      - run: cpanm --quite --notest App::Yath
+      - run: yath test --qvf t/

@@ -1,24 +1,21 @@
 name: coverage
 
 on:
+  pull_request:
   push:
     branches:
       - develop
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: ['ubuntu-latest']
-        perl: [ '5.32' ]
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    runs-on: 'ubuntu-latest'
+    name: Coverage
     steps:
       - uses: actions/checkout@v2
       - name: Set up perl
         uses: shogo82148/actions-setup-perl@v1
         with:
-          perl-version: ${{ matrix.perl }}
+          perl-version: 5.32
       - run: cpanm --quiet --notest --installdeps .
       - run: cpanm --quiet --notest App::Yath Devel::Cover Devel::Cover::Report::Coveralls
       - run: PERL5OPT=-MDevel::Cover yath test --qvf t/

@@ -1,0 +1,56 @@
+---
+abstract: 'Manage perl installations in your C<$HOME>'
+author:
+  - 'Kang-min Liu  C<< <gugod@gugod.org> >>'
+build_requires:
+  File::Which: '1.21'
+  IO::All: '0.51'
+  Path::Class: '0.33'
+  Test::Exception: '0.32'
+  Test::More: '1.001002'
+  Test::NoWarnings: '1.04'
+  Test::Output: '1.03'
+  Test::Simple: '1.001002'
+  Test::Spec: '0.49'
+  Test::TempDir::Tiny: '0.016'
+configure_requires:
+  Module::Build::Tiny: '0.034'
+dynamic_config: 0
+generated_by: 'App::ModuleBuildTiny version 0.029, CPAN::Meta::Converter version 2.150010'
+license: mit
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: '1.4'
+name: App-perlbrew
+provides:
+  App::Perlbrew::Path:
+    file: lib/App/Perlbrew/Path.pm
+  App::Perlbrew::Path::Installation:
+    file: lib/App/Perlbrew/Path/Installation.pm
+  App::Perlbrew::Path::Installations:
+    file: lib/App/Perlbrew/Path/Installations.pm
+  App::Perlbrew::Path::Root:
+    file: lib/App/Perlbrew/Path/Root.pm
+  App::Perlbrew::Util:
+    file: lib/App/Perlbrew/Util.pm
+  App::perlbrew:
+    file: lib/App/perlbrew.pm
+    version: '0.92'
+requires:
+  CPAN::Perl::Releases: '5.20210320'
+  Capture::Tiny: '0.36'
+  Devel::PatchPerl: '2.08'
+  ExtUtils::MakeMaker: '7.22'
+  File::Copy: '0'
+  File::Temp: '0.2304'
+  JSON::PP: '0'
+  Pod::Parser: '1.63'
+  Pod::Usage: '1.68'
+  local::lib: '2.000014'
+resources:
+  bugtracker: https://github.com/gugod/App-perlbrew/issues
+  repository: https://github.com/gugod/App-perlbrew.git
+version: '0.92'
+x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
+x_spdx_expression: MIT
+x_static_install: '1'

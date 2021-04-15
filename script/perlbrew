@@ -197,7 +197,7 @@ Version "blead" is also a special token that means whatever the latest
 version in the repository, which is downloaded from this specific URL
 regardless of mirror settings:
 
-    http://perl5.git.perl.org/perl.git/snapshot/blead.tar.gz
+    https://github.com/Perl/perl5/archive/blead.tar.gz
 
 The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
@@ -640,7 +640,11 @@ which are not necessarily the I<same> module versions you had installed previous
 =head1 COMMAND: CLONE-MODULES
 
 Usage:
-    perlbrew clone-modules <src_version> <dst_version>
+    perlbrew clone-modules [options] <src_version> <dst_version>
+
+Options:
+
+    --notest    Skip all module tests
 
 This command re-installs all CPAN modules found from one installation to another. For example, this list all modules under '5.26.1' and re-install them under '5.27.7':
 

@@ -1,4 +1,4 @@
-requires 'CPAN::Perl::Releases' => '5.20210123';
+requires 'CPAN::Perl::Releases' => '5.20210320';
 requires 'Capture::Tiny'        => '0.36';
 requires 'Devel::PatchPerl'     => '2.08';
 requires 'Pod::Parser'          => '1.63';
@@ -19,7 +19,7 @@ on test => sub {
     requires 'Test::NoWarnings'     => '1.04';
     requires 'Test::Output'         => '1.03';
     requires 'Test::Simple'         => '1.001002';
-    requires 'Test::Spec'           => '0.47';
+    requires 'Test::Spec'           => '0.49';
     requires 'Test::TempDir::Tiny'  => '0.016';
 };
 

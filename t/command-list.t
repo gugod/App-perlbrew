@@ -57,6 +57,18 @@ describe "list command," => sub {
             stdout_like sub { $app->run(); }, qr/^(\s|\*)\sc?perl-?\d\.\d{1,3}[_.]\d{1,2}(\@nobita)?/, 'Cannot find Perl with libraries in output'
 
         };
+        describe "when `--no-decoration` is given", sub {
+            it "does not mark anything", sub {
+                $ENV{PERLBREW_LIB} = "nobita";
+                my $app = App::perlbrew->new("list", "--no-decoration");
+                stdout_like sub { $app->run(); }, qr/^perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/, 'No decoration mark in the output';
+            };
+        };
+    };
+
+    describe "when `--no-decoration` is given", sub {
+        my $app = App::perlbrew->new("list", "--no-decoration");
+        stdout_like sub { $app->run(); }, qr/^perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/, 'No decoration mark in the output';
     };
 };
 

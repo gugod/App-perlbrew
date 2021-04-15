@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.91";
+our $VERSION = "0.92";
 use Config;
 
 BEGIN {
@@ -291,6 +291,7 @@ sub parse_cmdline {
         'all',
         'shell=s',
         'no-patchperl',
+        'no-decoration',
 
         "builddir=s",
 
@@ -858,7 +859,7 @@ sub available_cperl_distributions {
 
     # cperl releases: https://github.com/perl11/cperl/tags
     my $cperl_remote           = 'https://github.com';
-    my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/tags';
+    my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/releases';
 
     my $html = http_get($url_cperl_release_list);
 
@@ -867,7 +868,7 @@ sub available_cperl_distributions {
     }
 
     if ($html) {
-        while ($html =~ m{href="(/perl11/cperl/archive/cperl-(5.+?)\.tar\.gz)"}xg) {
+        while ($html =~ m{href="(/perl11/cperl/releases/download/cperl-(5.+?)/cperl-.+?\.tar\.gz)"}g) {
             $dist{ "cperl-$2" } = $cperl_remote . $1;
         }
     }
@@ -1041,9 +1042,12 @@ sub release_detail_cperl_local {
         "cperl-5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
         "cperl-5.24.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.24.2.tar.gz",
         "cperl-5.25.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.25.2.tar.gz",
-        "cperl-5.26.0" => "https://github.com/perl11/cperl/archive/cperl-5.26.0.tar.gz",
-        "cperl-5.26.0-RC1" => "https://github.com/perl11/cperl/archive/cperl-5.26.0-RC1.tar.gz",
-        "cperl-5.27.0" => "https://github.com/perl11/cperl/archive/cperl-5.27.0.tar.gz",
+        "cperl-5.26.4" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.4/cperl-5.26.4.tar.gz",
+        "cperl-5.26.5" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.5/cperl-5.26.5.tar.gz",
+        "cperl-5.28.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.28.2/cperl-5.28.2.tar.gz",
+        "cperl-5.29.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.0/cperl-5.29.0.tar.gz",
+        "cperl-5.29.1" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.1/cperl-5.29.1.tar.gz",
+        "cperl-5.30.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.30.0/cperl-5.30.0.tar.gz",
     );
 
     my $error = 1;
@@ -1059,17 +1063,19 @@ sub release_detail_cperl_remote {
     my ($self, $dist, $rd) = @_;
     $rd ||= {};
 
-    my $expect_href = "/perl11/cperl/archive/${dist}.tar.gz";
-    my $html = http_get('https://github.com/perl11/cperl/releases/tag/' . $dist);
+    my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
     my $error = 1;
+
+    my $html = eval {
+        http_get('https://github.com/perl11/cperl/releases/tag/' . $dist);
+    } || "";
 
     if ($html =~ m{ <a \s+ href="($expect_href)" }xsi) {
         $rd->{tarball_name} = "${dist}.tar.gz";
         $rd->{tarball_url}  = "https://github.com" . $1;
         $error = 0;
-    } else {
-        $error = 1;
     }
+
     return ($error, $rd);
 }
 
@@ -1168,7 +1174,7 @@ sub run_command_init {
         }
         elsif ($shell =~ m/fish/) {
             $code = ". $root_dir/etc/perlbrew.fish";
-            $yourshrc = 'config/fish/config.fish';
+            $yourshrc = '.config/fish/config.fish';
         }
         else {
             $code = "source $root_dir/etc/bashrc";
@@ -2084,18 +2090,27 @@ sub run_command_list {
     my $self       = shift;
     my $is_verbose = $self->{verbose};
 
-    for my $i ($self->installed_perls) {
-        printf "%-2s%-20s %-20s %s\n",
-            $i->{is_current} ? '*' : '',
-            $i->{name},
-            ( $is_verbose ?
-                (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
-              : '' ),
-            ( $is_verbose ? "(installed on $i->{ctime})" : '' );
+    if ($self->{'no-decoration'}) {
+        for my $i ($self->installed_perls) {
+            print $i->{name} . "\n";
+            for my $lib (@{$i->{libs}}) {
+                print $lib->{name} . "\n";
+            }
+        }
+    } else {
+        for my $i ($self->installed_perls) {
+            printf "%-2s%-20s %-20s %s\n",
+                $i->{is_current} ? '*' : '',
+                $i->{name},
+                ( $is_verbose ?
+                  (index($i->{name}, $i->{version}) < 0) ? "($i->{version})" : ''
+                  : '' ),
+                  ( $is_verbose ? "(installed on $i->{ctime})" : '' );
 
-        for my $lib (@{$i->{libs}}) {
-            print $lib->{is_current} ? "* " : "  ",
-                $lib->{name}, "\n"
+            for my $lib (@{$i->{libs}}) {
+                print $lib->{is_current} ? "* " : "  ",
+                    $lib->{name}, "\n"
+            }
         }
     }
 
@@ -2842,15 +2857,15 @@ sub run_command_clone_modules {
     # create a new application to 'exec' the 'cpanm'
     # with the specified module list
 
-    my $app = $class->new(
+    my @args = (
         qw(--quiet exec --with),
         $dst_perl,
-        'cpanm',
-        @modules_to_install
-        );
+        'cpanm'
+    );
+    push @args, '--notest' if $self->{notest};
+    push @args, @modules_to_install;
 
-    $app->run;
-
+    $class->new(@args)->run;
 }
 
 sub format_info_output
@@ -3386,7 +3401,7 @@ __END__
 
 App::perlbrew - Manage perl installations in your C<$HOME>
 
-=head2 SYNOPSIS
+=head1 SYNOPSIS
 
     # Installation
     curl -L https://install.perlbrew.pl | bash
@@ -3422,7 +3437,7 @@ App::perlbrew - Manage perl installations in your C<$HOME>
     # Exec something with all perlbrew-ed perls
     perlbrew exec -- perl -E 'say $]'
 
-=head2 DESCRIPTION
+=head1 DESCRIPTION
 
 L<perlbrew> is a program to automate the building and installation of perl in an
 easy way. It provides multiple isolated perl environments, and a mechanism
@@ -3439,7 +3454,7 @@ or by visiting L<perlbrew's official website|https://perlbrew.pl/>. The followin
 features the API of C<App::perlbrew> module, and may not be remotely
 close to what your want to read.
 
-=head2 INSTALLATION
+=head1 INSTALLATION
 
 It is the simplest to use the perlbrew installer, just paste this statement to
 your terminal:
@@ -3497,7 +3512,7 @@ The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
 command, but it is also easy to upgrade perlbrew by running C<cpan App::perlbrew>
 again.
 
-=head2 PROJECT DEVELOPMENT
+=head1 PROJECT DEVELOPMENT
 
 L<perlbrew project|https://perlbrew.pl/> uses github
 L<https://github.com/gugod/App-perlbrew/issues> for issue
@@ -3513,13 +3528,13 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2010- Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2021 Kang-min Liu C<< <gugod@gugod.org> >>.
 
-=head3 LICENCE
+=head1 LICENCE
 
 The MIT License
 
-=head2 DISCLAIMER OF WARRANTY
+=head1 DISCLAIMER OF WARRANTY
 
 BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
 FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
