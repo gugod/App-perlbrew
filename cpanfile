@@ -1,4 +1,4 @@
-requires 'CPAN::Perl::Releases' => '5.20210123';
+requires 'CPAN::Perl::Releases' => '5.20210320';
 requires 'Capture::Tiny'        => '0.36';
 requires 'Devel::PatchPerl'     => '2.08';
 requires 'Pod::Parser'          => '1.63';
