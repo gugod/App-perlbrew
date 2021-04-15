@@ -326,7 +326,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.91";
+  our $VERSION = "0.92";
   use Config;
   
   BEGIN {
@@ -3181,15 +3181,15 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       # create a new application to 'exec' the 'cpanm'
       # with the specified module list
   
-      my $app = $class->new(
+      my @args = (
           qw(--quiet exec --with),
           $dst_perl,
-          'cpanm',
-          @modules_to_install
-          );
+          'cpanm'
+      );
+      push @args, '--notest' if $self->{notest};
+      push @args, @modules_to_install;
   
-      $app->run;
-  
+      $class->new(@args)->run;
   }
   
   sub format_info_output
@@ -3725,7 +3725,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   App::perlbrew - Manage perl installations in your C<$HOME>
   
-  =head2 SYNOPSIS
+  =head1 SYNOPSIS
   
       # Installation
       curl -L https://install.perlbrew.pl | bash
@@ -3761,7 +3761,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       # Exec something with all perlbrew-ed perls
       perlbrew exec -- perl -E 'say $]'
   
-  =head2 DESCRIPTION
+  =head1 DESCRIPTION
   
   L<perlbrew> is a program to automate the building and installation of perl in an
   easy way. It provides multiple isolated perl environments, and a mechanism
@@ -3778,7 +3778,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   features the API of C<App::perlbrew> module, and may not be remotely
   close to what your want to read.
   
-  =head2 INSTALLATION
+  =head1 INSTALLATION
   
   It is the simplest to use the perlbrew installer, just paste this statement to
   your terminal:
@@ -3836,7 +3836,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   command, but it is also easy to upgrade perlbrew by running C<cpan App::perlbrew>
   again.
   
-  =head2 PROJECT DEVELOPMENT
+  =head1 PROJECT DEVELOPMENT
   
   L<perlbrew project|https://perlbrew.pl/> uses github
   L<https://github.com/gugod/App-perlbrew/issues> for issue
@@ -3852,13 +3852,13 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   =head1 COPYRIGHT
   
-  Copyright (c) 2010- Kang-min Liu C<< <gugod@gugod.org> >>.
+  Copyright (c) 2021 Kang-min Liu C<< <gugod@gugod.org> >>.
   
-  =head3 LICENCE
+  =head1 LICENCE
   
   The MIT License
   
-  =head2 DISCLAIMER OF WARRANTY
+  =head1 DISCLAIMER OF WARRANTY
   
   BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
   FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
@@ -12345,7 +12345,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20210123';
+  $CPAN::Perl::Releases::VERSION = '5.20210320';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12618,6 +12618,8 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.32.1-RC1" => { id => 'SHAY' },
   "5.33.6" => { id => 'HYDAHY' },
   "5.32.1" => { id => 'SHAY' },
+  "5.33.7" => { id => 'RENEEB' },
+  "5.33.8" => { id => 'ATOOMIC' },
   };
   
   sub perl_tarballs {
@@ -12686,7 +12688,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20210123
+  version 5.20210320
   
   =head1 SYNOPSIS
   
@@ -43333,7 +43335,11 @@ which are not necessarily the I<same> module versions you had installed previous
 =head1 COMMAND: CLONE-MODULES
 
 Usage:
-    perlbrew clone-modules <src_version> <dst_version>
+    perlbrew clone-modules [options] <src_version> <dst_version>
+
+Options:
+
+    --notest    Skip all module tests
 
 This command re-installs all CPAN modules found from one installation to another. For example, this list all modules under '5.26.1' and re-install them under '5.27.7':
 
