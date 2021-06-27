@@ -5,6 +5,8 @@ use App::perlbrew;
 use File::Temp 'tempdir';
 use IO::All;
 
+use App::Perlbrew::HTTP qw(http_user_agent_program http_get http_download);
+
 unless ($ENV{PERLBREW_DEV_TEST}) {
     plan skip_all => <<REASON;
 
@@ -14,14 +16,14 @@ blind. Whoever which to test this need to set PERLBREW_DEV_TEST env var to 1.
 REASON
 }
 
-my $ua = App::perlbrew::http_user_agent_program();
+my $ua = http_user_agent_program();
 note "User agent program = $ua";
 
-describe "App::perlbrew::http_get function" => sub {
+describe "http_get function" => sub {
     my ($output);
 
     before all => sub {
-        App::perlbrew::http_get(
+        http_get(
             "https://get.perlbrew.pl",
             undef,
             sub { $output = $_[0]; }
@@ -38,7 +40,7 @@ describe "App::perlbrew::http_get function" => sub {
     };
 };
 
-describe "App::perlbrew::http_download function, downloading the perlbrew-installer." => sub {
+describe "http_download function, downloading the perlbrew-installer." => sub {
     my ($dir, $output, $download_error);
 
     before all => sub {
@@ -55,7 +57,7 @@ Therefore we cannot proceed the test.
 REASON
         }
 
-        my $download_error = App::perlbrew::http_download("https://install.perlbrew.pl", $output);
+        my $download_error = http_download("https://install.perlbrew.pl", $output);
     };
 
     it "downloads to the wanted path" => sub {
@@ -68,4 +70,3 @@ REASON
 };
 
 runtests unless caller;
-
