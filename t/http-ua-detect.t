@@ -2,7 +2,7 @@
 use strict;
 use warnings;
 use File::Which qw(which);
-use App::perlbrew;
+use App::Perlbrew::HTTP qw(http_user_agent_program);
 use Test::More;
 
 my $expected_ua;
@@ -16,7 +16,7 @@ elsif (which("fetch")) {
     $expected_ua = "fetch";
 }
 
-my $detected_ua = App::perlbrew::http_user_agent_program();
+my $detected_ua = http_user_agent_program();
 is $detected_ua, $expected_ua, "UA: $detected_ua";
 
 done_testing;
