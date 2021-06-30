@@ -2692,7 +2692,6 @@ sub run_command_clone_modules {
     $dst_perl = pop || $self->current_env;
     $src_perl = pop || $self->current_env;
 
-
     # check source and destination do exist
     undef $src_perl if (! $self->resolve_installation_name($src_perl));
     undef $dst_perl if (! $self->resolve_installation_name($dst_perl));
@@ -2706,37 +2705,8 @@ sub run_command_clone_modules {
         exit(-1);
     }
 
+    my @modules_to_install = @{ $self->list_modules($src_perl) };
 
-    # I need to run an application to do the module listing.
-    # and get the result back so to handle it and pass
-    # to the exec subroutine. The solution I found so far
-    # is to store the result in a temp file (the list_modules
-    # uses a sub-perl process, so there is no way to pass a
-    # filehandle or something similar).
-    my $class = ref($self);
-    require File::Temp;
-    my $modules_fh = File::Temp->new;
-
-    # list all the modules and place them in the output file
-    my $src_app = $class->new(
-        qw(--quiet exec --with),
-        $src_perl,
-        'perl',
-        '-MExtUtils::Installed',
-        '-le',
-        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; open my $output_fh, ">", "%s"; print {$output_fh} $_ for ExtUtils::Installed->new->modules;',
-                $modules_fh->filename )
-        );
-
-    $src_app->run;
-
-    # here I should have the list of modules into the
-    # temporary file name, so I can ask the destination
-    # perl instance to install such list
-    $modules_fh->close;
-    open $modules_fh, '<', $modules_fh->filename;
-    chomp(my @modules_to_install = <$modules_fh>);
-    $modules_fh->close;
     die "\nNo modules installed on $src_perl !\n" if (! @modules_to_install);
     print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n";
 
@@ -2751,7 +2721,7 @@ sub run_command_clone_modules {
     push @args, '--notest' if $self->{notest};
     push @args, @modules_to_install;
 
-    $class->new(@args)->run;
+    __PACKAGE__->new(@args)->run;
 }
 
 sub format_info_output
