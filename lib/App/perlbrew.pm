@@ -2350,8 +2350,8 @@ sub run_command_exec {
                 print "Command terminated with non-zero status.\n";
 
                 print STDERR "Command [" .
-                join(' ', map { /\s/ ? "'$_'" : $_ } @ARGV) . # trying reverse shell escapes - quote arguments containing spaces
-                "] terminated with exit code $exit_code (\$? = $err) under the following perl environment:\n";
+                    join(' ', map { /\s/ ? "'$_'" : $_ } @ARGV) . # trying reverse shell escapes - quote arguments containing spaces
+                    "] terminated with exit code $exit_code (\$? = $err) under the following perl environment:\n";
                 print STDERR $self->format_info_output;
             }
 
