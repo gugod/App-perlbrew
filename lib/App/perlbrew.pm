@@ -23,6 +23,7 @@ use Getopt::Long ();
 use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
 use File::Copy 'copy';
+use Capture::Tiny ();
 
 use App::Perlbrew::Util;
 use App::Perlbrew::Path;
@@ -1776,7 +1777,6 @@ sub do_system {
 
 sub do_capture {
     my ($self, @cmd) = @_;
-    require Capture::Tiny;
     return Capture::Tiny::capture(
         sub {
             $self->do_system(@cmd);
@@ -2303,8 +2303,7 @@ sub run_command_exec {
         } split $d, $opts{with};
 
         @exec_with = map { $installed{$_} } @with;
-    }
-    else {
+    } else {
         @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
     }
 
@@ -2312,11 +2311,11 @@ sub run_command_exec {
         # TODO use comparable version.
         # For now, it doesn't produce consistent results for 5.026001 and 5.26.1
         @exec_with = grep { $_->{orig_version} >= $opts{min} } @exec_with;
-    };
+    }
 
     if ($opts{max}) {
         @exec_with = grep { $_->{orig_version} <= $opts{max} } @exec_with;
-    };
+    }
 
     if (0 == @exec_with) {
         print "No perl installation found.\n" unless $self->{quiet};
@@ -2406,8 +2405,7 @@ sub run_command_alias {
 
         $path_alias->unlink;
         $path_name->symlink ($path_alias);
-    }
-    elsif ($cmd eq 'delete') {
+    } elsif ($cmd eq 'delete') {
         $self->assert_known_installation($name);
 
         unless (-l $path_name) {
@@ -2415,8 +2413,7 @@ sub run_command_alias {
         }
 
         $path_name->unlink;
-    }
-    elsif ($cmd eq 'rename') {
+    } elsif ($cmd eq 'rename') {
         $self->assert_known_installation($name);
 
         unless (-l $path_name) {
@@ -2428,11 +2425,9 @@ sub run_command_alias {
         }
 
         rename($path_name, $path_alias);
-    }
-    elsif ($cmd eq 'help') {
+    } elsif ($cmd eq 'help') {
         $self->run_command_help("alias");
-    }
-    else {
+    } else {
         die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
     }
 }
@@ -2460,8 +2455,7 @@ sub run_command_lib {
     my $sub = "run_command_lib_$subcommand";
     if ($self->can($sub)) {
         $self->$sub(@args);
-    }
-    else {
+    } else {
         print "Unknown command: $subcommand\n";
     }
 }
@@ -2489,8 +2483,7 @@ sub run_command_lib_create {
 
     $dir->mkpath;
 
-    print "lib '$fullname' is created.\n"
-        unless $self->{quiet};
+    print "lib '$fullname' is created.\n" unless $self->{quiet};
 
     return;
 }
@@ -2519,9 +2512,8 @@ sub run_command_lib_delete {
         $dir->rmpath;
 
         print "lib '$fullname' is deleted.\n"
-            unless $self->{quiet};
-    }
-    else {
+        unless $self->{quiet};
+    } else {
         die "ERROR: '$fullname' does not exist.\n";
     }
 
@@ -2603,37 +2595,44 @@ sub run_command_upgrade_perl {
     $self->do_install_release($dist, $dist_version);
 }
 
-# Executes the list-modules command.
-# This routine launches a new perl instance that, thru
-# ExtUtils::Installed prints out all the modules
-# in the system. If an argument is passed to the
-# subroutine it is managed as a filename
-# to which prints the list of modules.
-sub run_command_list_modules {
-    my ($self, $output_filename) = @_;
-    my $class = ref($self) || __PACKAGE__;
+sub list_modules {
+    my ($self, $env) = @_;
 
-    # avoid something that does not seem as a filename to print
-    # output to...
-    undef $output_filename if (! scalar($output_filename));
-
-    my $name = $self->current_env;
-    if (-l (my $path = $self->root->perls ($name))) {
-        $name = $path->readlink->basename;
-    }
-
-    my $app = $class->new(
-        qw(--quiet exec --with),
-        $name,
-        'perl',
-        '-MExtUtils::Installed',
-        '-le',
-        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for grep {$_ ne q!Perl!} ExtUtils::Installed->new->modules;',
-                $output_filename ? sprintf('open my $output_fh, \'>\', "%s"; ', $output_filename) : '',
-                $output_filename ? '$output_fh' : 'STDOUT')
+    $env ||= $self->current_env;
+    my ($stdout, $stderr, $success) = Capture::Tiny::capture(
+        sub {
+            __PACKAGE__->new(
+                "--quiet", "exec", "--with", $env, 'perl', '-MExtUtils::Installed', '-le',
+                'BEGIN{@INC=grep {$_ ne q!.!} @INC}; print for ExtUtils::Installed->new->modules;',
+            )->run;
+        }
     );
 
-    $app->run;
+    unless ($success) {
+        unless ($self->{quiet}) {
+            print STDERR "Failed to retrive the list of installed modules.\n";
+            if ($self->{verbose}) {
+                print STDERR "STDOUT\n======\n$stdout\nSTDERR\n======\n$stderr\n";
+            }
+        }
+        return [];
+    }
+
+    my %rename = (
+        "ack" => "App::Ack",
+        "libwww::perl" => "LWP",
+        "libintl-perl" => "Locale::Messages",
+        "Role::Identifiable" => "Role::Identifiable::HasTags",
+        "TAP::Harness::Multiple" => "TAP::Harness::ReportByDescription",
+    );
+
+    return [map { $rename{$_} // $_ } grep { $_ ne "Perl" } split(/\n/, $stdout)];
+}
+
+sub run_command_list_modules {
+    my ($self) = @_;
+    my ($modules, $error) = $self->list_modules();
+    print "$_\n" for @$modules;
 }
 
 sub resolve_installation_name {
@@ -2692,7 +2691,6 @@ sub run_command_clone_modules {
     $dst_perl = pop || $self->current_env;
     $src_perl = pop || $self->current_env;
 
-
     # check source and destination do exist
     undef $src_perl if (! $self->resolve_installation_name($src_perl));
     undef $dst_perl if (! $self->resolve_installation_name($dst_perl));
@@ -2706,37 +2704,8 @@ sub run_command_clone_modules {
         exit(-1);
     }
 
+    my @modules_to_install = @{ $self->list_modules($src_perl) };
 
-    # I need to run an application to do the module listing.
-    # and get the result back so to handle it and pass
-    # to the exec subroutine. The solution I found so far
-    # is to store the result in a temp file (the list_modules
-    # uses a sub-perl process, so there is no way to pass a
-    # filehandle or something similar).
-    my $class = ref($self);
-    require File::Temp;
-    my $modules_fh = File::Temp->new;
-
-    # list all the modules and place them in the output file
-    my $src_app = $class->new(
-        qw(--quiet exec --with),
-        $src_perl,
-        'perl',
-        '-MExtUtils::Installed',
-        '-le',
-        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; open my $output_fh, ">", "%s"; print {$output_fh} $_ for ExtUtils::Installed->new->modules;',
-                $modules_fh->filename )
-        );
-
-    $src_app->run;
-
-    # here I should have the list of modules into the
-    # temporary file name, so I can ask the destination
-    # perl instance to install such list
-    $modules_fh->close;
-    open $modules_fh, '<', $modules_fh->filename;
-    chomp(my @modules_to_install = <$modules_fh>);
-    $modules_fh->close;
     die "\nNo modules installed on $src_perl !\n" if (! @modules_to_install);
     print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n";
 
@@ -2751,7 +2720,7 @@ sub run_command_clone_modules {
     push @args, '--notest' if $self->{notest};
     push @args, @modules_to_install;
 
-    $class->new(@args)->run;
+    __PACKAGE__->new(@args)->run;
 }
 
 sub format_info_output
