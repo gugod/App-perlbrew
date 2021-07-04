@@ -1,3 +1,5 @@
+	- Let `list-modules` and `clone-modules` map certain output to their representative module name. Github issue #722
+
 0.92
 	- Released at 2021-04-15T23:53:55+0900
 	- Thanks to our contributors: chee
