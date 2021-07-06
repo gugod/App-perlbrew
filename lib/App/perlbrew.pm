@@ -2583,7 +2583,6 @@ sub run_command_upgrade_perl {
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
 
-    require Config ;
     my @d_options = map { '-D' . $flavor{$_}->{d_option}} keys %flavor ;
     my %sub_config = map { $_ => $Config{$_}} grep { /^config_arg\d/} keys %Config ;
     for my $value (values %sub_config) {
