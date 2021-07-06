@@ -2697,7 +2697,7 @@ sub run_command_clone_modules {
 
     if ( ! $src_perl
          || ! $dst_perl
-         || $src_perl eq $dst_perl ){
+         || $src_perl eq $dst_perl ) {
         # cannot understand from where to where or
         # the user did specify the same versions
         $self->run_command_help('clone-modules');
@@ -2706,8 +2706,13 @@ sub run_command_clone_modules {
 
     my @modules_to_install = @{ $self->list_modules($src_perl) };
 
-    die "\nNo modules installed on $src_perl !\n" if (! @modules_to_install);
-    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n";
+    unless (@modules_to_install) {
+        print "\nNo modules installed on $src_perl !\n" unless $self->{quiet};
+        return;
+    }
+
+    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n"
+        unless $self->{quiet};
 
     # create a new application to 'exec' the 'cpanm'
     # with the specified module list
