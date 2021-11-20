@@ -2304,7 +2304,9 @@ sub run_command_exec {
 
         @exec_with = map { $installed{$_} } @with;
     } else {
-        @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
+        @exec_with = grep {
+            not -l $self->root->perls( $_->{name} ); # Skip Aliases
+        } map { ($_, @{$_->{libs}}) } $self->installed_perls;
     }
 
     if ($opts{min}) {
@@ -2328,7 +2330,6 @@ sub run_command_exec {
 
     my $overall_success = 1;
     for my $i ( @exec_with ) {
-        next if -l $self->root->perls ($i->{name}); # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
