@@ -147,9 +147,9 @@ $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   package App::Perlbrew::Path;
   
-  require File::Basename;
-  require File::Glob;
-  require File::Path;
+  use File::Basename ();
+  use File::Glob ();
+  use File::Path ();
   
   use overload (
       '""' => \& stringify,
@@ -173,8 +173,7 @@ $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   sub _children {
       my ($self, $package) = @_;
   
-      return map $package->new($_),
-      File::Glob::bsd_glob($self->child("*"))
+      map { $package->new($_) } File::Glob::bsd_glob($self->child("*"));
   }
   
   sub new {
@@ -186,7 +185,7 @@ $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   sub basename {
       my ($self, $suffix) = @_;
   
-      return scalar File::Basename::fileparse ($self, ($suffix) x!! defined $suffix);
+      return scalar File::Basename::fileparse($self, ($suffix) x!! defined $suffix);
   }
   
   sub child {
@@ -204,19 +203,19 @@ $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   sub dirname {
       my ($self) = @_;
   
-      return App::Perlbrew::Path->new(File::Basename::dirname ($self));
+      return App::Perlbrew::Path->new( File::Basename::dirname($self) );
   }
   
   sub mkpath {
       my ($self) = @_;
-      File::Path::mkpath ([$self->stringify], 0, 0777);
+      File::Path::mkpath( [$self->stringify], 0, 0777 );
       return $self;
   }
   
   sub readlink {
       my ($self) = @_;
   
-      my $link = readlink $self->stringify;
+      my $link = CORE::readlink( $self->stringify );
       $link = __PACKAGE__->new($link) if defined $link;
   
       return $link;
@@ -224,7 +223,7 @@ $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   sub rmpath {
       my ($self) = @_;
-      File::Path::rmtree([$self->stringify], 0, 0);
+      File::Path::rmtree( [$self->stringify], 0, 0 );
       return $self;
   }
   
@@ -246,15 +245,14 @@ $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       my ($self, $destination, $force) = @_;
       $destination = App::Perlbrew::Path->new($destination) unless ref $destination;
   
-      CORE::unlink $destination if $force && (-e $destination || -l $destination);
+      CORE::unlink($destination) if $force && (-e $destination || -l $destination);
   
-      $destination if CORE::symlink $self, $destination;
+      $destination if CORE::symlink($self, $destination);
   }
   
   sub unlink {
       my ($self) = @_;
-  
-      CORE::unlink ($self);
+      CORE::unlink($self);
   }
   
   1;
@@ -452,7 +450,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.92";
+  our $VERSION = "0.93";
   use Config;
   
   BEGIN {
@@ -2754,7 +2752,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
           @exec_with = map { $installed{$_} } @with;
       } else {
-          @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
+          @exec_with = grep {
+              not -l $self->root->perls( $_->{name} ); # Skip Aliases
+          } map { ($_, @{$_->{libs}}) } $self->installed_perls;
       }
   
       if ($opts{min}) {
@@ -2778,7 +2778,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my $overall_success = 1;
       for my $i ( @exec_with ) {
-          next if -l $self->root->perls ($i->{name}); # Skip Aliases
           my %env = $self->perlbrew_env($i->{name});
           next if !$env{PERLBREW_PERL};
   
@@ -3033,7 +3032,6 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       local $self->{as}        = $current->{name};
       local $self->{dist_name} = $dist;
   
-      require Config ;
       my @d_options = map { '-D' . $flavor{$_}->{d_option}} keys %flavor ;
       my %sub_config = map { $_ => $Config{$_}} grep { /^config_arg\d/} keys %Config ;
       for my $value (values %sub_config) {
