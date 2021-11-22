@@ -1,3 +1,9 @@
+0.93
+	- Released at 2021-11-22T23:09:25+0900
+	- Let `clone-modules` takes just one arguments and mean 'cloning modules from that perl'.
+	- Let `list-modules` and `clone-modules` map certain output to their representative module name. Github issue #722
+	- `exec` command now takes aliases explicitly specified in `--with` args and run commands with those aliases -- even if that would run the same thing twice. Github issue #725
+
 0.92
 	- Released at 2021-04-15T23:53:55+0900
 	- Thanks to our contributors: chee

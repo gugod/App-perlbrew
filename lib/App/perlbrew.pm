@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.92";
+our $VERSION = "0.93";
 use Config;
 
 BEGIN {
@@ -23,10 +23,12 @@ use Getopt::Long ();
 use CPAN::Perl::Releases;
 use JSON::PP 'decode_json';
 use File::Copy 'copy';
+use Capture::Tiny ();
 
 use App::Perlbrew::Util;
 use App::Perlbrew::Path;
 use App::Perlbrew::Path::Root;
+use App::Perlbrew::HTTP qw(http_get http_download);
 
 ### global variables
 
@@ -83,121 +85,6 @@ for (@flavors) {
 for (@flavors) {
     if (my $implies = $_->{implies}) {
         $flavor{$implies}{implied_by} = $_->{name};
-    }
-}
-
-{
-    my %commands = (
-        curl => {
-            test     => '--version >/dev/null 2>&1',
-            get      => '--silent --location --fail -o - {url}',
-            download => '--silent --location --fail -o {output} {url}',
-            order    => 1,
-
-            # Exit code is 22 on 404s etc
-            die_on_error => sub { die 'Page not retrieved; HTTP error code 400 or above.' if ($_[ 0 ] >> 8 == 22); },
-        },
-        wget => {
-            test     => '--version >/dev/null 2>&1',
-            get      => '--quiet -O - {url}',
-            download => '--quiet -O {output} {url}',
-            order    => 2,
-
-            # Exit code is not 0 on error
-            die_on_error => sub { die 'Page not retrieved: fetch failed.' if ($_[ 0 ]); },
-        },
-        fetch => {
-            test     => '--version >/dev/null 2>&1',
-            get      => '-o - {url}',
-            download => '-o {output} {url}',
-            order    => 3,
-
-            # Exit code is 8 on 404s etc
-            die_on_error => sub { die 'Server issued an error response.' if ($_[ 0 ] >> 8 == 8); },
-        }
-    );
-
-    our $HTTP_USER_AGENT_PROGRAM;
-    sub http_user_agent_program {
-        $HTTP_USER_AGENT_PROGRAM ||= do {
-            my $program;
-
-            for my $p (sort {$commands{$a}{order}<=>$commands{$b}{order}} keys %commands) {
-                my $code = system("$p $commands{$p}->{test}") >> 8;
-                if ($code != 127) {
-                    $program = $p;
-                    last;
-                }
-            }
-
-            unless ($program) {
-                die "[ERROR] Cannot find a proper http user agent program. Please install curl or wget.\n";
-            }
-
-            $program;
-        };
-
-        die "[ERROR] Unrecognized http user agent program: $HTTP_USER_AGENT_PROGRAM. It can only be one of: ".join(",", keys %commands)."\n" unless $commands{$HTTP_USER_AGENT_PROGRAM};
-
-        return $HTTP_USER_AGENT_PROGRAM;
-    }
-
-    sub http_user_agent_command {
-        my ($purpose, $params) = @_;
-        my $ua = http_user_agent_program;
-        my $cmd = $ua . " " . $commands{ $ua }->{ $purpose };
-        for (keys %$params) {
-            $cmd =~ s!{$_}!$params->{$_}!g;
-        }
-        return ($ua, $cmd) if wantarray;
-        return $cmd;
-    }
-
-    sub http_download {
-        my ($url, $path) = @_;
-
-        if (-e $path) {
-            die "ERROR: The download target < $path > already exists.\n";
-        }
-
-        my $partial = 0;
-        local $SIG{TERM} = local $SIG{INT} = sub { $partial++ };
-
-        my $download_command = http_user_agent_command(download => { url => $url, output => $path });
-
-        my $status = system($download_command);
-        if ($partial) {
-            $path->unlink;
-            return "ERROR: Interrupted.";
-        }
-        unless ($status == 0) {
-            $path->unlink;
-            return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
-        }
-        return 0;
-    }
-
-    sub http_get {
-        my ($url, $header, $cb) = @_;
-
-        if (ref($header) eq 'CODE') {
-            $cb = $header;
-            $header = undef;
-        }
-
-        my ($program, $command) = http_user_agent_command(get => { url =>  $url });
-
-        open my $fh, '-|', $command
-            or die "open() pipe for '$command': $!";
-
-        local $/;
-        my $body = <$fh>;
-        close $fh;
-
-        # check if the download has failed and die automatically
-        $commands{ $program }{ die_on_error }->($?);
-
-        return $cb ? $cb->($body) : $body;
     }
 }
 
@@ -1890,7 +1777,6 @@ sub do_system {
 
 sub do_capture {
     my ($self, @cmd) = @_;
-    require Capture::Tiny;
     return Capture::Tiny::capture(
         sub {
             $self->do_system(@cmd);
@@ -2417,20 +2303,21 @@ sub run_command_exec {
         } split $d, $opts{with};
 
         @exec_with = map { $installed{$_} } @with;
-    }
-    else {
-        @exec_with = map { ($_, @{$_->{libs}}) } $self->installed_perls;
+    } else {
+        @exec_with = grep {
+            not -l $self->root->perls( $_->{name} ); # Skip Aliases
+        } map { ($_, @{$_->{libs}}) } $self->installed_perls;
     }
 
     if ($opts{min}) {
         # TODO use comparable version.
         # For now, it doesn't produce consistent results for 5.026001 and 5.26.1
         @exec_with = grep { $_->{orig_version} >= $opts{min} } @exec_with;
-    };
+    }
 
     if ($opts{max}) {
         @exec_with = grep { $_->{orig_version} <= $opts{max} } @exec_with;
-    };
+    }
 
     if (0 == @exec_with) {
         print "No perl installation found.\n" unless $self->{quiet};
@@ -2443,7 +2330,6 @@ sub run_command_exec {
 
     my $overall_success = 1;
     for my $i ( @exec_with ) {
-        next if -l $self->root->perls ($i->{name}); # Skip Aliases
         my %env = $self->perlbrew_env($i->{name});
         next if !$env{PERLBREW_PERL};
 
@@ -2520,8 +2406,7 @@ sub run_command_alias {
 
         $path_alias->unlink;
         $path_name->symlink ($path_alias);
-    }
-    elsif ($cmd eq 'delete') {
+    } elsif ($cmd eq 'delete') {
         $self->assert_known_installation($name);
 
         unless (-l $path_name) {
@@ -2529,8 +2414,7 @@ sub run_command_alias {
         }
 
         $path_name->unlink;
-    }
-    elsif ($cmd eq 'rename') {
+    } elsif ($cmd eq 'rename') {
         $self->assert_known_installation($name);
 
         unless (-l $path_name) {
@@ -2542,11 +2426,9 @@ sub run_command_alias {
         }
 
         rename($path_name, $path_alias);
-    }
-    elsif ($cmd eq 'help') {
+    } elsif ($cmd eq 'help') {
         $self->run_command_help("alias");
-    }
-    else {
+    } else {
         die "\nERROR: Unrecognized action: `${cmd}`.\n\n";
     }
 }
@@ -2574,8 +2456,7 @@ sub run_command_lib {
     my $sub = "run_command_lib_$subcommand";
     if ($self->can($sub)) {
         $self->$sub(@args);
-    }
-    else {
+    } else {
         print "Unknown command: $subcommand\n";
     }
 }
@@ -2603,8 +2484,7 @@ sub run_command_lib_create {
 
     $dir->mkpath;
 
-    print "lib '$fullname' is created.\n"
-        unless $self->{quiet};
+    print "lib '$fullname' is created.\n" unless $self->{quiet};
 
     return;
 }
@@ -2633,9 +2513,8 @@ sub run_command_lib_delete {
         $dir->rmpath;
 
         print "lib '$fullname' is deleted.\n"
-            unless $self->{quiet};
-    }
-    else {
+        unless $self->{quiet};
+    } else {
         die "ERROR: '$fullname' does not exist.\n";
     }
 
@@ -2705,7 +2584,6 @@ sub run_command_upgrade_perl {
     local $self->{as}        = $current->{name};
     local $self->{dist_name} = $dist;
 
-    require Config ;
     my @d_options = map { '-D' . $flavor{$_}->{d_option}} keys %flavor ;
     my %sub_config = map { $_ => $Config{$_}} grep { /^config_arg\d/} keys %Config ;
     for my $value (values %sub_config) {
@@ -2717,37 +2595,44 @@ sub run_command_upgrade_perl {
     $self->do_install_release($dist, $dist_version);
 }
 
-# Executes the list-modules command.
-# This routine launches a new perl instance that, thru
-# ExtUtils::Installed prints out all the modules
-# in the system. If an argument is passed to the
-# subroutine it is managed as a filename
-# to which prints the list of modules.
-sub run_command_list_modules {
-    my ($self, $output_filename) = @_;
-    my $class = ref($self) || __PACKAGE__;
+sub list_modules {
+    my ($self, $env) = @_;
 
-    # avoid something that does not seem as a filename to print
-    # output to...
-    undef $output_filename if (! scalar($output_filename));
-
-    my $name = $self->current_env;
-    if (-l (my $path = $self->root->perls ($name))) {
-        $name = $path->readlink->basename;
-    }
-
-    my $app = $class->new(
-        qw(--quiet exec --with),
-        $name,
-        'perl',
-        '-MExtUtils::Installed',
-        '-le',
-        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; %s print {%s} $_ for grep {$_ ne q!Perl!} ExtUtils::Installed->new->modules;',
-                $output_filename ? sprintf('open my $output_fh, \'>\', "%s"; ', $output_filename) : '',
-                $output_filename ? '$output_fh' : 'STDOUT')
+    $env ||= $self->current_env;
+    my ($stdout, $stderr, $success) = Capture::Tiny::capture(
+        sub {
+            __PACKAGE__->new(
+                "--quiet", "exec", "--with", $env, 'perl', '-MExtUtils::Installed', '-le',
+                'BEGIN{@INC=grep {$_ ne q!.!} @INC}; print for ExtUtils::Installed->new->modules;',
+            )->run;
+        }
     );
 
-    $app->run;
+    unless ($success) {
+        unless ($self->{quiet}) {
+            print STDERR "Failed to retrive the list of installed modules.\n";
+            if ($self->{verbose}) {
+                print STDERR "STDOUT\n======\n$stdout\nSTDERR\n======\n$stderr\n";
+            }
+        }
+        return [];
+    }
+
+    my %rename = (
+        "ack" => "App::Ack",
+        "libwww::perl" => "LWP",
+        "libintl-perl" => "Locale::Messages",
+        "Role::Identifiable" => "Role::Identifiable::HasTags",
+        "TAP::Harness::Multiple" => "TAP::Harness::ReportByDescription",
+    );
+
+    return [map { $rename{$_} // $_ } grep { $_ ne "Perl" } split(/\n/, $stdout)];
+}
+
+sub run_command_list_modules {
+    my ($self) = @_;
+    my ($modules, $error) = $self->list_modules();
+    print "$_\n" for @$modules;
 }
 
 sub resolve_installation_name {
@@ -2806,53 +2691,28 @@ sub run_command_clone_modules {
     $dst_perl = pop || $self->current_env;
     $src_perl = pop || $self->current_env;
 
-
     # check source and destination do exist
     undef $src_perl if (! $self->resolve_installation_name($src_perl));
     undef $dst_perl if (! $self->resolve_installation_name($dst_perl));
 
     if ( ! $src_perl
          || ! $dst_perl
-         || $src_perl eq $dst_perl ){
+         || $src_perl eq $dst_perl ) {
         # cannot understand from where to where or
         # the user did specify the same versions
         $self->run_command_help('clone-modules');
         exit(-1);
     }
 
+    my @modules_to_install = @{ $self->list_modules($src_perl) };
 
-    # I need to run an application to do the module listing.
-    # and get the result back so to handle it and pass
-    # to the exec subroutine. The solution I found so far
-    # is to store the result in a temp file (the list_modules
-    # uses a sub-perl process, so there is no way to pass a
-    # filehandle or something similar).
-    my $class = ref($self);
-    require File::Temp;
-    my $modules_fh = File::Temp->new;
+    unless (@modules_to_install) {
+        print "\nNo modules installed on $src_perl !\n" unless $self->{quiet};
+        return;
+    }
 
-    # list all the modules and place them in the output file
-    my $src_app = $class->new(
-        qw(--quiet exec --with),
-        $src_perl,
-        'perl',
-        '-MExtUtils::Installed',
-        '-le',
-        sprintf('BEGIN{@INC=grep {$_ ne q!.!} @INC}; open my $output_fh, ">", "%s"; print {$output_fh} $_ for ExtUtils::Installed->new->modules;',
-                $modules_fh->filename )
-        );
-
-    $src_app->run;
-
-    # here I should have the list of modules into the
-    # temporary file name, so I can ask the destination
-    # perl instance to install such list
-    $modules_fh->close;
-    open $modules_fh, '<', $modules_fh->filename;
-    chomp(my @modules_to_install = <$modules_fh>);
-    $modules_fh->close;
-    die "\nNo modules installed on $src_perl !\n" if (! @modules_to_install);
-    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n";
+    print "\nInstalling $#modules_to_install modules from $src_perl to $dst_perl ...\n"
+        unless $self->{quiet};
 
     # create a new application to 'exec' the 'cpanm'
     # with the specified module list
@@ -2865,7 +2725,7 @@ sub run_command_clone_modules {
     push @args, '--notest' if $self->{notest};
     push @args, @modules_to_install;
 
-    $class->new(@args)->run;
+    __PACKAGE__->new(@args)->run;
 }
 
 sub format_info_output

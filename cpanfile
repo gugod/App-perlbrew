@@ -1,6 +1,8 @@
-requires 'CPAN::Perl::Releases' => '5.20210320';
-requires 'Capture::Tiny'        => '0.36';
+# Always requires the latest for this two.
+requires 'CPAN::Perl::Releases' => '5.20210620';
 requires 'Devel::PatchPerl'     => '2.08';
+
+requires 'Capture::Tiny'        => '0.48';
 requires 'Pod::Parser'          => '1.63';
 requires 'Pod::Usage'           => '1.68';
 requires 'File::Copy'           => '0';

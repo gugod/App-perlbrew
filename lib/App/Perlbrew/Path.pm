@@ -3,9 +3,9 @@ use warnings;
 
 package App::Perlbrew::Path;
 
-require File::Basename;
-require File::Glob;
-require File::Path;
+use File::Basename ();
+use File::Glob ();
+use File::Path ();
 
 use overload (
     '""' => \& stringify,
@@ -29,8 +29,7 @@ sub _child {
 sub _children {
     my ($self, $package) = @_;
 
-    return map $package->new($_),
-    File::Glob::bsd_glob($self->child("*"))
+    map { $package->new($_) } File::Glob::bsd_glob($self->child("*"));
 }
 
 sub new {
@@ -42,7 +41,7 @@ sub new {
 sub basename {
     my ($self, $suffix) = @_;
 
-    return scalar File::Basename::fileparse ($self, ($suffix) x!! defined $suffix);
+    return scalar File::Basename::fileparse($self, ($suffix) x!! defined $suffix);
 }
 
 sub child {
@@ -60,19 +59,19 @@ sub children {
 sub dirname {
     my ($self) = @_;
 
-    return App::Perlbrew::Path->new(File::Basename::dirname ($self));
+    return App::Perlbrew::Path->new( File::Basename::dirname($self) );
 }
 
 sub mkpath {
     my ($self) = @_;
-    File::Path::mkpath ([$self->stringify], 0, 0777);
+    File::Path::mkpath( [$self->stringify], 0, 0777 );
     return $self;
 }
 
 sub readlink {
     my ($self) = @_;
 
-    my $link = readlink $self->stringify;
+    my $link = CORE::readlink( $self->stringify );
     $link = __PACKAGE__->new($link) if defined $link;
 
     return $link;
@@ -80,7 +79,7 @@ sub readlink {
 
 sub rmpath {
     my ($self) = @_;
-    File::Path::rmtree([$self->stringify], 0, 0);
+    File::Path::rmtree( [$self->stringify], 0, 0 );
     return $self;
 }
 
@@ -102,15 +101,14 @@ sub symlink {
     my ($self, $destination, $force) = @_;
     $destination = App::Perlbrew::Path->new($destination) unless ref $destination;
 
-    CORE::unlink $destination if $force && (-e $destination || -l $destination);
+    CORE::unlink($destination) if $force && (-e $destination || -l $destination);
 
-    $destination if CORE::symlink $self, $destination;
+    $destination if CORE::symlink($self, $destination);
 }
 
 sub unlink {
     my ($self) = @_;
-
-    CORE::unlink ($self);
+    CORE::unlink($self);
 }
 
 1;

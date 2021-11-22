@@ -640,7 +640,9 @@ which are not necessarily the I<same> module versions you had installed previous
 =head1 COMMAND: CLONE-MODULES
 
 Usage:
-    perlbrew clone-modules [options] <src_version> <dst_version>
+
+    perlbrew clone-modules [options] <destination>
+    perlbrew clone-modules [options] <source> <destination>
 
 Options:
 
@@ -650,6 +652,9 @@ This command re-installs all CPAN modules found from one installation to another
 
     perlbrew clone-modules 5.26.1 5.27.7
 
+The argument "source" is optional and is default to the current activated one. However if none is activated (perlbrew is switched off), it it an error.
+
+Noted that this does not guarantee that the versions of modules stays the same in the destination.
 
 =head1 SEE ALSO
 

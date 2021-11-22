@@ -16,23 +16,15 @@ mock_perlbrew_install("perl-5.16.0");
 
 no warnings;
 my ($__from, $__to, $__notest);
+sub App::perlbrew::list_modules {
+    my ($self, $env)  = @_;
+    $__from = $env || $self->current_env;
+    return ["Foo", "Bar"];
+}
+
 sub App::perlbrew::run_command_exec {
     my ($self, @args) = @_;
-
-    diag "ARGS: @args";
-
-    if (grep { $_ eq '-MExtUtils::Installed' } @args) {
-        $__from = $args[1];
-
-        my ($fn) = $args[5] =~ m{open .+">", "(.+?)";};
-        if ($fn) {
-            open my $fh, ">", $fn;
-            print $fh "Foo\nBar\n";
-            close($fh);
-        } else {
-            die "Failed to grok output path.";
-        }
-    } elsif (grep { $_ eq 'cpanm' } @args) {
+    if (grep { $_ eq 'cpanm' } @args) {
         $__to = $args[1];
         ($__notest) = grep { $_ eq '--notest' } @{$self->{original_argv}};
     }

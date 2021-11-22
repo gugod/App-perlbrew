@@ -23,6 +23,8 @@ meta-spec:
   version: '1.4'
 name: App-perlbrew
 provides:
+  App::Perlbrew::HTTP:
+    file: lib/App/Perlbrew/HTTP.pm
   App::Perlbrew::Path:
     file: lib/App/Perlbrew/Path.pm
   App::Perlbrew::Path::Installation:
@@ -35,10 +37,10 @@ provides:
     file: lib/App/Perlbrew/Util.pm
   App::perlbrew:
     file: lib/App/perlbrew.pm
-    version: '0.92'
+    version: '0.93'
 requires:
-  CPAN::Perl::Releases: '5.20210320'
-  Capture::Tiny: '0.36'
+  CPAN::Perl::Releases: '5.20210620'
+  Capture::Tiny: '0.48'
   Devel::PatchPerl: '2.08'
   ExtUtils::MakeMaker: '7.22'
   File::Copy: '0'
@@ -50,7 +52,7 @@ requires:
 resources:
   bugtracker: https://github.com/gugod/App-perlbrew/issues
   repository: https://github.com/gugod/App-perlbrew.git
-version: '0.92'
+version: '0.93'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
 x_spdx_expression: MIT
 x_static_install: '1'
