@@ -3,6 +3,8 @@
 # Make sure we are at the right directory.
 cd $(dirname $0)/..
 
+git clean -xdf
+
 CURRENT_VERSION=$(egrep 'our \$VERSION = "[\.0-9]+";' lib/App/perlbrew.pm  | egrep -o '[0-9]+' | tail -1)
 RELEASE_VERSION=0.$((CURRENT_VERSION+1))
 RELEASE_TIMESTAMP=$(date +'%FT%T%z')
