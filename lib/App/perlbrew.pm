@@ -2232,10 +2232,14 @@ sub run_command_self_upgrade {
     } else {
         die "Unable to detect version of new perlbrew!\n";
     }
+
     if ($new_version <= $VERSION) {
-        print "Your perlbrew is up-to-date.\n";
+        print "Your perlbrew is up-to-date (version $VERSION).\n" unless $self->{quiet};
         return;
     }
+
+    print "Upgrading from $VERSION to $new_version\n" unless $self->{quiet};
+
     system $TMP_PERLBREW, "self-install";
     $TMP_PERLBREW->unlink;
 }
