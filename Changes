@@ -1,3 +1,7 @@
+0.94
+	- Released at 2021-12-05T08:39:16+0900
+	- Let `self-upgrade` print version numbers when doing upgrades. Github issue #678.
+
 0.93
 	- Released at 2021-11-22T23:09:25+0900
 	- Let `clone-modules` takes just one arguments and mean 'cloning modules from that perl'.
