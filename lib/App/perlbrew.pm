@@ -1675,7 +1675,7 @@ INSTALL
         $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
     }
 
-    delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH);
+    delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH NO_COLOR);
 
     if ($self->do_system($cmd)) {
         my $newperl = $self->root->perls ($installation_name)->perl;
