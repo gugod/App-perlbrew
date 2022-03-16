@@ -66,14 +66,20 @@ sub http_user_agent_program {
 sub http_user_agent_command {
     my ($purpose, $params) = @_;
     my $ua = http_user_agent_program;
-    my $cmd = $ua . " " . $commands{ $ua }->{ $purpose };
+    my $cmd = $commands{ $ua }->{ $purpose };
     for (keys %$params) {
         $cmd =~ s!{$_}!$params->{$_}!g;
     }
 
     if ($HTTP_VERBOSE) {
-        $cmd =~ s/(silent|quiet)/verbose/;
+        if ($ua eq "fetch") {
+            $cmd = "-v " . $cmd;
+        } else {
+            $cmd =~ s/(silent|quiet)/verbose/;
+        }
     }
+
+    $cmd = $ua . " " . $cmd;
     return ($ua, $cmd) if wantarray;
     return $cmd;
 }
