@@ -2123,7 +2123,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           $cmd = "($cmd) >> '$self->{log_file}' 2>&1 ";
       }
   
-      delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH);
+      delete $ENV{$_} for qw(PERL5LIB PERL5OPT AWKPATH NO_COLOR);
   
       if ($self->do_system($cmd)) {
           my $newperl = $self->root->perls ($installation_name)->perl;
@@ -3829,10 +3829,12 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   L<perlbrew project|https://perlbrew.pl/> uses github
   L<https://github.com/gugod/App-perlbrew/issues> for issue
   tracking. Issues sent to these two systems will eventually be reviewed
-  and handled.
+  and handled. To participate, you need a github account.
   
-  See L<https://github.com/gugod/App-perlbrew/contributors> for a list
-  of project contributors.
+  Please briefly read the short instructions about how to get your work
+  released to CPAN:
+  
+  L<https://github.com/gugod/App-perlbrew/blob/develop/CONTRIBUTING.md>
   
   =head1 AUTHOR
   
@@ -3840,7 +3842,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   =head1 COPYRIGHT
   
-  Copyright (c) 2021 Kang-min Liu C<< <gugod@gugod.org> >>.
+  Copyright (c) 2022 Kang-min Liu C<< <gugod@gugod.org> >>.
   
   =head1 LICENCE
   
@@ -12333,7 +12335,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20210620';
+  $CPAN::Perl::Releases::VERSION = '5.20220313';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12614,6 +12616,17 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.34.0" => { id => 'XSAWYERX' },
   "5.35.0" => { id => 'RJBS' },
   "5.35.1" => { id => 'CORION' },
+  "5.35.2" => { id => 'NEILB' },
+  "5.35.3" => { id => 'ETHER' },
+  "5.35.4" => { id => 'WOLFSAGE' },
+  "5.35.5" => { id => 'LEONT' },
+  "5.35.6" => { id => 'HYDAHY' },
+  "5.35.7" => { id => 'NEILB' },
+  "5.35.8" => { id => 'ATOOMIC' },
+  "5.35.9" => { id => 'RENEEB' },
+  "5.34.1-RC1" => { id => 'SHAY' },
+  "5.34.1-RC2" => { id => 'SHAY' },
+  "5.34.1" => { id => 'SHAY' },
   };
   
   sub perl_tarballs {
@@ -12682,7 +12695,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20210620
+  version 5.20220313
   
   =head1 SYNOPSIS
   
@@ -12747,7 +12760,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2021 by Chris Williams.
+  This software is copyright (c) 2022 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
