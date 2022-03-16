@@ -19,8 +19,10 @@ for my $prog (qw(curl wget fetch)) {
 
             is $ua, $prog, "UA Program can be set to: $prog";
 
-            my ($cmd_verbosity) = $cmd =~ m/\s(--verbose|-v)\s/;
-            is !!$cmd_verbosity, !!$verbose, "verbosity matches: [$cmd]";
+            unless ($prog eq "fetch") {
+                my ($cmd_verbosity) = $cmd =~ m/\s(--verbose)\s/;
+                is !!$cmd_verbosity, !!$verbose, "verbosity matches: [$cmd]";
+            }
         }
     };
 }

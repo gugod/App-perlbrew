@@ -72,9 +72,7 @@ sub http_user_agent_command {
     }
 
     if ($HTTP_VERBOSE) {
-        if ($ua eq "fetch") {
-            $cmd = "-v " . $cmd;
-        } else {
+        unless ($ua eq "fetch") {
             $cmd =~ s/(silent|quiet)/verbose/;
         }
     }
