@@ -3381,10 +3381,12 @@ again.
 L<perlbrew project|https://perlbrew.pl/> uses github
 L<https://github.com/gugod/App-perlbrew/issues> for issue
 tracking. Issues sent to these two systems will eventually be reviewed
-and handled.
+and handled. To participate, you need a github account.
 
-See L<https://github.com/gugod/App-perlbrew/contributors> for a list
-of project contributors.
+Please briefly read the short instructions about how to get your work
+released to CPAN:
+
+L<https://github.com/gugod/App-perlbrew/blob/develop/CONTRIBUTING.md>
 
 =head1 AUTHOR
 
@@ -3392,7 +3394,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2021 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2022 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 

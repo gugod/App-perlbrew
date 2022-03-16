@@ -6,6 +6,7 @@ get your work released:
 - Fork the repository on github
 - Modify `lib/App/perlbrew.pm` or `script/perlbrew` if necessary.
 - Add tests so others do not break your feature.
+- If it seems pulsable, update `Changes` too. Put a gist of the change in the beginning of the file.
 - Send a pull request to @gugod and make an offer that he cannot reject (optional :-)
 
 Notice that the "master" branch is a stable branch, while the "develop" branch is the default target
