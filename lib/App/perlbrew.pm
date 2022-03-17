@@ -152,6 +152,10 @@ sub new {
     $self->root;
     $self->home;
 
+    if ($self->{verbose}) {
+        $App::Perlbrew::HTTP::HTTP_VERBOSE = 1;
+    }
+
     return $self;
 }
 

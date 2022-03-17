@@ -6,6 +6,7 @@ use 5.008;
 use Exporter 'import';
 our @EXPORT_OK = qw(http_user_agent_program http_user_agent_command http_get http_download);
 
+our $HTTP_VERBOSE = 0;
 our $HTTP_USER_AGENT_PROGRAM;
 
 my %commands = (
@@ -65,10 +66,18 @@ sub http_user_agent_program {
 sub http_user_agent_command {
     my ($purpose, $params) = @_;
     my $ua = http_user_agent_program;
-    my $cmd = $ua . " " . $commands{ $ua }->{ $purpose };
+    my $cmd = $commands{ $ua }->{ $purpose };
     for (keys %$params) {
         $cmd =~ s!{$_}!$params->{$_}!g;
     }
+
+    if ($HTTP_VERBOSE) {
+        unless ($ua eq "fetch") {
+            $cmd =~ s/(silent|quiet)/verbose/;
+        }
+    }
+
+    $cmd = $ua . " " . $cmd;
     return ($ua, $cmd) if wantarray;
     return $cmd;
 }
