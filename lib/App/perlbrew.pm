@@ -2212,13 +2212,14 @@ sub run_command_install_cpm {
 
 sub run_command_self_upgrade {
     my ($self) = @_;
-    my $TMPDIR = $ENV{TMPDIR} || "/tmp";
-    my $TMP_PERLBREW = App::Perlbrew::Path->new ($TMPDIR, "perlbrew");
 
     require FindBin;
     unless (-w $FindBin::Bin) {
         die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
+
+    my $TMPDIR = $ENV{TMPDIR} || "/tmp";
+    my $TMP_PERLBREW = App::Perlbrew::Path->new ($TMPDIR, "perlbrew");
 
     http_download('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', $TMP_PERLBREW);
 
