@@ -2220,13 +2220,7 @@ sub run_command_self_upgrade {
         die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
     }
 
-    http_get('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
-        my ($body) = @_;
-
-        open my $fh, '>', $TMP_PERLBREW or die "Unable to write perlbrew: $!";
-        print $fh $body;
-        close $fh;
-    });
+    http_download('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', $TMP_PERLBREW);
 
     chmod 0755, $TMP_PERLBREW;
     my $new_version = qx($TMP_PERLBREW version);
