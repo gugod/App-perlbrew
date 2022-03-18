@@ -2229,11 +2229,13 @@ sub run_command_self_upgrade {
     if ($new_version =~ /App::perlbrew\/(\d+\.\d+)$/) {
         $new_version = $1;
     } else {
+        $TMP_PERLBREW->unlink;
         die "Unable to detect version of new perlbrew!\n";
     }
 
     if ($new_version <= $VERSION) {
         print "Your perlbrew is up-to-date (version $VERSION).\n" unless $self->{quiet};
+        $TMP_PERLBREW->unlink;
         return;
     }
 
