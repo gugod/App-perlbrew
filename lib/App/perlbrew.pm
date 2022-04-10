@@ -699,22 +699,17 @@ sub available_perl_distributions {
     # releases and minor versions when needed (using
     # filter_perl_available)
     my $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
-    my $html = http_get($url, undef, undef);
-    unless ($html) {
-        $html = '';
+    my $json = http_get($url, undef, undef);
+    unless ($json) {
+        $json = '';
         warn "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
     }
-    while ($html =~ m{"(http(?:s?)://cpan\.metacpan\.org/[^"]+/(perl-5\.[0-9]+\.[0-9]+(?:-[A-Z0-9]+)?)\.tar\.(?:bz2|gz))"}g) {
-        my ($current_perl, $current_url) = ($2, $1);
-
-        push @perllist, [ $current_perl, $current_url ];
+    my $decoded = decode_json($json);
+    for my $release (@{ $decoded->{releases} }) {
+        push @perllist, [ $release->{name}, $release->{download_url} ];
     }
     foreach my $perl ($self->filter_perl_available(\@perllist)) {
-        # We only want to add a Metacpan link if the cpan.metacpan.org link
-        # doesn't exist, and this assures that we do that properly.
-        if (!exists($perls->{ $perl->[0] })) {
-            $perls->{ $perl->[0] } = $perl->[1];
-        }
+        $perls->{ $perl->[0] } = $perl->[1];
     }
 
     return $perls;
