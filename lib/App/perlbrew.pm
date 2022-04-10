@@ -693,36 +693,13 @@ sub available_perl_distributions {
     my $perls = {};
     my @perllist;
 
-    my $url = $self->{all}  ? "https://cpan.metacpan.org/src/5.0/"
-                            : "https://cpan.metacpan.org/src/README.html" ;
-    my $html = http_get($url, undef, undef);
-    unless ($html) {
-        die "\nERROR: Unable to retrieve the list of perls from $url\n\n";
-    }
-    for (split "\n", $html) {
-        my ($current_perl, $current_url);
-        if ($self->{all}) {
-            ($current_perl, $current_url) = ($2, $1) if m|<a href="(perl.*?\.tar\.gz)">\s*([^\s]+?)\s*</a>|;
-        }
-        else {
-            ($current_perl, $current_url ) = ($2, $1) if m|<td><a href="(http(?:s?)://cpan.metacpan.org/src/.+?)">\s*([^\s]+?)\s*</a></td>|;
-        }
-
-        # if we have a $current_perl add it to the available hash of perls
-        if ($current_perl) {
-            $current_perl =~ s/\.tar\.(bz2|gz)//;
-            push @perllist, [ $current_perl, $current_url ];
-            $perls->{$current_perl} = $current_url;
-        }
-    }
-
     # we got impatient waiting for cpan.org to get updated to show 5.28...
     # So, we also fetch from metacpan for anything that looks perlish,
     # and we do our own processing to filter out the development
     # releases and minor versions when needed (using
     # filter_perl_available)
-    $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
-    $html = http_get($url, undef, undef);
+    my $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
+    my $html = http_get($url, undef, undef);
     unless ($html) {
         $html = '';
         warn "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
