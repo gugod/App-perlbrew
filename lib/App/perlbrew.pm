@@ -317,7 +317,7 @@ sub configure_args {
 sub cpan_mirror {
     my ($self) = @_;
     unless($self->{cpan_mirror}) {
-        $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "https://www.cpan.org";
+        $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "https://cpan.metacpan.org";
         $self->{cpan_mirror} =~ s{/+$}{};
     }
     return $self->{cpan_mirror};
@@ -693,51 +693,23 @@ sub available_perl_distributions {
     my $perls = {};
     my @perllist;
 
-    my $url = $self->{all}  ? "https://www.cpan.org/src/5.0/"
-                            : "https://www.cpan.org/src/README.html" ;
-    my $html = http_get($url, undef, undef);
-    unless ($html) {
-        die "\nERROR: Unable to retrieve the list of perls from $url\n\n";
-    }
-    for (split "\n", $html) {
-        my ($current_perl, $current_url);
-        if ($self->{all}) {
-            ($current_perl, $current_url) = ($2, $1) if m|<a href="(perl.*?\.tar\.gz)">\s*([^\s]+?)\s*</a>|;
-        }
-        else {
-            ($current_perl, $current_url ) = ($2, $1) if m|<td><a href="(http(?:s?)://www.cpan.org/src/.+?)">\s*([^\s]+?)\s*</a></td>|;
-        }
-
-        # if we have a $current_perl add it to the available hash of perls
-        if ($current_perl) {
-            $current_perl =~ s/\.tar\.(bz2|gz)//;
-            push @perllist, [ $current_perl, $current_url ];
-            $perls->{$current_perl} = $current_url;
-        }
-    }
-
     # we got impatient waiting for cpan.org to get updated to show 5.28...
     # So, we also fetch from metacpan for anything that looks perlish,
     # and we do our own processing to filter out the development
     # releases and minor versions when needed (using
     # filter_perl_available)
-    $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
-    $html = http_get($url, undef, undef);
-    unless ($html) {
-        $html = '';
+    my $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
+    my $json = http_get($url, undef, undef);
+    unless ($json) {
+        $json = '';
         warn "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
     }
-    while ($html =~ m{"(http(?:s?)://cpan\.metacpan\.org/[^"]+/(perl-5\.[0-9]+\.[0-9]+(?:-[A-Z0-9]+)?)\.tar\.(?:bz2|gz))"}g) {
-        my ($current_perl, $current_url) = ($2, $1);
-
-        push @perllist, [ $current_perl, $current_url ];
+    my $decoded = decode_json($json);
+    for my $release (@{ $decoded->{releases} }) {
+        push @perllist, [ $release->{name}, $release->{download_url} ];
     }
     foreach my $perl ($self->filter_perl_available(\@perllist)) {
-        # We only want to add a Metacpan link if the www.cpan.org link
-        # doesn't exist, and this assures that we do that properly.
-        if (!exists($perls->{ $perl->[0] })) {
-            $perls->{ $perl->[0] } = $perl->[1];
-        }
+        $perls->{ $perl->[0] } = $perl->[1];
     }
 
     return $perls;
@@ -816,7 +788,7 @@ sub perl_release {
     }
 
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
-    my $index = http_get("https://www.cpan.org/src/5.0/");
+    my $index = http_get("https://cpan.metacpan.org/src/5.0/");
     if ($index) {
         for my $prefix ("perl-", "perl") {
             for my $suffix (".tar.bz2", ".tar.gz") {
@@ -888,7 +860,7 @@ sub release_detail_perl_remote {
     my $version = $rd->{version};
 
     # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
-    my $index = http_get("https://www.cpan.org/src/5.0/");
+    my $index = http_get("https://cpan.metacpan.org/src/5.0/");
     if ($index) {
         for my $prefix ("perl-", "perl") {
             for my $suffix (".tar.bz2", ".tar.gz") {
