@@ -701,9 +701,9 @@ sub available_perl_distributions {
     my $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
     my $json = http_get($url, undef, undef);
     unless ($json) {
-        $json = '';
-        warn "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
+        die "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
     }
+
     my $decoded = decode_json($json);
     for my $release (@{ $decoded->{releases} }) {
         push @perllist, [ $release->{name}, $release->{download_url} ];
