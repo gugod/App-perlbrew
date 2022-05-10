@@ -315,11 +315,15 @@ sub configure_args {
 }
 
 sub cpan_mirror {
-    my ($self) = @_;
+    my ($self, $v) = @_;
+
+    $self->{cpan_mirror} = $v if $v;
+
     unless($self->{cpan_mirror}) {
         $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "https://cpan.metacpan.org";
         $self->{cpan_mirror} =~ s{/+$}{};
     }
+
     return $self->{cpan_mirror};
 }
 
