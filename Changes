@@ -1,4 +1,6 @@
+	- Now we use metacpan api for fetching perl versions and for downloading. Github PR #743
 	- `--verbose` flag now also enable verbosity of underlying curl/wget commands. Github PR #740.
+        - Avoid perl test errors when NO_COLOR is set. Github PR #738
 
 0.94
 	- Released at 2021-12-05T08:39:16+0900
