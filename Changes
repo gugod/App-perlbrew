@@ -1,3 +1,10 @@
+0.95
+	- Released at 2022-05-15T22:59:11+0800
+	- Thanks to our contributors: Leon Timmermans
+	- Now we use metacpan api for fetching perl versions and for downloading. Github PR #743
+	- `--verbose` flag now also enable verbosity of underlying curl/wget commands. Github PR #740.
+	- Avoid perl test errors when NO_COLOR is set. Github PR #738
+
 0.94
 	- Released at 2021-12-05T08:39:16+0900
 	- Let `self-upgrade` print version numbers when doing upgrades. Github issue #678.

@@ -4,15 +4,26 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin;
 
-use App::Perlbrew::HTTP qw(http_user_agent_program);
+use App::Perlbrew::HTTP qw(http_user_agent_command);
 
 use Test::More;
 use Test::Exception;
 
 for my $prog (qw(curl wget fetch)) {
-    subtest "UA set to $prog", sub {
-        local $App::Perlbrew::HTTP::HTTP_USER_AGENT_PROGRAM = $prog;
-        is http_user_agent_program(), $prog, "UA Program can be set to: $prog";
+    local $App::Perlbrew::HTTP::HTTP_USER_AGENT_PROGRAM = $prog;
+    for my $verbose (0, 1) {
+        local $App::Perlbrew::HTTP::HTTP_VERBOSE = $verbose;
+
+        subtest "UA should be $prog, verbosity should be $verbose", sub {
+            my ($ua, $cmd) = http_user_agent_command( "get" => { "url" => "https://perlbrew.pl" });
+
+            is $ua, $prog, "UA Program can be set to: $prog";
+
+            unless ($prog eq "fetch") {
+                my ($cmd_verbosity) = $cmd =~ m/\s(--verbose)\s/;
+                is !!$cmd_verbosity, !!$verbose, "verbosity matches: [$cmd]";
+            }
+        }
     };
 }
 

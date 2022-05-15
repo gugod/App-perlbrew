@@ -118,10 +118,13 @@ PROJECT DEVELOPMENT
 
     perlbrew project <https://perlbrew.pl/> uses github
     https://github.com/gugod/App-perlbrew/issues for issue tracking. Issues
-    sent to these two systems will eventually be reviewed and handled.
+    sent to these two systems will eventually be reviewed and handled. To
+    participate, you need a github account.
 
-    See https://github.com/gugod/App-perlbrew/contributors for a list of
-    project contributors.
+    Please briefly read the short instructions about how to get your work
+    released to CPAN:
+
+    https://github.com/gugod/App-perlbrew/blob/develop/CONTRIBUTING.md
 
 AUTHOR
 
@@ -129,7 +132,7 @@ AUTHOR
 
 COPYRIGHT
 
-    Copyright (c) 2021 Kang-min Liu <gugod@gugod.org>.
+    Copyright (c) 2022 Kang-min Liu <gugod@gugod.org>.
 
 LICENCE
 
