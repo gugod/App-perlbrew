@@ -24,6 +24,7 @@ $fatpacked{"App/Perlbrew/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   use Exporter 'import';
   our @EXPORT_OK = qw(http_user_agent_program http_user_agent_command http_get http_download);
   
+  our $HTTP_VERBOSE = 0;
   our $HTTP_USER_AGENT_PROGRAM;
   
   my %commands = (
@@ -83,10 +84,18 @@ $fatpacked{"App/Perlbrew/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   sub http_user_agent_command {
       my ($purpose, $params) = @_;
       my $ua = http_user_agent_program;
-      my $cmd = $ua . " " . $commands{ $ua }->{ $purpose };
+      my $cmd = $commands{ $ua }->{ $purpose };
       for (keys %$params) {
           $cmd =~ s!{$_}!$params->{$_}!g;
       }
+  
+      if ($HTTP_VERBOSE) {
+          unless ($ua eq "fetch") {
+              $cmd =~ s/(silent|quiet)/verbose/;
+          }
+      }
+  
+      $cmd = $ua . " " . $cmd;
       return ($ua, $cmd) if wantarray;
       return $cmd;
   }
@@ -450,7 +459,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.94";
+  our $VERSION = "0.95";
   use Config;
   
   BEGIN {
@@ -599,6 +608,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       # Ensure propagation of $PERLBREW_HOME and $PERLBREW_ROOT
       $self->root;
       $self->home;
+  
+      if ($self->{verbose}) {
+          $App::Perlbrew::HTTP::HTTP_VERBOSE = 1;
+      }
   
       return $self;
   }
@@ -759,11 +772,15 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   }
   
   sub cpan_mirror {
-      my ($self) = @_;
+      my ($self, $v) = @_;
+  
+      $self->{cpan_mirror} = $v if $v;
+  
       unless($self->{cpan_mirror}) {
-          $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "https://www.cpan.org";
+          $self->{cpan_mirror} = $self->env("PERLBREW_CPAN_MIRROR") || "https://cpan.metacpan.org";
           $self->{cpan_mirror} =~ s{/+$}{};
       }
+  
       return $self->{cpan_mirror};
   }
   
@@ -1137,51 +1154,23 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my $perls = {};
       my @perllist;
   
-      my $url = $self->{all}  ? "https://www.cpan.org/src/5.0/"
-                              : "https://www.cpan.org/src/README.html" ;
-      my $html = http_get($url, undef, undef);
-      unless ($html) {
-          die "\nERROR: Unable to retrieve the list of perls from $url\n\n";
-      }
-      for (split "\n", $html) {
-          my ($current_perl, $current_url);
-          if ($self->{all}) {
-              ($current_perl, $current_url) = ($2, $1) if m|<a href="(perl.*?\.tar\.gz)">\s*([^\s]+?)\s*</a>|;
-          }
-          else {
-              ($current_perl, $current_url ) = ($2, $1) if m|<td><a href="(http(?:s?)://www.cpan.org/src/.+?)">\s*([^\s]+?)\s*</a></td>|;
-          }
-  
-          # if we have a $current_perl add it to the available hash of perls
-          if ($current_perl) {
-              $current_perl =~ s/\.tar\.(bz2|gz)//;
-              push @perllist, [ $current_perl, $current_url ];
-              $perls->{$current_perl} = $current_url;
-          }
-      }
-  
       # we got impatient waiting for cpan.org to get updated to show 5.28...
       # So, we also fetch from metacpan for anything that looks perlish,
       # and we do our own processing to filter out the development
       # releases and minor versions when needed (using
       # filter_perl_available)
-      $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
-      $html = http_get($url, undef, undef);
-      unless ($html) {
-          $html = '';
-          warn "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
+      my $url = 'https://fastapi.metacpan.org/v1/release/versions/perl';
+      my $json = http_get($url, undef, undef);
+      unless ($json) {
+          die "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
       }
-      while ($html =~ m{"(http(?:s?)://cpan\.metacpan\.org/[^"]+/(perl-5\.[0-9]+\.[0-9]+(?:-[A-Z0-9]+)?)\.tar\.(?:bz2|gz))"}g) {
-          my ($current_perl, $current_url) = ($2, $1);
   
-          push @perllist, [ $current_perl, $current_url ];
+      my $decoded = decode_json($json);
+      for my $release (@{ $decoded->{releases} }) {
+          push @perllist, [ $release->{name}, $release->{download_url} ];
       }
       foreach my $perl ($self->filter_perl_available(\@perllist)) {
-          # We only want to add a Metacpan link if the www.cpan.org link
-          # doesn't exist, and this assures that we do that properly.
-          if (!exists($perls->{ $perl->[0] })) {
-              $perls->{ $perl->[0] } = $perl->[1];
-          }
+          $perls->{ $perl->[0] } = $perl->[1];
       }
   
       return $perls;
@@ -1260,7 +1249,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
-      my $index = http_get("https://www.cpan.org/src/5.0/");
+      my $index = http_get("https://cpan.metacpan.org/src/5.0/");
       if ($index) {
           for my $prefix ("perl-", "perl") {
               for my $suffix (".tar.bz2", ".tar.gz") {
@@ -1332,7 +1321,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       my $version = $rd->{version};
   
       # try src/5.0 symlinks, either perl-5.X or perl5.X; favor .tar.bz2 over .tar.gz
-      my $index = http_get("https://www.cpan.org/src/5.0/");
+      my $index = http_get("https://cpan.metacpan.org/src/5.0/");
       if ($index) {
           for my $prefix ("perl-", "perl") {
               for my $suffix (".tar.bz2", ".tar.gz") {
@@ -2656,21 +2645,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   sub run_command_self_upgrade {
       my ($self) = @_;
-      my $TMPDIR = $ENV{TMPDIR} || "/tmp";
-      my $TMP_PERLBREW = App::Perlbrew::Path->new ($TMPDIR, "perlbrew");
   
       require FindBin;
       unless (-w $FindBin::Bin) {
           die "Your perlbrew installation appears to be system-wide.  Please upgrade through your package manager.\n";
       }
   
-      http_get('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', undef, sub {
-          my ($body) = @_;
+      my $TMPDIR = $ENV{TMPDIR} || "/tmp";
+      my $TMP_PERLBREW = App::Perlbrew::Path->new ($TMPDIR, "perlbrew");
   
-          open my $fh, '>', $TMP_PERLBREW or die "Unable to write perlbrew: $!";
-          print $fh $body;
-          close $fh;
-      });
+      http_download('https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew', $TMP_PERLBREW);
   
       chmod 0755, $TMP_PERLBREW;
       my $new_version = qx($TMP_PERLBREW version);
@@ -2678,11 +2662,13 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       if ($new_version =~ /App::perlbrew\/(\d+\.\d+)$/) {
           $new_version = $1;
       } else {
+          $TMP_PERLBREW->unlink;
           die "Unable to detect version of new perlbrew!\n";
       }
   
       if ($new_version <= $VERSION) {
           print "Your perlbrew is up-to-date (version $VERSION).\n" unless $self->{quiet};
+          $TMP_PERLBREW->unlink;
           return;
       }
   
