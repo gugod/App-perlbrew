@@ -12321,7 +12321,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20220313';
+  $CPAN::Perl::Releases::VERSION = '5.20220620';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12613,6 +12613,13 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.34.1-RC1" => { id => 'SHAY' },
   "5.34.1-RC2" => { id => 'SHAY' },
   "5.34.1" => { id => 'SHAY' },
+  "5.35.10" => { id => 'XSAWYERX' },
+  "5.35.11" => { id => 'SHAY' },
+  "5.36.0-RC2" => { id => 'RJBS' },
+  "5.36.0-RC3" => { id => 'RJBS' },
+  "5.36.0" => { id => 'RJBS' },
+  "5.37.0" => { id => 'RJBS' },
+  "5.37.1" => { id => 'WOLFSAGE' },
   };
   
   sub perl_tarballs {
@@ -12681,7 +12688,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20220313
+  version 5.20220620
   
   =head1 SYNOPSIS
   
@@ -13663,13 +13670,14 @@ $fatpacked{"ExtUtils/Command.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   use 5.00503;
   use strict;
+  use warnings;
   require Exporter;
   use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
   @ISA       = qw(Exporter);
   @EXPORT    = qw(cp rm_f rm_rf mv cat eqtime mkpath touch test_f test_d chmod
                   dos2unix);
-  $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   my $Is_VMS   = $^O eq 'VMS';
   my $Is_VMS_mode = $Is_VMS;
@@ -14055,8 +14063,8 @@ $fatpacked{"ExtUtils/Command/MM.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
   our @EXPORT  = qw(test_harness pod2man perllocal_install uninstall
                     warn_if_old_packlist test_s cp_nonempty);
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   my $Is_VMS = $^O eq 'VMS';
   
@@ -16205,9 +16213,10 @@ $fatpacked{"ExtUtils/Liblist.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   package ExtUtils::Liblist;
   
   use strict;
+  use warnings;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   use File::Spec;
   require ExtUtils::Liblist::Kid;
@@ -16505,8 +16514,8 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   
   use strict;
   use warnings;
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   use ExtUtils::MakeMaker::Config;
   use Cwd 'cwd';
@@ -16543,13 +16552,19 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
       # $potential_libs
       # this is a rewrite of Andy Dougherty's extliblist in perl
   
+      require Text::ParseWords;
+  
       my ( @searchpath );    # from "-L/path" entries in $potential_libs
-      my ( @libpath ) = split " ", $Config{'libpth'} || '';
+      my ( @libpath ) = Text::ParseWords::shellwords( $Config{'libpth'} || '' );
       my ( @ldloadlibs, @bsloadlibs, @extralibs, @ld_run_path, %ld_run_path_seen );
       my ( @libs,       %libs_seen );
       my ( $fullname,   @fullname );
       my ( $pwd )   = cwd();    # from Cwd.pm
       my ( $found ) = 0;
+  	if ($Config{gccversion}) {
+  		chomp(my @incpath = grep s/^ //, grep { /^#include </ .. /^End of search / } `$Config{cc} -E -v - </dev/null 2>&1 >/dev/null`);
+  		unshift @libpath, map { s{/include[^/]*}{/lib}; $_ } @incpath
+  	}
   
       if ( $^O eq 'darwin' or $^O eq 'next' )  {
           # 'escape' Mach-O ld -framework and -F flags, so they aren't dropped later on
@@ -16557,7 +16572,7 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
           $potential_libs =~ s/(^|\s)(-F)\s*(\S+)/$1-Wl,$2 -Wl,$3/g;
       }
   
-      foreach my $thislib ( split ' ', $potential_libs ) {
+      foreach my $thislib ( Text::ParseWords::shellwords($potential_libs) ) {
           my ( $custom_name ) = '';
   
           # Handle possible linker path arguments.
@@ -16582,6 +16597,7 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
                   $thislib = $self->catdir( $pwd, $thislib );
               }
               push( @searchpath, $thislib );
+              $thislib = qq{"$thislib"} if $thislib =~ / /; # protect spaces if there
               push( @extralibs,  "$ptype$thislib" );
               push( @ldloadlibs, "$rtype$thislib" );
               next;
@@ -16665,6 +16681,10 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
                   && -f ( $fullname = "$thispth/lib$thislib.$Config_dlext" ) )
               {
               }
+              elsif ( $^O eq 'darwin' && require DynaLoader && defined &DynaLoader::dl_load_file
+                  && DynaLoader::dl_load_file( $fullname = "$thispth/lib$thislib.$so", 0 ) )
+              {
+              }
               elsif ( -f ( $fullname = "$thispth/$thislib$Config_libext" ) ) {
               }
               elsif ( -f ( $fullname = "$thispth/lib$thislib.dll$Config_libext" ) ) {
@@ -16701,7 +16721,8 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
               # Now update library lists
   
               # what do we know about this library...
-              my $is_dyna = ( $fullname !~ /\Q$Config_libext\E\z/ );
+              # "Sounds like we should always assume it's a dynamic library on AIX."
+              my $is_dyna = $^O eq 'aix' ? 1 : ( $fullname !~ /\Q$Config_libext\E\z/ );
               my $in_perl = ( $libs =~ /\B-l:?\Q${thislib}\E\b/s );
   
               # include the path to the lib once in the dynamic linker path
@@ -17149,10 +17170,11 @@ $fatpacked{"ExtUtils/MM.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   package ExtUtils::MM;
   
   use strict;
+  use warnings;
   use ExtUtils::MakeMaker::Config;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::Liblist;
   require ExtUtils::MakeMaker;
@@ -17171,9 +17193,9 @@ $fatpacked{"ExtUtils/MM.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   
   B<FOR INTERNAL USE ONLY>
   
-  ExtUtils::MM is a subclass of ExtUtils::MakeMaker which automatically
+  ExtUtils::MM is a subclass of L<ExtUtils::MakeMaker> which automatically
   chooses the appropriate OS specific subclass for you
-  (ie. ExtUils::MM_Unix, etc...).
+  (ie. L<ExtUtils::MM_Unix>, etc...).
   
   It also provides a convenient alias via the MM class (I didn't want
   MakeMaker modules outside of ExtUtils/).
@@ -17218,6 +17240,7 @@ $fatpacked{"ExtUtils/MM.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   $Is{QNX}    = $^O eq 'qnx';
   $Is{AIX}    = $^O eq 'aix';
   $Is{Darwin} = $^O eq 'darwin';
+  $Is{OS390}  = $^O eq 'os390';
   
   $Is{Unix}   = !grep { $_ } values %Is;
   
@@ -17243,8 +17266,9 @@ $fatpacked{"ExtUtils/MM_AIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   package ExtUtils::MM_AIX;
   
   use strict;
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  use warnings;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   use ExtUtils::MakeMaker::Config;
   require ExtUtils::MM_Unix;
@@ -17261,10 +17285,10 @@ $fatpacked{"ExtUtils/MM_AIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head1 DESCRIPTION
   
-  This is a subclass of ExtUtils::MM_Unix which contains functionality for
+  This is a subclass of L<ExtUtils::MM_Unix> which contains functionality for
   AIX.
   
-  Unless otherwise stated it works just like ExtUtils::MM_Unix
+  Unless otherwise stated it works just like ExtUtils::MM_Unix.
   
   =head2 Overridden methods
   
@@ -17292,7 +17316,9 @@ $fatpacked{"ExtUtils/MM_AIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   sub xs_dlsyms_arg {
       my($self, $file) = @_;
-      return qq{-bE:${file}};
+      my $arg = qq{-bE:${file}};
+      $arg = '-Wl,'.$arg if $Config{lddlflags} =~ /-Wl,-bE:/;
+      return $arg;
   }
   
   sub init_others {
@@ -17323,8 +17349,9 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   package ExtUtils::MM_Any;
   
   use strict;
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  use warnings;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   use Carp;
   use File::Spec;
@@ -17368,7 +17395,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   modules.  It contains methods which are either inherently
   cross-platform or are written in a cross-platform manner.
   
-  Subclass off of ExtUtils::MM_Any I<and> ExtUtils::MM_Unix.  This is a
+  Subclass off of ExtUtils::MM_Any I<and> L<ExtUtils::MM_Unix>.  This is a
   temporary solution.
   
   B<THIS MAY BE TEMPORARY!>
@@ -17517,7 +17544,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
       my $is_dmake = $self->is_make_type('dmake');
   
-  Returns true if C<<$self->make>> is the given type; possibilities are:
+  Returns true if C<< $self->make >> is the given type; possibilities are:
   
     gmake    GNU make
     dmake
@@ -18410,9 +18437,9 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   END
   
       my @man_cmds;
-      foreach my $section (qw(1 3)) {
-          my $pods = $self->{"MAN${section}PODS"};
-          my $p2m = sprintf <<'CMD', $section, $] > 5.008 ? " -u" : "";
+      foreach my $num (qw(1 3)) {
+          my $pods = $self->{"MAN${num}PODS"};
+          my $p2m = sprintf <<'CMD', "\$(MAN${num}SECTION)", "$]" > 5.008 ? " -u" : "";
   	$(NOECHO) $(POD2MAN) --section=%s --perm_rw=$(PERM_RW)%s
   CMD
           push @man_cmds, $self->split_command($p2m, map {($_,$pods->{$_})} sort keys %$pods);
@@ -18489,7 +18516,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
       $mm->_fix_metadata_before_conversion( \%metadata );
   
-  Fixes errors in the metadata before it's handed off to CPAN::Meta for
+  Fixes errors in the metadata before it's handed off to L<CPAN::Meta> for
   conversion. This hopefully results in something that can be used further
   on, no guarantee is made though.
   
@@ -18992,7 +19019,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
       # rolled their own tarball rather than using "make dist".
       if ($meta->{generated_by} &&
           $meta->{generated_by} =~ /ExtUtils::MakeMaker version ([\d\._]+)/) {
-          my $eummv = do { local $^W = 0; $1+0; };
+          my $eummv = do { no warnings; $1+0; };
           if ($eummv < 6.2501) {
               return;
           }
@@ -19536,7 +19563,9 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
               my $key = "INSTALL".$dir.$uc_thing;
   
               $install{$key} ||=
-                $self->catdir('$(INSTALL_BASE)', @{$map{$thing}});
+                  ($thing =~ /^man.dir$/ and not $Config{lc $key})
+                  ? 'none'
+                  : $self->catdir('$(INSTALL_BASE)', @{$map{$thing}});
           }
       }
   
@@ -19738,7 +19767,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   linking used by tools_other() and places them in the $MM object.
   
   If there is no description, its the same as the parameter to
-  WriteMakefile() documented in ExtUtils::MakeMaker.
+  WriteMakefile() documented in L<ExtUtils::MakeMaker>.
   
   =cut
   
@@ -20089,7 +20118,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head2 File::Spec wrappers
   
-  ExtUtils::MM_Any is a subclass of File::Spec.  The methods noted here
+  ExtUtils::MM_Any is a subclass of L<File::Spec>.  The methods noted here
   override File::Spec.
   
   
@@ -20230,8 +20259,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
       my($self,$path) = @_;
   
       if ($path =~ m<^README\.pod$>i) {
-          warn "WARNING: Older versions of ExtUtils::MakeMaker may errantly install $path as part of this distribution. It is recommended to avoid using this path in CPAN modules.\n"
-            unless $ENV{PERL_CORE};
+          warn "WARNING: Older versions of ExtUtils::MakeMaker may errantly install $path as part of this distribution. It is recommended to avoid using this path in CPAN modules.\n";
           return '';
       }
   
@@ -20425,6 +20453,7 @@ $fatpacked{"ExtUtils/MM_BeOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   package ExtUtils::MM_BeOS;
   
   use strict;
+  use warnings;
   
   =head1 NAME
   
@@ -20436,7 +20465,7 @@ $fatpacked{"ExtUtils/MM_BeOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   =head1 DESCRIPTION
   
-  See ExtUtils::MM_Unix for a documentation of the methods provided
+  See L<ExtUtils::MM_Unix> for a documentation of the methods provided
   there. This package overrides the implementation of these methods, not
   the semantics.
   
@@ -20450,8 +20479,8 @@ $fatpacked{"ExtUtils/MM_BeOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   require ExtUtils::MM_Unix;
   
   our @ISA = qw( ExtUtils::MM_Any ExtUtils::MM_Unix );
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   
   =item os_flavor
@@ -20482,6 +20511,8 @@ $fatpacked{"ExtUtils/MM_BeOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   =back
   
+  =cut
+  
   1;
   __END__
   
@@ -20491,6 +20522,7 @@ $fatpacked{"ExtUtils/MM_Cygwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   package ExtUtils::MM_Cygwin;
   
   use strict;
+  use warnings;
   
   use ExtUtils::MakeMaker::Config;
   use File::Spec;
@@ -20499,8 +20531,8 @@ $fatpacked{"ExtUtils/MM_Cygwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   require ExtUtils::MM_Win32;
   our @ISA = qw( ExtUtils::MM_Unix );
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   
   =head1 NAME
@@ -20513,7 +20545,7 @@ $fatpacked{"ExtUtils/MM_Cygwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 DESCRIPTION
   
-  See ExtUtils::MM_Unix for a documentation of the methods provided there.
+  See L<ExtUtils::MM_Unix> for a documentation of the methods provided there.
   
   =over 4
   
@@ -20576,7 +20608,7 @@ $fatpacked{"ExtUtils/MM_Cygwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
       if ($Config{useshrplib} eq 'true') {
           my $libperl = '$(PERL_INC)' .'/'. "$Config{libperl}";
-          if( $] >= 5.006002 ) {
+          if( "$]" >= 5.006002 ) {
               $libperl =~ s/(dll\.)?a$/dll.a/;
           }
           $self->{PERL_ARCHIVE} = $libperl;
@@ -20590,12 +20622,22 @@ $fatpacked{"ExtUtils/MM_Cygwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       $self->{EXPORT_LIST}  ||= '';
   }
   
+  sub init_others {
+      my $self = shift;
+  
+      $self->SUPER::init_others;
+  
+      $self->{LDLOADLIBS} ||= $Config{perllibs};
+  
+      return;
+  }
+  
   =item maybe_command
   
   Determine whether a file is native to Cygwin by checking whether it
   resides inside the Cygwin installation (using Windows paths). If so,
-  use C<ExtUtils::MM_Unix> to determine if it may be a command.
-  Otherwise use the tests from C<ExtUtils::MM_Win32>.
+  use L<ExtUtils::MM_Unix> to determine if it may be a command.
+  Otherwise use the tests from L<ExtUtils::MM_Win32>.
   
   =cut
   
@@ -20648,16 +20690,6 @@ $fatpacked{"ExtUtils/MM_Cygwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       $s;
   }
   
-  =item all_target
-  
-  Build man pages, too
-  
-  =cut
-  
-  sub all_target {
-      ExtUtils::MM_Unix::all_target(shift);
-  }
-  
   =back
   
   =cut
@@ -20669,9 +20701,10 @@ $fatpacked{"ExtUtils/MM_DOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   package ExtUtils::MM_DOS;
   
   use strict;
+  use warnings;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Any;
   require ExtUtils::MM_Unix;
@@ -20689,10 +20722,10 @@ $fatpacked{"ExtUtils/MM_DOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head1 DESCRIPTION
   
-  This is a subclass of ExtUtils::MM_Unix which contains functionality
+  This is a subclass of L<ExtUtils::MM_Unix> which contains functionality
   for DOS.
   
-  Unless otherwise stated, it works just like ExtUtils::MM_Unix
+  Unless otherwise stated, it works just like ExtUtils::MM_Unix.
   
   =head2 Overridden methods
   
@@ -20746,14 +20779,15 @@ $fatpacked{"ExtUtils/MM_Darwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   package ExtUtils::MM_Darwin;
   
   use strict;
+  use warnings;
   
   BEGIN {
       require ExtUtils::MM_Unix;
       our @ISA = qw( ExtUtils::MM_Unix );
   }
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   
   =head1 NAME
@@ -20766,7 +20800,7 @@ $fatpacked{"ExtUtils/MM_Darwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 DESCRIPTION
   
-  See L<ExtUtils::MM_Unix> for L<ExtUtils::MM_Any> for documentation on the
+  See L<ExtUtils::MM_Unix> or L<ExtUtils::MM_Any> for documentation on the
   methods overridden here.
   
   =head2 Overridden Methods
@@ -20790,6 +20824,31 @@ $fatpacked{"ExtUtils/MM_Darwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       $self->SUPER::init_dist(@_);
   }
   
+  =head3 cflags
+  
+  Over-ride Apple's automatic setting of -Werror
+  
+  =cut
+  
+  sub cflags {
+      my($self,$libperl)=@_;
+      return $self->{CFLAGS} if $self->{CFLAGS};
+      return '' unless $self->needs_linking();
+  
+      my $base = $self->SUPER::cflags($libperl);
+  
+      foreach (split /\n/, $base) {
+          /^(\S*)\s*=\s*(\S*)$/ and $self->{$1} = $2;
+      };
+      $self->{CCFLAGS} .= " -Wno-error=implicit-function-declaration";
+  
+      return $self->{CFLAGS} = qq{
+  CCFLAGS = $self->{CCFLAGS}
+  OPTIMIZE = $self->{OPTIMIZE}
+  PERLTYPE = $self->{PERLTYPE}
+  };
+  }
+  
   1;
 EXTUTILS_MM_DARWIN
 
@@ -20797,9 +20856,10 @@ $fatpacked{"ExtUtils/MM_MacOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   package ExtUtils::MM_MacOS;
   
   use strict;
+  use warnings;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   sub new {
       die 'MacOS Classic (MacPerl) is no longer supported by MakeMaker';
@@ -20843,7 +20903,7 @@ $fatpacked{"ExtUtils/MM_NW5.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head1 DESCRIPTION
   
-  See ExtUtils::MM_Unix for a documentation of the methods provided
+  See L<ExtUtils::MM_Unix> for a documentation of the methods provided
   there. This package overrides the implementation of these methods, not
   the semantics.
   
@@ -20852,11 +20912,12 @@ $fatpacked{"ExtUtils/MM_NW5.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   =cut
   
   use strict;
+  use warnings;
   use ExtUtils::MakeMaker::Config;
   use File::Basename;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Win32;
   our @ISA = qw(ExtUtils::MM_Win32);
@@ -21025,7 +21086,7 @@ $fatpacked{"ExtUtils/MM_NW5.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
       }
       # Reconstruct the X.Y.Z version.
       my $version = join '.', map { sprintf "%d", $_ }
-                                $] =~ /(\d)\.(\d{3})(\d{2})/;
+                                "$]" =~ /(\d)\.(\d{3})(\d{2})/;
       push @m, sprintf <<'EOF', $from, $version, $to, $exportlist;
   	$(LD) $(LDFLAGS) %s -desc "Perl %s Extension ($(BASEEXT))  XS_VERSION: $(XS_VERSION)" -nlmversion $(NLM_VERSION) -o %s $(MYEXTLIB) $(PERL_INC)\Main.lib -commandfile %s
   	$(CHMOD) 755 $@
@@ -21045,12 +21106,13 @@ $fatpacked{"ExtUtils/MM_OS2.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   package ExtUtils::MM_OS2;
   
   use strict;
+  use warnings;
   
   use ExtUtils::MakeMaker qw(neatvalue);
   use File::Spec;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Any;
   require ExtUtils::MM_Unix;
@@ -21068,7 +21130,7 @@ $fatpacked{"ExtUtils/MM_OS2.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head1 DESCRIPTION
   
-  See ExtUtils::MM_Unix for a documentation of the methods provided
+  See L<ExtUtils::MM_Unix> for a documentation of the methods provided
   there. This package overrides the implementation of these methods, not
   the semantics.
   
@@ -21190,12 +21252,102 @@ $fatpacked{"ExtUtils/MM_OS2.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   1;
 EXTUTILS_MM_OS2
 
+$fatpacked{"ExtUtils/MM_OS390.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXTUTILS_MM_OS390';
+  package ExtUtils::MM_OS390;
+  
+  use strict;
+  use warnings;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
+  
+  use ExtUtils::MakeMaker::Config;
+  require ExtUtils::MM_Unix;
+  our @ISA = qw(ExtUtils::MM_Unix);
+  
+  =head1 NAME
+  
+  ExtUtils::MM_OS390 - OS390 specific subclass of ExtUtils::MM_Unix
+  
+  =head1 SYNOPSIS
+  
+    Don't use this module directly.
+    Use ExtUtils::MM and let it choose.
+  
+  =head1 DESCRIPTION
+  
+  This is a subclass of L<ExtUtils::MM_Unix> which contains functionality for
+  OS390.
+  
+  Unless otherwise stated it works just like ExtUtils::MM_Unix.
+  
+  =head2 Overriden methods
+  
+  =over
+  
+  =item xs_make_dynamic_lib
+  
+  Defines the recipes for the C<dynamic_lib> section.
+  
+  =cut
+  
+  sub xs_make_dynamic_lib {
+      my ($self, $attribs, $object, $to, $todir, $ldfrom, $exportlist, $dlsyms) = @_;
+      $exportlist = '' if $exportlist ne '$(EXPORT_LIST)';
+      my $armaybe = $self->_xs_armaybe($attribs);
+      my @m = sprintf '%s : %s $(MYEXTLIB) %s$(DFSEP).exists %s $(PERL_ARCHIVEDEP) $(PERL_ARCHIVE_AFTER) $(INST_DYNAMIC_DEP) %s'."\n", $to, $object, $todir, $exportlist, ($dlsyms || '');
+      my $dlsyms_arg = $self->xs_dlsyms_arg($dlsyms);
+      if ($armaybe ne ':'){
+          $ldfrom = 'tmp$(LIB_EXT)';
+          push(@m,"	\$(ARMAYBE) cr $ldfrom $object\n");
+          push(@m,"	\$(RANLIB) $ldfrom\n");
+      }
+  
+      # For example in AIX the shared objects/libraries from previous builds
+      # linger quite a while in the shared dynalinker cache even when nobody
+      # is using them.  This is painful if one for instance tries to restart
+      # a failed build because the link command will fail unnecessarily 'cos
+      # the shared object/library is 'busy'.
+      push(@m,"	\$(RM_F) \$\@\n");
+  
+      my $libs = '$(LDLOADLIBS)';
+  
+      my $ld_run_path_shell = "";
+      if ($self->{LD_RUN_PATH} ne "") {
+          $ld_run_path_shell = 'LD_RUN_PATH="$(LD_RUN_PATH)" ';
+      }
+  
+      push @m, sprintf <<'MAKE', $ld_run_path_shell, $self->xs_obj_opt('$@'), $dlsyms_arg, $ldfrom, $libs, $exportlist;
+  	%s$(LD) %s $(LDDLFLAGS) %s $(OTHERLDFLAGS) %s $(MYEXTLIB) \
+  	  $(PERL_ARCHIVE) %s $(PERL_ARCHIVE_AFTER) %s \
+  	  $(INST_DYNAMIC_FIX)
+  	$(CHMOD) $(PERM_RWX) $@
+  MAKE
+      join '', @m;
+  }
+  
+  1;
+  
+  =back
+  
+  =head1 AUTHOR
+  
+  Michael G Schwern <schwern@pobox.com> with code from ExtUtils::MM_Unix
+  
+  =head1 SEE ALSO
+  
+  L<ExtUtils::MakeMaker>
+  
+  =cut
+  __END__
+EXTUTILS_MM_OS390
+
 $fatpacked{"ExtUtils/MM_QNX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXTUTILS_MM_QNX';
   package ExtUtils::MM_QNX;
   
   use strict;
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  use warnings;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Unix;
   our @ISA = qw(ExtUtils::MM_Unix);
@@ -21212,10 +21364,10 @@ $fatpacked{"ExtUtils/MM_QNX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head1 DESCRIPTION
   
-  This is a subclass of ExtUtils::MM_Unix which contains functionality for
+  This is a subclass of L<ExtUtils::MM_Unix> which contains functionality for
   QNX.
   
-  Unless otherwise stated it works just like ExtUtils::MM_Unix
+  Unless otherwise stated it works just like ExtUtils::MM_Unix.
   
   =head2 Overridden methods
   
@@ -21255,8 +21407,9 @@ $fatpacked{"ExtUtils/MM_UWIN.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   package ExtUtils::MM_UWIN;
   
   use strict;
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  use warnings;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Unix;
   our @ISA = qw(ExtUtils::MM_Unix);
@@ -21273,10 +21426,10 @@ $fatpacked{"ExtUtils/MM_UWIN.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   =head1 DESCRIPTION
   
-  This is a subclass of ExtUtils::MM_Unix which contains functionality for
+  This is a subclass of L<ExtUtils::MM_Unix> which contains functionality for
   the AT&T U/WIN UNIX on Windows environment.
   
-  Unless otherwise stated it works just like ExtUtils::MM_Unix
+  Unless otherwise stated it works just like ExtUtils::MM_Unix.
   
   =head2 Overridden methods
   
@@ -21325,6 +21478,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   require 5.006;
   
   use strict;
+  use warnings;
   
   use Carp;
   use ExtUtils::MakeMaker::Config;
@@ -21336,8 +21490,8 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   # If we make $VERSION an our variable parse_version() breaks
   use vars qw($VERSION);
-  $VERSION = '7.34';
-  $VERSION = eval $VERSION;  ## no critic [BuiltinFunctions::ProhibitStringyEval]
+  $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Any;
   our @ISA = qw(ExtUtils::MM_Any);
@@ -21359,6 +21513,10 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
                      grep( $^O eq $_, qw(bsdos interix dragonfly) )
                     );
       $Is{Android} = $^O =~ /android/;
+      if ( $^O eq 'darwin' && $^X eq '/usr/bin/perl' ) {
+        my @osvers = split /\./, $Config{osvers};
+        $Is{ApplCor} = ( $osvers[0] >= 18 );
+      }
   }
   
   BEGIN {
@@ -21376,15 +21534,15 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   =head1 SYNOPSIS
   
-  C<require ExtUtils::MM_Unix;>
+    require ExtUtils::MM_Unix;
   
   =head1 DESCRIPTION
   
   The methods provided by this package are designed to be used in
-  conjunction with ExtUtils::MakeMaker. When MakeMaker writes a
+  conjunction with L<ExtUtils::MakeMaker>. When MakeMaker writes a
   Makefile, it creates one or more objects that inherit their methods
-  from a package C<MM>. MM itself doesn't provide any methods, but it
-  ISA ExtUtils::MM_Unix class. The inheritance tree of MM lets operating
+  from a package L<MM|ExtUtils::MM>. MM itself doesn't provide any methods, but
+  it ISA ExtUtils::MM_Unix class. The inheritance tree of MM lets operating
   specific packages take the responsibility for all the methods provided
   by MM_Unix. We are trying to reduce the number of the necessary
   overrides by defining rather primitive operations within
@@ -21411,8 +21569,8 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   Makefile.PL. Overridable methods are marked as (o). All methods are
   overridable by a platform specific MM_*.pm file.
   
-  Cross-platform methods are being moved into MM_Any.  If you can't find
-  something that used to be in here, look in MM_Any.
+  Cross-platform methods are being moved into L<MM_Any|ExtUtils::MM_Any>.
+  If you can't find something that used to be in here, look in MM_Any.
   
   =cut
   
@@ -21454,9 +21612,13 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       my $command = '$(CCCMD)';
       my $flags   = '$(CCCDLFLAGS) "-I$(PERL_INC)" $(PASTHRU_DEFINE) $(DEFINE)';
   
-      if (my $cpp = $Config{cpprun}) {
+      if ( $Is{ApplCor} ) {
+          $flags =~ s/"-I(\$\(PERL_INC\))"/-iwithsysroot "$1"/;
+      }
+  
+      if (my $cpp = $self->{CPPRUN}) {
           my $cpp_cmd = $self->const_cccmd;
-          $cpp_cmd =~ s/^CCCMD\s*=\s*\$\(CC\)/$cpp/;
+          $cpp_cmd =~ s/^CCCMD\s*=\s*\$\(CC\)/\$(CPPRUN)/;
           push @m, qq{
   .c.i:
   	$cpp_cmd $flags \$*.c > \$*.i
@@ -21473,8 +21635,11 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       my @exts = qw(c cpp cxx cc);
       push @exts, 'C' if !$Is{OS2} and !$Is{Win32} and !$Is{Dos}; #Case-specific
       $m_o = $self->{XSMULTI} ? $self->xs_obj_opt('$*$(OBJ_EXT)') : '';
+      my $dbgout = $self->dbgoutflag;
       for my $ext (@exts) {
-  	push @m, "\n.$ext\$(OBJ_EXT) :\n\t$command $flags \$*.$ext" . ( $m_o ? " $m_o" : '' ) . "\n";
+  	push @m, "\n.$ext\$(OBJ_EXT) :\n\t$command $flags "
+              .($dbgout?"$dbgout ":'')
+              ."\$*.$ext" . ( $m_o ? " $m_o" : '' ) . "\n";
       }
       return join "", @m;
   }
@@ -21492,6 +21657,16 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       "-o $output_file";
   }
   
+  =item dbgoutflag
+  
+  Returns a CC flag that tells the CC to emit a separate debugging symbol file
+  when compiling an object file.
+  
+  =cut
+  
+  sub dbgoutflag {
+      '';
+  }
   
   =item cflags (o)
   
@@ -21720,6 +21895,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
                 INST_ARCHLIB INST_SCRIPT INST_BIN INST_LIB
                 INST_MAN1DIR INST_MAN3DIR
                 MAN1EXT      MAN3EXT
+                MAN1SECTION  MAN3SECTION
                 INSTALLDIRS INSTALL_BASE DESTDIR PREFIX
                 PERLPREFIX      SITEPREFIX      VENDORPREFIX
                      ),
@@ -21783,12 +21959,20 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   MAN3PODS = ".$self->wraplist(sort keys %{$self->{MAN3PODS}})."
   ";
   
+      push @m, q{
+  SDKROOT := $(shell xcrun --show-sdk-path)
+  PERL_SYSROOT = $(SDKROOT)
+  } if $Is{ApplCor} && $self->{'PERL_INC'} =~ m!^/System/Library/Perl/!;
+  
+      push @m, q{
+  # Where is the Config information that we are using/depend on
+  CONFIGDEP = $(PERL_ARCHLIBDEP)$(DFSEP)Config.pm $(PERL_SYSROOT)$(PERL_INCDEP)$(DFSEP)config.h
+  } if $Is{ApplCor};
   
       push @m, q{
   # Where is the Config information that we are using/depend on
   CONFIGDEP = $(PERL_ARCHLIBDEP)$(DFSEP)Config.pm $(PERL_INCDEP)$(DFSEP)config.h
-  } if -e $self->catfile( $self->{PERL_INC}, 'config.h' );
-  
+  } if -e $self->catfile( $self->{PERL_INC}, 'config.h' ) && !$Is{ApplCor};
   
       push @m, qq{
   # Where to build things
@@ -22261,6 +22445,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
               my ($v, $d, $f) = File::Spec->splitpath($ext);
               my @d = File::Spec->splitdir($d);
               shift @d if $d[0] eq 'lib';
+              pop @d if $d[$#d] eq '';
               my $instdir = $self->catdir('$(INST_ARCHLIB)', 'auto', @d, $f);
   
               # Dynamic library names may need special handling.
@@ -22338,9 +22523,19 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       }
       $ldfrom = "-all $ldfrom -none" if $Is{OSF};
   
+      my $ldrun = '';
       # The IRIX linker doesn't use LD_RUN_PATH
-      my $ldrun = $Is{IRIX} && $self->{LD_RUN_PATH} ?
-                         qq{-rpath "$self->{LD_RUN_PATH}"} : '';
+      if ( $self->{LD_RUN_PATH} ) {
+          if ( $Is{IRIX} ) {
+              $ldrun = qq{-rpath "$self->{LD_RUN_PATH}"};
+          }
+          elsif ( $^O eq 'darwin' ) {
+              # both clang and gcc support -Wl,-rpath, but only clang supports
+              # -rpath so by using -Wl,-rpath we avoid having to check for the
+              # type of compiler
+              $ldrun = qq{-Wl,-rpath,"$self->{LD_RUN_PATH}"};
+          }
+      }
   
       # For example in AIX the shared objects/libraries from previous builds
       # linger quite a while in the shared dynalinker cache even when nobody
@@ -22412,7 +22607,6 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   sub find_perl {
       my($self, $ver, $names, $dirs, $trace) = @_;
-  
       if ($trace >= 2){
           print "Looking for perl $ver by these names:
   @$names
@@ -22565,12 +22759,15 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       my ( $self, $file, $line ) = @_;
   
       # Now figure out the interpreter name.
-      my ( $cmd, $arg ) = split ' ', $line, 2;
-      $cmd =~ s!^.*/!!;
+      my ( $origcmd, $arg ) = split ' ', $line, 2;
+      (my $cmd = $origcmd) =~ s!^.*/!!;
   
       # Now look (in reverse) for interpreter in absolute PATH (unless perl).
       my $interpreter;
-      if ( $cmd =~ m{^perl(?:\z|[^a-z])} ) {
+      if ( defined $ENV{PERL_MM_SHEBANG} && $ENV{PERL_MM_SHEBANG} eq "relocatable" ) {
+          $interpreter = "/usr/bin/env perl";
+      }
+      elsif ( $cmd =~ m{^perl(?:\z|[^a-z])} ) {
           if ( $Config{startperl} =~ m,^\#!.*/perl, ) {
               $interpreter = $Config{startperl};
               $interpreter =~ s,^\#!,,;
@@ -22590,6 +22787,24 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
                   warn "Ignoring $interpreter in $file\n"
                       if $Verbose && $interpreter;
                   $interpreter = $maybefile;
+              }
+          }
+  
+          # If the shebang is absolute and exists in PATH, but was not
+          # the first one found, leave it alone if it's actually the
+          # same file as first one.  This avoids packages built on
+          # merged-/usr systems with /usr/bin before /bin in the path
+          # breaking when installed on systems without merged /usr
+          if ($origcmd ne $interpreter and $self->file_name_is_absolute($origcmd)) {
+              my $origdir = dirname($origcmd);
+              if ($self->maybe_command($origcmd) && grep { $_ eq $origdir } @absdirs) {
+                  my ($odev, $oino) = stat $origcmd;
+                  my ($idev, $iino) = stat $interpreter;
+                  if ($odev == $idev && $oino eq $iino) {
+                      warn "$origcmd is the same as $interpreter, leaving alone"
+                          if $Verbose;
+                      $interpreter = $origcmd;
+                  }
               }
           }
       }
@@ -22771,6 +22986,25 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
               my $init_method = "init_${man}PODS";
               $self->$init_method();
           }
+      }
+  
+      # logic similar to picking man${num}ext in perl's Configure script
+      foreach my $num (1,3) {
+          my $installdirs = uc $self->{INSTALLDIRS};
+          $installdirs = '' if $installdirs eq 'PERL';
+          my @mandirs = File::Spec->splitdir( $self->_expand_macros(
+              $self->{ "INSTALL${installdirs}MAN${num}DIR" } ) );
+          my $mandir = pop @mandirs;
+          my $section = $num;
+  
+          foreach ($num, "${num}p", "${num}pm", qw< l n o C L >, "L$num") {
+              if ( $mandir =~ /^(?:man|cat)$_$/ ) {
+                  $section = $_;
+                  last;
+              }
+          }
+  
+          $self->{"MAN${num}SECTION"} = $section;
       }
   }
   
@@ -23365,6 +23599,11 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       # already escaped spaces.
       $self->{FULLPERL} =~ tr/"//d if $Is{VMS};
   
+      # `dmake` can fail for image (aka, executable) names which start with double-quotes
+      # * push quote inward by at least one character (or the drive prefix, if present)
+      # * including any initial directory separator preserves the `file_name_is_absolute` property
+      $self->{FULLPERL} =~ s/^"(\S(:\\|:)?)/$1"/ if $self->is_make_type('dmake');
+  
       # Little hack to get around VMS's find_perl putting "MCR" in front
       # sometimes.
       $self->{ABSPERL} = $self->{PERL};
@@ -23386,6 +23625,11 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       # Can't have an image name with quotes, and findperl will have
       # already escaped spaces.
       $self->{PERL} =~ tr/"//d if $Is{VMS};
+  
+      # `dmake` can fail for image (aka, executable) names which start with double-quotes
+      # * push quote inward by at least one character (or the drive prefix, if present)
+      # * including any initial directory separator preserves the `file_name_is_absolute` property
+      $self->{PERL} =~ s/^"(\S(:\\|:)?)/$1"/ if $self->is_make_type('dmake');
   
       # Are we building the core?
       $self->{PERL_CORE} = $ENV{PERL_CORE} unless exists $self->{PERL_CORE};
@@ -23490,6 +23734,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   		my ($v, $d, $f) = File::Spec->splitpath($ext);
   		my @d = File::Spec->splitdir($d);
   		shift @d if defined $d[0] and $d[0] eq 'lib';
+  		pop @d if $d[$#d] eq '';
   		my $instdir = $self->catdir('$(INST_ARCHLIB)', 'auto', @d, $f);
   		my $instfile = $self->catfile($instdir, $f);
   		push @statics, "$instfile\$(LIB_EXT)";
@@ -24060,14 +24305,14 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   Called by a utility method of makeaperl. Checks whether a given file
   is an XS library by seeing whether it defines any symbols starting
-  with C<boot_>.
+  with C<boot_> (with an optional leading underscore - needed on MacOS).
   
   =cut
   
   sub xs_static_lib_is_xs {
       my ($self, $libfile) = @_;
       my $devnull = File::Spec->devnull;
-      return `nm $libfile 2>$devnull` =~ /\bboot_/;
+      return `nm $libfile 2>$devnull` =~ /\b_?boot_/;
   }
   
   =item makefile (o)
@@ -24194,7 +24439,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       }
       close $fh;
   
-      if ( $pod_encoding and !( $] < 5.008 or !$Config{useperlio} ) ) {
+      if ( $pod_encoding and !( "$]" < 5.008 or !$Config{useperlio} ) ) {
           # Have to wrap in an eval{} for when running under PERL_CORE
           # Encode isn't available during build phase and parsing
           # ABSTRACT isn't important there
@@ -24216,7 +24461,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   is. $VERSION should be for all to see, so C<our $VERSION> or plain $VERSION
   are okay, but C<my $VERSION> is not.
   
-  C<<package Foo VERSION>> is also checked for.  The first version
+  C<package Foo VERSION> is also checked for.  The first version
   declaration found is used, but this may change as it differs from how
   Perl does it.
   
@@ -24241,7 +24486,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
           chop;
           next if /^\s*(if|unless|elsif)/;
           if ( m{^ \s* package \s+ \w[\w\:\']* \s+ (v?[0-9._]+) \s* (;|\{)  }x ) {
-              local $^W = 0;
+              no warnings;
               $result = $1;
           }
           elsif ( m{(?<!\\) ([\$*]) (([\w\:\']*) \bVERSION)\b .* (?<![<>=!])\=[^=]}x ) {
@@ -24259,6 +24504,10 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
         my $normal = eval { version->new( $result ) };
         $result = $normal if defined $normal;
       }
+      if ( defined $result ) {
+        $result = "undef" unless $result =~ m!^v?[\d_\.]+$!
+                          or eval { version->parse( $result ) };
+      }
       $result = "undef" unless defined $result;
       return $result;
   }
@@ -24274,8 +24523,8 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
               version::->import;
           };
           no strict;
+          no warnings;
           local *{$name};
-          local $^W = 0;
           $line = $1 if $line =~ m{^(.+)}s;
           eval($line); ## no critic
           return ${$name};
@@ -24473,11 +24722,12 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       }
   
       my $archname = $Config{archname};
-      if ($] >= 5.008) {
-          # archname did not change from 5.6 to 5.8, but those versions may
-          # not be not binary compatible so now we append the part of the
-          # version that changes when binary compatibility may change
-          $archname .= "-$Config{PERL_REVISION}.$Config{PERL_VERSION}";
+  
+      # archname did not change from 5.6 to 5.8, but those versions may
+      # not be not binary compatible so now we append the part of the
+      # version that changes when binary compatibility may change
+      if ("$]" >= 5.008) {
+          $archname .= "-$Config{api_revision}.$Config{api_version}";
       }
       push @ppd_chunks, sprintf <<'PPD_OUT', $archname;
           <ARCHITECTURE NAME="%s" />
@@ -24590,9 +24840,11 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
       my $m = '';
       foreach my $plfile (sort keys %$pl_files) {
-          my $list = ref($pl_files->{$plfile})
-                       ?  $pl_files->{$plfile}
-                       : [$pl_files->{$plfile}];
+          my $targets = $pl_files->{$plfile};
+          my $list =
+              ref($targets) eq 'HASH'  ? [ sort keys %$targets ] :
+              ref($targets) eq 'ARRAY' ? $pl_files->{$plfile}   :
+              [$pl_files->{$plfile}];
   
           foreach my $target (@$list) {
               if( $Is{VMS} ) {
@@ -24616,13 +24868,27 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
                   $perlrun = 'PERLRUNINST';
               }
   
+              my $extra_inputs = '';
+              if( ref($targets) eq 'HASH' ) {
+                  my $inputs = ref($targets->{$target})
+                      ? $targets->{$target}
+                      : [$targets->{$target}];
+  
+                  for my $input (@$inputs) {
+                      if( $Is{VMS} ) {
+                          $input = vmsify($self->eliminate_macros($input));
+                      }
+                      $extra_inputs .= ' '.$input;
+                  }
+              }
+  
               $m .= <<MAKE_FRAG;
   
   pure_all :: $target
   	\$(NOECHO) \$(NOOP)
   
-  $target :: $plfile $pm_dep
-  	\$($perlrun) $plfile $target
+  $target :: $plfile $pm_dep $extra_inputs
+  	\$($perlrun) $plfile $target $extra_inputs
   MAKE_FRAG
   
           }
@@ -24754,7 +25020,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   =item max_exec_len
   
-  Using POSIX::ARG_MAX.  Otherwise falling back to 4096.
+  Using L<POSIX>::ARG_MAX.  Otherwise falling back to 4096.
   
   =cut
   
@@ -25198,8 +25464,6 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   pure_all :: config pm_to_blib subdirs linkext
   	$(NOECHO) $(NOOP)
   
-  	$(NOECHO) $(NOOP)
-  
   subdirs :: $(MYEXTLIB)
   	$(NOECHO) $(NOOP)
   
@@ -25279,13 +25543,15 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       my ($self) = @_;
       return '' unless $self->needs_linking();
       my $m_o = $self->{XSMULTI} ? $self->xs_obj_opt('$*$(OBJ_EXT)') : '';
+      my $dbgout = $self->dbgoutflag;
+      $dbgout = $dbgout ? "$dbgout " : '';
       my $frag = '';
       # dmake makes noise about ambiguous rule
-      $frag .= sprintf <<'EOF', $m_o unless $self->is_make_type('dmake');
+      $frag .= sprintf <<'EOF', $dbgout, $m_o unless $self->is_make_type('dmake');
   .xs$(OBJ_EXT) :
   	$(XSUBPPRUN) $(XSPROTOARG) $(XSUBPPARGS) $*.xs > $*.xsc
   	$(MV) $*.xsc $*.c
-  	$(CCCMD) $(CCCDLFLAGS) "-I$(PERL_INC)" $(PASTHRU_DEFINE) $(DEFINE) $*.c %s
+  	$(CCCMD) $(CCCDLFLAGS) "-I$(PERL_INC)" $(PASTHRU_DEFINE) $(DEFINE) %s$*.c %s
   EOF
       if ($self->{XSMULTI}) {
   	for my $ext ($self->_xs_list_basenames) {
@@ -25299,16 +25565,17 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
               $self->_xsbuild_replace_macro($cccmd, 'xs', $ext, 'INC');
               my $define = '$(DEFINE)';
               $self->_xsbuild_replace_macro($define, 'xs', $ext, 'DEFINE');
-              #                             1     2       3     4
-              $frag .= _sprintf562 <<'EOF', $ext, $cccmd, $m_o, $define;
+              #                             1     2       3     4        5
+              $frag .= _sprintf562 <<'EOF', $ext, $cccmd, $m_o, $define, $dbgout;
   
   %1$s$(OBJ_EXT): %1$s.xs
   	$(XSUBPPRUN) $(XSPROTOARG) $(XSUBPPARGS) $*.xs > $*.xsc
   	$(MV) $*.xsc $*.c
-  	%2$s $(CCCDLFLAGS) "-I$(PERL_INC)" $(PASTHRU_DEFINE) %4$s $*.c %3$s
+  	%2$s $(CCCDLFLAGS) "-I$(PERL_INC)" $(PASTHRU_DEFINE) %4$s %5$s$*.c %3$s
   EOF
   	}
       }
+      $frag =~ s/"-I(\$\(PERL_INC\))"/-iwithsysroot "$1"/sg if $Is{ApplCor};
       $frag;
   }
   
@@ -25346,6 +25613,7 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   package ExtUtils::MM_VMS;
   
   use strict;
+  use warnings;
   
   use ExtUtils::MakeMaker::Config;
   require Exporter;
@@ -25360,8 +25628,8 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   use File::Basename;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Any;
   require ExtUtils::MM_Unix;
@@ -25383,7 +25651,7 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head1 DESCRIPTION
   
-  See ExtUtils::MM_Unix for a documentation of the methods provided
+  See L<ExtUtils::MM_Unix> for a documentation of the methods provided
   there. This package overrides the implementation of these methods, not
   the semantics.
   
@@ -25432,7 +25700,7 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   Those methods which override default MM_Unix methods are marked
   "(override)", while methods unique to MM_VMS are marked "(specific)".
   For overridden methods, documentation is limited to an explanation
-  of why this method overrides the MM_Unix method; see the ExtUtils::MM_Unix
+  of why this method overrides the MM_Unix method; see the L<ExtUtils::MM_Unix>
   documentation for more details.
   
   =over 4
@@ -25596,7 +25864,8 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =item _fixin_replace_shebang (override)
   
-  Helper routine for MM->fixin(), overridden because there's no such thing as an
+  Helper routine for L<< MM->fixin()|ExtUtils::MM_Unix/fixin >>, overridden
+  because there's no such thing as an
   actual shebang line that will be interpreted by the shell, so we just prepend
   $Config{startperl} and preserve the shebang line argument for any switches it
   may contain.
@@ -25932,9 +26201,10 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
       # Cleanup paths for directories in MMS macros.
       foreach my $macro ( qw [
               INST_BIN INST_SCRIPT INST_LIB INST_ARCHLIB
-              PERL_LIB PERL_ARCHLIB
+              PERL_LIB PERL_ARCHLIB PERL_ARCHLIBDEP
               PERL_INC PERL_SRC ],
-                          (map { 'INSTALL'.$_ } $self->installvars)
+                          (map { 'INSTALL'.$_ } $self->installvars),
+                          (map { 'DESTINSTALL'.$_ } $self->installvars)
                         )
       {
           next unless defined $self->{$macro};
@@ -26832,8 +27102,8 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   =item perldepend (override)
   
   Use VMS-style syntax for files; it's cheaper to just do it directly here
-  than to have the MM_Unix method call C<catfile> repeatedly.  Also, if
-  we have to rebuild Config.pm, use MM[SK] to do it.
+  than to have the L<MM_Unix|ExtUtils::MM_Unix> method call C<catfile>
+  repeatedly.  Also, if we have to rebuild Config.pm, use MM[SK] to do it.
   
   =cut
   
@@ -27426,7 +27696,7 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   Eliminate the macros in the output to the MMS/MMK file.
   
-  (File::Spec::VMS used to do this for us, but it's being removed)
+  (L<File::Spec::VMS> used to do this for us, but it's being removed)
   
   =cut
   
@@ -27465,7 +27735,7 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   as a file specification in Unix syntax.
   
   NOTE:  This is the canonical version of the method.  The version in
-  File::Spec::VMS is deprecated.
+  L<File::Spec::VMS> is deprecated.
   
   =cut
   
@@ -27527,7 +27797,7 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   it to be a file.
   
   NOTE:  This is the canonical version of the method.  The version in
-  File::Spec::VMS is deprecated.
+  L<File::Spec::VMS> is deprecated.
   
   =cut
   
@@ -27629,8 +27899,9 @@ $fatpacked{"ExtUtils/MM_VOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   package ExtUtils::MM_VOS;
   
   use strict;
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  use warnings;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Unix;
   our @ISA = qw(ExtUtils::MM_Unix);
@@ -27647,10 +27918,10 @@ $fatpacked{"ExtUtils/MM_VOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   =head1 DESCRIPTION
   
-  This is a subclass of ExtUtils::MM_Unix which contains functionality for
+  This is a subclass of L<ExtUtils::MM_Unix> which contains functionality for
   VOS.
   
-  Unless otherwise stated it works just like ExtUtils::MM_Unix
+  Unless otherwise stated it works just like ExtUtils::MM_Unix.
   
   =head2 Overridden methods
   
@@ -27683,7 +27954,7 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   package ExtUtils::MM_Win32;
   
   use strict;
-  
+  use warnings;
   
   =head1 NAME
   
@@ -27695,7 +27966,7 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   =head1 DESCRIPTION
   
-  See ExtUtils::MM_Unix for a documentation of the methods provided
+  See L<ExtUtils::MM_Unix> for a documentation of the methods provided
   there. This package overrides the implementation of these methods, not
   the semantics.
   
@@ -27709,8 +27980,8 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   require ExtUtils::MM_Any;
   require ExtUtils::MM_Unix;
   our @ISA = qw( ExtUtils::MM_Any ExtUtils::MM_Unix );
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   $ENV{EMXSHELL} = 'sh'; # to run `commands`
   
@@ -27759,7 +28030,7 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   sub replace_manpage_separator {
       my($self,$man) = @_;
-      $man =~ s,/+,.,g;
+      $man =~ s,[/\\]+,.,g;
       $man;
   }
   
@@ -27825,7 +28096,7 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       $self->{DEV_NULL} ||= '> NUL';
   
       $self->{FIXIN}    ||= $self->{PERL_CORE} ?
-        "\$(PERLRUN) $self->{PERL_SRC}\\win32\\bin\\pl2bat.pl" :
+        "\$(PERLRUN) -I$self->{PERL_SRC}\\cpan\\ExtUtils-PL2Bat\\lib $self->{PERL_SRC}\\win32\\bin\\pl2bat.pl" :
         'pl2bat.bat';
   
       $self->SUPER::init_tools;
@@ -28077,8 +28348,15 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   }
   
   sub can_dep_space {
-      my $self = shift;
-      1; # with Win32::GetShortPathName
+      my ($self) = @_;
+      return 0 unless $self->can_load_xs;
+      require Win32;
+      require File::Spec;
+      my ($vol, $dir) = File::Spec->splitpath($INC{'ExtUtils/MakeMaker.pm'});
+      # can_dep_space via GetShortPathName, if short paths are supported
+      my $canary = Win32::GetShortPathName(File::Spec->catpath($vol, $dir, 'MakeMaker.pm'));
+      (undef, undef, my $file) = File::Spec->splitpath($canary);
+      return (length $file > 11) ? 0 : 1;
   }
   
   =item quote_dep
@@ -28188,7 +28466,7 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       $text =~ s{\\\\"}{\\\\\\\\\\"}g;  # \\" -> \\\\\"
       $text =~ s{(?<!\\)\\"}{\\\\\\"}g; # \"  -> \\\"
       $text =~ s{(?<!\\)"}{\\"}g;       # "   -> \"
-      $text = qq{"$text"} if $text =~ /[ \t]/;
+      $text = qq{"$text"} if $text =~ /[ \t#]/; # hash because gmake 4.2.1
   
       # Apply the Command Prompt parsing rules (cmd.exe)
       my @text = split /("[^"]*")/, $text;
@@ -28277,6 +28555,16 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       return('Win32');
   }
   
+  =item dbgoutflag
+  
+  Returns a CC flag that tells the CC to emit a separate debugging symbol file
+  when compiling an object file.
+  
+  =cut
+  
+  sub dbgoutflag {
+      $MSVC ? '-Fd$(*).pdb' : '';
+  }
   
   =item cflags
   
@@ -28332,9 +28620,10 @@ $fatpacked{"ExtUtils/MM_Win95.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   package ExtUtils::MM_Win95;
   
   use strict;
+  use warnings;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Win32;
   our @ISA = qw(ExtUtils::MM_Win32);
@@ -28352,7 +28641,7 @@ $fatpacked{"ExtUtils/MM_Win95.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   =head1 DESCRIPTION
   
-  This is a subclass of ExtUtils::MM_Win32 containing changes necessary
+  This is a subclass of L<ExtUtils::MM_Win32> containing changes necessary
   to get MakeMaker playing nice with command.com and other Win9Xisms.
   
   =head2 Overridden methods
@@ -28413,8 +28702,8 @@ $fatpacked{"ExtUtils/MY.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   use strict;
   require ExtUtils::MM;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   our @ISA = qw(ExtUtils::MM);
   
   {
@@ -28440,7 +28729,7 @@ $fatpacked{"ExtUtils/MY.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   
   B<FOR INTERNAL USE ONLY>
   
-  ExtUtils::MY is a subclass of ExtUtils::MM.  Its provided in your
+  ExtUtils::MY is a subclass of L<ExtUtils::MM>.  Its provided in your
   Makefile.PL for you to add and override MakeMaker functionality.
   
   It also provides a convenient alias via the MY class.
@@ -28456,6 +28745,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   package ExtUtils::MakeMaker;
   
   use strict;
+  use warnings;
   
   BEGIN {require 5.006;}
   
@@ -28478,8 +28768,8 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   our %macro_fsentity; # whether a macro is a filesystem name
   our %macro_dep; # whether a macro is a dependency
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;  ## no critic [BuiltinFunctions::ProhibitStringyEval]
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   # Emulate something resembling CVS $Revision$
   (our $Revision = $VERSION) =~ s{_}{};
@@ -28770,7 +29060,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       PERLRUNINST PERL_CORE
       PERM_DIR PERM_RW PERM_RWX MAGICXS
       PL_FILES PM PM_FILTER PMLIBDIRS PMLIBPARENTDIRS POLLUTE
-      PREREQ_FATAL PREREQ_PM PREREQ_PRINT PRINT_PREREQ
+      PREREQ_FATAL PREREQ_PM PREREQ_PRINT PRINT_PREREQ PUREPERL_ONLY
       SIGN SKIP TEST_REQUIRES TYPEMAPS UNINST VERSION VERSION_FROM XS
       XSBUILD XSMULTI XSOPT XSPROTOARG XS_VERSION
       clean depend dist dynamic_lib linkext macro realclean tool_autosplit
@@ -28846,13 +29136,13 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       # we will use all these variables in the Makefile
       @Get_from_Config =
           qw(
-             ar cc cccdlflags ccdlflags dlext dlsrc exe_ext full_ar ld
+             ar cc cccdlflags ccdlflags cpprun dlext dlsrc exe_ext full_ar ld
              lddlflags ldflags libc lib_ext obj_ext osname osvers ranlib
              sitelibexp sitearchexp so
             );
   
       # 5.5.3 doesn't have any concept of vendor libs
-      push @Get_from_Config, qw( vendorarchexp vendorlibexp ) if $] >= 5.006;
+      push @Get_from_Config, qw( vendorarchexp vendorlibexp ) if "$]" >= 5.006;
   
       foreach my $item (@attrib_help){
           $Recognized_Att_Keys{$item} = 1;
@@ -28879,7 +29169,10 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       return eval {
         require CPAN::Meta::Requirements;
         CPAN::Meta::Requirements->VERSION(2.130);
-        require B; # CMR requires this, for core we have to too.
+        # Make sure vstrings can be handled. Some versions of CMR require B to
+        # do this, which won't be available in miniperl.
+        CPAN::Meta::Requirements->new->add_string_requirement('Module' => v1.2);
+        1;
       };
   }
   
@@ -28964,50 +29257,43 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
       check_hints($self);
   
-      if ( defined $self->{MIN_PERL_VERSION}
-            && $self->{MIN_PERL_VERSION} !~ /^v?[\d_\.]+$/ ) {
-        require version;
-        my $normal = eval {
-          local $SIG{__WARN__} = sub {
-              # simulate "use warnings FATAL => 'all'" for vintage perls
-              die @_;
-          };
-          version->new( $self->{MIN_PERL_VERSION} )
-        };
-        $self->{MIN_PERL_VERSION} = $normal if defined $normal && !$@;
-      }
+      if ( $self->{MIN_PERL_VERSION}) {
+          my $perl_version = $self->{MIN_PERL_VERSION};
+          if (ref $perl_version) {
+              # assume a version object
+          }
+          else {
+              $perl_version = eval {
+                  local $SIG{__WARN__} = sub {
+                      # simulate "use warnings FATAL => 'all'" for vintage perls
+                      die @_;
+                  };
+                  version->new( $perl_version )->numify;
+              };
+              $perl_version =~ tr/_//d
+                  if defined $perl_version;
+          }
   
-      # Translate X.Y.Z to X.00Y00Z
-      if( defined $self->{MIN_PERL_VERSION} ) {
-          $self->{MIN_PERL_VERSION} =~ s{ ^v? (\d+) \. (\d+) \. (\d+) $ }
-                                        {sprintf "%d.%03d%03d", $1, $2, $3}ex;
-      }
-  
-      my $perl_version_ok = eval {
-          local $SIG{__WARN__} = sub {
-              # simulate "use warnings FATAL => 'all'" for vintage perls
-              die @_;
-          };
-          !$self->{MIN_PERL_VERSION} or $self->{MIN_PERL_VERSION} <= $]
-      };
-      if (!$perl_version_ok) {
-          if (!defined $perl_version_ok) {
-              die <<'END';
-  Warning: MIN_PERL_VERSION is not in a recognized format.
+          if (!defined $perl_version) {
+              # should this be a warning?
+              die sprintf <<'END', $self->{MIN_PERL_VERSION};
+  MakeMaker FATAL: MIN_PERL_VERSION (%s) is not in a recognized format.
   Recommended is a quoted numerical value like '5.005' or '5.008001'.
   END
           }
-          elsif ($self->{PREREQ_FATAL}) {
-              die sprintf <<"END", $self->{MIN_PERL_VERSION}, $];
-  MakeMaker FATAL: perl version too low for this distribution.
-  Required is %s. We run %s.
+          elsif ($perl_version > "$]") {
+              my $message = sprintf <<'END', $perl_version, $];
+  Perl version %s or higher required. We run %s.
   END
+              if ($self->{PREREQ_FATAL}) {
+                  die "MakeMaker FATAL: $message";
+              }
+              else {
+                  warn "Warning: $message";
+              }
           }
-          else {
-              warn sprintf
-                  "Warning: Perl version %s or higher required. We run %s.\n",
-                  $self->{MIN_PERL_VERSION}, $];
-          }
+  
+          $self->{MIN_PERL_VERSION} = $perl_version;
       }
   
       my %configure_att;         # record &{$self->{CONFIGURE}} attributes
@@ -29091,7 +29377,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
       if (%unsatisfied && $self->{PREREQ_FATAL}){
           my $failedprereqs = join "\n", map {"    $_ $unsatisfied{$_}"}
-                              sort { $a cmp $b } keys %unsatisfied;
+                              sort { lc $a cmp lc $b } keys %unsatisfied;
           die <<"END";
   MakeMaker FATAL: prerequisites not found.
   $failedprereqs
@@ -29147,6 +29433,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
               } else {
                   my $value = $self->{$key};
                   # not going to test in FS so only stripping start
+                  $value =~ s/"// if $key =~ /PERL$/ and $self->is_make_type('dmake');
                   $value =~ s/^"// if $key =~ /PERL$/;
                   $value = $self->catdir("..", $value)
                     unless $self->file_name_is_absolute($value);
@@ -29156,7 +29443,8 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
           }
           if ($self->{PARENT}) {
               $self->{PARENT}->{CHILDREN}->{$newclass} = $self;
-              foreach my $opt (qw(POLLUTE PERL_CORE LINKTYPE LD OPTIMIZE)) {
+              foreach my $opt (qw(POLLUTE PERL_CORE LINKTYPE AR FULL_AR CC CCFLAGS
+                                  OPTIMIZE LD LDDLFLAGS LDFLAGS PERL_ARCHLIB DESTDIR)) {
                   if (exists $self->{PARENT}->{$opt}
                       and not exists $self->{$opt})
                       {
@@ -29175,7 +29463,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       # RT#91540 PREREQ_FATAL not recognized on command line
       if (%unsatisfied && $self->{PREREQ_FATAL}){
           my $failedprereqs = join "\n", map {"    $_ $unsatisfied{$_}"}
-                              sort { $a cmp $b } keys %unsatisfied;
+                              sort { lc $a cmp lc $b } keys %unsatisfied;
           die <<"END";
   MakeMaker FATAL: prerequisites not found.
   $failedprereqs
@@ -29490,7 +29778,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   }
   
   sub check_manifest {
-      print "Checking if your kit is complete...\n";
+      print STDOUT "Checking if your kit is complete...\n";
       require ExtUtils::Manifest;
       # avoid warning
       $ExtUtils::Manifest::Quiet = $ExtUtils::Manifest::Quiet = 1;
@@ -29606,20 +29894,19 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   }
   
   sub _run_hintfile {
-      our $self;
-      local($self) = shift;       # make $self available to the hint file.
-      my($hint_file) = shift;
+      my ($self, $hint_file) = @_;
   
       local($@, $!);
       print "Processing hints file $hint_file\n" if $Verbose;
   
-      # Just in case the ./ isn't on the hint file, which File::Spec can
-      # often strip off, we bung the curdir into @INC
-      local @INC = (File::Spec->curdir, @INC);
-      my $ret = do $hint_file;
-      if( !defined $ret ) {
-          my $error = $@ || $!;
-          warn $error;
+      if(open(my $fh, '<', $hint_file)) {
+          my $hints_content = do { local $/; <$fh> };
+          no strict;
+          eval $hints_content;
+          warn "Failed to run hint file $hint_file: $@" if $@;
+      }
+      else {
+          warn "Could not open $hint_file for read: $!";
       }
   }
   
@@ -29689,15 +29976,15 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       my $self = shift;
   
       my $finalname = $self->{MAKEFILE};
-      printf "Generating a %s %s\n", $self->make_type, $finalname if $Verbose || !$self->{PARENT};
-      print "Writing $finalname for $self->{NAME}\n" if $Verbose || !$self->{PARENT};
+      printf STDOUT "Generating a %s %s\n", $self->make_type, $finalname if $Verbose || !$self->{PARENT};
+      print STDOUT "Writing $finalname for $self->{NAME}\n" if $Verbose || !$self->{PARENT};
   
       unlink($finalname, "MakeMaker.tmp", $Is_VMS ? 'Descrip.MMS' : ());
   
       write_file_via_tmp($finalname, $self->{RESULT});
   
       # Write MYMETA.yml to communicate metadata up to the CPAN clients
-      print "Writing MYMETA.yml and MYMETA.json\n"
+      print STDOUT "Writing MYMETA.yml and MYMETA.json\n"
         if !$self->{NO_MYMETA} and $self->write_mymeta( $self->mymeta );
   
       # save memory
@@ -29718,7 +30005,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       die "write_file_via_tmp: 2nd arg must be ref" unless ref $contents;
       for my $chunk (@$contents) {
           my $to_write = $chunk;
-          utf8::encode $to_write if !$CAN_DECODE && $] > 5.008;
+          utf8::encode $to_write if !$CAN_DECODE && "$]" > 5.008;
           print $fh "$to_write\n" or die "Can't write to MakeMaker.tmp: $!";
       }
       close $fh or die "Can't write to MakeMaker.tmp: $!";
@@ -29880,6 +30167,8 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   seeks to handle all of these correctly. It is currently still not possible
   to portably use Unicode characters in module names, because this requires
   Perl to handle Unicode filenames, which is not yet the case on Windows.
+  
+  See L<ExtUtils::MakeMaker::FAQ> for details of the design and usage.
   
   =head2 How To Write A Makefile.PL
   
@@ -30290,7 +30579,11 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   =item CCFLAGS
   
   String that will be included in the compiler call command line between
-  the arguments INC and OPTIMIZE.
+  the arguments INC and OPTIMIZE. Note that setting this will overwrite its
+  default value (C<$Config::Config{ccflags}>); to preserve that, include
+  the default value directly, e.g.:
+  
+      CCFLAGS => "$Config::Config{ccflags} ..."
   
   =item CONFIG
   
@@ -30300,6 +30593,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   cc
   cccdlflags
   ccdlflags
+  cpprun
   dlext
   dlsrc
   ld
@@ -31053,6 +31347,20 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       perl bin/foobar.PL bin/foobar1
       perl bin/foobar.PL bin/foobar2
   
+  If an output file depends on extra input files beside the script itself,
+  a hash ref can be used in version 7.36 and above:
+  
+      PL_FILES => { 'foo.PL' => {
+          'foo.out' => 'foo.in',
+          'bar.out' => [qw(bar1.in bar2.in)],
+      }
+  
+  In this case the extra input files will be passed to the program after
+  the target file:
+  
+     perl foo.PL foo.out foo.in
+     perl foo.PL bar.out bar1.in bar2.in
+  
   PL files are normally run B<after> pm_to_blib and include INST_LIB and
   INST_ARCH in their C<@INC>, so the just built modules can be
   accessed... unless the PL file is making a module (or anything else in
@@ -31111,10 +31419,9 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =item POLLUTE
   
-  Release 5.005 grandfathered old global symbol names by providing preprocessor
-  macros for extension source compatibility.  As of release 5.6, these
-  preprocessor definitions are not available by default.  The POLLUTE flag
-  specifies that the old names should still be defined:
+  Prior to 5.6 various interpreter variables were available without a C<PL_>
+  prefix, eg. C<PL_undef> was available as C<undef>. As of release 5.6, these
+  are only defined if the POLLUTE flag is enabled:
   
     perl Makefile.PL POLLUTE=1
   
@@ -31412,7 +31719,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =item XSPROTOARG
   
-  May be set to C<-protoypes>, C<-noprototypes> or the empty string.  The
+  May be set to C<-prototypes>, C<-noprototypes> or the empty string.  The
   empty string is equivalent to the xsubpp default, or C<-noprototypes>.
   See the xsubpp documentation for details.  MakeMaker
   defaults to the empty string.
@@ -31477,7 +31784,8 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =item postamble
   
-  Anything put here will be passed to MY::postamble() if you have one.
+  Anything put here will be passed to
+  L<MY::postamble()|ExtUtils::MM_Any/postamble (o)> if you have one.
   
   =item realclean
   
@@ -31524,7 +31832,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   If you are running experiments with embedding perl as a library into
   other applications, you might find MakeMaker is not sufficient. You'd
-  better have a look at ExtUtils::Embed which is a collection of utilities
+  better have a look at L<ExtUtils::Embed> which is a collection of utilities
   for embedding.
   
   If you still need a different solution, try to develop another
@@ -31588,7 +31896,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   =head2 Distribution Support
   
   For authors of extensions MakeMaker provides several Makefile
-  targets. Most of the support comes from the ExtUtils::Manifest module,
+  targets. Most of the support comes from the L<ExtUtils::Manifest> module,
   where additional documentation can be found.
   
   =over 4
@@ -31596,13 +31904,13 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   =item    make distcheck
   
   reports which files are below the build directory but not in the
-  MANIFEST file and vice versa. (See ExtUtils::Manifest::fullcheck() for
+  MANIFEST file and vice versa. (See L<ExtUtils::Manifest/fullcheck> for
   details)
   
   =item    make skipcheck
   
   reports which files are skipped due to the entries in the
-  C<MANIFEST.SKIP> file (See ExtUtils::Manifest::skipcheck() for
+  C<MANIFEST.SKIP> file (See L<ExtUtils::Manifest/skipcheck> for
   details)
   
   =item    make distclean
@@ -31619,7 +31927,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   =item    make manifest
   
   rewrites the MANIFEST file, adding all remaining files found (See
-  ExtUtils::Manifest::mkmanifest() for details)
+  L<ExtUtils::Manifest/mkmanifest> for details)
   
   =item    make distdir
   
@@ -31819,11 +32127,16 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   =head1 SEE ALSO
   
   L<Module::Build> is a pure-Perl alternative to MakeMaker which does
-  not rely on make or any other external utility.  It is easier to
+  not rely on make or any other external utility.  It may be easier to
   extend to suit your needs.
   
-  L<Module::Install> is a wrapper around MakeMaker which adds features
-  not normally available.
+  L<Module::Build::Tiny> is a minimal pure-Perl alternative to MakeMaker
+  that follows the Build.PL protocol of Module::Build but without its
+  complexity and cruft, implementing only the installation of the module
+  and leaving authoring to L<mbtiny> or other authoring tools.
+  
+  L<Module::Install> is a (now discouraged) wrapper around MakeMaker which
+  adds features not normally available.
   
   L<ExtUtils::ModuleMaker> and L<Module::Starter> are both modules to
   help you setup your distribution.
@@ -31832,10 +32145,18 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   L<File::ShareDir::Install> makes it easy to install static, sometimes
   also referred to as 'shared' files. L<File::ShareDir> helps accessing
-  the shared files after installation.
+  the shared files after installation. L<Test::File::ShareDir> helps when
+  writing tests to use the shared files both before and after installation.
   
-  L<Dist::Zilla> makes it easy for the module author to create MakeMaker-based
-  distributions with lots of bells and whistles.
+  L<Dist::Zilla> is an authoring tool which allows great customization and
+  extensibility of the author experience, relying on the existing install
+  tools like ExtUtils::MakeMaker only for installation.
+  
+  L<Dist::Milla> is a Dist::Zilla bundle that greatly simplifies common
+  usage.
+  
+  L<Minilla> is a minimal authoring tool that does the same things as
+  Dist::Milla without the overhead of Dist::Zilla.
   
   =head1 AUTHORS
   
@@ -31870,9 +32191,10 @@ $fatpacked{"ExtUtils/MakeMaker/Config.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   package ExtUtils::MakeMaker::Config;
   
   use strict;
+  use warnings;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   use Config ();
   
@@ -31913,8 +32235,9 @@ $fatpacked{"ExtUtils/MakeMaker/Locale.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   package ExtUtils::MakeMaker::Locale;
   
   use strict;
-  our $VERSION = "7.34";
-  $VERSION = eval $VERSION;
+  use warnings;
+  our $VERSION = "7.64";
+  $VERSION =~ tr/_//d;
   
   use base 'Exporter';
   our @EXPORT_OK = qw(
@@ -31959,7 +32282,10 @@ $fatpacked{"ExtUtils/MakeMaker/Locale.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
               unless (defined &GetInputCP) {
                   eval {
                       require Win32;
-                      eval { Win32::GetConsoleCP() };
+                      eval {
+                          local $SIG{__WARN__} = sub {} if ( "$]" < 5.014 ); # suppress deprecation warning for inherited AUTOLOAD of Win32::GetConsoleCP()
+                          Win32::GetConsoleCP();
+                      };
                       # manually "import" it since Win32->import refuses
                       *GetInputCP = sub { &Win32::GetConsoleCP } if defined &Win32::GetConsoleCP;
                       *GetOutputCP = sub { &Win32::GetConsoleOutputCP } if defined &Win32::GetConsoleOutputCP;
@@ -32007,6 +32333,13 @@ $fatpacked{"ExtUtils/MakeMaker/Locale.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   	};
   	$ENCODING_LOCALE ||= $ENCODING_CONSOLE_IN;
       }
+  
+      # Workaround of Encode < v2.71 for "cp65000" and "cp65001"
+      # The "cp65000" and "cp65001" aliases were added in [Encode v2.71](https://github.com/dankogai/p5-encode/commit/7874bd95aa10967a3b5dbae333d16bcd703ac6c6)
+      # via commit <https://github.com/dankogai/p5-encode/commit/84b9c1101d5251d37e226f80d1c6781718779047>.
+      # This will avoid test failures for Win32 machines using the UTF-7 or UTF-8 code pages.
+      $ENCODING_LOCALE = 'UTF-7' if $ENCODING_LOCALE && lc($ENCODING_LOCALE) eq "cp65000";
+      $ENCODING_LOCALE = 'utf-8-strict' if $ENCODING_LOCALE && lc($ENCODING_LOCALE) eq "cp65001";
   
       if ($^O eq "darwin") {
   	$ENCODING_LOCALE_FS ||= "UTF-8";
@@ -32300,11 +32633,12 @@ $fatpacked{"ExtUtils/MakeMaker/version.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
   
   use 5.006001;
   use strict;
+  use warnings;
   
   use vars qw(@ISA $VERSION $CLASS $STRICT $LAX *declare *qv);
   
-  $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   $CLASS = 'version';
   
   {
@@ -32313,7 +32647,7 @@ $fatpacked{"ExtUtils/MakeMaker/version.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
       if ( $@ ) { # don't have any version.pm installed
           eval "use ExtUtils::MakeMaker::version::vpp";
           die "$@" if ( $@ );
-          local $^W;
+          no warnings;
           delete $INC{'version.pm'};
           $INC{'version.pm'} = $INC{'ExtUtils/MakeMaker/version.pm'};
           push @version::ISA, "ExtUtils::MakeMaker::version::vpp";
@@ -32323,7 +32657,7 @@ $fatpacked{"ExtUtils/MakeMaker/version.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
           *version::_VERSION = \&ExtUtils::MakeMaker::version::vpp::_VERSION;
           *version::vcmp = \&ExtUtils::MakeMaker::version::vpp::vcmp;
           *version::new = \&ExtUtils::MakeMaker::version::vpp::new;
-          if ($] >= 5.009000) {
+          if ("$]" >= 5.009000) {
               no strict 'refs';
               *version::stringify = \&ExtUtils::MakeMaker::version::vpp::stringify;
               *{'version::(""'} = \&ExtUtils::MakeMaker::version::vpp::stringify;
@@ -32354,11 +32688,12 @@ $fatpacked{"ExtUtils/MakeMaker/version/regex.pm"} = '#line '.(1+__LINE__).' "'._
   package ExtUtils::MakeMaker::version::regex;
   
   use strict;
+  use warnings;
   
   use vars qw($VERSION $CLASS $STRICT $LAX);
   
-  $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   #--------------------------------------------------------------------------#
   # Version regexp components
@@ -32599,11 +32934,12 @@ $fatpacked{"ExtUtils/MakeMaker/version/vpp.pm"} = '#line '.(1+__LINE__).' "'.__F
   
   use 5.006001;
   use strict;
+  use warnings;
   
   use Config;
   use vars qw($VERSION $CLASS @ISA $LAX $STRICT);
-  $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   $CLASS = 'ExtUtils::MakeMaker::version::vpp';
   
   require ExtUtils::MakeMaker::version::regex;
@@ -32645,7 +32981,7 @@ $fatpacked{"ExtUtils/MakeMaker/version/vpp.pm"} = '#line '.(1+__LINE__).' "'.__F
   
       # Set up any derived class
       unless ($class eq $CLASS) {
-  	local $^W;
+  	no warnings;
   	*{$class.'::declare'} =  \&{$CLASS.'::declare'};
   	*{$class.'::qv'} = \&{$CLASS.'::qv'};
       }
@@ -32677,7 +33013,7 @@ $fatpacked{"ExtUtils/MakeMaker/version/vpp.pm"} = '#line '.(1+__LINE__).' "'.__F
       }
   
       if (exists($args{'UNIVERSAL::VERSION'})) {
-  	local $^W;
+  	no warnings;
   	*UNIVERSAL::VERSION
   		= \&{$CLASS.'::_VERSION'};
       }
@@ -33408,11 +33744,11 @@ $fatpacked{"ExtUtils/MakeMaker/version/vpp.pm"} = '#line '.(1+__LINE__).' "'.__F
       if ( length($value) >= 3 && $value !~ /[._]/
   	&& _is_non_alphanumeric($value)) {
   	my $tvalue;
-  	if ( $] ge 5.008_001 ) {
+  	if ( "$]" >= 5.008_001 ) {
   	    $tvalue = _find_magic_vstring($value);
   	    $value = $tvalue if length $tvalue;
   	}
-  	elsif ( $] ge 5.006_000 ) {
+  	elsif ( "$]" >= 5.006_000 ) {
   	    $tvalue = sprintf("v%vd",$value);
   	    if ( $tvalue =~ /^v\d+(\.\d+){2,}$/ ) {
   		# must be a v-string
@@ -33447,7 +33783,7 @@ $fatpacked{"ExtUtils/MakeMaker/version/vpp.pm"} = '#line '.(1+__LINE__).' "'.__F
       my $class = ref($obj) || $obj;
   
       no strict 'refs';
-      if ( exists $INC{"$class.pm"} and not %{"$class\::"} and $] >= 5.008) {
+      if ( exists $INC{"$class.pm"} and not %{"$class\::"} and "$]" >= 5.008) {
   	 # file but no package
   	require Carp;
   	Carp::croak( "$class defines neither package nor VERSION"
@@ -33456,14 +33792,14 @@ $fatpacked{"ExtUtils/MakeMaker/version/vpp.pm"} = '#line '.(1+__LINE__).' "'.__F
   
       my $version = eval "\$$class\::VERSION";
       if ( defined $version ) {
-  	local $^W if $] <= 5.008;
+  	local $^W if "$]" <= 5.008;
   	$version = ExtUtils::MakeMaker::version::vpp->new($version);
       }
   
       if ( defined $req ) {
   	unless ( defined $version ) {
   	    require Carp;
-  	    my $msg =  $] < 5.006
+  	    my $msg = "$]" < 5.006
   	    ? "$class version $req required--this is only version "
   	    : "$class does not define \$$class\::VERSION"
   	      ."--version check failed";
@@ -34420,11 +34756,11 @@ EXTUTILS_MANIFEST
 $fatpacked{"ExtUtils/Mkbootstrap.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXTUTILS_MKBOOTSTRAP';
   package ExtUtils::Mkbootstrap;
   
-  # There's just too much Dynaloader incest here to turn on strict vars.
-  use strict 'refs';
+  use strict;
+  use warnings;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   require Exporter;
   our @ISA = ('Exporter');
@@ -34453,6 +34789,7 @@ $fatpacked{"ExtUtils/Mkbootstrap.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
       if (-f "${baseext}_BS"){
   	$_ = "${baseext}_BS";
   	package DynaLoader; # execute code as if in DynaLoader
+  	no strict 'vars';
   	local($osname, $dlsrc) = (); # avoid warnings
   	($osname, $dlsrc) = @Config::Config{qw(osname dlsrc)};
   	$bscode = "";
@@ -34463,6 +34800,7 @@ $fatpacked{"ExtUtils/Mkbootstrap.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   
       if ($Config{'dlsrc'} =~ /^dl_dld/){
   	package DynaLoader;
+  	no strict 'vars';
   	push(@dl_resolve_using, dl_findfile('-lc'));
       }
   
@@ -34504,7 +34842,7 @@ $fatpacked{"ExtUtils/Mkbootstrap.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   
   =head1 SYNOPSIS
   
-  C<Mkbootstrap>
+    Mkbootstrap
   
   =head1 DESCRIPTION
   
@@ -34538,6 +34876,7 @@ $fatpacked{"ExtUtils/Mksymlists.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   use 5.006;
   use strict qw[ subs refs ];
   # no strict 'vars';  # until filehandles are exempted
+  use warnings;
   
   use Carp;
   use Exporter;
@@ -34545,8 +34884,8 @@ $fatpacked{"ExtUtils/Mksymlists.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
   our @ISA = qw(Exporter);
   our @EXPORT = qw(&Mksymlists);
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   sub Mksymlists {
       my(%spec) = @_;
@@ -34683,7 +35022,7 @@ $fatpacked{"ExtUtils/Mksymlists.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       # linked to directly from C. GSAR 97-07-10
   
       #bcc dropped in 5.16, so dont create useless extra symbols for export table
-      unless($] >= 5.016) {
+      unless("$]" >= 5.016) {
           if ($Config::Config{'cc'} =~ /^bcc/i) {
               push @syms, "_$_", "$_ = _$_"
                   for (@{$data->{DL_VARS}}, @{$data->{FUNCLIST}});
@@ -35215,8 +35554,8 @@ $fatpacked{"ExtUtils/testlib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   use strict;
   use warnings;
   
-  our $VERSION = '7.34';
-  $VERSION = eval $VERSION;
+  our $VERSION = '7.64';
+  $VERSION =~ tr/_//d;
   
   use Cwd;
   use File::Spec;
@@ -35255,10 +35594,145 @@ $fatpacked{"ExtUtils/testlib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
 EXTUTILS_TESTLIB
 
 $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_TEMP';
-  package File::Temp;
+  package File::Temp; # git description: v0.2310-3-gc7148fe
   # ABSTRACT: return name and handle of a temporary file safely
-  our $VERSION = '0.2304'; # VERSION
   
+  our $VERSION = '0.2311';
+  
+  #pod =begin :__INTERNALS
+  #pod
+  #pod =head1 PORTABILITY
+  #pod
+  #pod This section is at the top in order to provide easier access to
+  #pod porters.  It is not expected to be rendered by a standard pod
+  #pod formatting tool. Please skip straight to the SYNOPSIS section if you
+  #pod are not trying to port this module to a new platform.
+  #pod
+  #pod This module is designed to be portable across operating systems and it
+  #pod currently supports Unix, VMS, DOS, OS/2, Windows and Mac OS
+  #pod (Classic). When porting to a new OS there are generally three main
+  #pod issues that have to be solved:
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item *
+  #pod
+  #pod Can the OS unlink an open file? If it can not then the
+  #pod C<_can_unlink_opened_file> method should be modified.
+  #pod
+  #pod =item *
+  #pod
+  #pod Are the return values from C<stat> reliable? By default all the
+  #pod return values from C<stat> are compared when unlinking a temporary
+  #pod file using the filename and the handle. Operating systems other than
+  #pod unix do not always have valid entries in all fields. If utility function
+  #pod C<File::Temp::unlink0> fails then the C<stat> comparison should be
+  #pod modified accordingly.
+  #pod
+  #pod =item *
+  #pod
+  #pod Security. Systems that can not support a test for the sticky bit
+  #pod on a directory can not use the MEDIUM and HIGH security tests.
+  #pod The C<_can_do_level> method should be modified accordingly.
+  #pod
+  #pod =back
+  #pod
+  #pod =end :__INTERNALS
+  #pod
+  #pod =head1 SYNOPSIS
+  #pod
+  #pod   use File::Temp qw/ tempfile tempdir /;
+  #pod
+  #pod   $fh = tempfile();
+  #pod   ($fh, $filename) = tempfile();
+  #pod
+  #pod   ($fh, $filename) = tempfile( $template, DIR => $dir);
+  #pod   ($fh, $filename) = tempfile( $template, SUFFIX => '.dat');
+  #pod   ($fh, $filename) = tempfile( $template, TMPDIR => 1 );
+  #pod
+  #pod   binmode( $fh, ":utf8" );
+  #pod
+  #pod   $dir = tempdir( CLEANUP => 1 );
+  #pod   ($fh, $filename) = tempfile( DIR => $dir );
+  #pod
+  #pod Object interface:
+  #pod
+  #pod   require File::Temp;
+  #pod   use File::Temp ();
+  #pod   use File::Temp qw/ :seekable /;
+  #pod
+  #pod   $fh = File::Temp->new();
+  #pod   $fname = $fh->filename;
+  #pod
+  #pod   $fh = File::Temp->new(TEMPLATE => $template);
+  #pod   $fname = $fh->filename;
+  #pod
+  #pod   $tmp = File::Temp->new( UNLINK => 0, SUFFIX => '.dat' );
+  #pod   print $tmp "Some data\n";
+  #pod   print "Filename is $tmp\n";
+  #pod   $tmp->seek( 0, SEEK_END );
+  #pod
+  #pod   $dir = File::Temp->newdir(); # CLEANUP => 1 by default
+  #pod
+  #pod The following interfaces are provided for compatibility with
+  #pod existing APIs. They should not be used in new code.
+  #pod
+  #pod MkTemp family:
+  #pod
+  #pod   use File::Temp qw/ :mktemp  /;
+  #pod
+  #pod   ($fh, $file) = mkstemp( "tmpfileXXXXX" );
+  #pod   ($fh, $file) = mkstemps( "tmpfileXXXXXX", $suffix);
+  #pod
+  #pod   $tmpdir = mkdtemp( $template );
+  #pod
+  #pod   $unopened_file = mktemp( $template );
+  #pod
+  #pod POSIX functions:
+  #pod
+  #pod   use File::Temp qw/ :POSIX /;
+  #pod
+  #pod   $file = tmpnam();
+  #pod   $fh = tmpfile();
+  #pod
+  #pod   ($fh, $file) = tmpnam();
+  #pod
+  #pod Compatibility functions:
+  #pod
+  #pod   $unopened_file = File::Temp::tempnam( $dir, $pfx );
+  #pod
+  #pod =head1 DESCRIPTION
+  #pod
+  #pod C<File::Temp> can be used to create and open temporary files in a safe
+  #pod way.  There is both a function interface and an object-oriented
+  #pod interface.  The File::Temp constructor or the tempfile() function can
+  #pod be used to return the name and the open filehandle of a temporary
+  #pod file.  The tempdir() function can be used to create a temporary
+  #pod directory.
+  #pod
+  #pod The security aspect of temporary file creation is emphasized such that
+  #pod a filehandle and filename are returned together.  This helps guarantee
+  #pod that a race condition can not occur where the temporary file is
+  #pod created by another process between checking for the existence of the
+  #pod file and its opening.  Additional security levels are provided to
+  #pod check, for example, that the sticky bit is set on world writable
+  #pod directories.  See L<"safe_level"> for more information.
+  #pod
+  #pod For compatibility with popular C library functions, Perl implementations of
+  #pod the mkstemp() family of functions are provided. These are, mkstemp(),
+  #pod mkstemps(), mkdtemp() and mktemp().
+  #pod
+  #pod Additionally, implementations of the standard L<POSIX|POSIX>
+  #pod tmpnam() and tmpfile() functions are provided if required.
+  #pod
+  #pod Implementations of mktemp(), tmpnam(), and tempnam() are provided,
+  #pod but should be used with caution since they return only a filename
+  #pod that was valid when function was called, so cannot guarantee
+  #pod that the file will not exist by the time the caller opens the filename.
+  #pod
+  #pod Filehandles returned by these functions support the seekable methods.
+  #pod
+  #pod =cut
   
   # Toolchain targets v5.8.1, but we'll try to support back to v5.6 anyway.
   # It might be possible to make this v5.5, but many v5.6isms are creeping
@@ -35290,11 +35764,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   use overload '""' => "STRINGIFY", '0+' => "NUMIFY",
     fallback => 1;
   
-  # use 'our' on v5.6.0
-  use vars qw(@EXPORT_OK %EXPORT_TAGS $DEBUG $KEEP_ALL);
-  
-  $DEBUG = 0;
-  $KEEP_ALL = 0;
+  our $DEBUG = 0;
+  our $KEEP_ALL = 0;
   
   # We are exporting functions
   
@@ -35302,7 +35773,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   # Export list - to allow fine tuning of export table
   
-  @EXPORT_OK = qw{
+  our @EXPORT_OK = qw{
                    tempfile
                    tempdir
                    tmpnam
@@ -35320,7 +35791,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   # Groups of functions for export
   
-  %EXPORT_TAGS = (
+  our %EXPORT_TAGS = (
                   'POSIX' => [qw/ tmpnam tmpfile /],
                   'mktemp' => [qw/ mktemp mkstemp mkstemps mkdtemp/],
                   'seekable' => [qw/ SEEK_SET SEEK_CUR SEEK_END /],
@@ -35431,7 +35902,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   #                        the file as soon as it is closed. Usually indicates
   #                        use of the O_TEMPORARY flag to sysopen.
   #                        Usually irrelevant on unix
-  #   "use_exlock" => Indicates that O_EXLOCK should be used. Default is true.
+  #   "use_exlock" => Indicates that O_EXLOCK should be used. Default is false.
+  #   "file_permissions" => file permissions for sysopen(). Default is 0600.
   
   # Optionally a reference to a scalar can be passed into the function
   # On error this will be used to store the reason for the error
@@ -35464,12 +35936,13 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
     # Default options
     my %options = (
-                   "open" => 0,
-                   "mkdir" => 0,
-                   "suffixlen" => 0,
-                   "unlink_on_close" => 0,
-                   "use_exlock" => 1,
-                   "ErrStr" => \$tempErrStr,
+                   "open"             => 0,
+                   "mkdir"            => 0,
+                   "suffixlen"        => 0,
+                   "unlink_on_close"  => 0,
+                   "use_exlock"       => 0,
+                   "ErrStr"           => \$tempErrStr,
+                   "file_permissions" => undef,
                   );
   
     # Read the template
@@ -35605,6 +36078,9 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
       }
     }
   
+    my $perms = $options{file_permissions};
+    my $has_perms = defined $perms;
+    $perms = 0600 unless $has_perms;
   
     # Now try MAX_TRIES time to open the file
     for (my $i = 0; $i < MAX_TRIES; $i++) {
@@ -35627,19 +36103,19 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
         my $open_success = undef;
         if ( $^O eq 'VMS' and $options{"unlink_on_close"} && !$KEEP_ALL) {
           # make it auto delete on close by setting FAB$V_DLT bit
-          $fh = VMS::Stdio::vmssysopen($path, $OPENFLAGS, 0600, 'fop=dlt');
+          $fh = VMS::Stdio::vmssysopen($path, $OPENFLAGS, $perms, 'fop=dlt');
           $open_success = $fh;
         } else {
           my $flags = ( ($options{"unlink_on_close"} && !$KEEP_ALL) ?
                         $OPENTEMPFLAGS :
                         $OPENFLAGS );
           $flags |= $LOCKFLAG if (defined $LOCKFLAG && $options{use_exlock});
-          $open_success = sysopen($fh, $path, $flags, 0600);
+          $open_success = sysopen($fh, $path, $flags, $perms);
         }
         if ( $open_success ) {
   
           # in case of odd umask force rw
-          chmod(0600, $path);
+          chmod($perms, $path) unless $has_perms;
   
           # Opened successfully - return file handle and name
           return ($fh, $path);
@@ -35694,7 +36170,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
       # 1 X say and the randomness could come up with the same
       # file MAX_TRIES in a row.
   
-      # Store current attempt - in principal this implies that the
+      # Store current attempt - in principle this implies that the
       # 3rd time around the open attempt that the first temp file
       # name could be generated again. Probably should store each
       # attempt and make sure that none are repeated
@@ -35924,7 +36400,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   sub _can_unlink_opened_file {
   
-    if (grep { $^O eq $_ } qw/MSWin32 os2 VMS dos MacOS haiku/) {
+    if (grep $^O eq $_, qw/MSWin32 os2 VMS dos MacOS haiku/) {
       return 0;
     } else {
       return 1;
@@ -36124,7 +36600,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   sub _parse_args {
     my $leading_template = (scalar(@_) % 2 == 1 ? shift(@_) : '' );
     my %args = @_;
-    %args = map { uc($_), $args{$_} } keys %args;
+    %args = map +(uc($_) => $args{$_}), keys %args;
   
     # template (store it in an array so that it will
     # disappear from the arg list of tempfile)
@@ -36137,6 +36613,60 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return( \@template, \%args );
   }
   
+  #pod =head1 OBJECT-ORIENTED INTERFACE
+  #pod
+  #pod This is the primary interface for interacting with
+  #pod C<File::Temp>. Using the OO interface a temporary file can be created
+  #pod when the object is constructed and the file can be removed when the
+  #pod object is no longer required.
+  #pod
+  #pod Note that there is no method to obtain the filehandle from the
+  #pod C<File::Temp> object. The object itself acts as a filehandle.  The object
+  #pod isa C<IO::Handle> and isa C<IO::Seekable> so all those methods are
+  #pod available.
+  #pod
+  #pod Also, the object is configured such that it stringifies to the name of the
+  #pod temporary file and so can be compared to a filename directly.  It numifies
+  #pod to the C<refaddr> the same as other handles and so can be compared to other
+  #pod handles with C<==>.
+  #pod
+  #pod     $fh eq $filename       # as a string
+  #pod     $fh != \*STDOUT        # as a number
+  #pod
+  #pod Available since 0.14.
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item B<new>
+  #pod
+  #pod Create a temporary file object.
+  #pod
+  #pod   my $tmp = File::Temp->new();
+  #pod
+  #pod by default the object is constructed as if C<tempfile>
+  #pod was called without options, but with the additional behaviour
+  #pod that the temporary file is removed by the object destructor
+  #pod if UNLINK is set to true (the default).
+  #pod
+  #pod Supported arguments are the same as for C<tempfile>: UNLINK
+  #pod (defaulting to true), DIR, EXLOCK, PERMS and SUFFIX.
+  #pod Additionally, the filename
+  #pod template is specified using the TEMPLATE option. The OPEN option
+  #pod is not supported (the file is always opened).
+  #pod
+  #pod  $tmp = File::Temp->new( TEMPLATE => 'tempXXXXX',
+  #pod                         DIR => 'mydir',
+  #pod                         SUFFIX => '.dat');
+  #pod
+  #pod Arguments are case insensitive.
+  #pod
+  #pod Can call croak() if an error occurs.
+  #pod
+  #pod Available since 0.14.
+  #pod
+  #pod TEMPLATE available since 0.23
+  #pod
+  #pod =cut
   
   sub new {
     my $proto = shift;
@@ -36174,6 +36704,27 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return $fh;
   }
   
+  #pod =item B<newdir>
+  #pod
+  #pod Create a temporary directory using an object oriented interface.
+  #pod
+  #pod   $dir = File::Temp->newdir();
+  #pod
+  #pod By default the directory is deleted when the object goes out of scope.
+  #pod
+  #pod Supports the same options as the C<tempdir> function. Note that directories
+  #pod created with this method default to CLEANUP => 1.
+  #pod
+  #pod   $dir = File::Temp->newdir( $template, %options );
+  #pod
+  #pod A template may be specified either with a leading template or
+  #pod with a TEMPLATE argument.
+  #pod
+  #pod Available since 0.19.
+  #pod
+  #pod TEMPLATE available since 0.23.
+  #pod
+  #pod =cut
   
   sub newdir {
     my $self = shift;
@@ -36198,6 +36749,19 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
                  }, "File::Temp::Dir";
   }
   
+  #pod =item B<filename>
+  #pod
+  #pod Return the name of the temporary file associated with this object
+  #pod (if the object was created using the "new" constructor).
+  #pod
+  #pod   $filename = $tmp->filename;
+  #pod
+  #pod This method is called automatically when the object is used as
+  #pod a string.
+  #pod
+  #pod Current API available since 0.14
+  #pod
+  #pod =cut
   
   sub filename {
     my $self = shift;
@@ -36216,6 +36780,27 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return refaddr($_[0]);
   }
   
+  #pod =item B<dirname>
+  #pod
+  #pod Return the name of the temporary directory associated with this
+  #pod object (if the object was created using the "newdir" constructor).
+  #pod
+  #pod   $dirname = $tmpdir->dirname;
+  #pod
+  #pod This method is called automatically when the object is used in string context.
+  #pod
+  #pod =item B<unlink_on_destroy>
+  #pod
+  #pod Control whether the file is unlinked when the object goes out of scope.
+  #pod The file is removed if this value is true and $KEEP_ALL is not.
+  #pod
+  #pod  $fh->unlink_on_destroy( 1 );
+  #pod
+  #pod Default is for the file to be removed.
+  #pod
+  #pod Current API available since 0.15
+  #pod
+  #pod =cut
   
   sub unlink_on_destroy {
     my $self = shift;
@@ -36225,6 +36810,29 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return ${*$self}{UNLINK};
   }
   
+  #pod =item B<DESTROY>
+  #pod
+  #pod When the object goes out of scope, the destructor is called. This
+  #pod destructor will attempt to unlink the file (using L<unlink1|"unlink1">)
+  #pod if the constructor was called with UNLINK set to 1 (the default state
+  #pod if UNLINK is not specified).
+  #pod
+  #pod No error is given if the unlink fails.
+  #pod
+  #pod If the object has been passed to a child process during a fork, the
+  #pod file will be deleted when the object goes out of scope in the parent.
+  #pod
+  #pod For a temporary directory object the directory will be removed unless
+  #pod the CLEANUP argument was used in the constructor (and set to false) or
+  #pod C<unlink_on_destroy> was modified after creation.  Note that if a temp
+  #pod directory is your current directory, it cannot be removed - a warning
+  #pod will be given in this case.  C<chdir()> out of the directory before
+  #pod letting the object go out of scope.
+  #pod
+  #pod If the global variable $KEEP_ALL is true, the file or directory
+  #pod will not be removed.
+  #pod
+  #pod =cut
   
   sub DESTROY {
     local($., $@, $!, $^E, $?);
@@ -36258,6 +36866,121 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     }
   }
   
+  #pod =back
+  #pod
+  #pod =head1 FUNCTIONS
+  #pod
+  #pod This section describes the recommended interface for generating
+  #pod temporary files and directories.
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item B<tempfile>
+  #pod
+  #pod This is the basic function to generate temporary files.
+  #pod The behaviour of the file can be changed using various options:
+  #pod
+  #pod   $fh = tempfile();
+  #pod   ($fh, $filename) = tempfile();
+  #pod
+  #pod Create a temporary file in  the directory specified for temporary
+  #pod files, as specified by the tmpdir() function in L<File::Spec>.
+  #pod
+  #pod   ($fh, $filename) = tempfile($template);
+  #pod
+  #pod Create a temporary file in the current directory using the supplied
+  #pod template.  Trailing `X' characters are replaced with random letters to
+  #pod generate the filename.  At least four `X' characters must be present
+  #pod at the end of the template.
+  #pod
+  #pod   ($fh, $filename) = tempfile($template, SUFFIX => $suffix)
+  #pod
+  #pod Same as previously, except that a suffix is added to the template
+  #pod after the `X' translation.  Useful for ensuring that a temporary
+  #pod filename has a particular extension when needed by other applications.
+  #pod But see the WARNING at the end.
+  #pod
+  #pod   ($fh, $filename) = tempfile($template, DIR => $dir);
+  #pod
+  #pod Translates the template as before except that a directory name
+  #pod is specified.
+  #pod
+  #pod   ($fh, $filename) = tempfile($template, TMPDIR => 1);
+  #pod
+  #pod Equivalent to specifying a DIR of "File::Spec->tmpdir", writing the file
+  #pod into the same temporary directory as would be used if no template was
+  #pod specified at all.
+  #pod
+  #pod   ($fh, $filename) = tempfile($template, UNLINK => 1);
+  #pod
+  #pod Return the filename and filehandle as before except that the file is
+  #pod automatically removed when the program exits (dependent on
+  #pod $KEEP_ALL). Default is for the file to be removed if a file handle is
+  #pod requested and to be kept if the filename is requested. In a scalar
+  #pod context (where no filename is returned) the file is always deleted
+  #pod either (depending on the operating system) on exit or when it is
+  #pod closed (unless $KEEP_ALL is true when the temp file is created).
+  #pod
+  #pod Use the object-oriented interface if fine-grained control of when
+  #pod a file is removed is required.
+  #pod
+  #pod If the template is not specified, a template is always
+  #pod automatically generated. This temporary file is placed in tmpdir()
+  #pod (L<File::Spec>) unless a directory is specified explicitly with the
+  #pod DIR option.
+  #pod
+  #pod   $fh = tempfile( DIR => $dir );
+  #pod
+  #pod If called in scalar context, only the filehandle is returned and the
+  #pod file will automatically be deleted when closed on operating systems
+  #pod that support this (see the description of tmpfile() elsewhere in this
+  #pod document).  This is the preferred mode of operation, as if you only
+  #pod have a filehandle, you can never create a race condition by fumbling
+  #pod with the filename. On systems that can not unlink an open file or can
+  #pod not mark a file as temporary when it is opened (for example, Windows
+  #pod NT uses the C<O_TEMPORARY> flag) the file is marked for deletion when
+  #pod the program ends (equivalent to setting UNLINK to 1). The C<UNLINK>
+  #pod flag is ignored if present.
+  #pod
+  #pod   (undef, $filename) = tempfile($template, OPEN => 0);
+  #pod
+  #pod This will return the filename based on the template but
+  #pod will not open this file.  Cannot be used in conjunction with
+  #pod UNLINK set to true. Default is to always open the file
+  #pod to protect from possible race conditions. A warning is issued
+  #pod if warnings are turned on. Consider using the tmpnam()
+  #pod and mktemp() functions described elsewhere in this document
+  #pod if opening the file is not required.
+  #pod
+  #pod To open the temporary filehandle with O_EXLOCK (open with exclusive
+  #pod file lock) use C<< EXLOCK=>1 >>. This is supported only by some
+  #pod operating systems (most notably BSD derived systems). By default
+  #pod EXLOCK will be false. Former C<File::Temp> versions set EXLOCK to
+  #pod true, so to be sure to get an unlocked filehandle also with older
+  #pod versions, explicitly set C<< EXLOCK=>0 >>.
+  #pod
+  #pod   ($fh, $filename) = tempfile($template, EXLOCK => 1);
+  #pod
+  #pod By default, the temp file is created with 0600 file permissions.
+  #pod Use C<PERMS> to change this:
+  #pod
+  #pod   ($fh, $filename) = tempfile($template, PERMS => 0666);
+  #pod
+  #pod Options can be combined as required.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Available since 0.05.
+  #pod
+  #pod UNLINK flag available since 0.10.
+  #pod
+  #pod TMPDIR flag available since 0.19.
+  #pod
+  #pod EXLOCK flag available since 0.19.
+  #pod
+  #pod PERMS flag available since 0.2310.
+  #pod
+  #pod =cut
   
   sub tempfile {
     if ( @_ && $_[0] eq 'File::Temp' ) {
@@ -36272,8 +36995,9 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
                    "SUFFIX" => '',    # Template suffix
                    "UNLINK" => 0,     # Do not unlink file on exit
                    "OPEN"   => 1,     # Open file
-                   "TMPDIR" => 0, # Place tempfile in tempdir if template specified
-                   "EXLOCK" => 1, # Open file with O_EXLOCK
+                   "TMPDIR" => 0,     # Place tempfile in tempdir if template specified
+                   "EXLOCK" => 0,     # Open file with O_EXLOCK
+                   "PERMS"  => undef, # File permissions
                   );
   
     # Check to see whether we have an odd or even number of arguments
@@ -36313,7 +37037,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
       } elsif ($options{TMPDIR}) {
   
-        $template = File::Spec->catfile(File::Spec->tmpdir, $template );
+        $template = File::Spec->catfile(_wrap_file_spec_tmpdir(), $template );
   
       }
   
@@ -36325,7 +37049,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
       } else {
   
-        $template = File::Spec->catfile(File::Spec->tmpdir, TEMPXXX);
+        $template = File::Spec->catfile(_wrap_file_spec_tmpdir(), TEMPXXX);
   
       }
   
@@ -36350,12 +37074,13 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     my ($fh, $path, $errstr);
     croak "Error in tempfile() using template $template: $errstr"
       unless (($fh, $path) = _gettemp($template,
-                                      "open" => $options{'OPEN'},
-                                      "mkdir"=> 0 ,
-                                      "unlink_on_close" => $unlink_on_close,
-                                      "suffixlen" => length($options{'SUFFIX'}),
-                                      "ErrStr" => \$errstr,
-                                      "use_exlock" => $options{EXLOCK},
+                                      "open"             => $options{OPEN},
+                                      "mkdir"            => 0,
+                                      "unlink_on_close"  => $unlink_on_close,
+                                      "suffixlen"        => length($options{SUFFIX}),
+                                      "ErrStr"           => \$errstr,
+                                      "use_exlock"       => $options{EXLOCK},
+                                      "file_permissions" => $options{PERMS},
                                      ) );
   
     # Set up an exit handler that can do whatever is right for the
@@ -36388,6 +37113,122 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   }
   
+  # On Windows under taint mode, File::Spec could suggest "C:\" as a tempdir
+  # which might not be writable.  If that is the case, we fallback to a
+  # user directory.  See https://rt.cpan.org/Ticket/Display.html?id=60340
+  
+  {
+    my ($alt_tmpdir, $checked);
+  
+    sub _wrap_file_spec_tmpdir {
+      return File::Spec->tmpdir unless $^O eq "MSWin32" && ${^TAINT};
+  
+      if ( $checked ) {
+        return $alt_tmpdir ? $alt_tmpdir : File::Spec->tmpdir;
+      }
+  
+      # probe what File::Spec gives and find a fallback
+      my $xxpath = _replace_XX( "X" x 10, 0 );
+  
+      # First, see if File::Spec->tmpdir is writable
+      my $tmpdir = File::Spec->tmpdir;
+      my $testpath = File::Spec->catdir( $tmpdir, $xxpath );
+      if (mkdir( $testpath, 0700) ) {
+        $checked = 1;
+        rmdir $testpath;
+        return $tmpdir;
+      }
+  
+      # Next, see if CSIDL_LOCAL_APPDATA is writable
+      require Win32;
+      my $local_app = File::Spec->catdir(
+        Win32::GetFolderPath( Win32::CSIDL_LOCAL_APPDATA() ), 'Temp'
+      );
+      $testpath = File::Spec->catdir( $local_app, $xxpath );
+      if ( -e $local_app or mkdir( $local_app, 0700 ) ) {
+        if (mkdir( $testpath, 0700) ) {
+          $checked = 1;
+          rmdir $testpath;
+          return $alt_tmpdir = $local_app;
+        }
+      }
+  
+      # Can't find something writable
+      croak << "HERE";
+  Couldn't find a writable temp directory in taint mode. Tried:
+    $tmpdir
+    $local_app
+  
+  Try setting and untainting the TMPDIR environment variable.
+  HERE
+  
+    }
+  }
+  
+  #pod =item B<tempdir>
+  #pod
+  #pod This is the recommended interface for creation of temporary
+  #pod directories.  By default the directory will not be removed on exit
+  #pod (that is, it won't be temporary; this behaviour can not be changed
+  #pod because of issues with backwards compatibility). To enable removal
+  #pod either use the CLEANUP option which will trigger removal on program
+  #pod exit, or consider using the "newdir" method in the object interface which
+  #pod will allow the directory to be cleaned up when the object goes out of
+  #pod scope.
+  #pod
+  #pod The behaviour of the function depends on the arguments:
+  #pod
+  #pod   $tempdir = tempdir();
+  #pod
+  #pod Create a directory in tmpdir() (see L<File::Spec|File::Spec>).
+  #pod
+  #pod   $tempdir = tempdir( $template );
+  #pod
+  #pod Create a directory from the supplied template. This template is
+  #pod similar to that described for tempfile(). `X' characters at the end
+  #pod of the template are replaced with random letters to construct the
+  #pod directory name. At least four `X' characters must be in the template.
+  #pod
+  #pod   $tempdir = tempdir ( DIR => $dir );
+  #pod
+  #pod Specifies the directory to use for the temporary directory.
+  #pod The temporary directory name is derived from an internal template.
+  #pod
+  #pod   $tempdir = tempdir ( $template, DIR => $dir );
+  #pod
+  #pod Prepend the supplied directory name to the template. The template
+  #pod should not include parent directory specifications itself. Any parent
+  #pod directory specifications are removed from the template before
+  #pod prepending the supplied directory.
+  #pod
+  #pod   $tempdir = tempdir ( $template, TMPDIR => 1 );
+  #pod
+  #pod Using the supplied template, create the temporary directory in
+  #pod a standard location for temporary files. Equivalent to doing
+  #pod
+  #pod   $tempdir = tempdir ( $template, DIR => File::Spec->tmpdir);
+  #pod
+  #pod but shorter. Parent directory specifications are stripped from the
+  #pod template itself. The C<TMPDIR> option is ignored if C<DIR> is set
+  #pod explicitly.  Additionally, C<TMPDIR> is implied if neither a template
+  #pod nor a directory are supplied.
+  #pod
+  #pod   $tempdir = tempdir( $template, CLEANUP => 1);
+  #pod
+  #pod Create a temporary directory using the supplied template, but
+  #pod attempt to remove it (and all files inside it) when the program
+  #pod exits. Note that an attempt will be made to remove all files from
+  #pod the directory even if they were not created by this module (otherwise
+  #pod why ask to clean it up?). The directory removal is made with
+  #pod the rmtree() function from the L<File::Path|File::Path> module.
+  #pod Of course, if the template is not specified, the temporary directory
+  #pod will be created in tmpdir() and will also be removed at program exit.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Current API available since 0.05.
+  #pod
+  #pod =cut
   
   # '
   
@@ -36438,7 +37279,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
         } elsif ($options{TMPDIR}) {
   
           # Prepend tmpdir
-          $template = File::Spec->catdir(File::Spec->tmpdir, $template);
+          $template = File::Spec->catdir(_wrap_file_spec_tmpdir(), $template);
   
         }
   
@@ -36452,7 +37293,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
       } else {
   
-        $template = File::Spec->catdir(File::Spec->tmpdir, TEMPXXX);
+        $template = File::Spec->catdir(_wrap_file_spec_tmpdir(), TEMPXXX);
   
       }
   
@@ -36489,6 +37330,33 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   }
   
+  #pod =back
+  #pod
+  #pod =head1 MKTEMP FUNCTIONS
+  #pod
+  #pod The following functions are Perl implementations of the
+  #pod mktemp() family of temp file generation system calls.
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item B<mkstemp>
+  #pod
+  #pod Given a template, returns a filehandle to the temporary file and the name
+  #pod of the file.
+  #pod
+  #pod   ($fh, $name) = mkstemp( $template );
+  #pod
+  #pod In scalar context, just the filehandle is returned.
+  #pod
+  #pod The template may be any filename with some number of X's appended
+  #pod to it, for example F</tmp/temp.XXXX>. The trailing X's are replaced
+  #pod with unique alphanumeric combinations.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Current API available since 0.05.
+  #pod
+  #pod =cut
   
   
   
@@ -36517,6 +37385,23 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   }
   
   
+  #pod =item B<mkstemps>
+  #pod
+  #pod Similar to mkstemp(), except that an extra argument can be supplied
+  #pod with a suffix to be appended to the template.
+  #pod
+  #pod   ($fh, $name) = mkstemps( $template, $suffix );
+  #pod
+  #pod For example a template of C<testXXXXXX> and suffix of C<.dat>
+  #pod would generate a file similar to F<testhGji_w.dat>.
+  #pod
+  #pod Returns just the filehandle alone when called in scalar context.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Current API available since 0.05.
+  #pod
+  #pod =cut
   
   sub mkstemps {
   
@@ -36546,6 +37431,22 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   }
   
+  #pod =item B<mkdtemp>
+  #pod
+  #pod Create a directory from a template. The template must end in
+  #pod X's that are replaced by the routine.
+  #pod
+  #pod   $tmpdir_name = mkdtemp($template);
+  #pod
+  #pod Returns the name of the temporary directory created.
+  #pod
+  #pod Directory must be removed by the caller.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Current API available since 0.05.
+  #pod
+  #pod =cut
   
   #' # for emacs
   
@@ -36577,6 +37478,20 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   }
   
+  #pod =item B<mktemp>
+  #pod
+  #pod Returns a valid temporary filename but does not guarantee
+  #pod that the file will not be opened by someone else.
+  #pod
+  #pod   $unopened_file = mktemp($template);
+  #pod
+  #pod Template is the same as that required by mkstemp().
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Current API available since 0.05.
+  #pod
+  #pod =cut
   
   sub mktemp {
   
@@ -36597,12 +37512,57 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return $tmpname;
   }
   
+  #pod =back
+  #pod
+  #pod =head1 POSIX FUNCTIONS
+  #pod
+  #pod This section describes the re-implementation of the tmpnam()
+  #pod and tmpfile() functions described in L<POSIX>
+  #pod using the mkstemp() from this module.
+  #pod
+  #pod Unlike the L<POSIX|POSIX> implementations, the directory used
+  #pod for the temporary file is not specified in a system include
+  #pod file (C<P_tmpdir>) but simply depends on the choice of tmpdir()
+  #pod returned by L<File::Spec|File::Spec>. On some implementations this
+  #pod location can be set using the C<TMPDIR> environment variable, which
+  #pod may not be secure.
+  #pod If this is a problem, simply use mkstemp() and specify a template.
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item B<tmpnam>
+  #pod
+  #pod When called in scalar context, returns the full name (including path)
+  #pod of a temporary file (uses mktemp()). The only check is that the file does
+  #pod not already exist, but there is no guarantee that that condition will
+  #pod continue to apply.
+  #pod
+  #pod   $file = tmpnam();
+  #pod
+  #pod When called in list context, a filehandle to the open file and
+  #pod a filename are returned. This is achieved by calling mkstemp()
+  #pod after constructing a suitable template.
+  #pod
+  #pod   ($fh, $file) = tmpnam();
+  #pod
+  #pod If possible, this form should be used to prevent possible
+  #pod race conditions.
+  #pod
+  #pod See L<File::Spec/tmpdir> for information on the choice of temporary
+  #pod directory for a particular operating system.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Current API available since 0.05.
+  #pod
+  #pod =cut
   
   sub tmpnam {
   
     # Retrieve the temporary directory name
-    my $tmpdir = File::Spec->tmpdir;
+    my $tmpdir = _wrap_file_spec_tmpdir();
   
+    # XXX I don't know under what circumstances this occurs, -- xdg 2016-04-02
     croak "Error temporary directory is not writable"
       if $tmpdir eq '';
   
@@ -36617,6 +37577,26 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   }
   
+  #pod =item B<tmpfile>
+  #pod
+  #pod Returns the filehandle of a temporary file.
+  #pod
+  #pod   $fh = tmpfile();
+  #pod
+  #pod The file is removed when the filehandle is closed or when the program
+  #pod exits. No access to the filename is provided.
+  #pod
+  #pod If the temporary file can not be created undef is returned.
+  #pod Currently this command will probably not work when the temporary
+  #pod directory is on an NFS file system.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Available since 0.05.
+  #pod
+  #pod Returning undef if unable to create file added in 0.12.
+  #pod
+  #pod =cut
   
   sub tmpfile {
   
@@ -36632,6 +37612,38 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   }
   
+  #pod =back
+  #pod
+  #pod =head1 ADDITIONAL FUNCTIONS
+  #pod
+  #pod These functions are provided for backwards compatibility
+  #pod with common tempfile generation C library functions.
+  #pod
+  #pod They are not exported and must be addressed using the full package
+  #pod name.
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item B<tempnam>
+  #pod
+  #pod Return the name of a temporary file in the specified directory
+  #pod using a prefix. The file is guaranteed not to exist at the time
+  #pod the function was called, but such guarantees are good for one
+  #pod clock tick only.  Always use the proper form of C<sysopen>
+  #pod with C<O_CREAT | O_EXCL> if you must open such a filename.
+  #pod
+  #pod   $filename = File::Temp::tempnam( $dir, $prefix );
+  #pod
+  #pod Equivalent to running mktemp() with $dir/$prefixXXXXXXXX
+  #pod (using unix file convention as an example)
+  #pod
+  #pod Because this function uses mktemp(), it can suffer from race conditions.
+  #pod
+  #pod Will croak() if there is an error.
+  #pod
+  #pod Current API available since 0.05.
+  #pod
+  #pod =cut
   
   sub tempnam {
   
@@ -36649,6 +37661,65 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   }
   
+  #pod =back
+  #pod
+  #pod =head1 UTILITY FUNCTIONS
+  #pod
+  #pod Useful functions for dealing with the filehandle and filename.
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item B<unlink0>
+  #pod
+  #pod Given an open filehandle and the associated filename, make a safe
+  #pod unlink. This is achieved by first checking that the filename and
+  #pod filehandle initially point to the same file and that the number of
+  #pod links to the file is 1 (all fields returned by stat() are compared).
+  #pod Then the filename is unlinked and the filehandle checked once again to
+  #pod verify that the number of links on that file is now 0.  This is the
+  #pod closest you can come to making sure that the filename unlinked was the
+  #pod same as the file whose descriptor you hold.
+  #pod
+  #pod   unlink0($fh, $path)
+  #pod      or die "Error unlinking file $path safely";
+  #pod
+  #pod Returns false on error but croaks() if there is a security
+  #pod anomaly. The filehandle is not closed since on some occasions this is
+  #pod not required.
+  #pod
+  #pod On some platforms, for example Windows NT, it is not possible to
+  #pod unlink an open file (the file must be closed first). On those
+  #pod platforms, the actual unlinking is deferred until the program ends and
+  #pod good status is returned. A check is still performed to make sure that
+  #pod the filehandle and filename are pointing to the same thing (but not at
+  #pod the time the end block is executed since the deferred removal may not
+  #pod have access to the filehandle).
+  #pod
+  #pod Additionally, on Windows NT not all the fields returned by stat() can
+  #pod be compared. For example, the C<dev> and C<rdev> fields seem to be
+  #pod different.  Also, it seems that the size of the file returned by stat()
+  #pod does not always agree, with C<stat(FH)> being more accurate than
+  #pod C<stat(filename)>, presumably because of caching issues even when
+  #pod using autoflush (this is usually overcome by waiting a while after
+  #pod writing to the tempfile before attempting to C<unlink0> it).
+  #pod
+  #pod Finally, on NFS file systems the link count of the file handle does
+  #pod not always go to zero immediately after unlinking. Currently, this
+  #pod command is expected to fail on NFS disks.
+  #pod
+  #pod This function is disabled if the global variable $KEEP_ALL is true
+  #pod and an unlink on open file is supported. If the unlink is to be deferred
+  #pod to the END block, the file is still registered for removal.
+  #pod
+  #pod This function should not be called if you are using the object oriented
+  #pod interface since the it will interfere with the object destructor deleting
+  #pod the file.
+  #pod
+  #pod Available Since 0.05.
+  #pod
+  #pod If can not unlink open file, defer removal until later available since 0.06.
+  #pod
+  #pod =cut
   
   sub unlink0 {
   
@@ -36689,6 +37760,32 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return 1;
   }
   
+  #pod =item B<cmpstat>
+  #pod
+  #pod Compare C<stat> of filehandle with C<stat> of provided filename.  This
+  #pod can be used to check that the filename and filehandle initially point
+  #pod to the same file and that the number of links to the file is 1 (all
+  #pod fields returned by stat() are compared).
+  #pod
+  #pod   cmpstat($fh, $path)
+  #pod      or die "Error comparing handle with file";
+  #pod
+  #pod Returns false if the stat information differs or if the link count is
+  #pod greater than 1. Calls croak if there is a security anomaly.
+  #pod
+  #pod On certain platforms, for example Windows, not all the fields returned by stat()
+  #pod can be compared. For example, the C<dev> and C<rdev> fields seem to be
+  #pod different in Windows.  Also, it seems that the size of the file
+  #pod returned by stat() does not always agree, with C<stat(FH)> being more
+  #pod accurate than C<stat(filename)>, presumably because of caching issues
+  #pod even when using autoflush (this is usually overcome by waiting a while
+  #pod after writing to the tempfile before attempting to C<unlink0> it).
+  #pod
+  #pod Not exported by default.
+  #pod
+  #pod Current API available since 0.14.
+  #pod
+  #pod =cut
   
   sub cmpstat {
   
@@ -36761,6 +37858,29 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return 1;
   }
   
+  #pod =item B<unlink1>
+  #pod
+  #pod Similar to C<unlink0> except after file comparison using cmpstat, the
+  #pod filehandle is closed prior to attempting to unlink the file. This
+  #pod allows the file to be removed without using an END block, but does
+  #pod mean that the post-unlink comparison of the filehandle state provided
+  #pod by C<unlink0> is not available.
+  #pod
+  #pod   unlink1($fh, $path)
+  #pod      or die "Error closing and unlinking file";
+  #pod
+  #pod Usually called from the object destructor when using the OO interface.
+  #pod
+  #pod Not exported by default.
+  #pod
+  #pod This function is disabled if the global variable $KEEP_ALL is true.
+  #pod
+  #pod Can call croak() if there is a security anomaly during the stat()
+  #pod comparison.
+  #pod
+  #pod Current API available since 0.14.
+  #pod
+  #pod =cut
   
   sub unlink1 {
     croak 'Usage: unlink1(filehandle, filename)'
@@ -36784,6 +37904,107 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     return unlink($path);
   }
   
+  #pod =item B<cleanup>
+  #pod
+  #pod Calling this function will cause any temp files or temp directories
+  #pod that are registered for removal to be removed. This happens automatically
+  #pod when the process exits but can be triggered manually if the caller is sure
+  #pod that none of the temp files are required. This method can be registered as
+  #pod an Apache callback.
+  #pod
+  #pod Note that if a temp directory is your current directory, it cannot be
+  #pod removed.  C<chdir()> out of the directory first before calling
+  #pod C<cleanup()>. (For the cleanup at program exit when the CLEANUP flag
+  #pod is set, this happens automatically.)
+  #pod
+  #pod On OSes where temp files are automatically removed when the temp file
+  #pod is closed, calling this function will have no effect other than to remove
+  #pod temporary directories (which may include temporary files).
+  #pod
+  #pod   File::Temp::cleanup();
+  #pod
+  #pod Not exported by default.
+  #pod
+  #pod Current API available since 0.15.
+  #pod
+  #pod =back
+  #pod
+  #pod =head1 PACKAGE VARIABLES
+  #pod
+  #pod These functions control the global state of the package.
+  #pod
+  #pod =over 4
+  #pod
+  #pod =item B<safe_level>
+  #pod
+  #pod Controls the lengths to which the module will go to check the safety of the
+  #pod temporary file or directory before proceeding.
+  #pod Options are:
+  #pod
+  #pod =over 8
+  #pod
+  #pod =item STANDARD
+  #pod
+  #pod Do the basic security measures to ensure the directory exists and is
+  #pod writable, that temporary files are opened only if they do not already
+  #pod exist, and that possible race conditions are avoided.  Finally the
+  #pod L<unlink0|"unlink0"> function is used to remove files safely.
+  #pod
+  #pod =item MEDIUM
+  #pod
+  #pod In addition to the STANDARD security, the output directory is checked
+  #pod to make sure that it is owned either by root or the user running the
+  #pod program. If the directory is writable by group or by other, it is then
+  #pod checked to make sure that the sticky bit is set.
+  #pod
+  #pod Will not work on platforms that do not support the C<-k> test
+  #pod for sticky bit.
+  #pod
+  #pod =item HIGH
+  #pod
+  #pod In addition to the MEDIUM security checks, also check for the
+  #pod possibility of ``chown() giveaway'' using the L<POSIX|POSIX>
+  #pod sysconf() function. If this is a possibility, each directory in the
+  #pod path is checked in turn for safeness, recursively walking back to the
+  #pod root directory.
+  #pod
+  #pod For platforms that do not support the L<POSIX|POSIX>
+  #pod C<_PC_CHOWN_RESTRICTED> symbol (for example, Windows NT) it is
+  #pod assumed that ``chown() giveaway'' is possible and the recursive test
+  #pod is performed.
+  #pod
+  #pod =back
+  #pod
+  #pod The level can be changed as follows:
+  #pod
+  #pod   File::Temp->safe_level( File::Temp::HIGH );
+  #pod
+  #pod The level constants are not exported by the module.
+  #pod
+  #pod Currently, you must be running at least perl v5.6.0 in order to
+  #pod run with MEDIUM or HIGH security. This is simply because the
+  #pod safety tests use functions from L<Fcntl|Fcntl> that are not
+  #pod available in older versions of perl. The problem is that the version
+  #pod number for Fcntl is the same in perl 5.6.0 and in 5.005_03 even though
+  #pod they are different versions.
+  #pod
+  #pod On systems that do not support the HIGH or MEDIUM safety levels
+  #pod (for example Win NT or OS/2) any attempt to change the level will
+  #pod be ignored. The decision to ignore rather than raise an exception
+  #pod allows portable programs to be written with high security in mind
+  #pod for the systems that can support this without those programs failing
+  #pod on systems where the extra tests are irrelevant.
+  #pod
+  #pod If you really need to see whether the change has been accepted
+  #pod simply examine the return value of C<safe_level>.
+  #pod
+  #pod   $newlevel = File::Temp->safe_level( File::Temp::HIGH );
+  #pod   die "Could not change to high security"
+  #pod       if $newlevel != File::Temp::HIGH;
+  #pod
+  #pod Available since 0.05.
+  #pod
+  #pod =cut
   
   {
     # protect from using the variable itself
@@ -36809,6 +38030,28 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     }
   }
   
+  #pod =item TopSystemUID
+  #pod
+  #pod This is the highest UID on the current system that refers to a root
+  #pod UID. This is used to make sure that the temporary directory is
+  #pod owned by a system UID (C<root>, C<bin>, C<sys> etc) rather than
+  #pod simply by root.
+  #pod
+  #pod This is required since on many unix systems C</tmp> is not owned
+  #pod by root.
+  #pod
+  #pod Default is to assume that any UID less than or equal to 10 is a root
+  #pod UID.
+  #pod
+  #pod   File::Temp->top_system_uid(10);
+  #pod   my $topid = File::Temp->top_system_uid;
+  #pod
+  #pod This value can be adjusted to reduce security checking if required.
+  #pod The value is only relevant when C<safe_level> is set to MEDIUM or higher.
+  #pod
+  #pod Available since 0.05.
+  #pod
+  #pod =cut
   
   {
     my $TopSystemUID = 10;
@@ -36825,8 +38068,131 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     }
   }
   
+  #pod =item B<$KEEP_ALL>
+  #pod
+  #pod Controls whether temporary files and directories should be retained
+  #pod regardless of any instructions in the program to remove them
+  #pod automatically.  This is useful for debugging but should not be used in
+  #pod production code.
+  #pod
+  #pod   $File::Temp::KEEP_ALL = 1;
+  #pod
+  #pod Default is for files to be removed as requested by the caller.
+  #pod
+  #pod In some cases, files will only be retained if this variable is true
+  #pod when the file is created. This means that you can not create a temporary
+  #pod file, set this variable and expect the temp file to still be around
+  #pod when the program exits.
+  #pod
+  #pod =item B<$DEBUG>
+  #pod
+  #pod Controls whether debugging messages should be enabled.
+  #pod
+  #pod   $File::Temp::DEBUG = 1;
+  #pod
+  #pod Default is for debugging mode to be disabled.
+  #pod
+  #pod Available since 0.15.
+  #pod
+  #pod =back
+  #pod
+  #pod =head1 WARNING
+  #pod
+  #pod For maximum security, endeavour always to avoid ever looking at,
+  #pod touching, or even imputing the existence of the filename.  You do not
+  #pod know that that filename is connected to the same file as the handle
+  #pod you have, and attempts to check this can only trigger more race
+  #pod conditions.  It's far more secure to use the filehandle alone and
+  #pod dispense with the filename altogether.
+  #pod
+  #pod If you need to pass the handle to something that expects a filename
+  #pod then on a unix system you can use C<"/dev/fd/" . fileno($fh)> for
+  #pod arbitrary programs. Perl code that uses the 2-argument version of
+  #pod C<< open >> can be passed C<< "+<=&" . fileno($fh) >>. Otherwise you
+  #pod will need to pass the filename. You will have to clear the
+  #pod close-on-exec bit on that file descriptor before passing it to another
+  #pod process.
+  #pod
+  #pod     use Fcntl qw/F_SETFD F_GETFD/;
+  #pod     fcntl($tmpfh, F_SETFD, 0)
+  #pod         or die "Can't clear close-on-exec flag on temp fh: $!\n";
+  #pod
+  #pod =head2 Temporary files and NFS
+  #pod
+  #pod Some problems are associated with using temporary files that reside
+  #pod on NFS file systems and it is recommended that a local filesystem
+  #pod is used whenever possible. Some of the security tests will most probably
+  #pod fail when the temp file is not local. Additionally, be aware that
+  #pod the performance of I/O operations over NFS will not be as good as for
+  #pod a local disk.
+  #pod
+  #pod =head2 Forking
+  #pod
+  #pod In some cases files created by File::Temp are removed from within an
+  #pod END block. Since END blocks are triggered when a child process exits
+  #pod (unless C<POSIX::_exit()> is used by the child) File::Temp takes care
+  #pod to only remove those temp files created by a particular process ID. This
+  #pod means that a child will not attempt to remove temp files created by the
+  #pod parent process.
+  #pod
+  #pod If you are forking many processes in parallel that are all creating
+  #pod temporary files, you may need to reset the random number seed using
+  #pod srand(EXPR) in each child else all the children will attempt to walk
+  #pod through the same set of random file names and may well cause
+  #pod themselves to give up if they exceed the number of retry attempts.
+  #pod
+  #pod =head2 Directory removal
+  #pod
+  #pod Note that if you have chdir'ed into the temporary directory and it is
+  #pod subsequently cleaned up (either in the END block or as part of object
+  #pod destruction), then you will get a warning from File::Path::rmtree().
+  #pod
+  #pod =head2 Taint mode
+  #pod
+  #pod If you need to run code under taint mode, updating to the latest
+  #pod L<File::Spec> is highly recommended.  On Windows, if the directory
+  #pod given by L<File::Spec::tmpdir> isn't writable, File::Temp will attempt
+  #pod to fallback to the user's local application data directory or croak
+  #pod with an error.
+  #pod
+  #pod =head2 BINMODE
+  #pod
+  #pod The file returned by File::Temp will have been opened in binary mode
+  #pod if such a mode is available. If that is not correct, use the C<binmode()>
+  #pod function to change the mode of the filehandle.
+  #pod
+  #pod Note that you can modify the encoding of a file opened by File::Temp
+  #pod also by using C<binmode()>.
+  #pod
+  #pod =head1 HISTORY
+  #pod
+  #pod Originally began life in May 1999 as an XS interface to the system
+  #pod mkstemp() function. In March 2000, the OpenBSD mkstemp() code was
+  #pod translated to Perl for total control of the code's
+  #pod security checking, to ensure the presence of the function regardless of
+  #pod operating system and to help with portability. The module was shipped
+  #pod as a standard part of perl from v5.6.1.
+  #pod
+  #pod Thanks to Tom Christiansen for suggesting that this module
+  #pod should be written and providing ideas for code improvements and
+  #pod security enhancements.
+  #pod
+  #pod =head1 SEE ALSO
+  #pod
+  #pod L<POSIX/tmpnam>, L<POSIX/tmpfile>, L<File::Spec>, L<File::Path>
+  #pod
+  #pod See L<IO::File> and L<File::MkTemp>, L<Apache::TempFile> for
+  #pod different implementations of temporary file handling.
+  #pod
+  #pod See L<File::Tempdir> for an alternative object-oriented wrapper for
+  #pod the C<tempdir> function.
+  #pod
+  #pod =cut
   
-  package File::Temp::Dir;
+  package ## hide from PAUSE
+    File::Temp::Dir;
+  
+  our $VERSION = '0.2311';
   
   use File::Path qw/ rmtree /;
   use strict;
@@ -36878,11 +38244,14 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   1;
   
+  
+  # vim: ts=2 sts=2 sw=2 et:
+  
   __END__
   
   =pod
   
-  =encoding utf-8
+  =encoding UTF-8
   
   =head1 NAME
   
@@ -36890,7 +38259,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   =head1 VERSION
   
-  version 0.2304
+  version 0.2311
   
   =head1 SYNOPSIS
   
@@ -36924,6 +38293,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     print $tmp "Some data\n";
     print "Filename is $tmp\n";
     $tmp->seek( 0, SEEK_END );
+  
+    $dir = File::Temp->newdir(); # CLEANUP => 1 by default
   
   The following interfaces are provided for compatibility with
   existing APIs. They should not be used in new code.
@@ -36983,7 +38354,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Filehandles returned by these functions support the seekable methods.
   
-  =begin __INTERNALS
+  =begin :__INTERNALS
   
   =head1 PORTABILITY
   
@@ -36996,6 +38367,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   currently supports Unix, VMS, DOS, OS/2, Windows and Mac OS
   (Classic). When porting to a new OS there are generally three main
   issues that have to be solved:
+  
   =over 4
   
   =item *
@@ -37020,7 +38392,7 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   =back
   
-  =end __INTERNALS
+  =end :__INTERNALS
   
   =head1 OBJECT-ORIENTED INTERFACE
   
@@ -37042,6 +38414,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
       $fh eq $filename       # as a string
       $fh != \*STDOUT        # as a number
   
+  Available since 0.14.
+  
   =over 4
   
   =item B<new>
@@ -37056,7 +38430,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   if UNLINK is set to true (the default).
   
   Supported arguments are the same as for C<tempfile>: UNLINK
-  (defaulting to true), DIR, EXLOCK and SUFFIX. Additionally, the filename
+  (defaulting to true), DIR, EXLOCK, PERMS and SUFFIX.
+  Additionally, the filename
   template is specified using the TEMPLATE option. The OPEN option
   is not supported (the file is always opened).
   
@@ -37067,6 +38442,10 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   Arguments are case insensitive.
   
   Can call croak() if an error occurs.
+  
+  Available since 0.14.
+  
+  TEMPLATE available since 0.23
   
   =item B<newdir>
   
@@ -37084,6 +38463,10 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   A template may be specified either with a leading template or
   with a TEMPLATE argument.
   
+  Available since 0.19.
+  
+  TEMPLATE available since 0.23.
+  
   =item B<filename>
   
   Return the name of the temporary file associated with this object
@@ -37093,6 +38476,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   This method is called automatically when the object is used as
   a string.
+  
+  Current API available since 0.14
   
   =item B<dirname>
   
@@ -37111,6 +38496,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
    $fh->unlink_on_destroy( 1 );
   
   Default is for the file to be removed.
+  
+  Current API available since 0.15
   
   =item B<DESTROY>
   
@@ -37220,19 +38607,33 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   and mktemp() functions described elsewhere in this document
   if opening the file is not required.
   
-  If the operating system supports it (for example BSD derived systems), the 
-  filehandle will be opened with O_EXLOCK (open with exclusive file lock). 
-  This can sometimes cause problems if the intention is to pass the filename 
-  to another system that expects to take an exclusive lock itself (such as 
-  DBD::SQLite) whilst ensuring that the tempfile is not reused. In this 
-  situation the "EXLOCK" option can be passed to tempfile. By default EXLOCK 
-  will be true (this retains compatibility with earlier releases).
+  To open the temporary filehandle with O_EXLOCK (open with exclusive
+  file lock) use C<< EXLOCK=>1 >>. This is supported only by some
+  operating systems (most notably BSD derived systems). By default
+  EXLOCK will be false. Former C<File::Temp> versions set EXLOCK to
+  true, so to be sure to get an unlocked filehandle also with older
+  versions, explicitly set C<< EXLOCK=>0 >>.
   
-    ($fh, $filename) = tempfile($template, EXLOCK => 0);
+    ($fh, $filename) = tempfile($template, EXLOCK => 1);
+  
+  By default, the temp file is created with 0600 file permissions.
+  Use C<PERMS> to change this:
+  
+    ($fh, $filename) = tempfile($template, PERMS => 0666);
   
   Options can be combined as required.
   
   Will croak() if there is an error.
+  
+  Available since 0.05.
+  
+  UNLINK flag available since 0.10.
+  
+  TMPDIR flag available since 0.19.
+  
+  EXLOCK flag available since 0.19.
+  
+  PERMS flag available since 0.2310.
   
   =item B<tempdir>
   
@@ -37295,6 +38696,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Will croak() if there is an error.
   
+  Current API available since 0.05.
+  
   =back
   
   =head1 MKTEMP FUNCTIONS
@@ -37319,6 +38722,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Will croak() if there is an error.
   
+  Current API available since 0.05.
+  
   =item B<mkstemps>
   
   Similar to mkstemp(), except that an extra argument can be supplied
@@ -37333,6 +38738,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Will croak() if there is an error.
   
+  Current API available since 0.05.
+  
   =item B<mkdtemp>
   
   Create a directory from a template. The template must end in
@@ -37346,6 +38753,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Will croak() if there is an error.
   
+  Current API available since 0.05.
+  
   =item B<mktemp>
   
   Returns a valid temporary filename but does not guarantee
@@ -37356,6 +38765,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   Template is the same as that required by mkstemp().
   
   Will croak() if there is an error.
+  
+  Current API available since 0.05.
   
   =back
   
@@ -37398,6 +38809,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Will croak() if there is an error.
   
+  Current API available since 0.05.
+  
   =item B<tmpfile>
   
   Returns the filehandle of a temporary file.
@@ -37412,6 +38825,10 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   directory is on an NFS file system.
   
   Will croak() if there is an error.
+  
+  Available since 0.05.
+  
+  Returning undef if unable to create file added in 0.12.
   
   =back
   
@@ -37441,6 +38858,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   Because this function uses mktemp(), it can suffer from race conditions.
   
   Will croak() if there is an error.
+  
+  Current API available since 0.05.
   
   =back
   
@@ -37496,6 +38915,10 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   interface since the it will interfere with the object destructor deleting
   the file.
   
+  Available Since 0.05.
+  
+  If can not unlink open file, defer removal until later available since 0.06.
+  
   =item B<cmpstat>
   
   Compare C<stat> of filehandle with C<stat> of provided filename.  This
@@ -37519,6 +38942,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Not exported by default.
   
+  Current API available since 0.14.
+  
   =item B<unlink1>
   
   Similar to C<unlink0> except after file comparison using cmpstat, the
@@ -37538,6 +38963,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   Can call croak() if there is a security anomaly during the stat()
   comparison.
+  
+  Current API available since 0.14.
   
   =item B<cleanup>
   
@@ -37559,6 +38986,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     File::Temp::cleanup();
   
   Not exported by default.
+  
+  Current API available since 0.15.
   
   =back
   
@@ -37635,6 +39064,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     die "Could not change to high security"
         if $newlevel != File::Temp::HIGH;
   
+  Available since 0.05.
+  
   =item TopSystemUID
   
   This is the highest UID on the current system that refers to a root
@@ -37653,6 +39084,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   This value can be adjusted to reduce security checking if required.
   The value is only relevant when C<safe_level> is set to MEDIUM or higher.
+  
+  Available since 0.05.
   
   =item B<$KEEP_ALL>
   
@@ -37677,6 +39110,8 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
     $File::Temp::DEBUG = 1;
   
   Default is for debugging mode to be disabled.
+  
+  Available since 0.15.
   
   =back
   
@@ -37734,7 +39169,10 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   =head2 Taint mode
   
   If you need to run code under taint mode, updating to the latest
-  L<File::Spec> is highly recommended.
+  L<File::Spec> is highly recommended.  On Windows, if the directory
+  given by L<File::Spec::tmpdir> isn't writable, File::Temp will attempt
+  to fallback to the user's local application data directory or croak
+  with an error.
   
   =head2 BINMODE
   
@@ -37770,26 +39208,16 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   =for Pod::Coverage STRINGIFY NUMIFY top_system_uid
   
-  # vim: ts=2 sts=2 sw=2 et:
-  
-  =for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders metacpan
-  
   =head1 SUPPORT
   
-  =head2 Bugs / Feature Requests
+  Bugs may be submitted through L<the RT bug tracker|https://rt.cpan.org/Public/Dist/Display.html?Name=File-Temp>
+  (or L<bug-File-Temp@rt.cpan.org|mailto:bug-File-Temp@rt.cpan.org>).
   
-  Please report any bugs or feature requests through the issue tracker
-  at L<http://rt.cpan.org/Public/Dist/Display.html?Name=File-Temp>.
-  You will be notified automatically of any progress on your issue.
+  There is also a mailing list available for users of this distribution, at
+  L<http://lists.perl.org/list/cpan-workers.html>.
   
-  =head2 Source Code
-  
-  This is open source software.  The code repository is available for
-  public review and contribution under the terms of the license.
-  
-  L<https://github.com/Perl-Toolchain-Gang/File-Temp>
-  
-    git clone https://github.com/Perl-Toolchain-Gang/File-Temp.git
+  There is also an irc channel available for users of this distribution, at
+  L<C<#toolchain> on C<irc.perl.org>|irc://irc.perl.org/#toolchain>.
   
   =head1 AUTHOR
   
@@ -37797,15 +39225,61 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   =head1 CONTRIBUTORS
   
+  =for stopwords Tim Jenness Karen Etheridge David Golden Slaven Rezic mohawk2 Roy Ivy III Peter Rabbitson Olivier Mengué John Acklam Gim Yee Nicolas R Brian Mowrey Dagfinn Ilmari Mannsåker Steinbrunner Ed Avis Guillem Jover James E. Keenan Kevin Ryde Ben Tilly
+  
   =over 4
   
   =item *
   
-  Ben Tilly <btilly@gmail.com>
+  Tim Jenness <t.jenness@jach.hawaii.edu>
+  
+  =item *
+  
+  Karen Etheridge <ether@cpan.org>
   
   =item *
   
   David Golden <dagolden@cpan.org>
+  
+  =item *
+  
+  Slaven Rezic <srezic@cpan.org>
+  
+  =item *
+  
+  mohawk2 <mohawk2@users.noreply.github.com>
+  
+  =item *
+  
+  Roy Ivy III <rivy.dev@gmail.com>
+  
+  =item *
+  
+  Peter Rabbitson <ribasushi@cpan.org>
+  
+  =item *
+  
+  Olivier Mengué <dolmen@cpan.org>
+  
+  =item *
+  
+  Peter John Acklam <pjacklam@online.no>
+  
+  =item *
+  
+  Tim Gim Yee <tim.gim.yee@gmail.com>
+  
+  =item *
+  
+  Nicolas R <atoomic@cpan.org>
+  
+  =item *
+  
+  Brian Mowrey <brian@drlabs.org>
+  
+  =item *
+  
+  Dagfinn Ilmari Mannsåker <ilmari@ilmari.org>
   
   =item *
   
@@ -37817,11 +39291,11 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   =item *
   
-  James E. Keenan <jkeen@verizon.net>
+  Guillem Jover <guillem@hadrons.org>
   
   =item *
   
-  Karen Etheridge <ether@cpan.org>
+  James E. Keenan <jkeen@verizon.net>
   
   =item *
   
@@ -37829,21 +39303,13 @@ $fatpacked{"File/Temp.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'FILE_
   
   =item *
   
-  Olivier Mengue <dolmen@cpan.org>
-  
-  =item *
-  
-  Peter John Acklam <pjacklam@online.no>
-  
-  =item *
-  
-  Peter Rabbitson <ribasushi@cpan.org>
+  Ben Tilly <btilly@gmail.com>
   
   =back
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2013 by Tim Jenness and the UK Particle Physics and Astronomy Research Council.
+  This software is copyright (c) 2020 by Tim Jenness and the UK Particle Physics and Astronomy Research Council.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
@@ -41146,8 +42612,8 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   }
   use Config ();
   
-  our $VERSION = '2.000024';
-  $VERSION = eval $VERSION;
+  our $VERSION = '2.000029';
+  $VERSION =~ tr/_//d;
   
   BEGIN {
     *_WIN32 = ($^O eq 'MSWin32' || $^O eq 'NetWare' || $^O eq 'symbian')
@@ -41207,9 +42673,10 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
       goto &$cwd;
     }
     my $drive = shift;
-    return Win32::Cwd()
-      if _WIN32 && defined &Win32::Cwd && !$drive;
+    return Win32::GetCwd()
+      if _WIN32 && defined &Win32::GetCwd && !$drive;
     local @ENV{qw(PATH IFS CDPATH ENV BASH_ENV)};
+    delete @ENV{qw(PATH IFS CDPATH ENV BASH_ENV)};
     my $cmd = $drive ? "eval { Cwd::getdcwd(q($drive)) }"
                      : 'getcwd';
     my $perl = _perl;
@@ -41318,6 +42785,9 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
       }
       elsif ( $arg eq '--quiet' ) {
         $attr{quiet} = 1;
+      }
+      elsif ( $arg eq '--always' ) {
+        $attr{always} = 1;
       }
       elsif ( $arg =~ /^--/ ) {
         die "Unknown import argument: $arg";
@@ -41727,7 +43197,7 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
     # really care about PATH, but might as well make this routine more general.
     if ($name =~ /^(?:CD|MAN)?PATH$/) {
       $value =~ s/$_path_sep/ /g;
-      my $silent = $name =~ /^(?:CD)?PATH$/ ? " ^"._devnull : '';
+      my $silent = $name =~ /^(?:CD)?PATH$/ ? " 2>"._devnull : '';
       return qq{set -x $name $value$silent;\n};
     }
   
@@ -41953,11 +43423,6 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   If the system asks you whether it should automatically configure as much
   as possible, you would typically answer yes.
   
-  In order to install local::lib into a directory other than the default, you need
-  to specify the name of the directory when you call bootstrap, as follows:
-  
-    perl Makefile.PL --bootstrap=~/foo
-  
   =item 3.
   
   Run this: (local::lib assumes you have make installed on your system)
@@ -41975,22 +43440,29 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   
   If you are using C shell, you can do this as follows:
   
+    % echo $SHELL
     /bin/csh
-    echo $SHELL
-    /bin/csh
-    echo 'eval `perl -I$HOME/perl5/lib/perl5 -Mlocal::lib`' >> ~/.cshrc
-  
-  If you passed to bootstrap a directory other than default, you also need to
-  give that as import parameter to the call of the local::lib module like this
-  way:
-  
-    echo 'eval "$(perl -I$HOME/foo/lib/perl5 -Mlocal::lib=$HOME/foo)"' >>~/.bashrc
+    $ echo 'eval `perl -I$HOME/perl5/lib/perl5 -Mlocal::lib`' >> ~/.cshrc
   
   After writing your shell configuration file, be sure to re-read it to get the
   changed settings into your current shell's environment. Bourne shells use
   C<. ~/.bashrc> for this, whereas C shells use C<source ~/.cshrc>.
   
   =back
+  
+  =head3 Bootstrapping into an alternate directory
+  
+  In order to install local::lib into a directory other than the default, you need
+  to specify the name of the directory when you call bootstrap.  Then, when
+  setting up the environment variables, both perl and local::lib must be told the
+  location of the bootstrap directory.  The setup process would look as follows:
+  
+    perl Makefile.PL --bootstrap=~/foo
+    make test && make install
+    echo 'eval "$(perl -I$HOME/foo/lib/perl5 -Mlocal::lib=$HOME/foo)"' >>~/.bashrc
+    . ~/.bashrc
+  
+  =head3 Other bootstrapping options
   
   If you're on a slower machine, or are operating under draconian disk space
   limitations, you can disable the automatic generation of manpages from POD when
@@ -42162,6 +43634,15 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   Remove all directories that were added to search paths by C<local::lib> from the
   search paths.
   
+  =head2 --quiet
+  
+  Don't output any messages about directories being created.
+  
+  =head2 --always
+  
+  Always add directories to environment variables, ignoring if they are already
+  included.
+  
   =head2 --shelltype
   
   Specify the shell type to use for output.  By default, the shell will be
@@ -42318,8 +43799,8 @@ $fatpacked{"local/lib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'LOCAL
   
   =back
   
-  Attempts to find the user's home directory. If installed, uses C<File::HomeDir>
-  for this purpose. If no definite answer is available, throws an exception.
+  Attempts to find the user's home directory.
+  If no definite answer is available, throws an exception.
   
   =head2 resolve_relative_path
   
