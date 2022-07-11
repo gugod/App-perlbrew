@@ -42,6 +42,7 @@ Commands:
 
     install-patchperl  Install patchperl
     install-cpanm      Install cpanm, a friendly companion.
+    install-cpm        Install cpm, a faster but still friendly companion.
     install-multiple   Install multiple versions and flavors of perl
 
     download       Download the specified perl distribution tarball.
@@ -493,6 +494,10 @@ Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 For more rationale about the existence of this command, read
 <http://perlbrew.pl/Perlbrew-and-Friends.html>
+
+Usage: perlbrew install-cpm
+
+Install the C<cpm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 =head1 COMMAND: INSTALL-PATCHPERL
 
