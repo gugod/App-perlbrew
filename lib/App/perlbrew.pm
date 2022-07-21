@@ -1282,6 +1282,11 @@ sub do_install_release {
 sub run_command_install {
     my ($self, $dist, $opts) = @_;
 
+    unless ($self->root->exists) {
+        die("ERROR: perlbrew root " . $self->root . " does not exist. Run `perlbrew init` to prepare it first.\n");
+        exit(-1);
+    }
+
     unless ($dist) {
         $self->run_command_help("install");
         exit(-1);
