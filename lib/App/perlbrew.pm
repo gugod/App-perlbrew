@@ -1284,7 +1284,6 @@ sub run_command_install {
 
     unless ($self->root->exists) {
         die("ERROR: perlbrew root " . $self->root . " does not exist. Run `perlbrew init` to prepare it first.\n");
-        exit(-1);
     }
 
     unless ($dist) {
