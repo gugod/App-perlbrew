@@ -38,6 +38,12 @@ sub new {
     bless { path => _joinpath (@path) }, $class;
 }
 
+sub exists {
+    my ($self) = @_;
+
+    -e $self->stringify;
+}
+
 sub basename {
     my ($self, $suffix) = @_;
 
