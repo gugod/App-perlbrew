@@ -12321,7 +12321,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20220620';
+  $CPAN::Perl::Releases::VERSION = '5.20220720';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12620,6 +12620,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.36.0" => { id => 'RJBS' },
   "5.37.0" => { id => 'RJBS' },
   "5.37.1" => { id => 'WOLFSAGE' },
+  "5.37.2" => { id => 'ATOOMIC' },
   };
   
   sub perl_tarballs {
@@ -12688,7 +12689,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20220620
+  version 5.20220720
   
   =head1 SYNOPSIS
   
@@ -44267,7 +44268,7 @@ It is also possible to set this variable before installing perlbrew
 to make perlbrew install itself under the given PERLBREW_ROOT:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 After doing this, the perlbrew executable is installed as C</opt/perl5/bin/perlbrew>
 
@@ -44298,7 +44299,7 @@ to 'sh Configure'. By default it is '-de'.
 
 =item PERLBREW_CPAN_MIRROR
 
-The CPAN mirror url of your choice. The default value is "http://www.cpan.org"
+The CPAN mirror url of your choice. By default, "https://cpan.metacpan.org" is used.
 
 =back
 
@@ -44333,7 +44334,7 @@ Usage:
     perlbrew install [options] <perl-release>
     perlbrew install [options] /path/to/perl-5.14.0.tar.gz
     perlbrew install [options] /path/to/perl/git/checkout/dir
-    perlbrew install [options] http://example.com/mirror/perl-5.12.3.tar.gz
+    perlbrew install [options] https://example.com/mirror/perl-5.12.3.tar.gz
 
 Build and install the wanted perl. The last argument can be a short string designating a specific version which can be known from the output of C<perlbrew available>, a path to a pre-downloaded tarball, a path to a git-checkout of perl5 repo, or a URL to a tarball.
 
@@ -44380,7 +44381,7 @@ but from the community. The cperl distributions are downloaded from:
 
     https://github.com/perl11/cperl/releases
 
-See http://perl11.org/cperl/ for more information about cperl distribution.
+See https://perl11.org/cperl/ for more information about cperl distribution.
 
 Options for C<install> command:
 
@@ -44513,12 +44514,9 @@ Usage: perlbrew available [--all]
 
 List the recently available versions of perl on CPAN.
 
-The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
-and is not the list of *all* perl versions ever released in the past.
+By default, the latest sub-version of each stable versions are listed.
 
-To get a list of all perls ever released, use the C<--all> option.
-
-NOTICE: This command might be gone in the future and become an option of 'list' command.
+To get a list of all perls ever released, inculding development and RC versions, run the command with C<--all> option.
 
 =head1 COMMAND: OFF
 
@@ -44662,9 +44660,7 @@ Usage: perlbrew install-cpanm
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 For more rationale about the existence of this command, read
-<http://perlbrew.pl/Perlbrew-and-Friends.html>
-
-=head1 COMMAND: INSTALL-CPM
+<https://perlbrew.pl/Perlbrew-and-Friends.html>
 
 Usage: perlbrew install-cpm
 
@@ -44679,7 +44675,7 @@ is automatically invoked if your perlbrew installation is done with the
 installer, but not with cpan.
 
 For more rationale about the existence of this command, read
-<http://perlbrew.pl/Perlbrew-and-Friends.html>
+<https://perlbrew.pl/Perlbrew-and-Friends.html>
 
 =head1 COMMAND: SELF-UPGRADE
 
@@ -44834,6 +44830,6 @@ Noted that this does not guarantee that the versions of modules stays the same i
 
 =head1 SEE ALSO
 
-L<App::perlbrew>, L<App::cpanminus>, L<App::cpm>, L<Devel::PatchPerl>
+L<App::perlbrew>, L<App::cpanminus>, L<Devel::PatchPerl>
 
 =cut
