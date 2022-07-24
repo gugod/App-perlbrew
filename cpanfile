@@ -1,5 +1,5 @@
 # Always requires the latest for this two.
-requires 'CPAN::Perl::Releases' => '5.20220313';
+requires 'CPAN::Perl::Releases' => '5.20220720';
 requires 'Devel::PatchPerl'     => '2.08';
 
 requires 'Capture::Tiny'        => '0.48';
