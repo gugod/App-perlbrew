@@ -2,9 +2,8 @@
 use strict;
 use warnings;
 
-use Test::More;
-use Test::Exception;
-use File::Temp qw(tempdir);
+use Test::More import => [ qw( done_testing like subtest ) ];
+use File::Temp qw( tempdir );
 
 my $actual_status_code = 42;
 
