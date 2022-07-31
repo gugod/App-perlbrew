@@ -42,6 +42,7 @@ Commands:
 
     install-patchperl  Install patchperl
     install-cpanm      Install cpanm, a friendly companion.
+    install-cpm        Install cpm, a faster but still friendly companion.
     install-multiple   Install multiple versions and flavors of perl
 
     download       Download the specified perl distribution tarball.
@@ -97,7 +98,7 @@ It is also possible to set this variable before installing perlbrew
 to make perlbrew install itself under the given PERLBREW_ROOT:
 
     export PERLBREW_ROOT=/opt/perl5
-    curl -L http://install.perlbrew.pl | bash
+    curl -L https://install.perlbrew.pl | bash
 
 After doing this, the perlbrew executable is installed as C</opt/perl5/bin/perlbrew>
 
@@ -128,7 +129,7 @@ to 'sh Configure'. By default it is '-de'.
 
 =item PERLBREW_CPAN_MIRROR
 
-The CPAN mirror url of your choice. The default value is "http://www.cpan.org"
+The CPAN mirror url of your choice. By default, "https://cpan.metacpan.org" is used.
 
 =back
 
@@ -163,7 +164,7 @@ Usage:
     perlbrew install [options] <perl-release>
     perlbrew install [options] /path/to/perl-5.14.0.tar.gz
     perlbrew install [options] /path/to/perl/git/checkout/dir
-    perlbrew install [options] http://example.com/mirror/perl-5.12.3.tar.gz
+    perlbrew install [options] https://example.com/mirror/perl-5.12.3.tar.gz
 
 Build and install the wanted perl. The last argument can be a short string designating a specific version which can be known from the output of C<perlbrew available>, a path to a pre-downloaded tarball, a path to a git-checkout of perl5 repo, or a URL to a tarball.
 
@@ -210,7 +211,7 @@ but from the community. The cperl distributions are downloaded from:
 
     https://github.com/perl11/cperl/releases
 
-See http://perl11.org/cperl/ for more information about cperl distribution.
+See https://perl11.org/cperl/ for more information about cperl distribution.
 
 Options for C<install> command:
 
@@ -343,12 +344,9 @@ Usage: perlbrew available [--all]
 
 List the recently available versions of perl on CPAN.
 
-The list is retrieved from the web page L<http://www.cpan.org/src/README.html>,
-and is not the list of *all* perl versions ever released in the past.
+By default, the latest sub-version of each stable versions are listed.
 
-To get a list of all perls ever released, use the C<--all> option.
-
-NOTICE: This command might be gone in the future and become an option of 'list' command.
+To get a list of all perls ever released, inculding development and RC versions, run the command with C<--all> option.
 
 =head1 COMMAND: OFF
 
@@ -492,7 +490,11 @@ Usage: perlbrew install-cpanm
 Install the C<cpanm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 For more rationale about the existence of this command, read
-<http://perlbrew.pl/Perlbrew-and-Friends.html>
+<https://perlbrew.pl/Perlbrew-and-Friends.html>
+
+Usage: perlbrew install-cpm
+
+Install the C<cpm> standalone executable in C<$PERLBREW_ROOT/bin>.
 
 =head1 COMMAND: INSTALL-PATCHPERL
 
@@ -503,7 +505,7 @@ is automatically invoked if your perlbrew installation is done with the
 installer, but not with cpan.
 
 For more rationale about the existence of this command, read
-<http://perlbrew.pl/Perlbrew-and-Friends.html>
+<https://perlbrew.pl/Perlbrew-and-Friends.html>
 
 =head1 COMMAND: SELF-UPGRADE
 

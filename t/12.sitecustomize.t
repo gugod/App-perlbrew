@@ -11,12 +11,6 @@ $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 
 use Test::More;
 
-## setup
-
-App::Perlbrew::Path
-    ->new ($ENV{PERLBREW_ROOT})
-    ->rmpath;
-
 ## mock
 
 no warnings 'redefine';

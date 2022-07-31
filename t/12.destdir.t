@@ -12,12 +12,6 @@ my $DESTDIR = tempdir( CLEANUP => 1 );
 
 use Test::More;
 
-## setup
-
-App::Perlbrew::Path
-    ->new($ENV{PERLBREW_ROOT})
-    ->rmpath;
-
 ## mock
 
 no warnings 'redefine';

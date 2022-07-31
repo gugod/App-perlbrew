@@ -101,7 +101,15 @@ sub http_download {
     }
     unless ($status == 0) {
         $path->unlink;
-        return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
+        if ($? == -1) {
+            return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$!";
+        }
+        elsif ($? & 127) {
+            return "ERROR: The command died with signal " . ($? & 127) . "\n\n\t$download_command\n\n";
+        }
+        else {
+            return "ERROR: The command finished with error\n\n\t$download_command\n\nExit code:\n\n\t" . ($? >> 8);
+        }
     }
     return 0;
 }
