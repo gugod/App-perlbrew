@@ -119,7 +119,15 @@ $fatpacked{"App/Perlbrew/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       }
       unless ($status == 0) {
           $path->unlink;
-          return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$?";
+          if ($? == -1) {
+              return "ERROR: Failed to execute the command\n\n\t$download_command\n\nReason:\n\n\t$!";
+          }
+          elsif ($? & 127) {
+              return "ERROR: The command died with signal " . ($? & 127) . "\n\n\t$download_command\n\n";
+          }
+          else {
+              return "ERROR: The command finished with error\n\n\t$download_command\n\nExit code:\n\n\t" . ($? >> 8);
+          }
       }
       return 0;
   }
@@ -189,6 +197,12 @@ $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       my ($class, @path) = @_;
   
       bless { path => _joinpath (@path) }, $class;
+  }
+  
+  sub exists {
+      my ($self) = @_;
+  
+      -e $self->stringify;
   }
   
   sub basename {
@@ -459,7 +473,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.95";
+  our $VERSION = "0.96";
   use Config;
   
   BEGIN {
@@ -1738,6 +1752,10 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
   sub run_command_install {
       my ($self, $dist, $opts) = @_;
+  
+      unless ($self->root->exists) {
+          die("ERROR: perlbrew root " . $self->root . " does not exist. Run `perlbrew init` to prepare it first.\n");
+      }
   
       unless ($dist) {
           $self->run_command_help("install");
