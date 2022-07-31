@@ -108,7 +108,7 @@ sub http_download {
             return "ERROR: The command died with signal " . ($? & 127) . "\n\n\t$download_command\n\n";
         }
         else {
-            return "ERROR: The command finished with error\n\n\t$download_command\n\nReason:\n\n\t" . ($? >> 8);
+            return "ERROR: The command finished with error\n\n\t$download_command\n\nExit code:\n\n\t" . ($? >> 8);
         }
     }
     return 0;

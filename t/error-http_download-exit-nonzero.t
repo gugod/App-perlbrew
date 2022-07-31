@@ -22,7 +22,7 @@ subtest "The exit status code of curl", sub {
     my $error = http_download( "https://example.com/whatever.tar.gz",
         App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT)->child("whatever.tar.gz") );
 
-    like $error, qr/^ERROR .+ Reason .+ ${actual_status_code}/xs;
+    like $error, qr/^ERROR .+ Exit\ code: .+ ${actual_status_code}/xs;
 };
 
 done_testing;
