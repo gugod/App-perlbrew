@@ -1,3 +1,6 @@
+	- `install-cpm` is now properly documented. Thanks to Tekki.
+	- Let `install` hint for `init` when PERLBREW_ROOT does not exist. .RT #57669.
+
 0.95
 	- Released at 2022-05-15T22:59:11+0800
 	- Thanks to our contributors: Leon Timmermans
