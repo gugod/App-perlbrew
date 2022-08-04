@@ -24,7 +24,7 @@ use JSON::PP qw( decode_json );
 use File::Copy qw( copy );
 use Capture::Tiny ();
 
-use App::Perlbrew::Util qw( editdist files_are_the_same uniq find_similar_tokens );
+use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens );
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
