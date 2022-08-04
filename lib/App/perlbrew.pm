@@ -24,7 +24,7 @@ use JSON::PP qw( decode_json );
 use File::Copy qw( copy );
 use Capture::Tiny ();
 
-use App::Perlbrew::Util qw( editdist files_are_the_same uniq );
+use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens );
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
@@ -403,21 +403,10 @@ sub commands {
 
 sub find_similar_commands {
     my ( $self, $command ) = @_;
-    my $SIMILAR_DISTANCE = 6;
 
     $command =~ s/_/-/g;
 
-    my @commands = sort { $a->[1] <=> $b->[1] } map {
-        my $d = editdist( $_, $command );
-        ( ( $d < $SIMILAR_DISTANCE ) ? [$_, $d] : () )
-    } $self->commands;
-
-    if (@commands) {
-        my $best = $commands[0][1];
-        @commands = map { $_->[0] } grep { $_->[1] == $best } @commands;
-    }
-
-    return @commands;
+    return @{ find_similar_tokens($command, [ sort $self->commands ]) };
 }
 
 # This method is called in the 'run' loop
