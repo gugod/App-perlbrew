@@ -22,19 +22,31 @@ jobs:
           tool_name: perlnitpick
 
   yath:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: ['ubuntu-18.04']
         perl: [ '5.36', '5.34' ]
-    name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
+    container:
+      image: perl:${{ matrix.perl }}
+    name: Perl ${{ matrix.perl }}
     steps:
       - uses: actions/checkout@v2
-      - name: Set up perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: ${{ matrix.perl }}
       - run: perl -V
       - run: cpanm --quite --notest --installdeps .
       - run: cpanm --quite --notest App::Yath
       - run: yath test --qvf t/
+
+  prove:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl: [ '5.8', '5.10' ]
+    container:
+      image: perl:${{ matrix.perl }}
+    name: Perl ${{ matrix.perl }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: perl -V
+      - run: cpanm --quite --notest --installdeps .
+      - run: cpanm --quite --notest App::Prove
+      - run: prove -lrv t
