@@ -2666,7 +2666,7 @@ sub list_modules {
         "TAP::Harness::Multiple" => "TAP::Harness::ReportByDescription",
     );
 
-    return [map { $rename{$_} // $_ } grep { $_ ne "Perl" } split( /\n/, $stdout )];
+    return [map { $rename{$_} || $_ } grep { $_ ne "Perl" } split( /\n/, $stdout )];
 }
 
 sub run_command_list_modules {
