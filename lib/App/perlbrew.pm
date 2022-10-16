@@ -1646,12 +1646,11 @@ INSTALL
     # automatic parallel testing via $HARNESS_OPTIONS. The
     # "test_harness" target was added in 5.7.3, which was the last
     # development release before 5.8.0.
-    my $test_target = "test";
-    if ( $dist_version =~ /^5\.(\d+)\.(\d+)/
-        && ( $1 >= 8 || $1 == 7 && $2 == 3 ) )
-    {
-        $test_target = "test_harness";
-    }
+    my $use_harness = ( $dist_version =~ /^5\.(\d+)\.(\d+)/
+                        && ( $1 >= 8 || $1 == 7 && $2 == 3 ) )
+        || $dist_version eq "blead";
+    my $test_target = $use_harness ? "test_harness" : "test";
+
     local $ENV{TEST_JOBS} = $self->{j}
         if $test_target eq "test_harness" && ( $self->{j} || 1 ) > 1;
 
