@@ -60,8 +60,15 @@ sub files_are_the_same {
 
 sub perl_version_to_integer {
     my $version = shift;
-    my @v = split(/[\.\-_]/, $version);
+
+    my @v;
+    if ($version eq 'blead') {
+        @v = (999,999,999);
+    } else {
+        @v = split(/[\.\-_]/, $version);
+    }
     return undef if @v < 2;
+
     if ($v[1] <= 5) {
         $v[2] ||= 0;
         $v[3] = 0;
