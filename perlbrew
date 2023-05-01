@@ -12413,7 +12413,7 @@ CPAN_META_YAML
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20230420';
+  $CPAN::Perl::Releases::VERSION = '5.20230423';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -12704,6 +12704,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.36.1-RC2" => { id => 'SHAY' },
   "5.36.1-RC3" => { id => 'SHAY' },
   "5.37.11" => { id => 'SHAY' },
+  "5.36.1" => { id => 'SHAY' },
   };
   
   sub perl_tarballs {
@@ -12772,7 +12773,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20230420
+  version 5.20230423
   
   =head1 SYNOPSIS
   
@@ -13756,11 +13757,10 @@ $fatpacked{"ExtUtils/Command.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   use strict;
   use warnings;
   require Exporter;
-  use vars qw(@ISA @EXPORT @EXPORT_OK $VERSION);
-  @ISA       = qw(Exporter);
-  @EXPORT    = qw(cp rm_f rm_rf mv cat eqtime mkpath touch test_f test_d chmod
-                  dos2unix);
-  $VERSION = '7.64';
+  our @ISA     = qw(Exporter);
+  our @EXPORT  = qw(cp rm_f rm_rf mv cat eqtime mkpath touch test_f test_d chmod
+                    dos2unix);
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   my $Is_VMS   = $^O eq 'VMS';
@@ -14147,7 +14147,7 @@ $fatpacked{"ExtUtils/Command/MM.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
   our @EXPORT  = qw(test_harness pod2man perllocal_install uninstall
                     warn_if_old_packlist test_s cp_nonempty);
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   my $Is_VMS = $^O eq 'VMS';
@@ -16299,7 +16299,7 @@ $fatpacked{"ExtUtils/Liblist.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   use strict;
   use warnings;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   use File::Spec;
@@ -16598,7 +16598,7 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   
   use strict;
   use warnings;
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   use ExtUtils::MakeMaker::Config;
@@ -16649,6 +16649,7 @@ $fatpacked{"ExtUtils/Liblist/Kid.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   		chomp(my @incpath = grep s/^ //, grep { /^#include </ .. /^End of search / } `$Config{cc} -E -v - </dev/null 2>&1 >/dev/null`);
   		unshift @libpath, map { s{/include[^/]*}{/lib}; $_ } @incpath
   	}
+  	@libpath = grep -d, @libpath;
   
       if ( $^O eq 'darwin' or $^O eq 'next' )  {
           # 'escape' Mach-O ld -framework and -F flags, so they aren't dropped later on
@@ -17257,7 +17258,7 @@ $fatpacked{"ExtUtils/MM.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   use warnings;
   use ExtUtils::MakeMaker::Config;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::Liblist;
@@ -17351,7 +17352,7 @@ $fatpacked{"ExtUtils/MM_AIX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   use strict;
   use warnings;
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   use ExtUtils::MakeMaker::Config;
@@ -17434,7 +17435,7 @@ $fatpacked{"ExtUtils/MM_Any.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   use strict;
   use warnings;
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   use Carp;
@@ -20563,7 +20564,7 @@ $fatpacked{"ExtUtils/MM_BeOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   require ExtUtils::MM_Unix;
   
   our @ISA = qw( ExtUtils::MM_Any ExtUtils::MM_Unix );
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   
@@ -20615,7 +20616,7 @@ $fatpacked{"ExtUtils/MM_Cygwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   require ExtUtils::MM_Win32;
   our @ISA = qw( ExtUtils::MM_Unix );
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   
@@ -20787,7 +20788,7 @@ $fatpacked{"ExtUtils/MM_DOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   use strict;
   use warnings;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Any;
@@ -20870,7 +20871,7 @@ $fatpacked{"ExtUtils/MM_Darwin.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       our @ISA = qw( ExtUtils::MM_Unix );
   }
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   
@@ -20942,7 +20943,7 @@ $fatpacked{"ExtUtils/MM_MacOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   use strict;
   use warnings;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   sub new {
@@ -21000,7 +21001,7 @@ $fatpacked{"ExtUtils/MM_NW5.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   use ExtUtils::MakeMaker::Config;
   use File::Basename;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Win32;
@@ -21195,7 +21196,7 @@ $fatpacked{"ExtUtils/MM_OS2.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   use ExtUtils::MakeMaker qw(neatvalue);
   use File::Spec;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Any;
@@ -21341,7 +21342,7 @@ $fatpacked{"ExtUtils/MM_OS390.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   use strict;
   use warnings;
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   use ExtUtils::MakeMaker::Config;
@@ -21430,7 +21431,7 @@ $fatpacked{"ExtUtils/MM_QNX.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   use strict;
   use warnings;
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Unix;
@@ -21492,7 +21493,7 @@ $fatpacked{"ExtUtils/MM_UWIN.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   use strict;
   use warnings;
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Unix;
@@ -21572,10 +21573,11 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
   use ExtUtils::MakeMaker qw($Verbose neatvalue _sprintf562);
   
-  # If we make $VERSION an our variable parse_version() breaks
-  use vars qw($VERSION);
-  $VERSION = '7.64';
+  # If $VERSION is in scope, parse_version() breaks
+  {
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
+  }
   
   require ExtUtils::MM_Any;
   our @ISA = qw(ExtUtils::MM_Any);
@@ -21593,13 +21595,16 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       $Is{SunOS4}  = $^O eq 'sunos';
       $Is{Solaris} = $^O eq 'solaris';
       $Is{SunOS}   = $Is{SunOS4} || $Is{Solaris};
-      $Is{BSD}     = ($^O =~ /^(?:free|net|open)bsd$/ or
+      $Is{BSD}     = ($^O =~ /^(?:free|midnight|net|open)bsd$/ or
                      grep( $^O eq $_, qw(bsdos interix dragonfly) )
                     );
       $Is{Android} = $^O =~ /android/;
-      if ( $^O eq 'darwin' && $^X eq '/usr/bin/perl' ) {
+      if ( $^O eq 'darwin' ) {
         my @osvers = split /\./, $Config{osvers};
-        $Is{ApplCor} = ( $osvers[0] >= 18 );
+        if ( $^X eq '/usr/bin/perl' ) {
+          $Is{ApplCor} = ( $osvers[0] >= 18 );
+        }
+        $Is{AppleRPath} = ( $osvers[0] >= 9 );
       }
   }
   
@@ -22613,7 +22618,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
           if ( $Is{IRIX} ) {
               $ldrun = qq{-rpath "$self->{LD_RUN_PATH}"};
           }
-          elsif ( $^O eq 'darwin' ) {
+          elsif ( $^O eq 'darwin' && $Is{AppleRPath} ) {
               # both clang and gcc support -Wl,-rpath, but only clang supports
               # -rpath so by using -Wl,-rpath we avoid having to check for the
               # type of compiler
@@ -23752,7 +23757,7 @@ $fatpacked{"ExtUtils/MM_Unix.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   sub init_platform {
       my($self) = shift;
   
-      $self->{MM_Unix_VERSION} = $VERSION;
+      $self->{MM_Unix_VERSION} = our $VERSION;
       $self->{PERL_MALLOC_DEF} = '-DPERL_EXTMALLOC_DEF -Dmalloc=Perl_malloc '.
                                  '-Dfree=Perl_mfree -Drealloc=Perl_realloc '.
                                  '-Dcalloc=Perl_calloc';
@@ -25712,7 +25717,7 @@ $fatpacked{"ExtUtils/MM_VMS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   use File::Basename;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Any;
@@ -27984,7 +27989,7 @@ $fatpacked{"ExtUtils/MM_VOS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<
   
   use strict;
   use warnings;
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Unix;
@@ -28064,7 +28069,7 @@ $fatpacked{"ExtUtils/MM_Win32.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   require ExtUtils::MM_Any;
   require ExtUtils::MM_Unix;
   our @ISA = qw( ExtUtils::MM_Any ExtUtils::MM_Unix );
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   $ENV{EMXSHELL} = 'sh'; # to run `commands`
@@ -28706,7 +28711,7 @@ $fatpacked{"ExtUtils/MM_Win95.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   use strict;
   use warnings;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require ExtUtils::MM_Win32;
@@ -28786,7 +28791,7 @@ $fatpacked{"ExtUtils/MY.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   use strict;
   require ExtUtils::MM;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   our @ISA = qw(ExtUtils::MM);
   
@@ -28813,7 +28818,7 @@ $fatpacked{"ExtUtils/MY.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'EXT
   
   B<FOR INTERNAL USE ONLY>
   
-  ExtUtils::MY is a subclass of L<ExtUtils::MM>.  Its provided in your
+  ExtUtils::MY is a subclass of L<ExtUtils::MM>.  It is provided in your
   Makefile.PL for you to add and override MakeMaker functionality.
   
   It also provides a convenient alias via the MY class.
@@ -28852,7 +28857,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   our %macro_fsentity; # whether a macro is a filesystem name
   our %macro_dep; # whether a macro is a dependency
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   # Emulate something resembling CVS $Revision$
@@ -29352,7 +29357,10 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
                       # simulate "use warnings FATAL => 'all'" for vintage perls
                       die @_;
                   };
-                  version->new( $perl_version )->numify;
+                  my $v = version->new($perl_version);
+                  # we care about parse issues, not numify warnings
+                  no warnings;
+                  $v->numify;
               };
               $perl_version =~ tr/_//d
                   if defined $perl_version;
@@ -29978,19 +29986,20 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   }
   
   sub _run_hintfile {
-      my ($self, $hint_file) = @_;
+      our $self;
+      local($self) = shift;       # make $self available to the hint file.
+      my($hint_file) = shift;
   
       local($@, $!);
       print "Processing hints file $hint_file\n" if $Verbose;
   
-      if(open(my $fh, '<', $hint_file)) {
-          my $hints_content = do { local $/; <$fh> };
-          no strict;
-          eval $hints_content;
-          warn "Failed to run hint file $hint_file: $@" if $@;
-      }
-      else {
-          warn "Could not open $hint_file for read: $!";
+      # Just in case the ./ isn't on the hint file, which File::Spec can
+      # often strip off, we bung the curdir into @INC
+      local @INC = (File::Spec->curdir, @INC);
+      my $ret = do $hint_file;
+      if( !defined $ret ) {
+          my $error = $@ || $!;
+          warn $error;
       }
   }
   
@@ -30089,6 +30098,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
       die "write_file_via_tmp: 2nd arg must be ref" unless ref $contents;
       for my $chunk (@$contents) {
           my $to_write = $chunk;
+          $to_write = '' unless defined $to_write;
           utf8::encode $to_write if !$CAN_DECODE && "$]" > 5.008;
           print $fh "$to_write\n" or die "Can't write to MakeMaker.tmp: $!";
       }
@@ -30156,26 +30166,6 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
           push @m,"$key=>".neatvalue($v->{$key});
       }
       return "{ ".join(', ',@m)." }";
-  }
-  
-  sub _find_magic_vstring {
-      my $value = shift;
-      return $value if $UNDER_CORE;
-      my $tvalue = '';
-      require B;
-      my $sv = B::svref_2object(\$value);
-      my $magic = ref($sv) eq 'B::PVMG' ? $sv->MAGIC : undef;
-      while ( $magic ) {
-          if ( $magic->TYPE eq 'V' ) {
-              $tvalue = $magic->PTR;
-              $tvalue =~ s/^v?(.+)$/v$1/;
-              last;
-          }
-          else {
-              $magic = $magic->MOREMAGIC;
-          }
-      }
-      return $tvalue;
   }
   
   sub selfdocument {
@@ -32124,7 +32114,7 @@ $fatpacked{"ExtUtils/MakeMaker.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   is installed).  Clients like L<CPAN> or L<CPANPLUS> will read these
   files to see what prerequisites must be fulfilled before building or testing
   the distribution.  If you wish to shut this feature off, set the C<NO_MYMETA>
-  C<WriteMakeFile()> flag to true.
+  C<WriteMakefile()> flag to true.
   
   =head2 Disabling an extension
   
@@ -32277,7 +32267,7 @@ $fatpacked{"ExtUtils/MakeMaker/Config.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   use strict;
   use warnings;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   use Config ();
@@ -32320,7 +32310,7 @@ $fatpacked{"ExtUtils/MakeMaker/Locale.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   
   use strict;
   use warnings;
-  our $VERSION = "7.64";
+  our $VERSION = "7.70";
   $VERSION =~ tr/_//d;
   
   use base 'Exporter';
@@ -32721,7 +32711,7 @@ $fatpacked{"ExtUtils/MakeMaker/version.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
   
   use vars qw(@ISA $VERSION $CLASS $STRICT $LAX *declare *qv);
   
-  $VERSION = '7.64';
+  $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   $CLASS = 'version';
   
@@ -32776,7 +32766,7 @@ $fatpacked{"ExtUtils/MakeMaker/version/regex.pm"} = '#line '.(1+__LINE__).' "'._
   
   use vars qw($VERSION $CLASS $STRICT $LAX);
   
-  $VERSION = '7.64';
+  $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   #--------------------------------------------------------------------------#
@@ -33022,7 +33012,7 @@ $fatpacked{"ExtUtils/MakeMaker/version/vpp.pm"} = '#line '.(1+__LINE__).' "'.__F
   
   use Config;
   use vars qw($VERSION $CLASS @ISA $LAX $STRICT);
-  $VERSION = '7.64';
+  $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   $CLASS = 'ExtUtils::MakeMaker::version::vpp';
   
@@ -34843,7 +34833,7 @@ $fatpacked{"ExtUtils/Mkbootstrap.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\
   use strict;
   use warnings;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   require Exporter;
@@ -34968,7 +34958,7 @@ $fatpacked{"ExtUtils/Mksymlists.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
   our @ISA = qw(Exporter);
   our @EXPORT = qw(&Mksymlists);
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   sub Mksymlists {
@@ -35638,7 +35628,7 @@ $fatpacked{"ExtUtils/testlib.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   use strict;
   use warnings;
   
-  our $VERSION = '7.64';
+  our $VERSION = '7.70';
   $VERSION =~ tr/_//d;
   
   use Cwd;
