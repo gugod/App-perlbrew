@@ -141,4 +141,13 @@ subtest "comparable_perl_version" =>  sub {
     }
 };
 
+subtest "blead is the biggest" => sub {
+    plan tests => 0+@versions;
+    my $b = perl_version_to_integer("blead");
+    for my $v (@versions) {
+        my $n = perl_version_to_integer($v);
+        ok $b > $n, "blead is bigger than $v";
+    }
+};
+
 done_testing;

@@ -1,10 +1,9 @@
 # Always requires the latest for this two.
-requires 'CPAN::Perl::Releases' => '5.20220720';
+requires 'CPAN::Perl::Releases' => '5.20230423';
 requires 'Devel::PatchPerl'     => '2.08';
 
 requires 'Capture::Tiny'        => '0.48';
-requires 'Pod::Parser'          => '1.63';
-requires 'Pod::Usage'           => '1.68';
+requires 'Pod::Usage'           => '1.69';
 requires 'File::Copy'           => '0';
 requires 'File::Temp'           => '0.2304';
 requires 'JSON::PP'             => '0';

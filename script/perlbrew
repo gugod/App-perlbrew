@@ -34,8 +34,10 @@ Commands:
     off            Turn off perlbrew in current shell
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
-    exec           exec programs with specified perl environments.
-    clone-modules  re-installs all CPAN modules from one installation to another
+    exec           Execute programs with specified perl environments.
+
+    list-modules   List installed CPAN modules for the current Perl version in use
+    clone-modules  Re-installs all CPAN modules from one installation to another
 
     self-install       Install perlbrew itself under PERLBREW_ROOT/bin
     self-upgrade       Upgrade perlbrew itself.
@@ -650,13 +652,13 @@ Options:
 
     --notest    Skip all module tests
 
-This command re-installs all CPAN modules found from one installation to another. For example, this list all modules under '5.26.1' and re-install them under '5.27.7':
+This command re-installs all CPAN modules found from one installation to another. For example, this lists all modules under '5.26.1' and re-installs them under '5.27.7':
 
     perlbrew clone-modules 5.26.1 5.27.7
 
-The argument "source" is optional and is default to the current activated one. However if none is activated (perlbrew is switched off), it it an error.
+The argument "source" is optional and defaults to the currently activated one. However if none is activated (perlbrew is switched off), it it an error.
 
-Noted that this does not guarantee that the versions of modules stays the same in the destination.
+Note that this does not guarantee that the versions of modules stay the same in the destination.
 
 =head1 SEE ALSO
 

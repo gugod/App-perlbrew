@@ -4,7 +4,8 @@ use warnings;
 use 5.008;
 
 use Exporter 'import';
-our @EXPORT = qw(uniq min editdist files_are_the_same perl_version_to_integer);
+our @EXPORT = qw( uniq min editdist files_are_the_same perl_version_to_integer );
+our @EXPORT_OK = qw( find_similar_tokens );
 
 sub uniq {
     my %seen;
@@ -59,8 +60,15 @@ sub files_are_the_same {
 
 sub perl_version_to_integer {
     my $version = shift;
-    my @v = split(/[\.\-_]/, $version);
+
+    my @v;
+    if ($version eq 'blead') {
+        @v = (999,999,999);
+    } else {
+        @v = split(/[\.\-_]/, $version);
+    }
     return undef if @v < 2;
+
     if ($v[1] <= 5) {
         $v[2] ||= 0;
         $v[3] = 0;
@@ -71,6 +79,23 @@ sub perl_version_to_integer {
     }
 
     return $v[1]*1000000 + $v[2]*1000 + $v[3];
+}
+
+sub find_similar_tokens {
+    my ($token, $tokens) = @_;
+    my $SIMILAR_DISTANCE = 6;
+
+    my @similar_tokens = sort { $a->[1] <=> $b->[1] } map {
+        my $d = editdist( $_, $token );
+        ( ( $d < $SIMILAR_DISTANCE ) ? [$_, $d] : () )
+    } @$tokens;
+
+    if (@similar_tokens) {
+        my $best_score = $similar_tokens[0][1];
+        @similar_tokens = map { $_->[0] } grep { $_->[1] == $best_score } @similar_tokens;
+    }
+
+    return \@similar_tokens;
 }
 
 1;

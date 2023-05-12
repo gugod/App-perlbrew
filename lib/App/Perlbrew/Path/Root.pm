@@ -3,8 +3,8 @@ use warnings;
 
 package App::Perlbrew::Path::Root;
 
-require App::Perlbrew::Path;
-require App::Perlbrew::Path::Installations;
+use App::Perlbrew::Path ();
+use App::Perlbrew::Path::Installations ();
 
 our @ISA = qw( App::Perlbrew::Path );
 
