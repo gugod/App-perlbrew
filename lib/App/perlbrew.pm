@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.96";
+our $VERSION = "0.97";
 use Config qw( %Config );
 
 BEGIN {
@@ -3424,7 +3424,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2022 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2023 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 
