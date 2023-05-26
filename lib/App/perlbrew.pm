@@ -2800,6 +2800,11 @@ sub run_command_info {
     print $self->format_info_output(@_);
 }
 
+sub run_command_make_shim {
+    my ($self) = shift;
+    die "TO BE IMPLEMENTED";
+}
+
 sub BASHRC_CONTENT() {
     return
           "export PERLBREW_SHELLRC_VERSION=$VERSION\n"
