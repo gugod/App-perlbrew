@@ -666,7 +666,7 @@ Usage:
 
     perlbrew make-shim <program>
 
-This commands produce a file named C<program> under current directory. The C<program> is a shell-wrapper of the program of the same name inside current perlbrew environment. The output C<program> is prepared in a way that it can be moved to different directories and it can still find the original program and run it as if it is inside the original perlbrew environment.
+This commands produce an executable file named C<program> under current directory. The C<program> is a shell-wrapper of the program of the same name inside current perlbrew environment. The output C<program> is prepared in a way that it can be moved to different directories and it can still find the original program and run it as if it is inside the original perlbrew environment.
 
 For example, you may find C<tldr> from L<App::tldr> a handy tool and decide to install it inside your daily working environment:
 
