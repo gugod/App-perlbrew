@@ -30,7 +30,12 @@ sub file {
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
+
 delete $ENV{PERLBREW_LIB};
+delete $ENV{PERLBREW_PERL};
+delete $ENV{PERLBREW_PATH};
+delete $ENV{PERLBREW_MANPATH};
+delete $ENV{PERL_LOCAL_LIB_ROOT};
 
 my $root = App::Perlbrew::Path::Root->new ($ENV{PERLBREW_ROOT});
 $root->perls->mkpath;
@@ -70,6 +75,20 @@ CODE
 sub mock_perlbrew_install {
     my ($name, @args) = @_;
     App::perlbrew->new(install => $name, @args)->run();
+}
+
+sub mock_perlbrew_use {
+    my ($name) = @_;
+
+    my %env = App::perlbrew->new()->perlbrew_env($name);
+
+    for my $k (qw< PERLBREW_PERL PERLBREW_LIB PERL5LIB PATH >) {
+        if (defined $env{$k}) {
+            $ENV{$k} = $env{$k};
+        } else {
+            delete $ENV{$k}
+        }
+    }
 }
 
 sub mock_perlbrew_lib_create {
