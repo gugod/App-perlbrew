@@ -77,12 +77,16 @@ sub mock_perlbrew_install {
     App::perlbrew->new(install => $name, @args)->run();
 }
 
+sub mock_perlbrew_off {
+    mock_perlbrew_use("");
+}
+
 sub mock_perlbrew_use {
     my ($name) = @_;
 
     my %env = App::perlbrew->new()->perlbrew_env($name);
 
-    for my $k (qw< PERLBREW_PERL PERLBREW_LIB PERL5LIB PATH >) {
+    for my $k (qw< PERLBREW_PERL PERLBREW_LIB PERLBREW_PATH PERL5LIB >) {
         if (defined $env{$k}) {
             $ENV{$k} = $env{$k};
         } else {
