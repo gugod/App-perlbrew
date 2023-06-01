@@ -186,8 +186,6 @@ The format of <perl-release> looks like:
 
 =item blead
 
-=item cperl-<version>
-
 =back
 
 Version numbers usually look like "5.x.xx", or "perl-5.xx.x-RCx" for
@@ -207,13 +205,6 @@ mirror site configured before.
 
 Version number alone without the "perl-" prefix means the official
 release provided by perl5 porters.
-
-The prefix "cperl" is a special release provided not by perl5 porters,
-but from the community. The cperl distributions are downloaded from:
-
-    https://github.com/perl11/cperl/releases
-
-See https://perl11.org/cperl/ for more information about cperl distribution.
 
 Options for C<install> command:
 
