@@ -25,13 +25,4 @@ throws_ok(
     qr[ERROR:]
 );
 
-throws_ok(
-    sub {
-        my $app = App::perlbrew->new("available");
-        my $ret = $app->available_cperl_distributions();
-    },
-    qr[ERROR:]
-);
-
-
 done_testing;

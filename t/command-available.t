@@ -26,15 +26,9 @@ my %available_perl_dists = (
     'perl5.004_05' => 'http://www.cpan.org/src/5.0/perl5.004_05.tar.gz',
 );
 
-my %available_cperl_dists = (
-    'cperl-5.26.1' => 'https://github.com/perl11/cperl/archive/cperl-5.26.1.tar.gz',
-    'cperl-5.27.1' => 'https://github.com/perl11/cperl/archive/cperl-5.27.1.tar.gz',
-);
-
 sub mocked_perlbrew {
     my $app = App::perlbrew->new( @_ );
     $app->expects( 'available_perl_distributions' )->returns( \%available_perl_dists );
-    $app->expects( 'available_cperl_distributions' )->returns( \%available_cperl_dists );
     return $app;
 }
 
@@ -82,7 +76,7 @@ describe "available command output, when something installed locally," => sub {
               (
                   \# .+ \n
                   (
-                      \s{3,}c?perl-?\d\.\d{1,3}[_.]\d{1,2}
+                      \s{3,}perl-?\d\.\d{1,3}[_.]\d{1,2}
                       \s+
                       (
                           INSTALLED \s on \s .+ \s via
