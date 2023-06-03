@@ -11,7 +11,7 @@ jobs:
     runs-on: 'ubuntu-latest'
     name: Coverage
     container:
-      image: perl:stable-slim
+      image: perl:stable
     steps:
       - uses: actions/checkout@v2
       - run: cpanm --quiet --notest --installdeps .
