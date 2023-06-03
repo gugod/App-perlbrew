@@ -10,12 +10,11 @@ jobs:
   build:
     runs-on: 'ubuntu-latest'
     name: Coverage
+    container:
+      image: perl:stable-slim
     steps:
+    container:
       - uses: actions/checkout@v2
-      - name: Set up perl
-        uses: shogo82148/actions-setup-perl@v1
-        with:
-          perl-version: 5.32
       - run: cpanm --quiet --notest --installdeps .
       - run: cpanm --quiet --notest App::Yath Devel::Cover Devel::Cover::Report::Coveralls
       - run: PERL5OPT=-MDevel::Cover yath test --qvf t/
