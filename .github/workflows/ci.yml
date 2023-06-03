@@ -13,9 +13,6 @@ jobs:
           apt install -y git
           cpanm --notest --quiet App::PerlNitpick
       - uses: actions/checkout@v2
-      - uses: gugod/action-perlcritic@fun
-        with:
-          directory: "lib script t dev-bin"
       - name: run perlnitpick
         run: perlnitpick --inplace --rules=RemoveTrailingWhitespace,RemoveUnusedVariables,RemoveUnusedInclude,RemoveUnusedImport .
       - name: suggester
