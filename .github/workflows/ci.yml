@@ -51,7 +51,7 @@ jobs:
       - run: cpanm --quite --notest App::Prove
       - run: prove -lrv t
 
-  prove5.8.9:
+  prove5_8_9:
     runs-on: ubuntu-latest
     container:
       image: perl:5.8.9
