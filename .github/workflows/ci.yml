@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        perl: [ '5.8', '5.10' ]
+        perl: [ '5.10', '5.12' ]
     container:
       image: perl:${{ matrix.perl }}
     name: Perl ${{ matrix.perl }}
@@ -49,4 +49,16 @@ jobs:
       - run: perl -V
       - run: cpanm --quite --notest --installdeps .
       - run: cpanm --quite --notest App::Prove
+      - run: prove -lrv t
+
+  prove5.8.9:
+    runs-on: ubuntu-latest
+    container:
+      image: perl:5.8.9
+    name: Perl 5.8.9
+    steps:
+      - uses: actions/checkout@v2
+      - run: perl -V
+      - run: cpanm --quite --notest Pod::Man@4.10 Test::Deep@1.130 App::Prove
+      - run: cpanm --quite --notest --installdeps .
       - run: prove -lrv t
