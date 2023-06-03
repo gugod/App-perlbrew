@@ -36,18 +36,4 @@ subtest 'parse "5.18.2"' => sub {
     is $rd->{version}, "5.18.2";
 };
 
-subtest 'parse "cperl-5.22.2"' => sub {
-    my $app = App::perlbrew->new();
-
-    my $rd = $app->release_detail("cperl-5.22.2");
-
-    ok defined( $rd->{type} );
-    ok defined( $rd->{version} );
-    ok defined( $rd->{tarball_url} );
-    ok defined( $rd->{tarball_name} );
-
-    is $rd->{type}, "cperl";
-    is $rd->{version}, "5.22.2";
-};
-
 done_testing;
