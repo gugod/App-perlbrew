@@ -2050,10 +2050,9 @@ sub run_command_switch_off {
         "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
-sub run_command_env {
-    my ( $self, $name ) = @_;
-
-    my %env = $self->perlbrew_env($name);
+sub shell_env {
+    my ( $self, $env ) = @_;
+    my %env = %$env;
 
     my @statements;
     for my $k ( sort keys %env ) {
@@ -2067,15 +2066,17 @@ sub run_command_env {
         }
     }
 
+    my $statements = "";
+
     if ( $self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/ ) {
         for (@statements) {
             my ( $o, $k, $v ) = @$_;
             if ( $o eq 'unset' ) {
-                print "unset $k\n";
+                $statements .= "unset $k\n";
             }
             else {
                 $v =~ s/(\\")/\\$1/g;
-                print "export $k=\"$v\"\n";
+                $statements .= "export $k=\"$v\"\n";
             }
         }
     }
@@ -2083,13 +2084,21 @@ sub run_command_env {
         for (@statements) {
             my ( $o, $k, $v ) = @$_;
             if ( $o eq 'unset' ) {
-                print "unsetenv $k\n";
+                $statements .= "unsetenv $k\n";
             }
             else {
-                print "setenv $k \"$v\"\n";
+                $statements .= "setenv $k \"$v\"\n";
             }
         }
     }
+
+    return $statements;
+}
+
+sub run_command_env {
+    my ( $self, $name ) = @_;
+
+    print $self->shell_env({ $self->perlbrew_env($name) });
 }
 
 sub run_command_symlink_executables {
@@ -2715,6 +2724,40 @@ qq{eval "require $module" and do { (my \$f = "$module") =~ s<::></>g; \$f .= ".p
 sub run_command_info {
     my ($self) = shift;
     print $self->format_info_output(@_);
+}
+
+sub run_command_make_shim {
+    my ($self, $program) = @_;
+
+    if (-f $program) {
+        die "ERROR: $program already exists under current directory.\n";
+    }
+
+    my $current_env = $self->current_env
+        or die "ERROR: perlbrew is current off. make-shim requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-shim\n";
+
+    my %env = $self->perlbrew_env( $current_env );
+
+    my $shebang = '#!' . $self->env('SHELL');
+    my $preemble = $self->shell_env(\%env);
+    my $path = $self->shell_env({ PATH => $env{"PERLBREW_PATH"} . ":" . $self->env("PATH") });
+    my $shim = join(
+        "\n",
+        $shebang,
+        $preemble,
+        $path,
+        'exec ' . $program . ' "$@"',
+        "\n"
+    );
+
+    open my $fh, ">", "$program" or die $!;
+    print $fh $shim;
+    close $fh;
+    chmod 0755, $program;
+
+    if ( $self->{verbose} ) {
+        print "A shim of $program is made.\n";
+    }
 }
 
 sub BASHRC_CONTENT() {

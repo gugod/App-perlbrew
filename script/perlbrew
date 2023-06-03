@@ -651,6 +651,36 @@ The argument "source" is optional and defaults to the currently activated one. H
 
 Note that this does not guarantee that the versions of modules stay the same in the destination.
 
+=head1 COMMAND: MAKE-SHIM
+
+Usage:
+
+    perlbrew make-shim <program>
+
+This commands produce an executable file named C<program> under current directory. The C<program> is a shell-wrapper of the program of the same name inside current perlbrew environment. The output C<program> is prepared in a way that it can be moved to different directories and it can still find the original program and run it as if it is inside the original perlbrew environment.
+
+For example, you may find C<tldr> from L<App::tldr> a handy tool and decide to install it inside your daily working environment:
+
+    perlbrew use perl-5.36.1
+    cpm install -g App::tldr
+
+But when you occasionally have to switch to a different environment, C<PATH> would be tweaked and the command C<tldr> would went missing, as expected:
+
+    perlbrew use perl-5.18.4
+    tldr perl  #=> error: command not found
+
+It would be nice if C<tldr> can be made universonally available. One way to mitigate such needs is to prepare install the C<tldr> program outside of C<PERLBREW_ROOT>, while still utilize perlbrew environment to run it.
+
+For example, prepare a conventional directory C<~/.local/bin> and put that in C<PATH>, then:
+
+    perlbrew use perl-5.36.1
+
+    cd /tmp
+    perlbrew make-shim tldr
+    mv /tmp/tldr ~/.local/bin/tldr
+
+This C<~/.local/bin/tldr> is a shell-wrapper of the actual C<tldr> program, and it internally uses C<perl-5.36.1> environment. No matter what current perlbrew environment is. It will also work even if perlbrew is turned off. The only requirements is that the perlbrew environment C<perl-5.36.1> and the installation of C<App::tldr> has to remain.
+
 =head1 SEE ALSO
 
 L<App::perlbrew>, L<App::cpanminus>, L<Devel::PatchPerl>
