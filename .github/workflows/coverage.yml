@@ -13,7 +13,6 @@ jobs:
     container:
       image: perl:stable-slim
     steps:
-    container:
       - uses: actions/checkout@v2
       - run: cpanm --quiet --notest --installdeps .
       - run: cpanm --quiet --notest App::Yath Devel::Cover Devel::Cover::Report::Coveralls
