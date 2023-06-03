@@ -647,7 +647,7 @@ sub run_command_available {
     my @installed  = $self->installed_perls(@_);
     my $is_verbose = $self->{verbose};
 
-    my @sections = ( ['perl', 'available_perl_distributions'], ['cperl', 'available_cperl_distributions'], );
+    my @sections = ( ['perl', 'available_perl_distributions'] );
 
     for (@sections) {
         my ( $header, $method ) = @$_;
@@ -690,7 +690,7 @@ sub run_command_available {
 
 sub available_perls {
     my ($self) = @_;
-    my %dists = ( %{ $self->available_perl_distributions }, %{ $self->available_cperl_distributions }, );
+    my %dists = ( %{ $self->available_perl_distributions } );
     return $self->sort_perl_versions( keys %dists );
 }
 
@@ -720,30 +720,6 @@ sub available_perl_distributions {
     }
 
     return $perls;
-}
-
-# -> Map[ NameVersion =>  URL ]
-sub available_cperl_distributions {
-    my ($self) = @_;
-    my %dist;
-
-    # cperl releases: https://github.com/perl11/cperl/tags
-    my $cperl_remote           = 'https://github.com';
-    my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/releases';
-
-    my $html = http_get($url_cperl_release_list);
-
-    unless ($html) {
-        die "\nERROR: Unable to retrieve the list of cperl releases from ${url_cperl_release_list}\n";
-    }
-
-    if ($html) {
-        while ( $html =~ m{href="(/perl11/cperl/releases/download/cperl-(5.+?)/cperl-.+?\.tar\.gz)"}g ) {
-            $dist{"cperl-$2"} = $cperl_remote . $1;
-        }
-    }
-
-    return \%dist;
 }
 
 # $perllist is an arrayref of arrayrefs.  The inner arrayrefs are of the
@@ -822,24 +798,6 @@ sub perl_release {
     return ( $dist_tarball, $dist_tarball_url );
 }
 
-sub cperl_release {
-    my ( $self, $version ) = @_;
-    my %url = (
-        "5.22.3"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
-        "5.22.2"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
-        "5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
-    );
-
-    # my %digest => {
-    #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
-    #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
-    # };
-
-    my $dist_tarball_url = $url{$version} or die "ERROR: Cannot find the tarball for cperl-$version\n";
-    my $dist_tarball     = "cperl-${version}.tar.gz";
-    return ( $dist_tarball, $dist_tarball_url );
-}
-
 sub release_detail_perl_local {
     my ( $self, $dist, $rd ) = @_;
     $rd ||= {};
@@ -904,56 +862,11 @@ sub release_detail_perl_remote {
     return ( $error, $rd );
 }
 
-sub release_detail_cperl_local {
-    my ( $self, $dist, $rd ) = @_;
-    $rd ||= {};
-    my %url = (
-        "cperl-5.22.3"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
-        "cperl-5.22.2"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
-        "cperl-5.24.0-RC1" =>
-            "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
-        "cperl-5.24.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.24.2.tar.gz",
-        "cperl-5.25.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.25.2.tar.gz",
-        "cperl-5.26.4" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.4/cperl-5.26.4.tar.gz",
-        "cperl-5.26.5" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.5/cperl-5.26.5.tar.gz",
-        "cperl-5.28.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.28.2/cperl-5.28.2.tar.gz",
-        "cperl-5.29.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.0/cperl-5.29.0.tar.gz",
-        "cperl-5.29.1" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.1/cperl-5.29.1.tar.gz",
-        "cperl-5.30.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.30.0/cperl-5.30.0.tar.gz",
-    );
-
-    my $error = 1;
-    if ( my $u = $url{$dist} ) {
-        $rd->{tarball_name} = "${dist}.tar.gz";
-        $rd->{tarball_url}  = $u;
-        $error              = 0;
-    }
-    return ( $error, $rd );
-}
-
-sub release_detail_cperl_remote {
-    my ( $self, $dist, $rd ) = @_;
-    $rd ||= {};
-
-    my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
-    my $error       = 1;
-
-    my $html = eval { http_get( 'https://github.com/perl11/cperl/releases/tag/' . $dist ); } || "";
-
-    if ( $html =~ m{ <a \s+ href="($expect_href)" }xsi ) {
-        $rd->{tarball_name} = "${dist}.tar.gz";
-        $rd->{tarball_url}  = "https://github.com" . $1;
-        $error              = 0;
-    }
-
-    return ( $error, $rd );
-}
-
 sub release_detail {
     my ( $self, $dist ) = @_;
     my ( $dist_type, $dist_version );
 
-    ( $dist_type, $dist_version ) = $dist =~ /^ (?: (c?perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
+    ( $dist_type, $dist_version ) = $dist =~ /^ (?: (perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
     $dist_type = "perl" if $dist_version && !$dist_type;
 
     my $rd = {
@@ -963,9 +876,13 @@ sub release_detail {
         tarball_name => undef,
     };
 
-# dynamic methods: release_detail_perl_local, release_detail_cperl_local, release_detail_perl_remote, release_detail_cperl_remote
+    # dynamic methods: release_detail_perl_local, release_detail_perl_remote
     my $m_local  = "release_detail_${dist_type}_local";
     my $m_remote = "release_detail_${dist_type}_remote";
+
+    unless ($self->can($m_local) && $self->can($m_remote)) {
+        die "ERROR: Unknown dist type: $dist_type\n";
+    }
 
     my ($error) = $self->$m_local( $dist, $rd );
     ($error) = $self->$m_remote( $dist, $rd ) if $error;
