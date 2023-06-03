@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        perl: [ '5.10', '5.12' ]
+        perl: ['5.12', '5.14']
     container:
       image: perl:${{ matrix.perl }}
     name: Perl ${{ matrix.perl }}
@@ -51,11 +51,14 @@ jobs:
       - run: cpanm --quite --notest App::Prove
       - run: prove -lrv t
 
-  prove5_8_9:
+  prove_legacy:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        perl: ['5.8', '5.10']
     container:
-      image: perl:5.8.9
-    name: Perl 5.8.9
+      image: perl:${{ matrix.perl }}
+    name: Perl ${{ matrix.perl }}
     steps:
       - uses: actions/checkout@v2
       - run: perl -V
