@@ -2734,7 +2734,7 @@ sub run_command_make_shim {
     }
 
     my $current_env = $self->current_env
-        or die "ERROR: perlbrew is current off. make-shim requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-shim\n";
+        or die "ERROR: perlbrew is not activated. make-shim requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-shim\n";
 
     my %env = $self->perlbrew_env( $current_env );
 
