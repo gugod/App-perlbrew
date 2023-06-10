@@ -40,6 +40,11 @@ describe "App::perlbrew->make_shim('foo')" => sub {
             my $app = App::perlbrew->new("make-shim", "foo");
             $app->run();
         } qr(^ERROR:);
+
+        throws_ok {
+            my $app = App::perlbrew->new("make-shim", "-o", "foo", "bar");
+           $app->run();
+        } qr(^ERROR:);
     };
 
     it "should produce 'foo' in the current dir" => sub {
@@ -48,6 +53,19 @@ describe "App::perlbrew->make_shim('foo')" => sub {
         chdir($dir);
 
         my $app = App::perlbrew->new("make-shim", "foo");
+        $app->run();
+
+        ok -f "foo", "foo is produced under current directory.";
+        my $shim_content = io("foo")->slurp;
+        diag "\nThe content of shim:\n----\n$shim_content\n----\n";
+    };
+
+    it "should produce 'foo' in the current dir" => sub {
+        mock_perlbrew_use("perl-5.36.1");
+        my $dir = tempdir();
+        chdir($dir);
+
+        my $app = App::perlbrew->new("make-shim", "-o", "foo", "bar");
         $app->run();
 
         ok -f "foo", "foo is produced under current directory.";
