@@ -188,6 +188,7 @@ sub parse_cmdline {
         'notest|n',
         'quiet|q',
         'verbose|v',
+        'output|o=s',
         'as=s',
         'append=s',
         'help|h',
@@ -2729,7 +2730,9 @@ sub run_command_info {
 sub run_command_make_shim {
     my ($self, $program) = @_;
 
-    if (-f $program) {
+    my $output = $self->{output} || $program;
+
+    if (-f $output) {
         die "ERROR: $program already exists under current directory.\n";
     }
 
@@ -2750,13 +2753,13 @@ sub run_command_make_shim {
         "\n"
     );
 
-    open my $fh, ">", "$program" or die $!;
+    open my $fh, ">", "$output" or die $!;
     print $fh $shim;
     close $fh;
-    chmod 0755, $program;
+    chmod 0755, $output;
 
     if ( $self->{verbose} ) {
-        print "A shim of $program is made.\n";
+        print "The shim $output is made.\n";
     }
 }
 
