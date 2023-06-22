@@ -14,8 +14,7 @@ jobs:
         with:
           args: |
             bash -c "
-              cpanm --quiet --notest App::ModuleBuildTiny
-              mbtiny dist
+              ls -al
               echo ./App-perlbrew-*.tar.gz
             "
       - run: cpanm --verbose ./App-perlbrew-*.tar.gz
