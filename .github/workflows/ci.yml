@@ -3,12 +3,13 @@ name: CI
 on: pull_request
 
 jobs:
-  DistThenTest:
+  TestDist:
     runs-on: ubuntu-latest
-    name: mbtiny on perl 5.36
+    name: Test the dist
     steps:
       - uses: actions/checkout@v2
-      - uses: docker://docker.io/library/perl:5.36
+      - name: mbtiny dist
+        uses: docker://docker.io/library/perl:5.36
         with:
           args: |
             bash -c "
@@ -16,15 +17,19 @@ jobs:
               mbtiny dist
               echo ./App-perlbrew-*.tar.gz
             "
-      - uses: docker://docker.io/library/perl:5.36
+      - name: install on perl 5.36
+        uses: docker://docker.io/library/perl:5.36
         with:
           args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
-      - uses: docker://docker.io/library/perl:5.34
+      - name: install on perl 5.34
+        uses: docker://docker.io/library/perl:5.34
         with:
           args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
-      - uses: docker://docker.io/library/perl:5.14
+      - name: install on perl 5.14
+        uses: docker://docker.io/library/perl:5.14
         with:
           args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
-      - uses: docker://docker.io/library/perl:5.12
+      - name: install on perl 5.12
+        uses: docker://docker.io/library/perl:5.12
         with:
           args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
