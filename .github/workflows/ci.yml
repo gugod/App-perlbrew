@@ -10,10 +10,11 @@ jobs:
     name: mbtiny on perl 5.36
     steps:
       - uses: actions/checkout@v2
-      - run: cpanm --quiet --notest App::ModuleBuildTiny
-      - run: cpanm --quiet --notest --installdeps .
-      - run: mbtiny dist
-      - run: echo ./App-perlbrew-*.tar.gz
+      - uses: docker://docker.io/library/perl:5.36
+        run: |
+          cpanm --quiet --notest App::ModuleBuildTiny
+          mbtiny dist
+          echo ./App-perlbrew-*.tar.gz
       - run: cpanm --verbose ./App-perlbrew-*.tar.gz
 
   yath:
