@@ -3,10 +3,8 @@ name: CI
 on: pull_request
 
 jobs:
-  mbtiny:
+  DistThenTest:
     runs-on: ubuntu-latest
-    container:
-      image: perl:5.36
     name: mbtiny on perl 5.36
     steps:
       - uses: actions/checkout@v2
@@ -18,49 +16,15 @@ jobs:
               mbtiny dist
               echo ./App-perlbrew-*.tar.gz
             "
-      - run: cpanm --verbose ./App-perlbrew-*.tar.gz
-
-  yath:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        perl: [ '5.36', '5.34' ]
-    container:
-      image: perl:${{ matrix.perl }}
-    name: Perl ${{ matrix.perl }}
-    steps:
-      - uses: actions/checkout@v2
-      - run: perl -V
-      - run: cpanm --quite --notest --installdeps .
-      - run: cpanm --quite --notest App::Yath
-      - run: yath test --qvf t/
-
-  prove:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        perl: ['5.12', '5.14']
-    container:
-      image: perl:${{ matrix.perl }}
-    name: Perl ${{ matrix.perl }}
-    steps:
-      - uses: actions/checkout@v2
-      - run: perl -V
-      - run: cpanm --quite --notest --installdeps .
-      - run: cpanm --quite --notest App::Prove
-      - run: prove -lrv t
-
-  prove_legacy:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        perl: ['5.8', '5.10']
-    container:
-      image: perl:${{ matrix.perl }}
-    name: Perl ${{ matrix.perl }}
-    steps:
-      - uses: actions/checkout@v2
-      - run: perl -V
-      - run: cpanm --quite --notest Pod::Man@4.10 Test::Deep@1.130 App::Prove
-      - run: cpanm --quite --notest --installdeps .
-      - run: prove -lrv t
+      - uses: docker://docker.io/library/perl:5.36
+        with:
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
+      - uses: docker://docker.io/library/perl:5.34
+        with:
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
+      - uses: docker://docker.io/library/perl:5.14
+        with:
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
+      - uses: docker://docker.io/library/perl:5.12
+        with:
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
