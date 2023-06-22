@@ -11,10 +11,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: docker://docker.io/library/perl:5.36
-        run: |
-          cpanm --quiet --notest App::ModuleBuildTiny
-          mbtiny dist
-          echo ./App-perlbrew-*.tar.gz
+        with:
+          args: |
+            bash -c "
+              cpanm --quiet --notest App::ModuleBuildTiny
+              mbtiny dist
+              echo ./App-perlbrew-*.tar.gz
+            "
       - run: cpanm --verbose ./App-perlbrew-*.tar.gz
 
   yath:
