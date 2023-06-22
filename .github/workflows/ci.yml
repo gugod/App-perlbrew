@@ -3,6 +3,19 @@ name: CI
 on: pull_request
 
 jobs:
+  mbtiny:
+    runs-on: ubuntu-latest
+    container:
+      image: perl:5.36
+    name: mbtiny on perl 5.36
+    steps:
+      - uses: actions/checkout@v2
+      - run: cpanm --quiet --notest App::ModuleBuildTiny
+      - run: cpanm --quiet --notest --installdeps .
+      - run: mbtiny dist
+      - run: echo ./App-perlbrew-*.tar.gz
+      - run: cpanm --verbose ./App-perlbrew-*.tar.gz
+
   yath:
     runs-on: ubuntu-latest
     strategy:
