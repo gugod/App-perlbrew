@@ -1,4 +1,5 @@
 {
+    "name" : "App-perlbrew",
     "x_static_install": true,
     "resources": {
         "bugtracker": {
