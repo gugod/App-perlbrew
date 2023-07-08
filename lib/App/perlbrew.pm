@@ -2730,6 +2730,11 @@ sub run_command_info {
 sub run_command_make_shim {
     my ($self, $program) = @_;
 
+    unless ($program) {
+        $self->run_command_help("make-shim");
+        return;
+    }
+
     my $output = $self->{output} || $program;
 
     if (-f $output) {
