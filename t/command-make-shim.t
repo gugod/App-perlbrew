@@ -5,7 +5,6 @@ use Test::Spec;
 use Test::Exception;
 use File::Temp qw( tempdir );
 
-
 use FindBin;
 use lib $FindBin::Bin;
 
@@ -14,6 +13,17 @@ require "test_helpers.pl";
 
 mock_perlbrew_install("perl-5.36.1");
 
+describe "App::perlbrew->make_shim()" => sub {
+    it "should show usage", sub {
+        mock_perlbrew_use("perl-5.36.1");
+
+        lives_ok {
+            my $app = App::perlbrew->new("make-shim");
+            $app->expects("run_command_help")->returns("")->at_least_once;
+            $app->run;
+        };
+    };
+};
 
 describe "App::perlbrew->make_shim('foo')" => sub {
     it "should err when perlbrew is off" => sub {
