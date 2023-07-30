@@ -68,7 +68,7 @@ sub http_user_agent_command {
     my $ua = http_user_agent_program;
     my $cmd = $commands{ $ua }->{ $purpose };
     for (keys %$params) {
-        $cmd =~ s!{$_}!$params->{$_}!g;
+        $cmd =~ s!{$_}!\Q$params->{$_}\E!g;
     }
 
     if ($HTTP_VERBOSE) {
