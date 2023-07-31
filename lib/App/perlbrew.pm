@@ -706,11 +706,8 @@ sub available_perl_distributions {
     # and we do our own processing to filter out the development
     # releases and minor versions when needed (using
     # filter_perl_available)
-    my $url  = 'https://fastapi.metacpan.org/v1/release/versions/perl';
-    my $json = http_get( $url, undef, undef );
-    unless ($json) {
-        die "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
-    }
+    my $json = http_get('https://fastapi.metacpan.org/v1/release/versions/perl')
+        or die "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
 
     my $decoded = decode_json($json);
     for my $release ( @{ $decoded->{releases} } ) {
@@ -784,7 +781,7 @@ sub perl_release {
         }
     }
 
-    my $json = http_get("'https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}'");
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
     my $result;
     unless ( $json and $result = decode_json($json)->{hits}{hits}[0] ) {
@@ -843,7 +840,7 @@ sub release_detail_perl_remote {
         }
     }
 
-    my $json = http_get("'https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}'");
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
     my $result;
     unless ( $json and $result = decode_json($json)->{hits}{hits}[0] ) {
@@ -1646,7 +1643,8 @@ sub do_install_program_from_url {
         }
     }
 
-    my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
+    my $body = http_get($url)
+        or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
 
     unless ( $body =~ m{\A#!/}s ) {
         my $x = App::Perlbrew::Path->new( $self->env('TMPDIR') || "/tmp", "${program_name}.downloaded.$$" );
