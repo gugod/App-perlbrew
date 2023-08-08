@@ -2766,6 +2766,16 @@ sub run_command_make_shim {
     }
 }
 
+sub run_command_make_pp {
+    my ($self, $program) = @_;
+
+    unless ($program) {
+        $self->run_command_help("make-pp");
+        return;
+    }
+}
+
+
 sub BASHRC_CONTENT() {
     return
           "export PERLBREW_SHELLRC_VERSION=$VERSION\n"
