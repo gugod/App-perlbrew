@@ -702,8 +702,8 @@ The produced file is a standalone binary executable containing these content:
     1. The named program
     2. perl runtime
     3. all core perl libs of current perl
-    4. If an perlbrew lib is active, the entirety of it.
-    5. Otherwise, the entire site_lib of current perl.
+    4. the entire site lib
+    5. the entire local lib (managed by `perlbrew lib` command), if active.
 
 It is expected that the output can then be running on a different machine of the same OS and arch.
 
