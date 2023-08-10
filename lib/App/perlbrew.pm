@@ -2773,6 +2773,66 @@ sub run_command_make_pp {
         $self->run_command_help("make-pp");
         return;
     }
+
+    my $current_env = $self->current_env
+        or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
+
+    my $output = $self->{output} || $program;
+
+    if (-f $output) {
+        die "ERROR: $program already exists under current directory.\n";
+    }
+
+    my $path_program = $self->whereis_in_env($program, $current_env)
+        or die "ERROR: $program cannot be found in $current_env";
+    my $path_pp = $self->whereis_in_env("pp", $current_env)
+            or die "ERROR: pp cannot be found in $current_env";
+
+
+    my $sitelib = $self->do_capture(
+        $self->installed_perl_executable( $self->current_perl ),
+        "-MConfig",
+        "-e",
+        'print $Config{sitelibexp}',
+    );
+
+    my $locallib;
+    if ($self->current_lib) {
+        require local::lib;
+        my ($current_lib) = grep { $_->{is_current} } $self->local_libs();
+        my @llpaths = sort { length($a) <=> length($b) }
+            local::lib->lib_paths_for( $current_lib->{dir} );
+        $locallib = $llpaths[0];
+    }
+
+    my $perlversion = $self->do_capture(
+        $self->installed_perl_executable( $self->current_perl ),
+        "-MConfig",
+        "-e",
+        'print $Config{version}',
+    );
+
+    my @cmd = (
+        $path_pp,
+        "-B", # core modules
+        "-a", "$sitelib;$perlversion",
+        ($locallib ? ("-a", "$locallib;$perlversion") : ()),
+        "-z", "9",
+        "-o", $output,
+        $path_program,
+    );
+
+    $self->do_system(@cmd);
+}
+
+sub whereis_in_env {
+    my ($self, $program, $env) = @_;
+    my %env = $self->perlbrew_env( $env );
+    my @paths = split /:/, $env{PERLBREW_PATH};
+
+    my ($path) = grep { -x $_ } map { App::Perlbrew::Path->new($_, $program) } @paths;
+
+    return $path;
 }
 
 
