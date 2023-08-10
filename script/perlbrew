@@ -705,10 +705,9 @@ The produced file is a standalone binary executable containing these content:
     4. the entire site lib
     5. the entire local lib (managed by `perlbrew lib` command), if active.
 
-It is expected that the output can then be running on a different machine of the same OS and arch.
+It is expected that the executable can then be running on a different machine of the same OS and arch.
 
-This approach is the maximum overkill for packing one program as it'll be definitely packaing a lot more then the exact list of runtime dependencies of the named program. However, it saves all mental hassle by wasting some amount of disk spaces.
-
+Noted that this approach is the maximum overkill for packing one program as it'll be definitely packaing a lot more then the exact list of runtime dependencies of the named program. C<make-pp> is meant for a lazy solution for a non-trivial problem of perfectly determing the runtime dependencies of an arbitarary program.
 
 =head1 SEE ALSO
 
