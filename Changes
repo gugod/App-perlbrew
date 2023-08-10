@@ -1,6 +1,7 @@
 	- New command: make-shim. Github PR #776.
 	- Remove the support of cperl from `available` and `install` command. Github PR: #777. cperl can still be installed by specifying the tarball, just not by their short names.
         - new command: make-shim. Github PR: #779.
+        - new command: make-pp.
 
 0.97
 	- Released at 2023-05-12T22:33:42+0900
