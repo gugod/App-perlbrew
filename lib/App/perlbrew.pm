@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.97";
+our $VERSION = "0.98";
 use Config qw( %Config );
 
 BEGIN {
@@ -188,6 +188,7 @@ sub parse_cmdline {
         'notest|n',
         'quiet|q',
         'verbose|v',
+        'output|o=s',
         'as=s',
         'append=s',
         'help|h',
@@ -647,7 +648,7 @@ sub run_command_available {
     my @installed  = $self->installed_perls(@_);
     my $is_verbose = $self->{verbose};
 
-    my @sections = ( ['perl', 'available_perl_distributions'], ['cperl', 'available_cperl_distributions'], );
+    my @sections = ( ['perl', 'available_perl_distributions'] );
 
     for (@sections) {
         my ( $header, $method ) = @$_;
@@ -690,7 +691,7 @@ sub run_command_available {
 
 sub available_perls {
     my ($self) = @_;
-    my %dists = ( %{ $self->available_perl_distributions }, %{ $self->available_cperl_distributions }, );
+    my %dists = ( %{ $self->available_perl_distributions } );
     return $self->sort_perl_versions( keys %dists );
 }
 
@@ -705,11 +706,8 @@ sub available_perl_distributions {
     # and we do our own processing to filter out the development
     # releases and minor versions when needed (using
     # filter_perl_available)
-    my $url  = 'https://fastapi.metacpan.org/v1/release/versions/perl';
-    my $json = http_get( $url, undef, undef );
-    unless ($json) {
-        die "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
-    }
+    my $json = http_get('https://fastapi.metacpan.org/v1/release/versions/perl')
+        or die "\nERROR: Unable to retrieve list of perls from Metacpan.\n\n";
 
     my $decoded = decode_json($json);
     for my $release ( @{ $decoded->{releases} } ) {
@@ -720,30 +718,6 @@ sub available_perl_distributions {
     }
 
     return $perls;
-}
-
-# -> Map[ NameVersion =>  URL ]
-sub available_cperl_distributions {
-    my ($self) = @_;
-    my %dist;
-
-    # cperl releases: https://github.com/perl11/cperl/tags
-    my $cperl_remote           = 'https://github.com';
-    my $url_cperl_release_list = $cperl_remote . '/perl11/cperl/releases';
-
-    my $html = http_get($url_cperl_release_list);
-
-    unless ($html) {
-        die "\nERROR: Unable to retrieve the list of cperl releases from ${url_cperl_release_list}\n";
-    }
-
-    if ($html) {
-        while ( $html =~ m{href="(/perl11/cperl/releases/download/cperl-(5.+?)/cperl-.+?\.tar\.gz)"}g ) {
-            $dist{"cperl-$2"} = $cperl_remote . $1;
-        }
-    }
-
-    return \%dist;
 }
 
 # $perllist is an arrayref of arrayrefs.  The inner arrayrefs are of the
@@ -807,7 +781,7 @@ sub perl_release {
         }
     }
 
-    my $json = http_get("'https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}'");
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
     my $result;
     unless ( $json and $result = decode_json($json)->{hits}{hits}[0] ) {
@@ -819,24 +793,6 @@ sub perl_release {
     die "ERROR: Cannot find the tarball for perl-$version\n"
         if !$dist_path and !$dist_tarball;
     my $dist_tarball_url = "https://cpan.metacpan.org${dist_path}";
-    return ( $dist_tarball, $dist_tarball_url );
-}
-
-sub cperl_release {
-    my ( $self, $version ) = @_;
-    my %url = (
-        "5.22.3"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
-        "5.22.2"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
-        "5.24.0-RC1" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
-    );
-
-    # my %digest => {
-    #     "5.22.3" => "bcf494a6b12643fa5e803f8e0d9cef26312b88fc",
-    #     "5.22.2" => "8615964b0a519cf70d69a155b497de98e6a500d0",
-    # };
-
-    my $dist_tarball_url = $url{$version} or die "ERROR: Cannot find the tarball for cperl-$version\n";
-    my $dist_tarball     = "cperl-${version}.tar.gz";
     return ( $dist_tarball, $dist_tarball_url );
 }
 
@@ -884,7 +840,7 @@ sub release_detail_perl_remote {
         }
     }
 
-    my $json = http_get("'https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}'");
+    my $json = http_get("https://fastapi.metacpan.org/v1/release/_search?size=1&q=name:perl-${version}");
 
     my $result;
     unless ( $json and $result = decode_json($json)->{hits}{hits}[0] ) {
@@ -904,56 +860,11 @@ sub release_detail_perl_remote {
     return ( $error, $rd );
 }
 
-sub release_detail_cperl_local {
-    my ( $self, $dist, $rd ) = @_;
-    $rd ||= {};
-    my %url = (
-        "cperl-5.22.3"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.3/cperl-5.22.3.tar.gz",
-        "cperl-5.22.2"     => "https://github.com/perl11/cperl/releases/download/cperl-5.22.2/cperl-5.22.2.tar.gz",
-        "cperl-5.24.0-RC1" =>
-            "https://github.com/perl11/cperl/releases/download/cperl-5.24.0-RC1/cperl-5.24.0-RC1.tar.gz",
-        "cperl-5.24.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.24.2.tar.gz",
-        "cperl-5.25.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.24.2/cperl-5.25.2.tar.gz",
-        "cperl-5.26.4" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.4/cperl-5.26.4.tar.gz",
-        "cperl-5.26.5" => "https://github.com/perl11/cperl/releases/download/cperl-5.26.5/cperl-5.26.5.tar.gz",
-        "cperl-5.28.2" => "https://github.com/perl11/cperl/releases/download/cperl-5.28.2/cperl-5.28.2.tar.gz",
-        "cperl-5.29.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.0/cperl-5.29.0.tar.gz",
-        "cperl-5.29.1" => "https://github.com/perl11/cperl/releases/download/cperl-5.29.1/cperl-5.29.1.tar.gz",
-        "cperl-5.30.0" => "https://github.com/perl11/cperl/releases/download/cperl-5.30.0/cperl-5.30.0.tar.gz",
-    );
-
-    my $error = 1;
-    if ( my $u = $url{$dist} ) {
-        $rd->{tarball_name} = "${dist}.tar.gz";
-        $rd->{tarball_url}  = $u;
-        $error              = 0;
-    }
-    return ( $error, $rd );
-}
-
-sub release_detail_cperl_remote {
-    my ( $self, $dist, $rd ) = @_;
-    $rd ||= {};
-
-    my $expect_href = "/perl11/cperl/releases/download/${dist}/${dist}.tar.gz";
-    my $error       = 1;
-
-    my $html = eval { http_get( 'https://github.com/perl11/cperl/releases/tag/' . $dist ); } || "";
-
-    if ( $html =~ m{ <a \s+ href="($expect_href)" }xsi ) {
-        $rd->{tarball_name} = "${dist}.tar.gz";
-        $rd->{tarball_url}  = "https://github.com" . $1;
-        $error              = 0;
-    }
-
-    return ( $error, $rd );
-}
-
 sub release_detail {
     my ( $self, $dist ) = @_;
     my ( $dist_type, $dist_version );
 
-    ( $dist_type, $dist_version ) = $dist =~ /^ (?: (c?perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
+    ( $dist_type, $dist_version ) = $dist =~ /^ (?: (perl) -? )? ( [\d._]+ (?:-RC\d+)? |git|stable|blead)$/x;
     $dist_type = "perl" if $dist_version && !$dist_type;
 
     my $rd = {
@@ -963,9 +874,13 @@ sub release_detail {
         tarball_name => undef,
     };
 
-# dynamic methods: release_detail_perl_local, release_detail_cperl_local, release_detail_perl_remote, release_detail_cperl_remote
+    # dynamic methods: release_detail_perl_local, release_detail_perl_remote
     my $m_local  = "release_detail_${dist_type}_local";
     my $m_remote = "release_detail_${dist_type}_remote";
+
+    unless ($self->can($m_local) && $self->can($m_remote)) {
+        die "ERROR: Unknown dist type: $dist_type\n";
+    }
 
     my ($error) = $self->$m_local( $dist, $rd );
     ($error) = $self->$m_remote( $dist, $rd ) if $error;
@@ -1728,7 +1643,8 @@ sub do_install_program_from_url {
         }
     }
 
-    my $body = http_get($url) or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
+    my $body = http_get($url)
+        or die "\nERROR: Failed to retrieve $program_name executable.\n\n";
 
     unless ( $body =~ m{\A#!/}s ) {
         my $x = App::Perlbrew::Path->new( $self->env('TMPDIR') || "/tmp", "${program_name}.downloaded.$$" );
@@ -2133,10 +2049,9 @@ sub run_command_switch_off {
         "To immediately make it effective, run this line in this terminal:\n\n    exec @{[ $self->env('SHELL') ]}\n\n";
 }
 
-sub run_command_env {
-    my ( $self, $name ) = @_;
-
-    my %env = $self->perlbrew_env($name);
+sub shell_env {
+    my ( $self, $env ) = @_;
+    my %env = %$env;
 
     my @statements;
     for my $k ( sort keys %env ) {
@@ -2150,15 +2065,17 @@ sub run_command_env {
         }
     }
 
+    my $statements = "";
+
     if ( $self->env('SHELL') =~ /(ba|k|z|\/)sh\d?$/ ) {
         for (@statements) {
             my ( $o, $k, $v ) = @$_;
             if ( $o eq 'unset' ) {
-                print "unset $k\n";
+                $statements .= "unset $k\n";
             }
             else {
                 $v =~ s/(\\")/\\$1/g;
-                print "export $k=\"$v\"\n";
+                $statements .= "export $k=\"$v\"\n";
             }
         }
     }
@@ -2166,13 +2083,21 @@ sub run_command_env {
         for (@statements) {
             my ( $o, $k, $v ) = @$_;
             if ( $o eq 'unset' ) {
-                print "unsetenv $k\n";
+                $statements .= "unsetenv $k\n";
             }
             else {
-                print "setenv $k \"$v\"\n";
+                $statements .= "setenv $k \"$v\"\n";
             }
         }
     }
+
+    return $statements;
+}
+
+sub run_command_env {
+    my ( $self, $name ) = @_;
+
+    print $self->shell_env({ $self->perlbrew_env($name) });
 }
 
 sub run_command_symlink_executables {
@@ -2799,6 +2724,117 @@ sub run_command_info {
     my ($self) = shift;
     print $self->format_info_output(@_);
 }
+
+sub run_command_make_shim {
+    my ($self, $program) = @_;
+
+    unless ($program) {
+        $self->run_command_help("make-shim");
+        return;
+    }
+
+    my $output = $self->{output} || $program;
+
+    if (-f $output) {
+        die "ERROR: $program already exists under current directory.\n";
+    }
+
+    my $current_env = $self->current_env
+        or die "ERROR: perlbrew is not activated. make-shim requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-shim\n";
+
+    my %env = $self->perlbrew_env( $current_env );
+
+    my $shebang = '#!' . $self->env('SHELL');
+    my $preemble = $self->shell_env(\%env);
+    my $path = $self->shell_env({ PATH => $env{"PERLBREW_PATH"} . ":" . $self->env("PATH") });
+    my $shim = join(
+        "\n",
+        $shebang,
+        $preemble,
+        $path,
+        'exec ' . $program . ' "$@"',
+        "\n"
+    );
+
+    open my $fh, ">", "$output" or die $!;
+    print $fh $shim;
+    close $fh;
+    chmod 0755, $output;
+
+    if ( $self->{verbose} ) {
+        print "The shim $output is made.\n";
+    }
+}
+
+sub run_command_make_pp {
+    my ($self, $program) = @_;
+
+    unless ($program) {
+        $self->run_command_help("make-pp");
+        return;
+    }
+
+    my $current_env = $self->current_env
+        or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
+
+    my $output = $self->{output} || $program;
+
+    if (-f $output) {
+        die "ERROR: $program already exists under current directory.\n";
+    }
+
+    my $path_program = $self->whereis_in_env($program, $current_env)
+        or die "ERROR: $program cannot be found in $current_env";
+    my $path_pp = $self->whereis_in_env("pp", $current_env)
+            or die "ERROR: pp cannot be found in $current_env";
+
+
+    my $sitelib = $self->do_capture(
+        $self->installed_perl_executable( $self->current_perl ),
+        "-MConfig",
+        "-e",
+        'print $Config{sitelibexp}',
+    );
+
+    my $locallib;
+    if ($self->current_lib) {
+        require local::lib;
+        my ($current_lib) = grep { $_->{is_current} } $self->local_libs();
+        my @llpaths = sort { length($a) <=> length($b) }
+            local::lib->lib_paths_for( $current_lib->{dir} );
+        $locallib = $llpaths[0];
+    }
+
+    my $perlversion = $self->do_capture(
+        $self->installed_perl_executable( $self->current_perl ),
+        "-MConfig",
+        "-e",
+        'print $Config{version}',
+    );
+
+    my @cmd = (
+        $path_pp,
+        "-B", # core modules
+        "-a", "$sitelib;$perlversion",
+        ($locallib ? ("-a", "$locallib;$perlversion") : ()),
+        "-z", "9",
+        "-o", $output,
+        $path_program,
+    );
+
+    $self->do_system(@cmd);
+}
+
+sub whereis_in_env {
+    my ($self, $program, $env) = @_;
+    my %env = $self->perlbrew_env( $env );
+    my @paths = split /:/, $env{PERLBREW_PATH};
+
+    my ($path) = grep { -x $_ } map { App::Perlbrew::Path->new($_, $program) } @paths;
+
+    return $path;
+}
+
 
 sub BASHRC_CONTENT() {
     return

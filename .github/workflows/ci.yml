@@ -3,50 +3,33 @@ name: CI
 on: pull_request
 
 jobs:
-  lint:
+  TestDist:
     runs-on: ubuntu-latest
-    container:
-      image: perl:5.32
+    name: Test the dist
     steps:
       - uses: actions/checkout@v2
-      - uses: gugod/action-perlcritic@fun
+      - name: mbtiny dist
+        uses: docker://docker.io/library/perl:5.36
         with:
-          directory: "lib script t dev-bin"
-      - name: install perlnitpick
-        run: cpanm --notest --quiet App::PerlNitpick
-      - name: run perlnitpick
-        run: perlnitpick --inplace --rules=RemoveTrailingWhitespace,RemoveUnusedVariables,RemoveUnusedInclude,RemoveUnusedImport .
-      - name: suggester
-        uses: reviewdog/action-suggester@v1
+          args: |
+            bash -c "
+              cpanm --quiet --notest App::ModuleBuildTiny
+              mbtiny dist
+              echo ./App-perlbrew-*.tar.gz
+            "
+      - name: install on perl 5.36
+        uses: docker://docker.io/library/perl:5.36
         with:
-          tool_name: perlnitpick
-
-  yath:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        perl: [ '5.36', '5.34' ]
-    container:
-      image: perl:${{ matrix.perl }}
-    name: Perl ${{ matrix.perl }}
-    steps:
-      - uses: actions/checkout@v2
-      - run: perl -V
-      - run: cpanm --quite --notest --installdeps .
-      - run: cpanm --quite --notest App::Yath
-      - run: yath test --qvf t/
-
-  prove:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        perl: [ '5.8', '5.10' ]
-    container:
-      image: perl:${{ matrix.perl }}
-    name: Perl ${{ matrix.perl }}
-    steps:
-      - uses: actions/checkout@v2
-      - run: perl -V
-      - run: cpanm --quite --notest --installdeps .
-      - run: cpanm --quite --notest App::Prove
-      - run: prove -lrv t
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
+      - name: install on perl 5.34
+        uses: docker://docker.io/library/perl:5.34
+        with:
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
+      - name: install on perl 5.14
+        uses: docker://docker.io/library/perl:5.14
+        with:
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
+      - name: install on perl 5.12
+        uses: docker://docker.io/library/perl:5.12
+        with:
+          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"

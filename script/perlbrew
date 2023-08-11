@@ -186,8 +186,6 @@ The format of <perl-release> looks like:
 
 =item blead
 
-=item cperl-<version>
-
 =back
 
 Version numbers usually look like "5.x.xx", or "perl-5.xx.x-RCx" for
@@ -207,13 +205,6 @@ mirror site configured before.
 
 Version number alone without the "perl-" prefix means the official
 release provided by perl5 porters.
-
-The prefix "cperl" is a special release provided not by perl5 porters,
-but from the community. The cperl distributions are downloaded from:
-
-    https://github.com/perl11/cperl/releases
-
-See https://perl11.org/cperl/ for more information about cperl distribution.
 
 Options for C<install> command:
 
@@ -659,6 +650,64 @@ This command re-installs all CPAN modules found from one installation to another
 The argument "source" is optional and defaults to the currently activated one. However if none is activated (perlbrew is switched off), it it an error.
 
 Note that this does not guarantee that the versions of modules stay the same in the destination.
+
+=head1 COMMAND: MAKE-SHIM
+
+Usage:
+
+    perlbrew make-shim <program>
+    perlbrew make-shim -o <shim-name> <program>
+    perlbrew make-shim --output <shim-name> <program>
+
+This commands produce an executable file under current directory named C<program>, or C<shim-name> if given after C<--output> (or C<-o> for short). The output is a shell-wrapper, a shim, of the named program inside current perlbrew environment.
+
+When the shim is executed, the original C<program> is then executed with all relevant environment variable set to the perlbrew environment it is installed in, regardless which perlbrew environment is currently activated. The shim can also be moved to different directories and, such as the conventional C<~/.local/bin>, so it is always available.
+
+For example, you may find C<tldr> from L<App::tldr> a handy tool and decide to install it inside your daily working environment:
+
+    perlbrew use perl-5.36.1
+    cpm install -g App::tldr
+
+But when you occasionally have to switch to a different environment, C<PATH> would be tweaked and the command C<tldr> would went missing, and that is the expected outcome:
+
+    perlbrew use perl-5.18.4
+    tldr perl  #=> error: command not found
+
+It would be nice if C<tldr> can be made universally available. One way to mitigate such needs is to prepare install the C<tldr> program outside of C<PERLBREW_ROOT>, while still utilize perlbrew environment to run it.
+
+For example, prepare a conventional directory C<~/.local/bin> and put that in C<PATH>, then:
+
+    perlbrew use perl-5.36.1
+
+    cd /tmp
+    perlbrew make-shim tldr
+    mv /tmp/tldr ~/.local/bin/tldr
+
+This C<~/.local/bin/tldr> is a shell-wrapper of the actual C<tldr> program, and it internally activates the perlbrew environment C<perl-5.36.1>. Running the tldr shim will then always run the actual C<tldr>, no matter which perlbrew environment is activated, or even if perlbrew is turned off. The only requirements is that the perlbrew environment C<perl-5.36.1> and the installation of C<App::tldr> has to remain.
+
+=head1 COMMAND: MAKE-PP
+
+Usage:
+
+    perlbrew make-pp <program>
+    perlbrew make-pp -o <name> <program>
+    perlbrew make-pp --output <name> <program>
+
+This commands produce an executable file under current directory named C<program>, or C<name> if given after C<--output> (or C<-o> for short). The output is a PAR-packed version of the named program inside current perlbrew environment.
+
+This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if current perl is not a perlbrew-managed perl, <make-pp> also bails out.
+
+The produced file is a standalone binary executable containing these content:
+
+    1. The named program
+    2. perl runtime
+    3. all core perl libs of current perl
+    4. the entire site lib
+    5. the entire local lib (managed by `perlbrew lib` command), if active.
+
+It is expected that the executable can then be running on a different machine of the same OS and arch.
+
+Noted that this approach is the maximum overkill for packing one program as it'll be definitely packaing a lot more then the exact list of runtime dependencies of the named program. C<make-pp> is meant for a lazy solution for a non-trivial problem of perfectly determing the runtime dependencies of an arbitarary program.
 
 =head1 SEE ALSO
 
