@@ -37,9 +37,9 @@ provides:
     file: lib/App/Perlbrew/Util.pm
   App::perlbrew:
     file: lib/App/perlbrew.pm
-    version: '0.97'
+    version: '0.98'
 requires:
-  CPAN::Perl::Releases: '5.20230423'
+  CPAN::Perl::Releases: '5.20230720'
   Capture::Tiny: '0.48'
   Devel::PatchPerl: '2.08'
   ExtUtils::MakeMaker: '7.22'
@@ -51,7 +51,7 @@ requires:
 resources:
   bugtracker: https://github.com/gugod/App-perlbrew/issues
   repository: https://github.com/gugod/App-perlbrew.git
-version: '0.97'
+version: '0.98'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
 x_spdx_expression: MIT
 x_static_install: '1'
