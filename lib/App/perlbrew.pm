@@ -2802,10 +2802,9 @@ sub run_command_make_pp {
         'print $Config{sitelibexp}',
     );
 
-    my $privlib = $self->do_capture(
-        $self->installed_perl_executable( $self->current_perl ),
-        "-MConfig",
-        "-e",
+    my $privlib = $self->do_capture_current_perl(
+        '-MConfig',
+        '-e',
         'print $Config{privlibexp}',
     );
 
