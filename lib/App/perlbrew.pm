@@ -2802,6 +2802,12 @@ sub run_command_make_pp {
         'print $Config{sitelibexp}',
     );
 
+    my $privlib = $self->do_capture_current_perl(
+        '-MConfig',
+        '-e',
+        'print $Config{privlibexp}',
+    );
+
     my $locallib;
     if ($self->current_lib) {
         require local::lib;
@@ -2820,6 +2826,7 @@ sub run_command_make_pp {
     my @cmd = (
         $path_pp,
         "-B", # core modules
+        "-a", "$privlib;$perlversion",
         "-a", "$sitelib;$perlversion",
         ($locallib ? ("-a", "$locallib;$perlversion") : ()),
         "-z", "9",
