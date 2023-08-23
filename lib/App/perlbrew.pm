@@ -1697,6 +1697,14 @@ sub do_capture {
     );
 }
 
+sub do_capture_current_perl {
+    my ( $self, @cmd ) = @_;
+    return $self->do_capture(
+        $self->installed_perl_executable( $self->current_perl ),
+        @cmd,
+    );
+}
+
 sub format_perl_version {
     my $self    = shift;
     my $version = shift;
@@ -2714,7 +2722,7 @@ sub format_info_output {
         my $code =
 qq{eval "require $module" and do { (my \$f = "$module") =~ s<::></>g; \$f .= ".pm"; print "$module\n  Location: \$INC{\$f}\n  Version: " . ($module->VERSION ? $module->VERSION : "no VERSION specified" ) } or do { print "$module could not be found, is it installed?" } };
         $out .=
-            "\nModule: " . $self->do_capture( $self->installed_perl_executable( $self->current_perl ), "-le", $code );
+            "\nModule: " . $self->do_capture_current_perl( '-le', $code );
     }
 
     $out;
@@ -2788,11 +2796,9 @@ sub run_command_make_pp {
     my $path_pp = $self->whereis_in_env("pp", $current_env)
             or die "ERROR: pp cannot be found in $current_env";
 
-
-    my $sitelib = $self->do_capture(
-        $self->installed_perl_executable( $self->current_perl ),
-        "-MConfig",
-        "-e",
+    my $sitelib = $self->do_capture_current_perl(
+        '-MConfig',
+        '-e',
         'print $Config{sitelibexp}',
     );
 
@@ -2812,10 +2818,9 @@ sub run_command_make_pp {
         $locallib = $llpaths[0];
     }
 
-    my $perlversion = $self->do_capture(
-        $self->installed_perl_executable( $self->current_perl ),
-        "-MConfig",
-        "-e",
+    my $perlversion = $self->do_capture_current_perl(
+        '-MConfig',
+        '-e',
         'print $Config{version}',
     );
 
