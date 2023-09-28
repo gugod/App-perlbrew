@@ -10840,7 +10840,7 @@ This command re-installs all CPAN modules found from one installation to another
 
     perlbrew clone-modules 5.26.1 5.27.7
 
-The argument "source" is optional and defaults to the currently activated one. However if none is activated (perlbrew is switched off), it it an error.
+The argument "source" is optional and defaults to the currently activated one. However if none is activated (perlbrew is switched off), it is an error.
 
 Note that this does not guarantee that the versions of modules stay the same in the destination.
 
