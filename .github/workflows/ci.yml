@@ -8,11 +8,11 @@ jobs:
     container:
       image: perl:5.38
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: cpanm --quiet --notest App::ModuleBuildTiny
       - run: mbtiny dist
       - run: echo ./App-perlbrew-*.tar.gz
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: App-perlbrew-tarball
           path: ./App-perlbrew-*.tar.gz
@@ -22,13 +22,30 @@ jobs:
     needs: mbtiny-dist
     strategy:
       matrix:
-        version: ["5.38", "5.36", "5.18"]
+        version: ["5.38", "5.36", "5.34", "5.18"]
+    name: cpanm-dist-perl-${{ matrix.version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-setup-perl@v1.29.0
+        with:
+          perl-version: ${{ matrix.version }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: App-perlbrew-tarball
+      - run: echo ./App-perlbrew-*.tar.gz
+      - run: cpanm --verbose ./App-perlbrew-*.tar.gz
+
+  cpanm-dist-in-container:
+    needs: mbtiny-dist
+    strategy:
+      matrix:
+        version: ["5.39"]
     name: cpanm-dist-perl-${{ matrix.version }}
     runs-on: ubuntu-latest
     container:
       image: perl:${{ matrix.version }}
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-tarball
       - run: echo ./App-perlbrew-*.tar.gz
