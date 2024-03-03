@@ -8,11 +8,11 @@ jobs:
     container:
       image: perl:5.38
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - run: cpanm --quiet --notest App::ModuleBuildTiny
       - run: mbtiny dist
       - run: echo ./App-perlbrew-*.tar.gz
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: App-perlbrew-tarball
           path: ./App-perlbrew-*.tar.gz
@@ -28,7 +28,7 @@ jobs:
     container:
       image: perl:${{ matrix.version }}
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-tarball
       - run: echo ./App-perlbrew-*.tar.gz
