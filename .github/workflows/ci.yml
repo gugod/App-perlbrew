@@ -22,7 +22,7 @@ jobs:
     needs: mbtiny-dist
     strategy:
       matrix:
-        version: ["5.38", "5.36", "5.18"]
+        version: ["5.39", "5.38", "5.36", "5.34", "5.18"]
     name: cpanm-dist-perl-${{ matrix.version }}
     runs-on: ubuntu-latest
     container:
