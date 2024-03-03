@@ -25,9 +25,10 @@ jobs:
         version: ["5.39", "5.38", "5.36", "5.34", "5.18"]
     name: cpanm-dist-perl-${{ matrix.version }}
     runs-on: ubuntu-latest
-    container:
-      image: perl:${{ matrix.version }}
     steps:
+      - uses: shogo82148/actions-setup-perl@v1.29.0
+        with:
+          perl-version: ${{ matrix.version }}
       - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-tarball
