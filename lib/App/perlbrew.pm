@@ -711,6 +711,8 @@ sub available_perl_distributions {
 
     my $decoded = decode_json($json);
     for my $release ( @{ $decoded->{releases} } ) {
+        next
+            if !$release->{authorized};
         push @perllist, [$release->{name}, $release->{download_url}];
     }
     foreach my $perl ( $self->filter_perl_available( \@perllist ) ) {
