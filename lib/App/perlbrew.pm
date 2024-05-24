@@ -3433,6 +3433,11 @@ As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
 have the permission to perform perl installations.)
 
+If you need to install perlbrew using a Perl that isn't either C</usr/bin/perl>
+or C</usr/local/bin/perl>, set and export the environment variable
+C<PERLBREW_SYSTEM_PERL> and then install as described above. Note that you
+must not use a perlbrew-managed perl.
+
 You may also install perlbrew from CPAN:
 
     cpan App::perlbrew

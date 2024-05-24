@@ -1,6 +1,7 @@
 0.99
 	- Thanks to our contributors: Joelle Maslak
 	- bashrc executes properly in bash shells with +h option set
+	- Allow specification of non-standard Perl location
 
 0.98
 	- Released at 2023-08-11T22:54:38+0900
