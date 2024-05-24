@@ -2881,7 +2881,9 @@ __perlbrew_purify () {
 __perlbrew_set_path () {
     export MANPATH=${PERLBREW_MANPATH:-}${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath 2>/dev/null)")
     export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
-    hash -r
+    if [ -o hashall ] ; then
+        hash -r
+    fi
 }
 
 __perlbrew_set_env() {
