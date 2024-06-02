@@ -689,8 +689,6 @@ This C<~/.local/bin/tldr> is a shell-wrapper of the actual C<tldr> program, and 
 
 Usage:
 
-To produce a PAR-packed executable of program
-
     perlbrew make-pp -i <path> -o <path>
     perlbrew make-pp --input <path> --output <path>
 

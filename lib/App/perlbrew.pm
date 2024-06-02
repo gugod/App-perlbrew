@@ -188,6 +188,7 @@ sub parse_cmdline {
         'notest|n',
         'quiet|q',
         'verbose|v',
+        'input|i=s',
         'output|o=s',
         'as=s',
         'append=s',
@@ -2777,24 +2778,26 @@ sub run_command_make_shim {
 sub run_command_make_pp {
     my ($self, $program) = @_;
 
-    unless ($program) {
+    my $current_env = $self->current_env
+        or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
+    my $path_pp = $self->whereis_in_env("pp", $current_env)
+            or die "ERROR: pp cannot be found in $current_env";
+
+    my $input = $self->{input};
+    my $output = $self->{output};
+
+    unless ($input && $output) {
         $self->run_command_help("make-pp");
         return;
     }
 
-    my $current_env = $self->current_env
-        or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
-
-    my $output = $self->{output} || $program;
-
-    if (-f $output) {
-        die "ERROR: $program already exists under current directory.\n";
+    unless (-f $input) {
+        die "ERROR: The specified input $input do not exists\n";
     }
 
-    my $path_program = $self->whereis_in_env($program, $current_env)
-        or die "ERROR: $program cannot be found in $current_env";
-    my $path_pp = $self->whereis_in_env("pp", $current_env)
-            or die "ERROR: pp cannot be found in $current_env";
+    if (-f $output) {
+        die "ERROR: $output already exists.\n";
+    }
 
     my $sitelib = $self->do_capture_current_perl(
         '-MConfig',
@@ -2831,7 +2834,7 @@ sub run_command_make_pp {
         ($locallib ? ("-a", "$locallib;$perlversion") : ()),
         "-z", "9",
         "-o", $output,
-        $path_program,
+        $input,
     );
 
     $self->do_system(@cmd);
