@@ -689,17 +689,18 @@ This C<~/.local/bin/tldr> is a shell-wrapper of the actual C<tldr> program, and 
 
 Usage:
 
-    perlbrew make-pp <program>
-    perlbrew make-pp -o <name> <program>
-    perlbrew make-pp --output <name> <program>
+To produce a PAR-packed executable of program
 
-This commands produce an executable file under current directory named C<program>, or C<name> if given after C<--output> (or C<-o> for short). The output is a PAR-packed version of the named program inside current perlbrew environment.
+    perlbrew make-pp -i <path> -o <path>
+    perlbrew make-pp --input <path> --output <path>
 
-This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if current perl is not a perlbrew-managed perl, <make-pp> also bails out.
+This command takes a path of a perl program (the input), and produce a PAR-packed version of that program to the specified path (the output).
+
+This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if the current perl is not a perlbrew-managed perl, or if <make-pp> also bails out.
 
 The produced file is a standalone binary executable containing these content:
 
-    1. The named program
+    1. The input perl program
     2. perl runtime
     3. all core perl libs of current perl
     4. the entire site lib
