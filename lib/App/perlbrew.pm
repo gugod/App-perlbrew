@@ -2884,7 +2884,9 @@ __perlbrew_purify () {
 __perlbrew_set_path () {
     export MANPATH=${PERLBREW_MANPATH:-}${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath 2>/dev/null)")
     export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
-    hash -r
+    if [ -o hashall ] ; then
+        hash -r
+    fi
 }
 
 __perlbrew_set_env() {
@@ -3433,6 +3435,11 @@ environment variable before running the installer:
 As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
 have the permission to perform perl installations.)
+
+If you need to install perlbrew using a Perl that isn't either C</usr/bin/perl>
+or C</usr/local/bin/perl>, set and export the environment variable
+C<PERLBREW_SYSTEM_PERL> and then install as described above. Note that you
+must not use a perlbrew-managed perl.
 
 You may also install perlbrew from CPAN:
 
