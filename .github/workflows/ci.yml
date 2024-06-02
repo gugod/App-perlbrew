@@ -10,12 +10,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: cpanm --quiet --notest App::ModuleBuildTiny
-      - run: mbtiny dist
-      - run: echo ./App-perlbrew-*.tar.gz
+      - run: mbtiny distdir
+      - run: echo ./App-perlbrew-*
       - uses: actions/upload-artifact@v4
         with:
-          name: App-perlbrew-tarball
-          path: ./App-perlbrew-*.tar.gz
+          name: App-perlbrew-distdir
+          path: ./App-perlbrew-*
           retention-days: 5
 
   cpanm-dist:
@@ -31,9 +31,9 @@ jobs:
           perl-version: ${{ matrix.version }}
       - uses: actions/download-artifact@v4
         with:
-          name: App-perlbrew-tarball
-      - run: echo ./App-perlbrew-*.tar.gz
-      - run: cpanm --verbose ./App-perlbrew-*.tar.gz
+          name: App-perlbrew-distdir
+      - run: echo ./App-perlbrew-*
+      - run: cpanm --verbose ./App-perlbrew-*
 
   cpanm-dist-in-container:
     needs: mbtiny-dist
@@ -47,6 +47,6 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: App-perlbrew-tarball
-      - run: echo ./App-perlbrew-*.tar.gz
-      - run: cpanm --verbose ./App-perlbrew-*.tar.gz
+          name: App-perlbrew-distdir
+      - run: echo ./App-perlbrew-*
+      - run: cpanm --verbose ./App-perlbrew-*
