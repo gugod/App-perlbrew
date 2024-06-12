@@ -1,22 +1,30 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
+use Test2::Tools::ClassicCompare qw/is_deeply/;
+use Data::Dumper;
+
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require "test_helpers.pl";
+require "test2_helpers.pl";
 
 use File::Temp qw(tempdir);
-use Test::Deep qw[];
-use Test::Spec;
 
 sub looks_like_perlbrew_root;
 
-local $App::perlbrew::PERLBREW_ROOT = '/perlbrew/root';
-local $ENV{PERLBREW_ROOT} = '/env/root';
-local $ENV{HOME} = '/home';
+# We will override these in the tests below
+local $App::perlbrew::PERLBREW_ROOT;
+local $ENV{PERLBREW_ROOT};
+local $ENV{HOME};
 
 describe "App::perlbrew#root method" => sub {
+    before_each init => sub {
+        $App::perlbrew::PERLBREW_ROOT = '/perlbrew/root';
+        $ENV{PERLBREW_ROOT} = '/env/root';
+        $ENV{HOME} = '/home';
+    };
+
     it "should return \$App::perlbrew::PERLBREW_ROOT if provided" => sub {
         my $app = App::perlbrew->new;
 
@@ -58,29 +66,17 @@ describe "App::perlbrew->new" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;
 
 sub looks_like_perlbrew_root {
     my ($got, $expected) = @_;
 
-    my ($ok, $stack);
+    is_deeply($got, $expected,
+        'Return value comparison failed') or return;
 
-    ($ok, $stack) = Test::Deep::cmp_details "$got", "$expected";
-    unless ($ok) {
-        fail;
-        diag "Return value comparison failed";
-        diag Test::Deep::deep_diag $stack;
-        return;
-    }
+    is_deeply("$got", "$App::perlbrew::PERLBREW_ROOT",
+        "Global \$PERLBREW_ROOT comparison failed") or return;
 
-    ($ok, $stack) = Test::Deep::cmp_details "$got", "$App::perlbrew::PERLBREW_ROOT";
-    unless ($ok) {
-        fail;
-        diag "Global \$PERLBREW_ROOT comparison failed";
-        diag Test::Deep::deep_diag $stack;
-        return;
-    }
-
-    return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path::Root');
+    isa_ok($got, 'App::Perlbrew::Path::Root');
 }
 
