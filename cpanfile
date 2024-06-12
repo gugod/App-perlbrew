@@ -23,6 +23,7 @@ on test => sub {
     requires 'Test::Spec'           => '0.49';
     requires 'Test::TempDir::Tiny'  => '0.016';
     requires 'Test2::Suite'         => '0.000138';
+    requires 'Test2::Plugin::NoWarnings' => '0.10';
 };
 
 on develop => sub {
