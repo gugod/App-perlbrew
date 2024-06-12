@@ -1,13 +1,11 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
+
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require "test_helpers.pl";
-
-use Test::Spec;
-use Test::Exception;
+require "test2_helpers.pl";
 
 mock_perlbrew_install("perl-5.8.9");
 mock_perlbrew_install("perl-5.14.0");
@@ -24,13 +22,13 @@ mock_perlbrew_install("perl-5.14.0", "--as" => "perl-shiny", "perl-5.14.0");
 describe "App::perlbrew->resolve_installation_name" => sub {
     my $app;
 
-    before each => sub {
+    before_each new_perlbrew => sub {
         $app = App::perlbrew->new;
     };
 
     it "takes exactly one argument, which means the `shortname` that needs to be resolved to a `longname`", sub {
         ok $app->resolve_installation_name("5.8.9");
-        dies_ok {
+        ok dies {
             $app->resolve_installation_name; # no args
         };
     };
@@ -65,4 +63,4 @@ describe "App::perlbrew->resolve_installation_name" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;
