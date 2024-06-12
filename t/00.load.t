@@ -5,7 +5,6 @@ use lib qw(lib);
 
 plan 1;
 
-use App::perlbrew;
-ok 1, 'use App::perlbrew';
+use ok 'App::perlbrew';
 
 
