@@ -18,6 +18,7 @@ use Test2::V0;
 use IO::All;
 use File::Temp qw( tempdir );
 
+no warnings 'redefine';
 sub dir {
     App::Perlbrew::Path->new(@_);
 }
