@@ -27,7 +27,7 @@
       },
       "runtime" : {
          "requires" : {
-            "CPAN::Perl::Releases" : "5.20230720",
+            "CPAN::Perl::Releases" : "5.20240609",
             "Capture::Tiny" : "0.48",
             "Devel::PatchPerl" : "2.08",
             "ExtUtils::MakeMaker" : "7.22",
