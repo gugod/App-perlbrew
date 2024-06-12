@@ -24,6 +24,7 @@ on test => sub {
     requires 'Test::TempDir::Tiny'  => '0.016';
     requires 'Test2::V0'            => '0.000163';
     requires 'Test2::Plugin::NoWarnings' => '0.10';
+    requires 'Test2::Plugin::IOEvents' => '0.001001';
 };
 
 on develop => sub {

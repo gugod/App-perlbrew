@@ -5,25 +5,29 @@ use warnings;
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
+require 'test2_helpers.pl';
 
-use Test::More;
-use Test::Output;
+use Test2::V0;
 
 mock_perlbrew_install("perl-5.12.3");
 mock_perlbrew_install("perl-5.12.4");
 mock_perlbrew_install("perl-5.14.1");
 mock_perlbrew_install("perl-5.14.2");
 
+use Test2::Plugin::IOEvents;
 subtest "perlbrew version" => sub {
 
     my $version = $App::perlbrew::VERSION;
-    stdout_like(
-        sub {
-            my $app = App::perlbrew->new("version");
-            $app->run;
-        } =>
-        qr{(?:\./)?\Qt/05.get_current_perl.t  - App::perlbrew/$version\E\n}
+    my $events = intercept {
+        my $app = App::perlbrew->new("version");
+        $app->run;
+    };
+    like(
+        $events,
+        [
+            {info => [{tag => 'STDOUT', details => qr{(?:\./)?\Qt/05.get_current_perl.t  - App::perlbrew/$version\E\n}}]}
+        ],
+        'perlbrew version matches'
     );
 };
 

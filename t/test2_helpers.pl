@@ -1,23 +1,20 @@
 =begin yada yada
 
-Copy this snippet to the beginning of tests:
+Copy this snippet to the beginning of tests that use Test2:
 
     use FindBin;
     use lib $FindBin::Bin;
     use App::perlbrew;
-    require 'test_helpers.pl';
+    require 'test2_helpers.pl';
 
 tldr: This file should be `require`-ed after the "use App::perlbrew;" statement in
 the test. It is meant to override subroutines for testing purposes and not
 mess up developer's own perlbrew environment. `FindBin` should be used to
 put 't/' dir to `@INC`.
 
-NOTE: If you are using Test2 in your test file, see test2_helpers.pl instead.
-
 =cut
 
-use strict;
-use Test::More;
+use Test2::V0;
 use IO::All;
 use File::Temp qw( tempdir );
 
