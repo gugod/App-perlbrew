@@ -1,20 +1,17 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Plugin::IOEvents;
 
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
 require 'test2_helpers.pl';
 
-use Test2::V0;
-
 mock_perlbrew_install("perl-5.12.3");
 mock_perlbrew_install("perl-5.12.4");
 mock_perlbrew_install("perl-5.14.1");
 mock_perlbrew_install("perl-5.14.2");
 
-use Test2::Plugin::IOEvents;
 subtest "perlbrew version" => sub {
 
     my $version = $App::perlbrew::VERSION;
