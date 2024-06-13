@@ -1,5 +1,6 @@
 #!perl
-use strict;
+use Test2::V0;
+use Test2::Tools::Subtest qw/subtest_buffered/;
 use Capture::Tiny qw/capture/;
 use IO::All;
 use App::perlbrew;
@@ -8,8 +9,6 @@ use File::Temp qw( tempdir );
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
-
-use Test::More;
 
 ## mock
 
@@ -59,13 +58,13 @@ use warnings;
 
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 
-subtest "No perls yet installed" => sub {
+subtest_buffered "No perls yet installed" => sub {
     my $app = App::perlbrew->new;
     my @installed = grep { !$_->{is_external} } $app->installed_perls;
     is 0+@installed, 0, "no perls installed";
 };
 
-subtest "--sitecustomize option can be set" => sub {
+subtest_buffered "--sitecustomize option can be set" => sub {
     my $app = App::perlbrew->new('install', 'perl-5.14.2',
         '--sitecustomize=mysitecustomize.pl'
     );
@@ -74,7 +73,7 @@ subtest "--sitecustomize option can be set" => sub {
     is $app->{sitecustomize}, 'mysitecustomize.pl', '--sitecustomize set as expected';
 };
 
-subtest "mock installing" => sub {
+subtest_buffered "mock installing" => sub {
     my $sitefile = File::Temp->new;
     print $sitefile "use strict;\n";
     close $sitefile;
