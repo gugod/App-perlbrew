@@ -1,8 +1,6 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
-use Test::More import => [ qw( done_testing like subtest ) ];
 use File::Temp qw( tempdir );
 
 my $actual_status_code = 42;
@@ -18,11 +16,10 @@ use App::Perlbrew::HTTP qw(http_download);
 
 local $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 
-subtest "The exit status code of curl", sub {
-    my $error = http_download( "https://example.com/whatever.tar.gz",
-        App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT)->child("whatever.tar.gz") );
+my $error = http_download( "https://example.com/whatever.tar.gz",
+    App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT)->child("whatever.tar.gz") );
 
-    like $error, qr/^ERROR .+ Exit\ code: .+ ${actual_status_code}/xs;
-};
+like $error, qr/^ERROR .+ Exit\ code: .+ ${actual_status_code}/xs,
+    "The exit status code of curl is ${actual_status_code}";
 
 done_testing;

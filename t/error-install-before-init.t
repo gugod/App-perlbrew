@@ -1,9 +1,6 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
-use Test::More;
-use Test::Exception;
 use File::Temp qw(tempdir);
 
 use App::perlbrew;
@@ -13,12 +10,13 @@ my $fakehome = tempdir( CLEANUP => 1 );
 
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT = App::Perlbrew::Path->new($fakehome)->child("perl5")->stringify;
 
-throws_ok(
-    sub {
+like(
+    dies {
         my $app = App::perlbrew->new("install", "perl-5.36.0");
         $app->run;
     },
-    qr[ERROR: .*perlbrew init.*]
+    qr[ERROR: .*perlbrew init.*],
+    "installing a perl before initializing perlbrew fails"
 );
 
 done_testing;

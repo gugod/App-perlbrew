@@ -1,7 +1,5 @@
 #!/usr/bin/env perl
-
-use strict;
-use Test::More;
+use Test2::V0;
 use App::Perlbrew::Util qw(files_are_the_same);
 
 use FindBin qw($RealBin);
@@ -14,6 +12,7 @@ for my $i (0..$#test_files) {
     my $should_be_same = files_are_the_same($t, $t);
     my $should_not_be_same = files_are_the_same($t, $u);
 
+    note "Comparing $t with $u";
     ok ($^O eq 'MSWin32' xor $should_be_same); # should return false on win32
     ok !$should_not_be_same;
 }

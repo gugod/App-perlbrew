@@ -1,7 +1,7 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::More tests => 2;
+use Test2::V0;
+
+plan 2;
 
 # test that 'do_system' wraps 'system' correctly
 
@@ -15,7 +15,7 @@ use App::perlbrew;
 my $app = App::perlbrew->new('list');
 
 $app->do_system(qw(perl -E), 'say 42');
-is_deeply \@system, [qw(perl -E), 'say 42'], 'passed all arguments to system()';
+is \@system, [qw(perl -E), 'say 42'], 'passed all arguments to system()';
 
 $app->do_system("perl -e 'say 42'");
-is_deeply \@system, ["perl -e 'say 42'"], 'passed single string to system()';
+is \@system, ["perl -e 'say 42'"], 'passed single string to system()';
