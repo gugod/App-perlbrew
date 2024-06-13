@@ -1,16 +1,13 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
-use Test::More;
 use App::perlbrew;
 
 my $app = App::perlbrew->new();
 my @perls = $app->installed_perls;
 
 unless(@perls) {
-    plan skip_all => "No perl installation under PERLBREW_ROOT";
-    exit;
+    skip_all("No perl installation under PERLBREW_ROOT");
 }
 
 for my $perl (@perls) {
