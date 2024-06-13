@@ -1,12 +1,11 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
+
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require "test_helpers.pl";
-
-use Test::Spec;
+require "test2_helpers.pl";
 
 sub looks_like_perlbrew_builddir;
 
@@ -35,19 +34,10 @@ describe "App::perlbrew->new" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;
 
 sub looks_like_perlbrew_builddir {
     my ($got, $expected) = @_;
-
-    my ($ok, $stack);
-
-    ($ok, $stack) = Test::Deep::cmp_details "$got", "$expected";
-    unless ($ok) {
-        fail;
-        diag Test::Deep::deep_diag $stack;
-        return;
-    }
-
-    return Test::Deep::cmp_deeply $got, Isa ('App::Perlbrew::Path');
+    is "$got", "$expected", "builddir is $expected";
+    isa_ok $got, 'App::Perlbrew::Path';
 }
