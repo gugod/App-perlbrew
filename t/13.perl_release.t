@@ -1,13 +1,11 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require "test_helpers.pl";
+require "test2_helpers.pl";
 
-
-use Test::Spec;
 use CPAN::Perl::Releases;
 use JSON::PP qw(encode_json);
 
@@ -46,4 +44,4 @@ describe "App::perlbrew#perl_release method" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;
