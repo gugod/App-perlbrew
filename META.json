@@ -49,7 +49,10 @@
             "Test::Output" : "1.03",
             "Test::Simple" : "1.001002",
             "Test::Spec" : "0.49",
-            "Test::TempDir::Tiny" : "0.016"
+            "Test::TempDir::Tiny" : "0.016",
+            "Test2::V0" : "0.000163",
+            "Test2::Plugin::NoWarnings" : "0.10",
+            "Test2::Plugin::IOEvents" : "0.001001"
          }
       }
    },
