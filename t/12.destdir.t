@@ -1,5 +1,5 @@
 #!perl
-use strict;
+use Test2::V0;
 use Capture::Tiny qw/capture/;
 use IO::All;
 use App::perlbrew;
@@ -9,8 +9,6 @@ $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 my $DESTDIR = tempdir( CLEANUP => 1 );
-
-use Test::More;
 
 ## mock
 

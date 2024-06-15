@@ -1,7 +1,5 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::More;
+use Test2::V0;
 use App::perlbrew;
 
 {

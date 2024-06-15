@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 BEGIN {
     delete $ENV{PERLBREW_LIB};
@@ -9,9 +8,7 @@ BEGIN {
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
-
-use Test::More;
+require 'test2_helpers.pl';
 
 {
     no warnings 'redefine';
@@ -26,7 +23,7 @@ use Test::More;
     }
 }
 
-plan tests => 3;
+plan 3;
 
 {
     my $app = App::perlbrew->new("install", "--switch", "perl-stable");

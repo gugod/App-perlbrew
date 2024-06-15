@@ -1,16 +1,17 @@
-use strict;
-use warnings;
-use Test::More tests => 6;
+#!/usr/bin/env perl
+use Test2::V0;
 use File::Basename qw(basename);
-
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
+require 'test2_helpers.pl';
+
+plan 6;
 
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 
-my $pb = new_ok('App::perlbrew');
+my $pb = App::perlbrew->new;
+ok($pb, 'App::perlbrew object created');
 
 my $test_dir = App::Perlbrew::Path->new ($pb->root, qw/build test/);
 my $test_file = App::Perlbrew::Path->new ( $test_dir, 3 );

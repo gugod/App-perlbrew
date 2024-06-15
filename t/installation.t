@@ -1,14 +1,10 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
-
-use Test::More;
-use Test::Exception;
+require 'test2_helpers.pl';
 
 ## main
 
@@ -28,10 +24,10 @@ note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 
     is $installed[0]->{name}, "perl-5.14.0";
 
-    dies_ok {
+    ok dies {
         my $app = App::perlbrew->new("install", "perl-5.14.0");
         $app->run;
-    } "should die when doing install with existing distribution name.";
+    }, "should die when doing install with existing distribution name.";
 }
 
 subtest "App::perlbrew#is_installed method." => sub {
@@ -50,10 +46,10 @@ subtest "do not clobber exitsing user-specified name." => sub {
 
     ok grep { $_->{name} eq 'the-dude' } $app->installed_perls;
 
-    dies_ok {
+    ok dies {
         my $app = App::perlbrew->new("install", "perl-5.14.0", "--as", "the-dude");
         $app->run;
-    } "should die when doing install with existing user-specified name.";
+    }, "should die when doing install with existing user-specified name.";
 };
 
 done_testing;

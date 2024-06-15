@@ -1,11 +1,9 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 use English qw( -no_match_vars );
-use Test::More;
 
 use App::perlbrew;
-use Test::NoWarnings;
+use Test2::Plugin::NoWarnings;
 
 my @test_cases = (
     {
@@ -26,7 +24,7 @@ my @test_cases = (
     },
 );
 
-plan tests => scalar @test_cases + 1;
+plan scalar @test_cases;
 {
     my $app = App::perlbrew->new();
  TEST:

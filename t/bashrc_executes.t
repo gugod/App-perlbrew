@@ -1,13 +1,11 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
+require 'test2_helpers.pl';
 
-use Test::More;
 use Capture::Tiny qw( capture_stderr );
 use File::Which qw( which );
 
@@ -16,7 +14,7 @@ note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
 subtest "Works without error output on bash where hashing is off", sub {
     my $bash = which("bash");
     if (!defined($bash)) {
-        plan skip_all => "Bash executable not found, skipping this test.";
+        skip_all "Bash executable not found, skipping this test.";
         return;
     }
 

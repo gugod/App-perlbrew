@@ -1,7 +1,8 @@
-use strict;
-use warnings;
-use Test::More tests => 3;
+#!/usr/bin/env perl
+use Test2::V0;
 use App::Perlbrew::Util qw( find_similar_tokens );
+
+plan 3;
 
 my @tokens = (
     "apple",

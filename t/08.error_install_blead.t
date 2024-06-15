@@ -1,14 +1,10 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
-
-use Test::More;
-use Test::Exception;
+require 'test2_helpers.pl';
 
 use App::perlbrew;
 {
@@ -16,20 +12,22 @@ use App::perlbrew;
     sub App::perlbrew::http_download { return "ERROR" }
 }
 
-throws_ok(
-    sub {
+like(
+    dies {
         my $app = App::perlbrew->new("install", "perl-blead");
         $app->run;
     },
-    qr[ERROR: Failed to download https://.+/blead\.tar\.gz]
+    qr[ERROR: Failed to download https://.+/blead\.tar\.gz],
+    'install blead-perl failed'
 );
 
-throws_ok(
-    sub {
+like(
+    dies {
         my $app = App::perlbrew->new("install", "blead");
         $app->run;
     },
-    qr[ERROR: Failed to download https://.+/blead\.tar\.gz]
+    qr[ERROR: Failed to download https://.+/blead\.tar\.gz],
+    'install blead failed'
 );
 
 done_testing;
