@@ -25,7 +25,7 @@ for my $prog (qw(curl wget fetch)) {
 
 subtest "something not supported", sub {
     local $App::Perlbrew::HTTP::HTTP_USER_AGENT_PROGRAM = "something-that-is-not-recognized";
-    ok dies { http_user_agent_program() }, 
+    ok dies { http_user_agent_program() },
         "should die when asked to use unrecognized http UA program";
 };
 

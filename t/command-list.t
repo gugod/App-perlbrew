@@ -33,7 +33,7 @@ describe "list command," => sub {
             my $app = App::perlbrew->new("list");
             my $events = intercept { $app->run() };
             like $events,
-                [ 
+                [
                     {info => [{tag => 'STDOUT', details => qr/^(\s|\*)\sc?perl-?\d\.\d{1,3}[_.]\d{1,2}\s+/}]}
                 ],
                 'Cannot find Perl in output';
@@ -54,7 +54,7 @@ describe "list command," => sub {
             my $app = App::perlbrew->new("list");
             my $events = intercept { $app->run() };
             like $events,
-                [ 
+                [
                     {info => [{tag => 'STDOUT', details => qr/^(\s|\*)\sc?perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/}]}
                 ],
                 'Cannot find Perl with libraries in output';
@@ -65,7 +65,7 @@ describe "list command," => sub {
             my $app = App::perlbrew->new("list");
             my $events = intercept { $app->run() };
             like $events,
-                [ 
+                [
                     {info => [{tag => 'STDOUT', details => qr/^(\s|\*)\sc?perl-?\d\.\d{1,3}[_.]\d{1,2}(\@nobita)?/}]}
                 ],
                 'Cannot find Perl with libraries in output';
@@ -79,7 +79,7 @@ describe "list command," => sub {
                     $app->run();
                 };
                 like $events,
-                    [ 
+                    [
                         {info => [{tag => 'STDOUT', details => qr/^perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/}]}
                     ],
                     'No decoration mark in the output';
@@ -91,7 +91,7 @@ describe "list command," => sub {
         my $app = App::perlbrew->new("list", "--no-decoration");
         my $events = intercept { $app->run() };
         like $events,
-            [ 
+            [
                 {info => [{tag => 'STDOUT', details => qr/^perl-?\d\.\d{1,3}[_.]\d{1,2}(@\w+)?/}]}
             ],
             'No decoration mark in the output';

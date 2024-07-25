@@ -20,7 +20,7 @@ ok !$error, 'no error';
 ok defined( $rd->{tarball_url} ), 'tarball_url is defined';
 ok defined( $rd->{tarball_name} ), 'tarball_url is defined';
 
-is $rd->{tarball_url}, "https://www.cpan.org/src/5.0/perl-5.18.2.tar.bz2",  
+is $rd->{tarball_url}, "https://www.cpan.org/src/5.0/perl-5.18.2.tar.bz2",
     'tarball_url is correct';
 is $rd->{tarball_name}, "perl-5.18.2.tar.bz2",
     'tarball_name is correct';
