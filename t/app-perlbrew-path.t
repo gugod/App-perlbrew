@@ -1,12 +1,7 @@
 #!/usr/bin/env perl
-
-use strict;
-use warnings;
-
+use Test2::V0;
+use Test2::Tools::Spec;
 use File::Temp qw[];
-
-use Test::Spec;
-use Test::Exception;
 
 use App::Perlbrew::Path;
 
@@ -28,10 +23,9 @@ describe "App::Perlbrew::Path" => sub {
         };
 
         it "should die with undefined element" => sub {
-            throws_ok
-                { App::Perlbrew::Path->new('foo', undef, 'bar') }
-                qr/^Received an undefined entry as a parameter/,
-                '';
+            ok dies {
+                App::Perlbrew::Path->new('foo', undef, 'bar')
+            }, qr/^Received an undefined entry as a parameter/;
         };
 
         it "should concatenate long (root) path" => sub {
@@ -105,7 +99,7 @@ describe "App::Perlbrew::Path" => sub {
 
             $path->mkpath;
 
-            lives_ok { $path->mkpath };
+            ok lives { $path->mkpath };
         };
 
         it "should return self" => sub {
@@ -119,29 +113,29 @@ describe "App::Perlbrew::Path" => sub {
         my $test_root;
         my $link;
 
-        before each => sub {
+        before_each arrange_testdir => sub {
             $test_root = arrange_testdir;
             $link = $test_root->child('link');
         };
 
-        context "when path doesn't exist" => sub {
+        describe "when path doesn't exist" => sub {
             it "should return undef" => sub {
                 is $link->readlink, undef;
             };
         };
 
-        context "when path isn't a symlink" => sub {
-            before each => sub { $link->mkpath };
+        describe "when path isn't a symlink" => sub {
+            before_each mkpath => sub { $link->mkpath };
 
             it "should return undef" => sub {
                 is $link->readlink, undef;
             };
         };
 
-        context "should return path object of link content" => sub {
+        describe "should return path object of link content" => sub {
             my $dest;
 
-            before each => sub {
+            before_each mkpath => sub {
                 $dest = $test_root->child('dest');
                 $dest->mkpath;
                 symlink $dest, $link;
@@ -169,7 +163,7 @@ describe "App::Perlbrew::Path" => sub {
         it "should not die when path doesn't exist" => sub {
             my $path = arrange_testdir ("foo");
 
-            lives_ok { $path->rmpath };
+            ok lives { $path->rmpath };
         };
 
         it "should return self" => sub {
@@ -294,11 +288,9 @@ describe "App::Perlbrew::Path" => sub {
             ok ! -e $file;
         };
     };
-
-    return;
 };
 
-runtests unless caller;
+done_testing;
 
 sub looks_like_perlbrew_path {
     my ($actual, $expected) = @_;
