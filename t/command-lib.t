@@ -46,7 +46,6 @@ describe "lib command," => sub {
         };
     };
 
-
     describe "`create` sub-command," => sub {
         my ($app, $libdir);
         my $mock = mock "App::perlbrew";
@@ -71,12 +70,14 @@ describe "lib command," => sub {
                     {info => [{tag => 'STDOUT', details => qr{lib 'perl-5.14.2\@nobita' is created.}}]}
                 ], 'stdout matches';
 
-                ok -d $libdir;
+                ok -d $libdir, "libdir exists";
             };
         };
 
         describe "with \@ in the beginning of lib name," => sub {
             it "creates the lib folder for current perl" => sub {
+                ok ! -d $libdir, "libdir do not exist";
+
                 my $events = intercept {
                     $app->{args} = [ "lib", "create", '@nobita' ];
                     $app->run;
@@ -130,11 +131,12 @@ describe "lib command," => sub {
     };
 
     describe "`delete` sub-command," => sub {
+        my $nobita = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
         before_each mkpath => sub {
-            App::Perlbrew::Path
-            ->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
-            ->mkpath
-            ;
+            $nobita->mkpath;
+        };
+        after_each rmpath => sub {
+            $nobita->rmpath;
         };
 
         it "deletes the local::lib folder" => sub {

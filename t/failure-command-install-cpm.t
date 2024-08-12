@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::Spec;
+use Test2::V0;
+use Test2::Tools::Spec;
 use File::Temp qw( tempdir );
 
 use App::perlbrew;
@@ -35,4 +34,4 @@ describe "App::perlbrew->install_cpm" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;

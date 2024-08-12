@@ -1,15 +1,13 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::Spec;
-use Test::Exception;
+use Test2::V0;
+use Test2::Tools::Spec;
 use File::Temp qw( tempdir );
 
 use FindBin;
 use lib $FindBin::Bin;
 
 use App::perlbrew;
-require "test_helpers.pl";
+require "test2_helpers.pl";
 
 mock_perlbrew_install("perl-5.36.1");
 
@@ -17,11 +15,20 @@ describe "App::perlbrew->make_shim()" => sub {
     it "should show usage", sub {
         mock_perlbrew_use("perl-5.36.1");
 
-        lives_ok {
-            my $app = App::perlbrew->new("make-shim");
-            $app->expects("run_command_help")->returns("")->at_least_once;
-            $app->run;
-        };
+        my $called = 0;
+        my $mock = mock 'App::perlbrew',
+            override => [
+                run_command_help => sub { $called++; "" }
+            ];
+
+        ok(
+            lives {
+                my $app = $mock->class->new("make-shim");
+                $app->run;
+            },
+            "`make-shim` should not trigger any exceptions"
+        ) or note($@);
+        is $called, 1, "`help` command should be running.";
     };
 };
 
@@ -32,10 +39,10 @@ describe "App::perlbrew->make_shim('foo')" => sub {
         my $dir = tempdir();
         chdir($dir);
 
-        throws_ok {
+        ok dies {
             my $app = App::perlbrew->new("make-shim", "foo");
             $app->run();
-        } qr(^ERROR:);
+        }, qr(^ERROR:);
 
         ok ! -f "foo", "foo is not produced";
     };
@@ -46,15 +53,15 @@ describe "App::perlbrew->make_shim('foo')" => sub {
         chdir($dir);
         io("foo")->print("hello");
 
-        throws_ok {
+        ok dies {
             my $app = App::perlbrew->new("make-shim", "foo");
             $app->run();
-        } qr(^ERROR:);
+        }, qr(^ERROR:);
 
-        throws_ok {
+        ok dies {
             my $app = App::perlbrew->new("make-shim", "-o", "foo", "bar");
            $app->run();
-        } qr(^ERROR:);
+        }, qr(^ERROR:);
     };
 
     it "should produce 'foo' in the current dir" => sub {
@@ -84,4 +91,4 @@ describe "App::perlbrew->make_shim('foo')" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;
