@@ -7,7 +7,6 @@ use File::Temp qw[];
 
 use Test::Spec;
 use Test::Exception;
-use Test::Deep;
 
 use App::Perlbrew::Path;
 
@@ -19,13 +18,13 @@ describe "App::Perlbrew::Path" => sub {
         it "should accept one parameter" => sub {
             my $path = App::Perlbrew::Path->new("foo/bar/baz");
 
-            cmp_deeply $path, looks_like_perlbrew_path "foo/bar/baz";
+            looks_like_perlbrew_path $path, "foo/bar/baz";
         };
 
         it "should concatenate multiple parameters into single path" => sub {
             my $path = App::Perlbrew::Path->new("foo", "bar/baz");
 
-            cmp_deeply $path, looks_like_perlbrew_path "foo/bar/baz";
+            looks_like_perlbrew_path $path, "foo/bar/baz";
         };
 
         it "should die with undefined element" => sub {
@@ -38,7 +37,7 @@ describe "App::Perlbrew::Path" => sub {
         it "should concatenate long (root) path" => sub {
             my $path = App::Perlbrew::Path->new('', qw(this is a long path to check if it is joined ok));
 
-            cmp_deeply $path, looks_like_perlbrew_path '/this/is/a/long/path/to/check/if/it/is/joined/ok';
+            looks_like_perlbrew_path $path, '/this/is/a/long/path/to/check/if/it/is/joined/ok';
         };
     };
 
@@ -60,39 +59,36 @@ describe "App::Perlbrew::Path" => sub {
         it "should create direct child" => sub {
             my $path = App::Perlbrew::Path->new("foo/bar")->child(1);
 
-            cmp_deeply $path, looks_like_perlbrew_path "foo/bar/1";
+            looks_like_perlbrew_path $path, "foo/bar/1";
         };
 
         it "should accept multiple children" => sub {
             my $path = App::Perlbrew::Path->new("foo/bar")->child(1, 2);
 
-            cmp_deeply $path, looks_like_perlbrew_path "foo/bar/1/2";
+            looks_like_perlbrew_path $path, "foo/bar/1/2";
         };
 
         it "should return chainable object" => sub {
             my $path = App::Perlbrew::Path->new("foo/bar")->child(1, 2)->child(3);
 
-            cmp_deeply $path, looks_like_perlbrew_path "foo/bar/1/2/3";
+            looks_like_perlbrew_path $path, "foo/bar/1/2/3";
         };
     };
 
     describe "children()" => sub {
         it "should return empty list on empty match" => sub {
             my $root = arrange_testdir;
-
-            cmp_deeply [ $root->children ], [];
+            is 0 + $root->children(), 0;
         };
 
         it "should return Path instances" => sub {
             my $root = arrange_testdir;
 
-            $root->child($_)->mkpath for qw[ aa ab ba ];
-
-            cmp_deeply [ $root->children ], [
-                looks_like_perlbrew_path ($root->child('aa')->stringify),
-                looks_like_perlbrew_path ($root->child('ab')->stringify),
-                looks_like_perlbrew_path ($root->child('ba')->stringify),
-            ];
+            for (qw[ aa ab ba ]) {
+                my $child = $root->child($_);
+                $child->mkpath;
+                looks_like_perlbrew_path $child, "$child";
+            }
         };
     };
 
@@ -115,7 +111,7 @@ describe "App::Perlbrew::Path" => sub {
         it "should return self" => sub {
             my $path = arrange_testdir ("foo/bar/baz");
 
-            cmp_deeply $path->mkpath, looks_like_perlbrew_path "$path";
+            looks_like_perlbrew_path $path->mkpath, "$path";
         };
     };
 
@@ -154,7 +150,7 @@ describe "App::Perlbrew::Path" => sub {
             it "should return link path" => sub {
                 my $read = $link->readlink;
 
-                cmp_deeply $read, looks_like_perlbrew_path "$dest";
+                looks_like_perlbrew_path $read, "$dest";
             };
         };
     };
@@ -179,7 +175,7 @@ describe "App::Perlbrew::Path" => sub {
         it "should return self" => sub {
             my $path = arrange_testdir ("foo/bar/baz");
 
-            cmp_deeply $path, looks_like_perlbrew_path "$path";
+            looks_like_perlbrew_path $path, "$path";
         };
     };
 
@@ -305,12 +301,12 @@ describe "App::Perlbrew::Path" => sub {
 runtests unless caller;
 
 sub looks_like_perlbrew_path {
-    my ($expected) = @_;
-
-    all (
-        methods (stringify => $expected),
-        obj_isa ('App::Perlbrew::Path'),
-    );
+    my ($actual, $expected) = @_;
+    subtest "looks like a perlbrew path object", sub {
+        is "$actual", $expected;
+        is $actual->stringify(), $expected;
+        isa_ok $actual, 'App::Perlbrew::Path';
+    };
 }
 
 sub arrange_testdir {
