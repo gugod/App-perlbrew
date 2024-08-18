@@ -684,6 +684,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           'notest|n',
           'quiet|q',
           'verbose|v',
+          'input|i=s',
           'output|o=s',
           'as=s',
           'append=s',
@@ -1207,6 +1208,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my $decoded = decode_json($json);
       for my $release ( @{ $decoded->{releases} } ) {
+          next
+              if !$release->{authorized};
           push @perllist, [$release->{name}, $release->{download_url}];
       }
       foreach my $perl ( $self->filter_perl_available( \@perllist ) ) {
@@ -2190,6 +2193,14 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           sub {
               $self->do_system(@cmd);
           }
+      );
+  }
+  
+  sub do_capture_current_perl {
+      my ( $self, @cmd ) = @_;
+      return $self->do_capture(
+          $self->installed_perl_executable( $self->current_perl ),
+          @cmd,
       );
   }
   
@@ -3210,7 +3221,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           my $code =
   qq{eval "require $module" and do { (my \$f = "$module") =~ s<::></>g; \$f .= ".pm"; print "$module\n  Location: \$INC{\$f}\n  Version: " . ($module->VERSION ? $module->VERSION : "no VERSION specified" ) } or do { print "$module could not be found, is it installed?" } };
           $out .=
-              "\nModule: " . $self->do_capture( $self->installed_perl_executable( $self->current_perl ), "-le", $code );
+              "\nModule: " . $self->do_capture_current_perl( '-le', $code );
       }
   
       $out;
@@ -3265,31 +3276,37 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   sub run_command_make_pp {
       my ($self, $program) = @_;
   
-      unless ($program) {
+      my $current_env = $self->current_env
+          or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
+      my $path_pp = $self->whereis_in_env("pp", $current_env)
+              or die "ERROR: pp cannot be found in $current_env";
+  
+      my $input = $self->{input};
+      my $output = $self->{output};
+  
+      unless ($input && $output) {
           $self->run_command_help("make-pp");
           return;
       }
   
-      my $current_env = $self->current_env
-          or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
-  
-      my $output = $self->{output} || $program;
-  
-      if (-f $output) {
-          die "ERROR: $program already exists under current directory.\n";
+      unless (-f $input) {
+          die "ERROR: The specified input $input do not exists\n";
       }
   
-      my $path_program = $self->whereis_in_env($program, $current_env)
-          or die "ERROR: $program cannot be found in $current_env";
-      my $path_pp = $self->whereis_in_env("pp", $current_env)
-              or die "ERROR: pp cannot be found in $current_env";
+      if (-f $output) {
+          die "ERROR: $output already exists.\n";
+      }
   
-  
-      my $sitelib = $self->do_capture(
-          $self->installed_perl_executable( $self->current_perl ),
-          "-MConfig",
-          "-e",
+      my $sitelib = $self->do_capture_current_perl(
+          '-MConfig',
+          '-e',
           'print $Config{sitelibexp}',
+      );
+  
+      my $privlib = $self->do_capture_current_perl(
+          '-MConfig',
+          '-e',
+          'print $Config{privlibexp}',
       );
   
       my $locallib;
@@ -3301,21 +3318,21 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           $locallib = $llpaths[0];
       }
   
-      my $perlversion = $self->do_capture(
-          $self->installed_perl_executable( $self->current_perl ),
-          "-MConfig",
-          "-e",
+      my $perlversion = $self->do_capture_current_perl(
+          '-MConfig',
+          '-e',
           'print $Config{version}',
       );
   
       my @cmd = (
           $path_pp,
           "-B", # core modules
+          "-a", "$privlib;$perlversion",
           "-a", "$sitelib;$perlversion",
           ($locallib ? ("-a", "$locallib;$perlversion") : ()),
           "-z", "9",
           "-o", $output,
-          $path_program,
+          $input,
       );
   
       $self->do_system(@cmd);
@@ -3365,7 +3382,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   __perlbrew_set_path () {
       export MANPATH=${PERLBREW_MANPATH:-}${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath 2>/dev/null)")
       export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
-      hash -r
+      if [ -o hashall ] ; then
+          hash -r
+      fi
   }
   
   __perlbrew_set_env() {
@@ -3915,6 +3934,11 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   root directory (although only original user that made the installation would
   have the permission to perform perl installations.)
   
+  If you need to install perlbrew using a Perl that isn't either C</usr/bin/perl>
+  or C</usr/local/bin/perl>, set and export the environment variable
+  C<PERLBREW_SYSTEM_PERL> and then install as described above. Note that you
+  must not use a perlbrew-managed perl.
+  
   You may also install perlbrew from CPAN:
   
       cpan App::perlbrew
@@ -3990,7 +4014,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20230720';
+  $CPAN::Perl::Releases::VERSION = '5.20240609';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -4283,6 +4307,21 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.38.0-RC2" => { id => 'RJBS' },
   "5.38.0" => { id => 'RJBS' },
   "5.39.1" => { id => 'SHAY' },
+  "5.39.2" => { id => 'PEVANS' },
+  "5.39.3" => { id => 'WOLFSAGE' },
+  "5.39.4" => { id => 'HAARG' },
+  "5.39.5" => { id => 'ETHER' },
+  "5.34.3" => { id => 'PEVANS' },
+  "5.36.3" => { id => 'PEVANS' },
+  "5.38.2" => { id => 'PEVANS' },
+  "5.39.6" => { id => 'BOOK' },
+  "5.39.7" => { id => 'CORION' },
+  "5.39.8" => { id => 'RENEEB' },
+  "5.39.9" => { id => 'PEVANS' },
+  "5.39.10" => { id => 'PEVANS' },
+  "5.40.0-RC1" => { id => 'HAARG' },
+  "5.40.0-RC2" => { id => 'HAARG' },
+  "5.40.0" => { id => 'HAARG' },
   };
   
   sub perl_tarballs {
@@ -4352,7 +4391,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20230720
+  version 5.20240609
   
   =head1 SYNOPSIS
   
@@ -4417,7 +4456,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2023 by Chris Williams.
+  This software is copyright (c) 2024 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
@@ -10882,17 +10921,16 @@ This C<~/.local/bin/tldr> is a shell-wrapper of the actual C<tldr> program, and 
 
 Usage:
 
-    perlbrew make-pp <program>
-    perlbrew make-pp -o <name> <program>
-    perlbrew make-pp --output <name> <program>
+    perlbrew make-pp -i <path> -o <path>
+    perlbrew make-pp --input <path> --output <path>
 
-This commands produce an executable file under current directory named C<program>, or C<name> if given after C<--output> (or C<-o> for short). The output is a PAR-packed version of the named program inside current perlbrew environment.
+This command takes a path of a perl program (the input), and produce a PAR-packed version of that program to the specified path (the output).
 
-This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if current perl is not a perlbrew-managed perl, <make-pp> also bails out.
+This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if the current perl is not a perlbrew-managed perl, or if <make-pp> also bails out.
 
 The produced file is a standalone binary executable containing these content:
 
-    1. The named program
+    1. The input perl program
     2. perl runtime
     3. all core perl libs of current perl
     4. the entire site lib
