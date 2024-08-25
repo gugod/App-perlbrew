@@ -1,12 +1,11 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
+use App::perlbrew;
+
 use FindBin;
 use lib $FindBin::Bin;
-use App::perlbrew;
-require 'test_helpers.pl';
-
-use Test::Spec;
+require 'test2_helpers.pl';
 
 mock_perlbrew_install("perl-5.12.3");
 mock_perlbrew_install("perl-5.12.4");
@@ -45,5 +44,4 @@ describe "current perl" => sub {
     };
 };
 
-runtests unless caller;
-
+done_testing;
