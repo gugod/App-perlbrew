@@ -100,4 +100,107 @@ sub mock_perlbrew_lib_create {
     App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", $name)->mkpath;
 }
 
+# Some wrappers around Test2::Tools::Mock, to make transition easer from Test::Spec
+
+sub mocked {
+    my ($object, $cb) = @_;
+    my $mocked = Mocked->new($object);
+
+    if (defined($cb)) {
+        $cb->($mocked, $object);
+        $mocked->verify;
+    } else {
+        return $mocked;
+    }
+}
+
+package Mocked {
+    use Test2::Tools::Mock qw(mock);
+
+    sub new {
+        my ($class, $object) = @_;
+        return bless {
+            object => $object,
+            methods => [],
+            mock => mock($object),
+        }, $class
+    }
+
+    sub expects {
+        my ($self, $method) = @_;
+        my $mockedMethod = MockedMethod->new($self, $method);
+        push @{$self->{methods}}, $mockedMethod;
+        return $mockedMethod;
+    }
+
+    sub verify {
+        my ($self) = @_;
+        for (@{$self->{methods}}) {
+            $_->verify();
+        }
+    }
+}
+
+package MockedMethod {
+    use Test2::Tools::Basic qw(ok);
+    use Test2::Tools::Compare qw(is);
+    use Test2::Tools::Mock qw(mock);
+
+    sub new {
+        my ($class, $mocked, $method) = @_;
+        return bless {
+            called => 0,
+            exactly => undef,
+            method => $method,
+            returns => undef,
+            mocked => $mocked,
+        }, $class;
+    }
+
+    sub never {
+        my ($self) = @_;
+        $self->{exactly} = 0;
+        return $self;
+    }
+
+    sub exactly {
+        my ($self, $times) = @_;
+        unless ( defined $times ) {
+            die "`exactly` requires a numerical argument.";
+        }
+
+        $self->{exactly} = $times;
+
+        return $self;
+    }
+
+    sub returns {
+        my ($self, $cb_or_value) = @_;
+
+        print "Mockiing " . $self->{method} ."\n";
+
+        $self->{mocked}{mock}->override(
+            $self->{method},
+            sub {
+                $self->{called}++;
+
+                (ref($cb_or_value) eq 'CODE') ? $cb_or_value->(@_) : $cb_or_value;
+            }
+        );
+
+        return $self;
+    }
+
+    sub verify {
+        my ($self) = @_;
+        if (defined $self->{exactly}) {
+            is $self->{called}, $self->{exactly}, $self->{method} . " should be called exactly " . $self->{exactly} . " times";
+        }
+        else {
+            ok $self->{called} > 0, $self->{method} . " is called at least 1 time";
+        }
+        return $self;
+    }
+}
+
 1;
