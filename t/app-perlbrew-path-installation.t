@@ -1,10 +1,9 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
 
 use File::Temp qw[];
 
-use Test::Spec;
 use Test::Deep;
 
 use App::Perlbrew::Path::Root;
@@ -19,7 +18,7 @@ sub arrange_installation;
 
 describe "App::Perlbrew::Path::Root" => sub {
     describe "perls()" => sub {
-        context "without parameters" => sub {
+        describe "without parameters" => sub {
             it "should return Instalations object" => sub {
                 local $ENV{HOME};
                 my $path = arrange_root->perls;
@@ -28,7 +27,7 @@ describe "App::Perlbrew::Path::Root" => sub {
             };
         };
 
-        context "with one parameter" => sub {
+        describe "with one parameter" => sub {
             it "should return Installation object" => sub {
                 local $ENV{HOME};
                 my $path = arrange_root->perls('blead');
@@ -37,7 +36,7 @@ describe "App::Perlbrew::Path::Root" => sub {
             };
         };
 
-        context "with multiple paramters" => sub {
+        describe "with multiple paramters" => sub {
             it "should return Path object" => sub {
                 local $ENV{HOME};
                 my $path = arrange_root->perls('blead', '.version');
@@ -91,7 +90,7 @@ describe "App::Perlbrew::Path::Installation" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;
 
 sub looks_like_path {
     my ($path, @tests) = @_;
