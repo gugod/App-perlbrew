@@ -160,7 +160,7 @@ package MockedMethod {
 
     sub never {
         my ($self) = @_;
-        $self->{exactly} = 0;
+        $self->exactly(0);
         return $self;
     }
 
