@@ -150,6 +150,7 @@ package MockedMethod {
         my ($class, $mocked, $method) = @_;
         return bless {
             called => 0,
+            at_least => undef,
             exactly => undef,
             method => $method,
             returns => undef,
@@ -168,9 +169,18 @@ package MockedMethod {
         unless ( defined $times ) {
             die "`exactly` requires a numerical argument.";
         }
-
         $self->{exactly} = $times;
+        $self->{at_least} = undef;
+        return $self;
+    }
 
+    sub at_least {
+        my ($self, $times) = @_;
+        unless ( defined $times ) {
+            die "`exactly` requires a numerical argument.";
+        }
+        $self->{exactly} = undef;
+        $self->{at_least} = $times;
         return $self;
     }
 
@@ -195,6 +205,9 @@ package MockedMethod {
         my ($self) = @_;
         if (defined $self->{exactly}) {
             is $self->{called}, $self->{exactly}, $self->{method} . " should be called exactly " . $self->{exactly} . " times";
+        }
+        elsif (defined $self->{at_least}) {
+            ok $self->{called} > $self->{at_least}, $self->{method} . " is called at least " .  $self->{at_least} . " time";
         }
         else {
             ok $self->{called} > 0, $self->{method} . " is called at least 1 time";
