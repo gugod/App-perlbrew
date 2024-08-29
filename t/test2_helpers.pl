@@ -148,14 +148,19 @@ package MockedMethod {
 
     sub new {
         my ($class, $mocked, $method) = @_;
-        return bless {
+        my $self = bless {
             called => 0,
+            with => undef,
+            called_with => undef,
             at_least => undef,
             exactly => undef,
             method => $method,
+            call_through => 1,
             returns => undef,
             mocked => $mocked,
         }, $class;
+        $mocked->{mock}->override($method => $self->_build_override_method());
+        return $self;
     }
 
     sub never {
@@ -184,25 +189,43 @@ package MockedMethod {
         return $self;
     }
 
-    sub returns {
-        my ($self, $cb_or_value) = @_;
+    sub _build_override_method {
+        my ($self) = @_;
+        return sub {
+            my $object = shift;
+            $self->{called_with} = \@_;
+            $self->{called}++;
 
-        print "Mockiing " . $self->{method} ."\n";
-
-        $self->{mocked}{mock}->override(
-            $self->{method},
-            sub {
-                $self->{called}++;
-
+            if ($self->{call_through}) {
+                my $method = $self->{mocked}{mock}->orig($self->{method});
+                $object->$method(@_);
+            } else {
+                my $cb_or_value = $self->{returns};
                 (ref($cb_or_value) eq 'CODE') ? $cb_or_value->(@_) : $cb_or_value;
             }
-        );
+        }
+    }
 
+    sub returns {
+        my ($self, $cb_or_value) = @_;
+        $self->{call_through} = 0;
+        $self->{returns} = $cb_or_value;
+        return $self;
+    }
+
+    sub with {
+        my ($self, @args) = @_;
+        $self->{with} = \@args;
         return $self;
     }
 
     sub verify {
         my ($self) = @_;
+
+        if (defined $self->{with}) {
+            is $self->{called_with}, $self->{with}, "method " . $self->{method} . " is called with expected arguments";
+        }
+
         if (defined $self->{exactly}) {
             is $self->{called}, $self->{exactly}, $self->{method} . " should be called exactly " . $self->{exactly} . " times";
         }
@@ -212,6 +235,7 @@ package MockedMethod {
         else {
             ok $self->{called} > 0, $self->{method} . " is called at least 1 time";
         }
+
         return $self;
     }
 }
