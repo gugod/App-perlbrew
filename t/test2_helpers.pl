@@ -114,7 +114,7 @@ sub mocked {
     }
 }
 
-package Mocked {
+package Mocked; {
     use Test2::Tools::Mock qw(mock);
 
     sub new {
@@ -159,7 +159,7 @@ package Mocked {
     }
 }
 
-package MockedMethod {
+package MockedMethod; {
     use Test2::Tools::Basic qw(ok note);
     use Test2::Tools::Compare qw(is);
     use Test2::Tools::Mock qw(mock);
