@@ -100,7 +100,7 @@ sub mock_perlbrew_lib_create {
     App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", $name)->mkpath;
 }
 
-# Some wrappers around Test2::Tools::Mock, to make transition easer from Test::Spec
+# Wrappers around Test2::Tools::Mock, a replacement of Test::Spec, more or less.
 
 sub mocked {
     my ($object, $cb) = @_;
