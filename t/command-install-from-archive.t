@@ -1,25 +1,15 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-
-use Test::Spec 0.49; # with_deep
-use Test::Deep;
+use Test2::V0;
+use Test2::Tools::Spec;
 
 use FindBin;
 use lib $FindBin::Bin;
-
 use App::perlbrew;
-
-use Hash::Util;
-
-require 'test_helpers.pl';
+require 'test2_helpers.pl';
 
 sub arrange_file;
-sub arrange_available_perls;
-sub arrange_command_line;
 sub expect_dispatch_via;
 sub should_install_from_archive;
-sub is_path;
 
 describe "command install <archive>" => sub {
     should_install_from_archive "with perl source archive" => (
@@ -45,62 +35,48 @@ describe "command install <archive>" => sub {
         dist_version => '5.28.0',
         installation_name => 'cperl-5.28.0',
     );
-
 };
 
-runtests unless caller;
+done_testing;
 
 sub should_install_from_archive {
     my ($title, %params) = @_;
 
-    Hash::Util::lock_keys %params,
-        'filename',
-        'dist_version',
-        'installation_name',
-        ;
+    describe $title => sub {
+        my %shared;
 
-    context $title => sub {
-        my $file;
-
-        before each => sub {
-            $file = arrange_file
-                name => $params{filename},,
+        before_each 'arrange file', sub {
+            my $file = $shared{file} = arrange_file
+                name => $params{filename},
                 tempdir => 1,
                 ;
 
-            arrange_command_line install => $file;
+            $shared{app} = App::perlbrew->new(install => "$file");
         };
 
         expect_dispatch_via
+            shared => \%shared,
             method => 'do_install_archive',
-            with_args => [
-                is_path (methods (basename => $params{filename}))
-            ];
+            with_args => [ object { call 'basename' => $params{filename} } ];
 
-        expect_dispatch_via method => 'do_extract_tarball',
-            stubs     => { do_install_this => '' },
-            with_args => [
-                is_path (methods (basename => $params{filename}))
-            ];
+        expect_dispatch_via
+            shared => \%shared,
+            method => 'do_extract_tarball',
+            with_args => [ object { call 'basename' => $params{filename} } ],
+            stubs     => { do_install_this => '' };
 
-        expect_dispatch_via method => 'do_install_this',
-            stubs     => { do_extract_tarball => sub { $_[-1]->dirname->child('foo') } },
+        expect_dispatch_via
+            shared => \%shared,
+            method => 'do_install_this',
             with_args => [
-                is_path (methods (basename => 'foo')),
+                object { call basename => 'foo' },
                 $params{dist_version},
                 $params{installation_name},
-            ];
+            ],
+            stubs     => { do_extract_tarball => sub { $_[-1]->dirname->child('foo') } };
+
     };
 };
-
-sub is_path {
-    my (@tests) = @_;
-
-    all (
-        obj_isa ('App::Perlbrew::Path'),
-        @tests,
-    );
-}
 
 sub arrange_file {
     my (%params) = @_;
@@ -118,30 +94,28 @@ sub arrange_file {
     return $file;
 }
 
-sub arrange_command_line {
-    my (@command_line) = @_;
-
-    share my %shared;
-
-    # Enforce stringification
-    $shared{app} = App::perlbrew->new(map "$_", @command_line);
-}
-
 sub expect_dispatch_via {
     my (%params) = @_;
+    tests "should dispatch via $params{method}()" => sub {
+        my $app = $params{shared}{app};
+        my $mock = mocked($app);
 
-    it "should dispatch via $params{method}()" => sub {
-        share my %shared;
+        if ($params{stubs}) {
+            $mock->stubs($params{stubs});
+        }
 
-        App::perlbrew->stubs(%{ $params{stubs} })
-            if $params{stubs};
+        if ($params{with_args}) {
+            $mock->expects($params{method})
+                ->with(@{ $params{with_args} })
+                ->returns(undef);
+        } else {
+            $mock->expects($params{method})
+                ->returns(undef);
+        }
 
-        my $expectation = App::perlbrew->expects($params{method});
-        $expectation = $expectation->with_deep(@{ $params{with_args} })
-            if $params{with_args};
+        $app->run;
 
-        $shared{app}->run;
-
-        ok $expectation->verify;
+        $mock->verify;
+        $mock->reset;
     };
 }

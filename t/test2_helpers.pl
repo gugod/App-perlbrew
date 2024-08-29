@@ -126,6 +126,18 @@ package Mocked {
         }, $class
     }
 
+    sub stubs {
+        my ($self, $stubs) = @_;
+        for my $k (keys %$stubs) {
+            my $v = $stubs->{$k};
+            if (ref($v) eq 'CODE') {
+                $self->{mock}->override($k => $v);
+            } else {
+                $self->{mock}->override($k => sub { $v });
+            }
+        }
+    }
+
     sub expects {
         my ($self, $method) = @_;
         my $mockedMethod = MockedMethod->new($self, $method);
@@ -139,10 +151,16 @@ package Mocked {
             $_->verify();
         }
     }
+
+    sub reset {
+        my ($self) = @_;
+        $self->{mock}->reset_all;
+        $self->{methods} = [];
+    }
 }
 
 package MockedMethod {
-    use Test2::Tools::Basic qw(ok);
+    use Test2::Tools::Basic qw(ok note);
     use Test2::Tools::Compare qw(is);
     use Test2::Tools::Mock qw(mock);
 
