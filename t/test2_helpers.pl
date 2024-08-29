@@ -201,7 +201,7 @@ package MockedMethod {
                 $object->$method(@_);
             } else {
                 my $cb_or_value = $self->{returns};
-                (ref($cb_or_value) eq 'CODE') ? $cb_or_value->(@_) : $cb_or_value;
+                (ref($cb_or_value) eq 'CODE') ? $cb_or_value->($object, @_) : $cb_or_value;
             }
         }
     }
