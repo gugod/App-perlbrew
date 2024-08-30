@@ -8,6 +8,8 @@ use lib $FindBin::Bin;
 use App::perlbrew;
 require "test2_helpers.pl";
 
+use PerlbrewTestHelpers qw(stdout_like);
+
 $App::perlbrew::PERLBREW_ROOT = my $perlbrew_root = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = my $perlbrew_home = tempdir( CLEANUP => 1 );
 
@@ -43,7 +45,7 @@ describe "available command output, when nothing installed locally," => sub {
     it "should display a list of perl versions" => sub {
         my ($mock, $app) = mocked_perlbrew( "available", "--verbose" );
 
-        stdout_like(sub {
+        stdout_like sub {
             $app->run();
         }, qr{
               \A
@@ -61,7 +63,7 @@ describe "available command output, when nothing installed locally," => sub {
                   \n
               )+
               \z
-        }sx);
+        }sx;
     };
 };
 
@@ -78,7 +80,7 @@ describe "available command output, when something installed locally," => sub {
             "installed_perls" => sub  { @installed_perls }
         );
 
-        stdout_like(sub {
+        stdout_like sub {
             $app->run();
         }, qr{
               \A
@@ -99,7 +101,7 @@ describe "available command output, when something installed locally," => sub {
                   \n
               )+
               \z
-        }sx);
+        }sx;
     };
 };
 

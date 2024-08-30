@@ -104,15 +104,6 @@ sub mock_perlbrew_lib_create {
     App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", $name)->mkpath;
 }
 
-# Replacements of Test::Output made by using Test2::Plugin::IOEvents
-
-sub stdout_like {
-    my ($cb, $re, $desc) = @_;
-    my $events = intercept { $cb->() };
-    my $out = join "", map { $_->details } map { @{ $_->facets->{info} } }@$events;
-    like($out, $re, $desc);
-}
-
 # Wrappers around Test2::Tools::Mock, a replacement of Test::Spec, more or less.
 
 sub mocked {
