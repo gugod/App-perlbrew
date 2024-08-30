@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::Spec;
+use Test2::V0;
+use Test2::Tools::Spec;
 use Path::Class;
 use File::Temp qw( tempdir );
 
@@ -37,4 +36,4 @@ describe "App::perlbrew->install_patchperl" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;

@@ -1,11 +1,8 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
 
 use File::Temp qw[];
-
-use Test::Spec;
-use Test::Deep;
 
 use App::Perlbrew::Path::Root;
 use App::Perlbrew::Path::Installation;
@@ -19,30 +16,27 @@ sub arrange_installation;
 
 describe "App::Perlbrew::Path::Root" => sub {
     describe "perls()" => sub {
-        context "without parameters" => sub {
+        describe "without parameters" => sub {
             it "should return Instalations object" => sub {
                 local $ENV{HOME};
                 my $path = arrange_root->perls;
-
-                cmp_deeply $path, looks_like_perl_installations("~/.root/perls");
+                is $path, looks_like_perl_installations("~/.root/perls");
             };
         };
 
-        context "with one parameter" => sub {
+        describe "with one parameter" => sub {
             it "should return Installation object" => sub {
                 local $ENV{HOME};
                 my $path = arrange_root->perls('blead');
-
-                cmp_deeply $path, looks_like_perl_installation("~/.root/perls/blead");
+                is $path, looks_like_perl_installation("~/.root/perls/blead");
             };
         };
 
-        context "with multiple paramters" => sub {
+        describe "with multiple paramters" => sub {
             it "should return Path object" => sub {
                 local $ENV{HOME};
                 my $path = arrange_root->perls('blead', '.version');
-
-                cmp_deeply $path, looks_like_path("~/.root/perls/blead/.version");
+                is $path, looks_like_path("~/.root/perls/blead/.version");
             };
         }
     };
@@ -58,7 +52,7 @@ describe "App::Perlbrew::Path::Installations" => sub {
 
             my @list = $root->perls->list;
 
-            cmp_deeply \@list, [
+            is \@list, [
                 looks_like_perl_installation("~/.root/perls/perl-1"),
                 looks_like_perl_installation("~/.root/perls/perl-2"),
             ];
@@ -71,27 +65,24 @@ describe "App::Perlbrew::Path::Installation" => sub {
         it "should return installation name" => sub {
             local $ENV{HOME};
             my $installation = arrange_installation('foo-bar');
-
-            cmp_deeply $installation->name, 'foo-bar';
+            is $installation->name, 'foo-bar';
         };
 
         it "should provide path to perl" => sub {
             local $ENV{HOME};
             my $perl = arrange_installation('foo-bar')->perl;
-
-            cmp_deeply $perl->stringify_with_tilde, '~/.root/perls/foo-bar/bin/perl';
+            is $perl->stringify_with_tilde, '~/.root/perls/foo-bar/bin/perl';
         };
 
         it "should provide path to version file" => sub {
             local $ENV{HOME};
             my $file = arrange_installation('foo-bar')->version_file;
-
-            cmp_deeply $file->stringify_with_tilde, '~/.root/perls/foo-bar/.version';
+            is $file->stringify_with_tilde, '~/.root/perls/foo-bar/.version';
         };
     };
 };
 
-runtests unless caller;
+done_testing;
 
 sub looks_like_path {
     my ($path, @tests) = @_;
@@ -101,19 +92,18 @@ sub looks_like_path {
     : 'stringify'
     ;
 
-    all(
-        methods($method => $path),
-        Isa('App::Perlbrew::Path'),
-        @tests,
-    );
+    object {
+        call $method => $path;
+        prop isa => 'App::Perlbrew::Path';
+    };
 }
 
 sub looks_like_perl_installation {
-    looks_like_path(@_, Isa('App::Perlbrew::Path::Installation'));
+    looks_like_path(@_, object { prop isa => 'App::Perlbrew::Path::Installation' });
 }
 
 sub looks_like_perl_installations {
-    looks_like_path(@_, Isa('App::Perlbrew::Path::Installations'));
+    looks_like_path(@_, object { prop isa => 'App::Perlbrew::Path::Installation' });
 }
 
 sub arrange_root {

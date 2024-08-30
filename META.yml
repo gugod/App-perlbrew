@@ -13,7 +13,6 @@ build_requires:
   Test::NoWarnings: '1.04'
   Test::Output: '1.03'
   Test::Simple: '1.001002'
-  Test::Spec: '0.49'
   Test::TempDir::Tiny: '0.016'
 configure_requires:
   Module::Build::Tiny: '0.039'

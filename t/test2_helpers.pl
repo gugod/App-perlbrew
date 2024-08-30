@@ -100,4 +100,162 @@ sub mock_perlbrew_lib_create {
     App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", $name)->mkpath;
 }
 
+# Wrappers around Test2::Tools::Mock, a replacement of Test::Spec, more or less.
+
+sub mocked {
+    my ($object, $cb) = @_;
+    my $mocked = Mocked->new($object);
+
+    if (defined($cb)) {
+        $cb->($mocked, $object);
+        $mocked->verify;
+    } else {
+        return $mocked;
+    }
+}
+
+package Mocked; {
+    use Test2::Tools::Mock qw(mock);
+
+    sub new {
+        my ($class, $object) = @_;
+        return bless {
+            object => $object,
+            methods => [],
+            mock => mock($object),
+        }, $class
+    }
+
+    sub stubs {
+        my ($self, $stubs) = @_;
+        for my $k (keys %$stubs) {
+            my $v = $stubs->{$k};
+            if (ref($v) eq 'CODE') {
+                $self->{mock}->override($k => $v);
+            } else {
+                $self->{mock}->override($k => sub { $v });
+            }
+        }
+    }
+
+    sub expects {
+        my ($self, $method) = @_;
+        my $mockedMethod = MockedMethod->new($self, $method);
+        push @{$self->{methods}}, $mockedMethod;
+        return $mockedMethod;
+    }
+
+    sub verify {
+        my ($self) = @_;
+        for (@{$self->{methods}}) {
+            $_->verify();
+        }
+    }
+
+    sub reset {
+        my ($self) = @_;
+        $self->{mock}->reset_all;
+        $self->{methods} = [];
+    }
+}
+
+package MockedMethod; {
+    use Test2::Tools::Basic qw(ok note);
+    use Test2::Tools::Compare qw(is);
+    use Test2::Tools::Mock qw(mock);
+
+    sub new {
+        my ($class, $mocked, $method) = @_;
+        my $self = bless {
+            called => 0,
+            with => undef,
+            called_with => undef,
+            at_least => undef,
+            exactly => undef,
+            method => $method,
+            call_through => 1,
+            returns => undef,
+            mocked => $mocked,
+        }, $class;
+        $mocked->{mock}->override($method => $self->_build_override_method());
+        return $self;
+    }
+
+    sub never {
+        my ($self) = @_;
+        $self->exactly(0);
+        return $self;
+    }
+
+    sub exactly {
+        my ($self, $times) = @_;
+        unless ( defined $times ) {
+            die "`exactly` requires a numerical argument.";
+        }
+        $self->{exactly} = $times;
+        $self->{at_least} = undef;
+        return $self;
+    }
+
+    sub at_least {
+        my ($self, $times) = @_;
+        unless ( defined $times ) {
+            die "`exactly` requires a numerical argument.";
+        }
+        $self->{exactly} = undef;
+        $self->{at_least} = $times;
+        return $self;
+    }
+
+    sub _build_override_method {
+        my ($self) = @_;
+        return sub {
+            my $object = shift;
+            $self->{called_with} = \@_;
+            $self->{called}++;
+
+            if ($self->{call_through}) {
+                my $method = $self->{mocked}{mock}->orig($self->{method});
+                $object->$method(@_);
+            } else {
+                my $cb_or_value = $self->{returns};
+                (ref($cb_or_value) eq 'CODE') ? $cb_or_value->($object, @_) : $cb_or_value;
+            }
+        }
+    }
+
+    sub returns {
+        my ($self, $cb_or_value) = @_;
+        $self->{call_through} = 0;
+        $self->{returns} = $cb_or_value;
+        return $self;
+    }
+
+    sub with {
+        my ($self, @args) = @_;
+        $self->{with} = \@args;
+        return $self;
+    }
+
+    sub verify {
+        my ($self) = @_;
+
+        if (defined $self->{with}) {
+            is $self->{called_with}, $self->{with}, "method " . $self->{method} . " is called with expected arguments";
+        }
+
+        if (defined $self->{exactly}) {
+            is $self->{called}, $self->{exactly}, $self->{method} . " should be called exactly " . $self->{exactly} . " times";
+        }
+        elsif (defined $self->{at_least}) {
+            ok $self->{called} > $self->{at_least}, $self->{method} . " is called at least " .  $self->{at_least} . " time";
+        }
+        else {
+            ok $self->{called} > 0, $self->{method} . " is called at least 1 time";
+        }
+
+        return $self;
+    }
+}
+
 1;
