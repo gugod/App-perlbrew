@@ -15,8 +15,12 @@ put 't/' dir to `@INC`.
 =cut
 
 use Test2::V0;
+use Test2::Plugin::IOEvents;
 use IO::All;
 use File::Temp qw( tempdir );
+
+use App::Perlbrew::Path;
+use App::Perlbrew::Path::Root;
 
 no warnings 'redefine';
 sub dir {
@@ -98,6 +102,15 @@ sub mock_perlbrew_use {
 sub mock_perlbrew_lib_create {
     my $name = shift;
     App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", $name)->mkpath;
+}
+
+# Replacements of Test::Output made by using Test2::Plugin::IOEvents
+
+sub stdout_like {
+    my ($cb, $re, $desc) = @_;
+    my $events = intercept { $cb->() };
+    my $out = join "", map { $_->details } map { @{ $_->facets->{info} } }@$events;
+    like($out, $re, $desc);
 }
 
 # Wrappers around Test2::Tools::Mock, a replacement of Test::Spec, more or less.
