@@ -33,6 +33,7 @@ describe "App::Perlbrew::Path::Root" => sub {
         };
 
         describe "with multiple paramters" => sub {
+            it "should return Path object" => sub {
                 local $ENV{HOME};
                 my $path = arrange_root->perls('blead', '.version');
                 is $path, looks_like_path("~/.root/perls/blead/.version");
