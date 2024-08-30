@@ -1,11 +1,13 @@
 #!/usr/bin/env perl
 use Test2::V0;
 use Test2::Tools::Spec;
-use Test::Output;
 use File::Spec;
 use Config;
 
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require "test2_helpers.pl";
 
 describe "info command" => sub {
     it "should display info if under perlbrew perl" => sub {
@@ -43,9 +45,9 @@ perlbrew:
     PERLBREW_MANPATH: perlbrew_manpath_value
 OUT
 
-        stdout_like sub {
+        stdout_like(sub {
             $app->run();
-        }, qr/$expected/;
+        }, qr/$expected/);
     };
     it "should display info if under system perl" => sub {
         my $app = App::perlbrew->new("info");
@@ -78,9 +80,9 @@ perlbrew:
     PERLBREW_MANPATH: perlbrew_manpath_value
 OUT
 
-        stdout_like sub {
+        stdout_like(sub {
             $app->run();
-        }, qr/$expected/;
+        }, qr/$expected/);
     };
 
     it "should display info for a module if the module is installed" => sub {
@@ -128,10 +130,10 @@ Module: \Q$module_name\E
   Version: [\\d\\._]+
 OUT
 
-        stdout_like sub {
+        stdout_like(sub {
             $app->{args} = [ "info", $module_name];
             $app->run();
-        }, qr/$expected/;
+        }, qr/$expected/);
     };
 
     it "should display a message that the module can't be found if the module isn't installed" => sub {
@@ -173,10 +175,10 @@ perlbrew:
 Module: $module_name could not be found, is it installed?.*
 OUT
 
-        stdout_like sub {
+        stdout_like(sub {
             $app->{args} = [ "info", $module_name];
             $app->run();
-        }, qr/$expected/;
+        }, qr/$expected/);
     };
 
 };
