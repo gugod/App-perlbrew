@@ -6,8 +6,7 @@ use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
 require "test2_helpers.pl";
-
-use Test::Output qw( stdout_from );
+use PerlbrewTestHelpers qw( stdout_from );
 
 $ENV{PERLBREW_DEBUG_COMPLETION} = 0;
 

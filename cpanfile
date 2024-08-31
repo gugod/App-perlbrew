@@ -15,7 +15,6 @@ on test => sub {
     requires 'File::Which'          => '1.21';
     requires 'IO::All'              => '0.51';
     requires 'Path::Class'          => '0.33';
-    requires 'Test::Output'         => '1.03';
     requires 'Test2::V0'            => '0.000163';
     requires 'Test2::Plugin::NoWarnings' => '0.10';
     requires 'Test2::Plugin::IOEvents' => '0.001001';

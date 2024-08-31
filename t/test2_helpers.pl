@@ -15,8 +15,12 @@ put 't/' dir to `@INC`.
 =cut
 
 use Test2::V0;
+use Test2::Plugin::IOEvents;
 use IO::All;
 use File::Temp qw( tempdir );
+
+use App::Perlbrew::Path;
+use App::Perlbrew::Path::Root;
 
 no warnings 'redefine';
 sub dir {

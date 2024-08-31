@@ -4,7 +4,7 @@
       "Kang-min Liu  C<< <gugod@gugod.org> >>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "App::ModuleBuildTiny version 0.041",
+   "generated_by" : "App::ModuleBuildTiny version 0.047",
    "license" : [
       "mit"
    ],
@@ -21,7 +21,7 @@
       },
       "develop" : {
          "requires" : {
-            "App::ModuleBuildTiny" : "0.041",
+            "App::ModuleBuildTiny" : "0.047",
             "Pod::Markdown" : "2.002"
          }
       },
@@ -48,7 +48,6 @@
             "Test2::V0" : "0.000163",
             "Test::More" : "1.001002",
             "Test::NoWarnings" : "1.04",
-            "Test::Output" : "1.03",
             "Test::Simple" : "1.001002",
             "Test::TempDir::Tiny" : "0.016"
          }

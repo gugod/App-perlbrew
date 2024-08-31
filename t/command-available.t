@@ -2,9 +2,14 @@
 use Test2::V0;
 use Test2::Tools::Spec;
 use File::Temp qw( tempdir );
-use Test::Output;
 
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require "test2_helpers.pl";
+
+use PerlbrewTestHelpers qw(stdout_like);
+
 $App::perlbrew::PERLBREW_ROOT = my $perlbrew_root = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = my $perlbrew_home = tempdir( CLEANUP => 1 );
 

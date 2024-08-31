@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use Test2::V0;
 use Test2::Tools::Spec;
+use Config;
 
 BEGIN { $ENV{SHELL} = "/bin/bash" }
 
@@ -8,9 +9,7 @@ use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
 require "test2_helpers.pl";
-
-use Test::Output;
-use Config;
+use PerlbrewTestHelpers qw(stderr_like);
 
 mock_perlbrew_install("perl-5.14.1");
 mock_perlbrew_lib_create('perl-5.14.1@nobita');
