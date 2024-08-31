@@ -9,10 +9,6 @@ build_requires:
   Test2::Plugin::IOEvents: '0.001001'
   Test2::Plugin::NoWarnings: '0.10'
   Test2::V0: '0.000163'
-  Test::More: '1.001002'
-  Test::NoWarnings: '1.04'
-  Test::Simple: '1.001002'
-  Test::TempDir::Tiny: '0.016'
 configure_requires:
   Module::Build::Tiny: '0.039'
 dynamic_config: 0
