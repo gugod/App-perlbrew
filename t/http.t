@@ -1,14 +1,17 @@
 #!/usr/bin/env perl
 use Test2::V0;
 use Test2::Tools::Spec;
-use App::perlbrew;
 use File::Temp 'tempdir';
-use IO::All;
 
+use App::perlbrew;
 use App::Perlbrew::HTTP qw(http_user_agent_program http_get http_download);
 
+use FindBin;
+use lib $FindBin::Bin;
+use PerlbrewTestHelpers qw( read_file );
+
 unless ($ENV{PERLBREW_DEV_TEST}) {
-    skip_all => <<REASON;
+    skip_all <<REASON;
 
 This test invokes HTTP request to external servers and should not be ran in
 blind. Whoever which to test this need to set PERLBREW_DEV_TEST env var to 1.
@@ -65,7 +68,9 @@ REASON
     };
 
     it "seems to be downloading the right content" => sub {
-        is(scalar(io($output)->getline), "#!/bin/sh\n");
+        my $content = read_file($output);
+        my ($first_line, undef) = split /\n/, $content, 2;
+        is ($first_line, "#!/bin/sh");
     };
 };
 
