@@ -6,8 +6,7 @@ use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
 require 'test2_helpers.pl';
-
-use Test::Output;
+use PerlbrewTestHelpers qw(stderr_is);
 
 mock_perlbrew_install("perl-5.12.3");
 mock_perlbrew_install("perl-5.12.4");
