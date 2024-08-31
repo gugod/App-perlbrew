@@ -17,7 +17,6 @@ on test => sub {
     requires 'Path::Class'          => '0.33';
     requires 'Test::More'           => '1.001002';
     requires 'Test::NoWarnings'     => '1.04';
-    requires 'Test::Output'         => '1.03';
     requires 'Test::Simple'         => '1.001002';
     requires 'Test::TempDir::Tiny'  => '0.016';
     requires 'Test2::V0'            => '0.000163';

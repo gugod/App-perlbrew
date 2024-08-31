@@ -1,11 +1,14 @@
 #!/usr/bin/env perl
 use Test2::V0;
 use Test2::Tools::Spec;
-use Test::Output;
 use File::Spec;
 use Config;
 
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require "test2_helpers.pl";
+use PerlbrewTestHelpers qw(stdout_like);
 
 describe "info command" => sub {
     it "should display info if under perlbrew perl" => sub {
