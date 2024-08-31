@@ -32,7 +32,6 @@ sub stderr_like (&$;$) {
 sub stdout_from (&) {
     my ($cb) = @_;
     return join "", map { $_->details } grep { $_->tag eq 'STDOUT' } ioevents_from($cb);
-    my $events = intercept { $cb->() };
 }
 
 sub stdout_is (&$;$) {
