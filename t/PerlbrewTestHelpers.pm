@@ -58,11 +58,10 @@ sub read_file {
 }
 
 sub write_file {
-    my ($file) = @_;
+    my ($file, $content) = @_;
     open my $fh, '>', $file
         or die "Cannot open $file for write: $!";
-    local $/ = undef;
-    print $fh $file;
+    print $fh $content;
     close $fh;
     return;
 }
