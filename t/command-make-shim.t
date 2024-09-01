@@ -8,6 +8,7 @@ use lib $FindBin::Bin;
 
 use App::perlbrew;
 require "test2_helpers.pl";
+use PerlbrewTestHelpers qw(read_file write_file);
 
 mock_perlbrew_install("perl-5.36.1");
 
@@ -51,7 +52,7 @@ describe "App::perlbrew->make_shim('foo')" => sub {
         mock_perlbrew_use("perl-5.36.1");
         my $dir = tempdir();
         chdir($dir);
-        io("foo")->print("hello");
+        write_file ("foo", "hello");
 
         ok dies {
             my $app = App::perlbrew->new("make-shim", "foo");
@@ -73,7 +74,7 @@ describe "App::perlbrew->make_shim('foo')" => sub {
         $app->run();
 
         ok -f "foo", "foo is produced under current directory.";
-        my $shim_content = io("foo")->slurp;
+        my $shim_content = read_file("foo");
         diag "\nThe content of shim:\n----\n$shim_content\n----\n";
     };
 
@@ -86,7 +87,7 @@ describe "App::perlbrew->make_shim('foo')" => sub {
         $app->run();
 
         ok -f "foo", "foo is produced under current directory.";
-        my $shim_content = io("foo")->slurp;
+        my $shim_content = read_file("foo");
         diag "\nThe content of shim:\n----\n$shim_content\n----\n";
     };
 };

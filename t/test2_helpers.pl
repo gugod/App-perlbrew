@@ -16,11 +16,12 @@ put 't/' dir to `@INC`.
 
 use Test2::V0;
 use Test2::Plugin::IOEvents;
-use IO::All;
 use File::Temp qw( tempdir );
 
 use App::Perlbrew::Path;
 use App::Perlbrew::Path::Root;
+
+use PerlbrewTestHelpers qw(write_file);
 
 no warnings 'redefine';
 sub dir {
@@ -62,7 +63,7 @@ sub App::perlbrew::do_install_release {
     $root->perls($name, "bin")->mkpath;
 
     my $perl = $root->perls ($name, "bin")->child ("perl");
-    io($perl)->print(<<'CODE');
+    write_file($perl, <<'CODE');
 #!/usr/bin/env perl
 use File::Basename;
 my $name = basename(dirname(dirname($0))), "\n";
