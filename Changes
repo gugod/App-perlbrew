@@ -1,5 +1,6 @@
-NEXT
-	- Thanks to our contributors: Joelle Maslak
+0.99
+	- Released at 2024-09-07T16:30:28+0900
+	- Thanks to our contributors: Graham Knop, Joelle Maslak, Luke Closs, jonasbn
 	- bashrc executes properly in bash shells with +h option set
 	- Allow specification of non-standard Perl location
 	- make-pp now requires the input to be specified with `-i` or `--input`.
