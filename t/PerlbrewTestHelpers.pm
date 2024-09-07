@@ -3,7 +3,11 @@ use Test2::V0;
 use Test2::Plugin::IOEvents;
 
 use Exporter 'import';
-our @EXPORT_OK = qw(stderr_from stderr_is stderr_like stdout_from stdout_is stdout_like);
+our @EXPORT_OK = qw(
+    read_file write_file
+    stderr_from stderr_is stderr_like
+    stdout_from stdout_is stdout_like
+);
 
 # Replacements of Test::Output made by using Test2::Plugin::IOEvents
 
@@ -44,5 +48,22 @@ sub stdout_like (&$;$) {
     like(stdout_from(sub { $cb->() }), $re, $desc);
 }
 
+sub read_file {
+    my ($file) = @_;
+    open my $fh, '<', $file
+        or die "Cannot open $file for read: $!";
+    local $/ = undef;
+    my $content = <$fh>;
+    return $content;
+}
+
+sub write_file {
+    my ($file, $content) = @_;
+    open my $fh, '>', $file
+        or die "Cannot open $file for write: $!";
+    print $fh $content;
+    close $fh;
+    return;
+}
 
 1;

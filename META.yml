@@ -4,7 +4,6 @@ author:
   - 'Kang-min Liu  C<< <gugod@gugod.org> >>'
 build_requires:
   File::Which: '1.21'
-  IO::All: '0.51'
   Path::Class: '0.33'
   Test2::Plugin::IOEvents: '0.001001'
   Test2::Plugin::NoWarnings: '0.10'
