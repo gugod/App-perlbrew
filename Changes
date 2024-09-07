@@ -3,7 +3,8 @@ NEXT
 	- bashrc executes properly in bash shells with +h option set
 	- Allow specification of non-standard Perl location
 	- make-pp now requires the input to be specified with `-i` or `--input`.
-	- Start to port tests to Test2
+	- Tests are ported to Test2. Big thanks to Luke Closs.
+        - Command make-pp now expects the input to be the path of an existing executable perl program, and would not be searching through $PATH.
 
 0.98
 	- Released at 2023-08-11T22:54:38+0900
