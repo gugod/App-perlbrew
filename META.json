@@ -4,7 +4,7 @@
       "Kang-min Liu  C<< <gugod@gugod.org> >>"
    ],
    "dynamic_config" : 0,
-   "generated_by" : "App::ModuleBuildTiny version 0.041",
+   "generated_by" : "App::ModuleBuildTiny version 0.047",
    "license" : [
       "mit"
    ],
@@ -21,13 +21,13 @@
       },
       "develop" : {
          "requires" : {
-            "App::ModuleBuildTiny" : "0.041",
+            "App::ModuleBuildTiny" : "0.047",
             "Pod::Markdown" : "2.002"
          }
       },
       "runtime" : {
          "requires" : {
-            "CPAN::Perl::Releases" : "5.20230720",
+            "CPAN::Perl::Releases" : "5.20240609",
             "Capture::Tiny" : "0.48",
             "Devel::PatchPerl" : "2.08",
             "ExtUtils::MakeMaker" : "7.22",
@@ -41,15 +41,10 @@
       "test" : {
          "requires" : {
             "File::Which" : "1.21",
-            "IO::All" : "0.51",
             "Path::Class" : "0.33",
-            "Test::Exception" : "0.32",
-            "Test::More" : "1.001002",
-            "Test::NoWarnings" : "1.04",
-            "Test::Output" : "1.03",
-            "Test::Simple" : "1.001002",
-            "Test::Spec" : "0.49",
-            "Test::TempDir::Tiny" : "0.016"
+            "Test2::Plugin::IOEvents" : "0.001001",
+            "Test2::Plugin::NoWarnings" : "0.10",
+            "Test2::V0" : "0.000163"
          }
       }
    },
@@ -74,7 +69,7 @@
       },
       "App::perlbrew" : {
          "file" : "lib/App/perlbrew.pm",
-         "version" : "0.98"
+         "version" : "0.99"
       }
    },
    "release_status" : "stable",
@@ -88,7 +83,7 @@
          "web" : "https://github.com/gugod/App-perlbrew"
       }
    },
-   "version" : "0.98",
+   "version" : "0.99",
    "x_serialization_backend" : "JSON::PP version 4.16",
    "x_spdx_expression" : "MIT",
    "x_static_install" : "1"

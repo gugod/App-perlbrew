@@ -1,111 +1,86 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-
-use Test::Spec 0.49; # with_deep
-use Test::Deep;
+use Test2::V0;
+use Test2::Tools::Spec;
 
 use FindBin;
 use lib $FindBin::Bin;
-
 use App::perlbrew;
-
-require 'test_helpers.pl';
-
-sub arrange_available_perls;
-sub arrange_command_line;
-sub expect_dispatch_via;
+require 'test2_helpers.pl';
 
 describe "command install" => sub {
     it "should install exact perl version" => sub {
-        arrange_command_line install => 'perl-5.12.1';
-
-        expect_dispatch_via do_install_release => [ 'perl-5.12.1', '5.12.1' ];
+        my $app = App::perlbrew->new(install => 'perl-5.12.1');
+        my $mock = mocked($app)->expects('do_install_release')->with('perl-5.12.1', '5.12.1');
+        $app->run;
+        $mock->verify;
     };
 
     it "should install exact cperl version" => sub {
-        arrange_command_line install => 'cperl-5.26.4';
-
-        expect_dispatch_via do_install_release => [ 'cperl-5.26.4', '5.26.4' ];
+        my $app = App::perlbrew->new(install => 'cperl-5.26.4');
+        my $mock = mocked($app)->expects('do_install_release')->with('cperl-5.26.4', '5.26.4');
+        $app->run;
+        $mock->verify;
     };
 
     it "should install stable version of perl" => sub {
-        arrange_command_line install => 'perl-stable';
+        my @versions_sorted_from_new_to_old = qw( perl-5.29.0 perl-5.14.2 perl-5.14.1 perl-5.12.3 perl-5.12.2 );
 
-        arrange_available_perls qw[
-            perl-5.12.2
-            perl-5.12.3
-            perl-5.14.1
-            perl-5.14.2
-            perl-5.29.0
-        ];
+        my $app = App::perlbrew->new(install => 'perl-stable');
 
-        expect_dispatch_via do_install_release => [ 'perl-5.14.2', '5.14.2' ];
+        my $mock = mocked($app);
+        $mock->expects('available_perls')->returns(sub { @versions_sorted_from_new_to_old });
+        $mock->expects('do_install_release')->with('perl-5.14.2', '5.14.2');
+
+        $app->run;
+        $mock->verify;
     };
 
     it "should install blead perl" => sub {
-        arrange_command_line install => 'perl-blead';
-        expect_dispatch_via do_install_blead => [];
+        my $app = App::perlbrew->new(install => 'perl-blead');
+
+        my $mock = mocked($app);
+        $mock->expects('do_install_release')->never;
+        $mock->expects('do_install_blead')->exactly(1)->returns(sub { "dummy" });
+
+        $app->run;
+        $mock->verify;
     };
 
     it "should install git checkout" => sub {
         my $checkout = tempdir (CLEANUP => 1);
         dir ($checkout, '.git')->mkpath;
 
-        arrange_command_line install => $checkout;
+        my $app = App::perlbrew->new(install => $checkout);
 
-        expect_dispatch_via do_install_git => [ $checkout ];
+        my $mock = mocked($app);
+        $mock->expects('do_install_git')->with($checkout)->returns(sub { "dummy" });
+
+        $app->run;
+        $mock->verify;
     };
 
     it "should install from archive" => sub {
         my $checkout = tempdir (CLEANUP => 1);
         my $file = file ($checkout, 'archive.tar.gz')->stringify;
-
         open my $fh, '>', $file;
         close $fh;
 
-        arrange_command_line install => $file;
+        my $app = App::perlbrew->new(install => $file);
 
-        expect_dispatch_via do_install_archive => [ all (
-            obj_isa ('App::Perlbrew::Path'),
-            methods (stringify => $file),
-        ) ];
+        my $mock = mocked($app)->expects('do_install_archive')->with($file)->returns(sub { "dummy" });
+
+        $app->run;
+        $mock->verify;
     };
 
     it "should install from uri" => sub {
-        arrange_command_line install => 'http://example.com/foo/bar';
+        my $app = App::perlbrew->new(install => 'http://example.com/foo/bar');
 
-        expect_dispatch_via do_install_url => [ 'http://example.com/foo/bar' ];
+        my $mock = mocked($app)->expects('do_install_url')->with('http://example.com/foo/bar')->returns(sub { "dummy" });
+
+        $app->run;
+        $mock->verify;
     };
 };
 
-runtests unless caller;
-
-sub arrange_available_perls {
-    my (@list) = @_;
-
-    App::perlbrew->stubs (available_perls => sub { $_[0]->sort_perl_versions (@list) });
-}
-
-sub arrange_command_line {
-    my (@command_line) = @_;
-
-    share my %shared;
-
-    $shared{app} = App::perlbrew->new (@command_line);
-}
-
-sub expect_dispatch_via {
-    my ($method, $arguments) = @_;
-
-    share my %shared;
-
-    my $expectation = App::perlbrew->expects ($method);
-    $expectation = $expectation->with_deep (@$arguments)
-        if $arguments;
-
-
-    $shared{app}->run;
-
-    ok $expectation->verify;
-}
+done_testing;

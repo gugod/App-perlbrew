@@ -42,13 +42,14 @@ echo
 echo "## Installing perlbrew"
 
 # loop thru available well known Perl installations
-for PERL in "/usr/bin/perl" "/usr/local/bin/perl"
+for PERL in "/usr/bin/perl" "/usr/local/bin/perl" "$PERLBREW_SYSTEM_PERL"
 do
-    [ -x "$PERL" ] && echo "Using Perl <$PERL>" && break
+    [ -n "$PERL" ] && [ -x "$PERL" ] && echo "Using Perl <$PERL>" && break
 done
 
 if [ ! -x "$PERL" ]; then
   echo "Need /usr/bin/perl or /usr/local/bin/perl to use $0"
+  echo "Alternatively, set PERLBREW_SYSTEM_PERL to point at system perl"
   clean_exit 2
 fi
 

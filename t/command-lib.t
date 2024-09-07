@@ -1,14 +1,14 @@
-use strict;
-use warnings;
+#!/usr/bin/env perl
+use Test2::V0;
+use Test2::Tools::Spec;
+use Test2::Plugin::IOEvents;
+
 use FindBin;
 use lib $FindBin::Bin;
 
-use Test::Spec;
-use Test::Output;
-use Test::Exception;
 use App::perlbrew;
+require "test2_helpers.pl";
 
-require "test_helpers.pl";
 mock_perlbrew_install("perl-5.14.1");
 mock_perlbrew_install("perl-5.14.2");
 mock_perlbrew_install("perl-5.14.3");
@@ -18,68 +18,73 @@ describe "lib command," => sub {
         it "should display error" => sub {
             my $x   = "correcthorsebatterystaple";
             my $app = App::perlbrew->new("lib", $x);
-            stdout_like {
-                eval {
-                    $app->run;
-                    1;
-                }
-                or do {
-                    print STDERR $@;
-                };
-            } qr/Unknown command: $x/;
+            my $events = intercept { $app->run() };
+            like(
+                $events,
+                [
+                    {info => [{tag => 'STDOUT', details => qr/Unknown command: $x/}]}
+                ],
+                'Unknown command'
+            );
         }
     };
 
     describe "without lib name" => sub {
         it "create errs gracefully showing usage" => sub {
             my $app = App::perlbrew->new;
-            throws_ok {
+            like dies {
                 $app->{args} = [ "lib", "create"];
                 $app->run;
-            } qr/ERROR: /i;
+            }, qr/ERROR: /i, 'lib create';
         };
-        it "delte errs gracefully showing usage" => sub {
+        it "delete errs gracefully showing usage" => sub {
             my $app = App::perlbrew->new;
-            throws_ok {
+            like dies {
                 $app->{args} = [ "lib", "delete"];
                 $app->run;
-            } qr/ERROR: /i;
+            }, qr/ERROR: /i, 'lib delete';
         };
     };
 
-
     describe "`create` sub-command," => sub {
         my ($app, $libdir);
+        my $mock = mock "App::perlbrew";
+        $mock->override("current_perl", sub { "perl-5.14.2" });
 
-        before each => sub {
-            $app = App::perlbrew->new;
-            $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
-
+        before_each setup_path => sub {
+            $app = $mock->class->new;
             $libdir = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
         };
 
-        after each => sub {
+        after_each remove_path => sub {
             $libdir->rmpath;
         };
 
         describe "with a bare lib name," => sub {
             it "creates the lib folder for current perl" => sub {
-                stdout_is {
+                my $events = intercept {
                     $app->{args} = [ "lib", "create", "nobita" ];
                     $app->run;
-                } qq{lib 'perl-5.14.2\@nobita' is created.\n};
+                };
+                like $events, [
+                    {info => [{tag => 'STDOUT', details => qr{lib 'perl-5.14.2\@nobita' is created.}}]}
+                ], 'stdout matches';
 
-                ok -d $libdir;
+                ok -d $libdir, "libdir exists";
             };
         };
 
         describe "with \@ in the beginning of lib name," => sub {
             it "creates the lib folder for current perl" => sub {
-                stdout_is {
-                    $app->{args} = [ "lib", "create", '@nobita' ];
+                ok ! -d $libdir, "libdir do not exist";
 
+                my $events = intercept {
+                    $app->{args} = [ "lib", "create", '@nobita' ];
                     $app->run;
-                } qq{lib 'perl-5.14.2\@nobita' is created.\n};
+                };
+                like $events, [
+                    {info => [{tag => 'STDOUT', details => qr{lib 'perl-5.14.2\@nobita' is created.}}]}
+                ], 'stdout matches';
 
                 ok -d $libdir;
             }
@@ -87,30 +92,37 @@ describe "lib command," => sub {
 
         describe "with perl name and \@  as part of lib name," => sub {
             it "creates the lib folder for the specified perl" => sub {
-                stdout_is {
+                my $events = intercept {
                     $app->{args} = [ "lib", "create", 'perl-5.14.2@nobita' ];
                     $app->run;
-                } qq{lib 'perl-5.14.2\@nobita' is created.\n};
+                };
+                like $events, [
+                    {info => [{tag => 'STDOUT', details => qr{lib 'perl-5.14.2\@nobita' is created.}}]}
+                ], 'stdout matches';
 
                 ok -d $libdir;
             };
 
             it "creates the lib folder for the specified perl" => sub {
-                stdout_is {
+                my $events = intercept {
                     $app->{args} = [ "lib", "create", 'perl-5.14.1@nobita' ];
                     $app->run;
-                } qq{lib 'perl-5.14.1\@nobita' is created.\n};
+                };
+                like $events, [
+                    {info => [{tag => 'STDOUT', details => qr{lib 'perl-5.14.1\@nobita' is created.}}]}
+                ], 'stdout matches';
 
                 $libdir = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.1@nobita');
                 ok -d $libdir;
             };
 
             it "shows errors if the specified perl does not exist." => sub {
-                throws_ok {
+                like dies {
                     ## perl-5.8.8 is not mock-installed
                     $app->{args} = [ "lib", "create", 'perl-5.8.8@nobita' ];
                     $app->run;
-                } qr{^ERROR: 'perl-5.8.8' is not installed yet, 'perl-5.8.8\@nobita' cannot be created.\n};
+                }, qr{^ERROR: 'perl-5.8.8' is not installed yet, 'perl-5.8.8\@nobita' cannot be created.\n},
+                'dies with error message';
 
                 $libdir = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.8.8@nobita');
                 ok !-d $libdir;
@@ -119,32 +131,38 @@ describe "lib command," => sub {
     };
 
     describe "`delete` sub-command," => sub {
-        before each => sub {
-            App::Perlbrew::Path
-            ->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita')
-            ->mkpath
-            ;
+        my $nobita = App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
+        before_each mkpath => sub {
+            $nobita->mkpath;
+        };
+        after_each rmpath => sub {
+            $nobita->rmpath;
         };
 
         it "deletes the local::lib folder" => sub {
-            stdout_is {
-                my $app = App::perlbrew->new("lib", "delete", "nobita");
-                $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
+            like intercept {
+                my $mock = mock "App::perlbrew";
+                $mock->override("current_perl", sub { "perl-5.14.2" });
+                my $app = $mock->class->new("lib", "delete", "nobita");
                 $app->run;
-            } qq{lib 'perl-5.14.2\@nobita' is deleted.\n};
+            }, [
+                {info => [{tag => 'STDOUT', details => qr{lib 'perl-5.14.2\@nobita' is deleted.}}]}
+            ], 'stdout matches';
 
             ok !-d App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
             ok !-e App::Perlbrew::Path->new($App::perlbrew::PERLBREW_HOME, "libs", 'perl-5.14.2@nobita');
         };
 
         it "shows errors when the given lib does not exists " => sub {
-            throws_ok {
-                my $app = App::perlbrew->new("lib", "delete", "yoga");
-                $app->expects("current_perl")->returns("perl-5.14.2")->at_least_once;
+            like dies {
+                my $mock = mock "App::perlbrew";
+                $mock->override("current_perl", sub { "perl-5.14.2" });
+                my $app = $mock->class->new("lib", "delete", "yoga");
                 $app->run;
-            } qr{^ERROR: 'perl-5\.14\.2\@yoga' does not exist\.};
+            }, qr{^ERROR: 'perl-5\.14\.2\@yoga' does not exist\.},
+            'dies with error message';
         };
     };
 };
 
-runtests unless caller;
+done_testing;

@@ -1,6 +1,5 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 use FindBin qw($Bin);
 BEGIN {
@@ -9,8 +8,6 @@ BEGIN {
 
 use File::Which qw(which);
 use App::Perlbrew::HTTP qw(http_user_agent_program);
-
-use Test::More;
 
 chmod 0755, "$Bin/fake-bin/curl";
 
@@ -32,7 +29,7 @@ if ($expected_ua) {
     my $detected_ua = http_user_agent_program();
     is $detected_ua, $expected_ua, "UA: $detected_ua";
 } else {
-    pass("Neither wget nor fetch can be found. This test requers at least one of them to be there.");
+    pass("Neither wget nor fetch can be found. This test requires at least one of them to be there.");
 }
 
 done_testing;

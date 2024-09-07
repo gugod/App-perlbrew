@@ -4,19 +4,14 @@ author:
   - 'Kang-min Liu  C<< <gugod@gugod.org> >>'
 build_requires:
   File::Which: '1.21'
-  IO::All: '0.51'
   Path::Class: '0.33'
-  Test::Exception: '0.32'
-  Test::More: '1.001002'
-  Test::NoWarnings: '1.04'
-  Test::Output: '1.03'
-  Test::Simple: '1.001002'
-  Test::Spec: '0.49'
-  Test::TempDir::Tiny: '0.016'
+  Test2::Plugin::IOEvents: '0.001001'
+  Test2::Plugin::NoWarnings: '0.10'
+  Test2::V0: '0.000163'
 configure_requires:
   Module::Build::Tiny: '0.039'
 dynamic_config: 0
-generated_by: 'App::ModuleBuildTiny version 0.041, CPAN::Meta::Converter version 2.150010'
+generated_by: 'App::ModuleBuildTiny version 0.047, CPAN::Meta::Converter version 2.150010'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -37,9 +32,9 @@ provides:
     file: lib/App/Perlbrew/Util.pm
   App::perlbrew:
     file: lib/App/perlbrew.pm
-    version: '0.98'
+    version: '0.99'
 requires:
-  CPAN::Perl::Releases: '5.20230720'
+  CPAN::Perl::Releases: '5.20240609'
   Capture::Tiny: '0.48'
   Devel::PatchPerl: '2.08'
   ExtUtils::MakeMaker: '7.22'
@@ -51,7 +46,7 @@ requires:
 resources:
   bugtracker: https://github.com/gugod/App-perlbrew/issues
   repository: https://github.com/gugod/App-perlbrew.git
-version: '0.98'
+version: '0.99'
 x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
 x_spdx_expression: MIT
 x_static_install: '1'

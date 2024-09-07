@@ -1,16 +1,17 @@
 #!perl
-use strict;
+use Test2::V0;
 use Capture::Tiny qw/capture/;
-use IO::All;
 use App::perlbrew;
 use File::Temp qw( tempdir );
+
+use FindBin;
+use lib $FindBin::Bin;
+use PerlbrewTestHelpers qw( write_file );
 
 $App::perlbrew::PERLBREW_ROOT = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = tempdir( CLEANUP => 1 );
 $ENV{PERLBREW_ROOT} = $App::perlbrew::PERLBREW_ROOT;
 my $DESTDIR = tempdir( CLEANUP => 1 );
-
-use Test::More;
 
 ## mock
 
@@ -49,7 +50,8 @@ sub App::perlbrew::do_install_release {
     $root->child("perls", $name, "bin")->mkpath;
 
     my $perl = $root->child("perls", $name, "bin")->child("perl");
-    io($perl)->print("#!/bin/sh\nperl \"\$@\";\n");
+
+    write_file($perl, "#!/bin/sh\nperl \"\$@\";\n");
     chmod 0755, $perl;
 
     # fake the install

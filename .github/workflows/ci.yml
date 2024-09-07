@@ -3,33 +3,50 @@ name: CI
 on: pull_request
 
 jobs:
-  TestDist:
+  mbtiny-dist:
     runs-on: ubuntu-latest
-    name: Test the dist
+    container:
+      image: perl:5.38
     steps:
-      - uses: actions/checkout@v2
-      - name: mbtiny dist
-        uses: docker://docker.io/library/perl:5.36
+      - uses: actions/checkout@v4
+      - run: cpanm --quiet --notest App::ModuleBuildTiny
+      - run: mbtiny distdir
+      - run: echo ./App-perlbrew-*
+      - uses: actions/upload-artifact@v4
         with:
-          args: |
-            bash -c "
-              cpanm --quiet --notest App::ModuleBuildTiny
-              mbtiny dist
-              echo ./App-perlbrew-*.tar.gz
-            "
-      - name: install on perl 5.36
-        uses: docker://docker.io/library/perl:5.36
+          name: App-perlbrew-distdir
+          path: ./App-perlbrew-*
+          retention-days: 5
+
+  cpanm-dist:
+    needs: mbtiny-dist
+    strategy:
+      matrix:
+        version: ["5.38", "5.36", "5.34", "5.18"]
+    name: cpanm-dist-perl-${{ matrix.version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: shogo82148/actions-setup-perl@v1.29.0
         with:
-          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
-      - name: install on perl 5.34
-        uses: docker://docker.io/library/perl:5.34
+          perl-version: ${{ matrix.version }}
+      - uses: actions/download-artifact@v4
         with:
-          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
-      - name: install on perl 5.14
-        uses: docker://docker.io/library/perl:5.14
+          name: App-perlbrew-distdir
+      - run: echo ./App-perlbrew-*
+      - run: cpanm --verbose ./App-perlbrew-*
+
+  cpanm-dist-in-container:
+    needs: mbtiny-dist
+    strategy:
+      matrix:
+        version: ["5.39"]
+    name: cpanm-dist-perl-${{ matrix.version }}
+    runs-on: ubuntu-latest
+    container:
+      image: perl:${{ matrix.version }}
+    steps:
+      - uses: actions/download-artifact@v4
         with:
-          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
-      - name: install on perl 5.12
-        uses: docker://docker.io/library/perl:5.12
-        with:
-          args: bash -c "cpanm --verbose ./App-perlbrew-*.tar.gz"
+          name: App-perlbrew-distdir
+      - run: echo ./App-perlbrew-*
+      - run: cpanm --verbose ./App-perlbrew-*

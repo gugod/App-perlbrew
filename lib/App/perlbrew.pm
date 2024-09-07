@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.98";
+our $VERSION = "0.99";
 use Config qw( %Config );
 
 BEGIN {
@@ -188,6 +188,7 @@ sub parse_cmdline {
         'notest|n',
         'quiet|q',
         'verbose|v',
+        'input|i=s',
         'output|o=s',
         'as=s',
         'append=s',
@@ -711,6 +712,8 @@ sub available_perl_distributions {
 
     my $decoded = decode_json($json);
     for my $release ( @{ $decoded->{releases} } ) {
+        next
+            if !$release->{authorized};
         push @perllist, [$release->{name}, $release->{download_url}];
     }
     foreach my $perl ( $self->filter_perl_available( \@perllist ) ) {
@@ -1694,6 +1697,14 @@ sub do_capture {
         sub {
             $self->do_system(@cmd);
         }
+    );
+}
+
+sub do_capture_current_perl {
+    my ( $self, @cmd ) = @_;
+    return $self->do_capture(
+        $self->installed_perl_executable( $self->current_perl ),
+        @cmd,
     );
 }
 
@@ -2714,7 +2725,7 @@ sub format_info_output {
         my $code =
 qq{eval "require $module" and do { (my \$f = "$module") =~ s<::></>g; \$f .= ".pm"; print "$module\n  Location: \$INC{\$f}\n  Version: " . ($module->VERSION ? $module->VERSION : "no VERSION specified" ) } or do { print "$module could not be found, is it installed?" } };
         $out .=
-            "\nModule: " . $self->do_capture( $self->installed_perl_executable( $self->current_perl ), "-le", $code );
+            "\nModule: " . $self->do_capture_current_perl( '-le', $code );
     }
 
     $out;
@@ -2769,31 +2780,37 @@ sub run_command_make_shim {
 sub run_command_make_pp {
     my ($self, $program) = @_;
 
-    unless ($program) {
+    my $current_env = $self->current_env
+        or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
+    my $path_pp = $self->whereis_in_env("pp", $current_env)
+            or die "ERROR: pp cannot be found in $current_env";
+
+    my $input = $self->{input};
+    my $output = $self->{output};
+
+    unless ($input && $output) {
         $self->run_command_help("make-pp");
         return;
     }
 
-    my $current_env = $self->current_env
-        or die "ERROR: perlbrew is not activated. make-pp requires an perlbrew environment to be activated.\nRead the usage by running: perlbrew help make-pp\n";
-
-    my $output = $self->{output} || $program;
-
-    if (-f $output) {
-        die "ERROR: $program already exists under current directory.\n";
+    unless (-f $input) {
+        die "ERROR: The specified input $input do not exists\n";
     }
 
-    my $path_program = $self->whereis_in_env($program, $current_env)
-        or die "ERROR: $program cannot be found in $current_env";
-    my $path_pp = $self->whereis_in_env("pp", $current_env)
-            or die "ERROR: pp cannot be found in $current_env";
+    if (-f $output) {
+        die "ERROR: $output already exists.\n";
+    }
 
-
-    my $sitelib = $self->do_capture(
-        $self->installed_perl_executable( $self->current_perl ),
-        "-MConfig",
-        "-e",
+    my $sitelib = $self->do_capture_current_perl(
+        '-MConfig',
+        '-e',
         'print $Config{sitelibexp}',
+    );
+
+    my $privlib = $self->do_capture_current_perl(
+        '-MConfig',
+        '-e',
+        'print $Config{privlibexp}',
     );
 
     my $locallib;
@@ -2805,21 +2822,21 @@ sub run_command_make_pp {
         $locallib = $llpaths[0];
     }
 
-    my $perlversion = $self->do_capture(
-        $self->installed_perl_executable( $self->current_perl ),
-        "-MConfig",
-        "-e",
+    my $perlversion = $self->do_capture_current_perl(
+        '-MConfig',
+        '-e',
         'print $Config{version}',
     );
 
     my @cmd = (
         $path_pp,
         "-B", # core modules
+        "-a", "$privlib;$perlversion",
         "-a", "$sitelib;$perlversion",
         ($locallib ? ("-a", "$locallib;$perlversion") : ()),
         "-z", "9",
         "-o", $output,
-        $path_program,
+        $input,
     );
 
     $self->do_system(@cmd);
@@ -2869,7 +2886,9 @@ __perlbrew_purify () {
 __perlbrew_set_path () {
     export MANPATH=${PERLBREW_MANPATH:-}${PERLBREW_MANPATH:+:}$(__perlbrew_purify "$(manpath 2>/dev/null)")
     export PATH=${PERLBREW_PATH:-$PERLBREW_ROOT/bin}:$(__perlbrew_purify "$PATH")
-    hash -r
+    if [[ -o hashall ]] ; then
+        hash -r
+    fi
 }
 
 __perlbrew_set_env() {
@@ -3418,6 +3437,11 @@ environment variable before running the installer:
 As a result, different users on the same machine can all share the same perlbrew
 root directory (although only original user that made the installation would
 have the permission to perform perl installations.)
+
+If you need to install perlbrew using a Perl that isn't either C</usr/bin/perl>
+or C</usr/local/bin/perl>, set and export the environment variable
+C<PERLBREW_SYSTEM_PERL> and then install as described above. Note that you
+must not use a perlbrew-managed perl.
 
 You may also install perlbrew from CPAN:
 

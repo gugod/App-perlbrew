@@ -647,7 +647,7 @@ This command re-installs all CPAN modules found from one installation to another
 
     perlbrew clone-modules 5.26.1 5.27.7
 
-The argument "source" is optional and defaults to the currently activated one. However if none is activated (perlbrew is switched off), it it an error.
+The argument "source" is optional and defaults to the currently activated one. However if none is activated (perlbrew is switched off), it is an error.
 
 Note that this does not guarantee that the versions of modules stay the same in the destination.
 
@@ -689,17 +689,16 @@ This C<~/.local/bin/tldr> is a shell-wrapper of the actual C<tldr> program, and 
 
 Usage:
 
-    perlbrew make-pp <program>
-    perlbrew make-pp -o <name> <program>
-    perlbrew make-pp --output <name> <program>
+    perlbrew make-pp -i <path> -o <path>
+    perlbrew make-pp --input <path> --output <path>
 
-This commands produce an executable file under current directory named C<program>, or C<name> if given after C<--output> (or C<-o> for short). The output is a PAR-packed version of the named program inside current perlbrew environment.
+This command takes a path of a perl program (the input), and produce a PAR-packed version of that program to the specified path (the output). Essentially this is a wrapper of C<pp> from L<PAR::Packer>, hence the name.
 
-This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if current perl is not a perlbrew-managed perl, <make-pp> also bails out.
+This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if the current perl is not a perlbrew-managed perl, or if the given output path is already occupied, <make-pp> also bails out.
 
 The produced file is a standalone binary executable containing these content:
 
-    1. The named program
+    1. The input perl program
     2. perl runtime
     3. all core perl libs of current perl
     4. the entire site lib

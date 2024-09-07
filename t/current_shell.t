@@ -1,7 +1,8 @@
-use warnings;
-use strict;
-use Test::More tests => 6;
+#!/usr/bin/env perl
+use Test2::V0;
 use App::perlbrew;
+
+plan 6;
 
 my $current_shell = (split("/", $ENV{SHELL}))[-1];
 my $self = App::perlbrew->new();

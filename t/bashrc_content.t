@@ -1,9 +1,8 @@
-use strict;
-use warnings;
+#!/usr/bin/env perl
+use Test2::V0;
+use Test2::Tools::Spec;
 
 use App::perlbrew;
-
-use Test::Spec;
 
 local $App::perlbrew::PERLBREW_ROOT;
 local %ENV;
@@ -11,7 +10,7 @@ local %ENV;
 sub describe_bashrc_content;
 
 describe "App::perlbrew->BASHRC_CONTENT()" => sub {
-    context "should not export custom PERLBREW_ROOT" => sub {
+    describe "should not export custom PERLBREW_ROOT" => sub {
         describe_bashrc_content "with default settings" => (
         );
 
@@ -20,7 +19,7 @@ describe "App::perlbrew->BASHRC_CONTENT()" => sub {
         );
     };
 
-    context "should export custom PERLBREW_ROOT" => sub {
+    describe "should export custom PERLBREW_ROOT" => sub {
         describe_bashrc_content "when env variable PERLBREW_ROOT is set" => (
             ENV_PERLBREW_ROOT => 'env/root',
             should_match => 'env/root',
@@ -39,7 +38,7 @@ describe "App::perlbrew->BASHRC_CONTENT()" => sub {
     };
 };
 
-runtests unless caller;
+done_testing;
 
 sub describe_bashrc_content {
     my ($title, %params) = @_;

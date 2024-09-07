@@ -1,12 +1,14 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::Spec;
-use Test::Output;
+use Test2::V0;
+use Test2::Tools::Spec;
 use File::Spec;
 use Config;
 
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require "test2_helpers.pl";
+use PerlbrewTestHelpers qw(stdout_like);
 
 describe "info command" => sub {
     it "should display info if under perlbrew perl" => sub {
@@ -14,12 +16,15 @@ describe "info command" => sub {
 
         my $mock_perl = { mock => 'current_perl' };
         my $perl_path = $Config{perlpath};
+        my $mock = mock $app,
+            override => [
+                current_perl => sub { $mock_perl },
+                current_env => sub { 'perl-5.8.9' },
+                installed_perl_executable => sub { $perl_path },
+                configure_args => sub { 'config_args_value' },
+                system_perl_shebang => sub { die }
+            ];
 
-        $app->expects("current_perl")->returns($mock_perl)->at_least_once();
-        $app->expects("current_env")->returns('perl-5.8.9');
-        $app->expects("installed_perl_executable")->with($mock_perl)->returns($perl_path)->at_least_once();
-        $app->expects("configure_args")->with($mock_perl)->returns('config_args_value');
-        $app->expects("system_perl_shebang")->never;
         local $ENV{PERLBREW_ROOT} = 'perlbrew_root_value';
         local $ENV{PERLBREW_HOME} = 'perlbrew_home_value';
         local $ENV{PERLBREW_PATH} = 'perlbrew_path_value';
@@ -48,11 +53,15 @@ OUT
     it "should display info if under system perl" => sub {
         my $app = App::perlbrew->new("info");
 
-        $app->expects("current_perl")->returns('');
-        $app->expects("current_env")->never;
-        $app->expects("installed_perl_executable")->never;
-        $app->expects("configure_args")->never;
-        $app->expects("system_perl_shebang")->returns("system_perl_shebang_value")->once;
+        my $mock = mock $app,
+            override => [
+                current_perl => sub { '' },
+                current_env => sub { die },
+                installed_perl_executable => sub { die },
+                configure_args => sub { die },
+                system_perl_shebang => sub { "system_perl_shebang_value" },
+            ];
+
         local $ENV{PERLBREW_ROOT} = 'perlbrew_root_value';
         local $ENV{PERLBREW_HOME} = 'perlbrew_home_value';
         local $ENV{PERLBREW_PATH} = 'perlbrew_path_value';
@@ -84,11 +93,15 @@ OUT
         my $perl_path = $Config{perlpath};
         my $module_name = "Data::Dumper";
 
-        $app->expects("current_perl")->returns($mock_perl)->at_least_once();
-        $app->expects("current_env")->returns('perl-5.8.9');
-        $app->expects("installed_perl_executable")->with($mock_perl)->returns($perl_path)->at_least_once();
-        $app->expects("configure_args")->with($mock_perl)->returns('config_args_value');
-        $app->expects("system_perl_shebang")->never;
+        my $mock = mock $app,
+            override => [
+                "current_perl" => sub { $mock_perl },
+                "current_env" => sub { 'perl-5.8.9'},
+                "installed_perl_executable" => sub { $perl_path },
+                "configure_args" => sub { 'config_args_value' },
+                "system_perl_shebang" => sub { die },
+            ];
+
         local $ENV{PERLBREW_ROOT} = 'perlbrew_root_value';
         local $ENV{PERLBREW_HOME} = 'perlbrew_home_value';
         local $ENV{PERLBREW_PATH} = 'perlbrew_path_value';
@@ -131,11 +144,15 @@ OUT
         my $perl_path = $Config{perlpath};
         my $module_name = "SOME_FAKE_MODULE";
 
-        $app->expects("current_perl")->returns($mock_perl)->at_least_once();
-        $app->expects("current_env")->returns('perl-5.8.9');
-        $app->expects("installed_perl_executable")->with($mock_perl)->returns($perl_path)->at_least_once();
-        $app->expects("configure_args")->with($mock_perl)->returns('config_args_value');
-        $app->expects("system_perl_shebang")->never;
+        my $mock = mock $app,
+            override => [
+                "current_perl" => sub { $mock_perl },
+                "current_env" => sub { 'perl-5.8.9' },
+                "installed_perl_executable" => sub { $perl_path },
+                "configure_args" => sub { 'config_args_value' },
+                "system_perl_shebang" => sub { die },
+            ];
+
         local $ENV{PERLBREW_ROOT} = 'perlbrew_root_value';
         local $ENV{PERLBREW_HOME} = 'perlbrew_home_value';
         local $ENV{PERLBREW_PATH} = 'perlbrew_path_value';
@@ -167,5 +184,4 @@ OUT
 
 };
 
-
-runtests unless caller;
+done_testing;

@@ -1,13 +1,11 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
+require 'test2_helpers.pl';
 
-use Test::More;
 use Capture::Tiny qw( capture_stdout );
 
 note "PERLBREW_ROOT set to $ENV{PERLBREW_ROOT}";
@@ -32,7 +30,7 @@ subtest "`perlbrew self-install` initialize the required dir structure under PER
 
 subtest "Works with bash", sub {
     if ($ENV{PERLBREW_SHELLRC_VERSION}) {
-        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        skip_all "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
         return;
     }
 
@@ -47,7 +45,7 @@ subtest "Works with bash", sub {
 
 subtest "Works with fish", sub {
     if ($ENV{PERLBREW_SHELLRC_VERSION}) {
-        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        skip_all "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
         return;
     }
 
@@ -62,7 +60,7 @@ subtest "Works with fish", sub {
 
 subtest "Works with zsh", sub {
     if ($ENV{PERLBREW_SHELLRC_VERSION}) {
-        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        skip_all "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
         return;
     }
     my $out = capture_stdout {
@@ -76,7 +74,7 @@ subtest "Works with zsh", sub {
 
 subtest "Exports PERLBREW_HOME when needed", sub {
     if ($ENV{PERLBREW_SHELLRC_VERSION}) {
-        plan skip_all => "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
+        skip_all "PERLBREW_SHELLRC_VERSION is defined, thus this subtest makes little sense.";
         return;
     }
     my $out = capture_stdout {

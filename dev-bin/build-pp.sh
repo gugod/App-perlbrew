@@ -13,6 +13,10 @@ fi
 
 export PERL5LIB="lib":".build/pp/lib/perl5":$PERL5LIB
 
-.build/pp/bin/pp -M App::perlbrew:: -M App::Perlbrew:: -o .build/pp/perlbrew script/perlbrew || (echo "pp FAILED: $?" && exit 1)
+.build/pp/bin/pp \
+    -M App::perlbrew \
+    -M 'App::Perlbrew::**' \
+    -o .build/pp/perlbrew script/perlbrew \
+     || (echo "pp FAILED: $?" && exit 1)
 
 echo "DONE:" .build/pp/perlbrew

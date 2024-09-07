@@ -1,11 +1,15 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::Spec;
+use Test2::V0;
+use Test2::Tools::Spec;
 use File::Temp qw( tempdir );
-use Test::Output;
 
+use FindBin;
+use lib $FindBin::Bin;
 use App::perlbrew;
+require "test2_helpers.pl";
+
+use PerlbrewTestHelpers qw(stdout_like);
+
 $App::perlbrew::PERLBREW_ROOT = my $perlbrew_root = tempdir( CLEANUP => 1 );
 $App::perlbrew::PERLBREW_HOME = my $perlbrew_home = tempdir( CLEANUP => 1 );
 
@@ -28,13 +32,18 @@ my %available_perl_dists = (
 
 sub mocked_perlbrew {
     my $app = App::perlbrew->new( @_ );
-    $app->expects( 'available_perl_distributions' )->returns( \%available_perl_dists );
-    return $app;
+
+    my $mock = mock $app,
+        override => [
+            available_perl_distributions => sub { \%available_perl_dists }
+        ];
+
+    return ($mock, $app);
 }
 
 describe "available command output, when nothing installed locally," => sub {
     it "should display a list of perl versions" => sub {
-        my $app = mocked_perlbrew( "available", "--verbose" );
+        my ($mock, $app) = mocked_perlbrew( "available", "--verbose" );
 
         stdout_like sub {
             $app->run();
@@ -60,14 +69,16 @@ describe "available command output, when nothing installed locally," => sub {
 
 describe "available command output, when something installed locally," => sub {
     it "should display a list of perl versions, with markers on installed versions" => sub {
-        my $app = mocked_perlbrew( "available", "--verbose" );
+        my ($mock, $app) = mocked_perlbrew( "available", "--verbose" );
 
         my @installed_perls = (
             { name => "perl-5.24.0" },
             { name => "perl-5.20.3" }
         );
 
-        $app->expects("installed_perls")->returns(@installed_perls);
+        $mock->override(
+            "installed_perls" => sub  { @installed_perls }
+        );
 
         stdout_like sub {
             $app->run();
@@ -94,4 +105,4 @@ describe "available command output, when something installed locally," => sub {
     };
 };
 
-runtests unless caller;
+done_testing;

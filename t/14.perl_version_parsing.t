@@ -1,5 +1,6 @@
 #!perl
-use strict;
+use Test2::V0;
+use Test2::Tools::Spec;
 
 use App::perlbrew;
 use App::Perlbrew::Util qw(perl_version_to_integer);
@@ -121,10 +122,8 @@ my @versions = qw(
                      5.17.5
              );
 
-use Test::More;
-
 subtest "perl_version_to_integer" =>  sub {
-    plan tests => (@versions - 1);
+    plan @versions - 1;
 
     my @versions_i = map { perl_version_to_integer($_) } @versions;
     for my $i (0 .. $#versions_i-1) {
@@ -133,7 +132,7 @@ subtest "perl_version_to_integer" =>  sub {
 };
 
 subtest "comparable_perl_version" =>  sub {
-    plan tests => 0+@versions;
+    plan 0+@versions;
 
     for my $v (@versions) {
         my $n = App::perlbrew->comparable_perl_version($v);
@@ -142,7 +141,7 @@ subtest "comparable_perl_version" =>  sub {
 };
 
 subtest "blead is the biggest" => sub {
-    plan tests => 0+@versions;
+    plan 0+@versions;
     my $b = perl_version_to_integer("blead");
     for my $v (@versions) {
         my $n = perl_version_to_integer($v);

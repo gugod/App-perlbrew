@@ -1,7 +1,5 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::More;
+use Test2::V0;
 use App::perlbrew;
 
 {
@@ -20,7 +18,7 @@ use App::perlbrew;
     }
 }
 
-plan tests => 12;
+plan 12;
 
 my $app = App::perlbrew->new();
 my $dists = $app->available_perl_distributions();

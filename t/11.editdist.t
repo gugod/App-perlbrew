@@ -1,7 +1,5 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
-use Test::More;
+use Test2::V0;
 use App::Perlbrew::Util qw< editdist >;
 
 is editdist(qw/Joe Jim/), 2;

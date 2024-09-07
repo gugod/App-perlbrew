@@ -1,28 +1,27 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 use App::perlbrew;
-use Test::More;
-use Test::Exception;
 
 no warnings 'redefine';
 sub App::perlbrew::http_get { "" }
 
-throws_ok(
-    sub {
+like(
+    dies {
         my $app = App::perlbrew->new("available");
         $app->run;
     },
-    qr[ERROR:]
+    qr[ERROR:],
+    'got Error from available'
 );
 
-throws_ok(
-    sub {
+like(
+    dies {
         my $app = App::perlbrew->new("available");
         my $ret = $app->available_perl_distributions();
     },
-    qr[ERROR:]
+    qr[ERROR:],
+    'got Error from available_perl_distributions'
 );
 
 done_testing;

@@ -1,9 +1,7 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 use File::Which qw(which);
 use App::Perlbrew::HTTP qw(http_user_agent_program);
-use Test::More;
 
 my $expected_ua;
 if (which("curl")) {

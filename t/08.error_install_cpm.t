@@ -1,20 +1,16 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
 
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require 'test_helpers.pl';
-
-use Test::More;
-use Test::Exception;
+require 'test2_helpers.pl';
 
 no warnings 'redefine';
 sub App::perlbrew::http_get { "" }
 
-throws_ok(
-    sub {
+like(
+    dies {
         my $app = App::perlbrew->new("install-cpm");
         $app->run;
     },

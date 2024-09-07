@@ -1,3 +1,12 @@
+0.99
+	- Released at 2024-09-07T16:30:28+0900
+	- Thanks to our contributors: Graham Knop, Joelle Maslak, Luke Closs, jonasbn
+	- bashrc executes properly in bash shells with +h option set
+	- Allow specification of non-standard Perl location
+	- make-pp now requires the input to be specified with `-i` or `--input`.
+	- Tests are ported to Test2. Big thanks to Luke Closs.
+        - Command make-pp now expects the input to be the path of an existing executable perl program, and would not be searching through $PATH.
+
 0.98
 	- Released at 2023-08-11T22:54:38+0900
 	- Remove the support of cperl from `available` and `install` command. Github PR: #777. cperl can still be installed by specifying the tarball, just not by their short names.

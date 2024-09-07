@@ -1,8 +1,10 @@
 #!/usr/bin/env perl
+use Test2::V0;
 use strict;
-use Test::More tests => 1;
 use lib qw(lib);
 
-use_ok('App::perlbrew');
+plan 1;
+
+use ok 'App::perlbrew';
 
 

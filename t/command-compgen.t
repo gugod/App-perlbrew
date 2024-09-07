@@ -1,14 +1,12 @@
 #!/usr/bin/env perl
-use strict;
-use warnings;
+use Test2::V0;
+use Test2::Tools::Spec;
 
 use FindBin;
 use lib $FindBin::Bin;
 use App::perlbrew;
-require "test_helpers.pl";
-
-use Test::Spec;
-use Test::Output qw( stdout_from );
+require "test2_helpers.pl";
+use PerlbrewTestHelpers qw( stdout_from );
 
 $ENV{PERLBREW_DEBUG_COMPLETION} = 0;
 
@@ -84,5 +82,4 @@ describe "compgen command," => sub {
     }
 };
 
-runtests unless caller;
-
+done_testing;
