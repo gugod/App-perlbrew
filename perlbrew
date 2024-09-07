@@ -10924,9 +10924,9 @@ Usage:
     perlbrew make-pp -i <path> -o <path>
     perlbrew make-pp --input <path> --output <path>
 
-This command takes a path of a perl program (the input), and produce a PAR-packed version of that program to the specified path (the output).
+This command takes a path of a perl program (the input), and produce a PAR-packed version of that program to the specified path (the output). Essentially this is a wrapper of C<pp> from L<PAR::Packer>, hence the name.
 
-This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if the current perl is not a perlbrew-managed perl, or if <make-pp> also bails out.
+This requires the current perlbrew environment to have L<PAR> and L<PAR::Packer> installed first. Otherwise C<make-pp> bails out. In addition, if the current perl is not a perlbrew-managed perl, or if the given output path is already occupied, <make-pp> also bails out.
 
 The produced file is a standalone binary executable containing these content:
 
