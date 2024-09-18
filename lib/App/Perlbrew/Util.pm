@@ -104,7 +104,14 @@ sub looks_like_url_of_skaji_relocatable_perl  {
     my $prefix = "https://github.com/skaji/relocatable-perl/releases/download";
     my $version_re = qr/(5\.[0-9][0-9]\.[0-9][0-9]?.[0-9])/;
     my $name_re = qr/perl-(linux|darwin)-(amd64|arm64)\.tar\.gz/;
-    $str =~ m{ \Q$prefix\E / $version_re / $name_re }x;
+    return undef unless $str =~ m{ \Q$prefix\E / $version_re / $name_re }x;
+    return {
+        url => $str,
+        version => $1,
+        os => $2,
+        arch => $3,
+        original_filename => "perl-$2-$3.tar.gz",
+    };
 }
 
 1;
