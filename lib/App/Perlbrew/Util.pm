@@ -5,7 +5,7 @@ use 5.008;
 
 use Exporter 'import';
 our @EXPORT = qw( uniq min editdist files_are_the_same perl_version_to_integer );
-our @EXPORT_OK = qw( find_similar_tokens );
+our @EXPORT_OK = qw( find_similar_tokens looks_like_url_of_skaji_relocatable_perl );
 
 sub uniq {
     my %seen;
@@ -96,6 +96,22 @@ sub find_similar_tokens {
     }
 
     return \@similar_tokens;
+}
+
+sub looks_like_url_of_skaji_relocatable_perl  {
+    my ($str) = @_;
+    # https://github.com/skaji/relocatable-perl/releases/download/5.40.0.0/perl-linux-amd64.tar.gz
+    my $prefix = "https://github.com/skaji/relocatable-perl/releases/download";
+    my $version_re = qr/(5\.[0-9][0-9]\.[0-9][0-9]?.[0-9])/;
+    my $name_re = qr/perl-(linux|darwin)-(amd64|arm64)\.tar\.gz/;
+    return undef unless $str =~ m{ \Q$prefix\E / $version_re / $name_re }x;
+    return {
+        url => $str,
+        version => $1,
+        os => $2,
+        arch => $3,
+        original_filename => "perl-$2-$3.tar.gz",
+    };
 }
 
 1;
