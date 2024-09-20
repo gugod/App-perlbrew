@@ -28,6 +28,7 @@ use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_li
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
+use App::Perlbrew::Sys;
 
 ### global variables
 
@@ -224,6 +225,8 @@ sub parse_cmdline {
         @ext
     );
 }
+
+sub sys { App::Perlbrew::Sys:: }
 
 sub root {
     my ( $self, $new_root ) = @_;
