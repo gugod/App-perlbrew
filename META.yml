@@ -28,13 +28,15 @@ provides:
     file: lib/App/Perlbrew/Path/Installations.pm
   App::Perlbrew::Path::Root:
     file: lib/App/Perlbrew/Path/Root.pm
+  App::Perlbrew::Sys:
+    file: lib/App/Perlbrew/Sys.pm
   App::Perlbrew::Util:
     file: lib/App/Perlbrew/Util.pm
   App::perlbrew:
     file: lib/App/perlbrew.pm
     version: '0.99'
 requires:
-  CPAN::Perl::Releases: '5.20240609'
+  CPAN::Perl::Releases: '5.20240920'
   Capture::Tiny: '0.48'
   Devel::PatchPerl: '2.08'
   ExtUtils::MakeMaker: '7.22'
