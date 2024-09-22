@@ -1,5 +1,5 @@
 use Test2::V0;
-use App::Perlbrew::Util qw(looks_like_url_of_skaji_relocatable_perl);
+use App::Perlbrew::Util qw(looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl);
 
 subtest "looks_like_url_of_skaji_relocatable_perl", sub {
     is(
@@ -27,6 +27,48 @@ subtest "looks_like_url_of_skaji_relocatable_perl", sub {
                   https://gugod.org/
                   https://github.com/skaji/relocatable-perl/releases/download/5.40.0.0/perl-linux-x86_64.tar.gz
           );
+};
+
+subtest "looks_like_sys_would_be_compatible_with_skaji_relocatable_perl", sub {
+    my $detail = looks_like_url_of_skaji_relocatable_perl("https://github.com/skaji/relocatable-perl/releases/download/5.40.0.0/perl-linux-amd64.tar.gz");
+
+    my @positiveCases = (
+        (mock {} =>
+            add => [
+                os => sub { "linux" },
+                arch => sub { "amd64" },
+            ]),
+        (mock {} =>
+            add => [
+                os => sub { "linux" },
+                arch => sub { "x86_64" },
+            ]),
+    );
+
+    my @negativeCasse = (
+        (mock {} =>
+            add => [
+                os => sub { "linux" },
+                arch => sub { "arm64" },
+            ]),
+        (mock {} =>
+            add => [
+                os => sub { "darwin" },
+                arch => sub { "aarch64" },
+            ]),
+        (mock {} =>
+            add => [
+                os => sub { "darwin" },
+                arch => sub { "x86_64" },
+            ]),
+    );
+
+
+    is looks_like_sys_would_be_compatible_with_skaji_relocatable_perl($detail, $_), T()
+        for @positiveCases;
+
+    is looks_like_sys_would_be_compatible_with_skaji_relocatable_perl($detail, $_), F()
+        for @negativeCasse;
 };
 
 done_testing;
