@@ -5,7 +5,12 @@ use 5.008;
 
 use Exporter 'import';
 our @EXPORT = qw( uniq min editdist files_are_the_same perl_version_to_integer );
-our @EXPORT_OK = qw( find_similar_tokens looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl );
+our @EXPORT_OK = qw(
+    find_similar_tokens
+    looks_like_url_of_skaji_relocatable_perl
+    looks_like_sys_would_be_compatible_with_skaji_relocatable_perl
+    make_skaji_relocatable_perl_url
+);
 
 sub uniq {
     my %seen;
@@ -130,6 +135,19 @@ sub looks_like_sys_would_be_compatible_with_skaji_relocatable_perl {
         ($detail->{os} eq $sys->os)
         && (_arch_compat($detail->{arch}) eq _arch_compat($sys->arch))
     );
+}
+
+sub make_skaji_relocatable_perl_url {
+    my ($str, $sys) = @_;
+    if ($str =~ m/\Askaji-relocatable-perl-(5\.[0-9][0-9]\.[0-9][0-9]?.[0-9])\z/) {
+        my $version = $1;
+        my $os = $sys->os;
+        my $arch = $sys->arch;
+        $arch = "amd64" if $arch eq 'x86_64';
+
+        return "https://github.com/skaji/relocatable-perl/releases/download/$version/perl-$os-$arch.tar.gz";
+    }
+    return undef;
 }
 
 1;
