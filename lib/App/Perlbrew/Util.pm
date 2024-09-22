@@ -5,7 +5,7 @@ use 5.008;
 
 use Exporter 'import';
 our @EXPORT = qw( uniq min editdist files_are_the_same perl_version_to_integer );
-our @EXPORT_OK = qw( find_similar_tokens looks_like_url_of_skaji_relocatable_perl );
+our @EXPORT_OK = qw( find_similar_tokens looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl );
 
 sub uniq {
     my %seen;
@@ -112,6 +112,24 @@ sub looks_like_url_of_skaji_relocatable_perl  {
         arch => $3,
         original_filename => "perl-$2-$3.tar.gz",
     };
+}
+
+
+sub _arch_compat {
+    my ($arch) = @_;
+    my $compat = {
+        x86_64 => "amd64"
+    };
+    return $compat->{$arch} || $arch;
+}
+
+sub looks_like_sys_would_be_compatible_with_skaji_relocatable_perl {
+    my ($detail, $sys) = @_;
+
+    return (
+        ($detail->{os} eq $sys->os)
+        && (_arch_compat($detail->{arch}) eq _arch_compat($sys->arch))
+    );
 }
 
 1;

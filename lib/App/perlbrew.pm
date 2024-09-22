@@ -24,7 +24,7 @@ use JSON::PP qw( decode_json );
 use File::Copy qw( copy move );
 use Capture::Tiny ();
 
-use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_like_url_of_skaji_relocatable_perl );
+use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl);
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
@@ -1231,7 +1231,11 @@ sub run_command_install {
     }
 
     if ( my $detail = looks_like_url_of_skaji_relocatable_perl($dist) ) {
-        return $self->do_install_skaji_relocatable_perl($detail);
+        if (looks_like_sys_would_be_compatible_with_skaji_relocatable_perl($detail, $self->sys)) {
+            return $self->do_install_skaji_relocatable_perl($detail);
+        } else {
+            die "ERROR: The given url points to a tarball for different os/arch.\n";
+        }
     }
 
     $self->{dist_name} = $dist;    # for help msg generation, set to non
