@@ -389,6 +389,31 @@ $fatpacked{"App/Perlbrew/Path/Root.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
 APP_PERLBREW_PATH_ROOT
 
+$fatpacked{"App/Perlbrew/Sys.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_PERLBREW_SYS';
+  package App::Perlbrew::Sys;
+  use strict;
+  use warnings;
+  use Config;
+  
+  sub osname {
+      $Config{osname}
+  }
+  
+  sub archname {
+      $Config{archname}
+  }
+  
+  sub os {
+      $Config{osname}
+  }
+  
+  sub arch {
+      (split(/-/, $Config{archname}, 2))[0]
+  }
+  
+  1;
+APP_PERLBREW_SYS
+
 $fatpacked{"App/Perlbrew/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_PERLBREW_UTIL';
   package App::Perlbrew::Util;
   use strict;
@@ -397,7 +422,12 @@ $fatpacked{"App/Perlbrew/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   use Exporter 'import';
   our @EXPORT = qw( uniq min editdist files_are_the_same perl_version_to_integer );
-  our @EXPORT_OK = qw( find_similar_tokens );
+  our @EXPORT_OK = qw(
+      find_similar_tokens
+      looks_like_url_of_skaji_relocatable_perl
+      looks_like_sys_would_be_compatible_with_skaji_relocatable_perl
+      make_skaji_relocatable_perl_url
+  );
   
   sub uniq {
       my %seen;
@@ -490,6 +520,53 @@ $fatpacked{"App/Perlbrew/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       return \@similar_tokens;
   }
   
+  sub looks_like_url_of_skaji_relocatable_perl  {
+      my ($str) = @_;
+      # https://github.com/skaji/relocatable-perl/releases/download/5.40.0.0/perl-linux-amd64.tar.gz
+      my $prefix = "https://github.com/skaji/relocatable-perl/releases/download";
+      my $version_re = qr/(5\.[0-9][0-9]\.[0-9][0-9]?.[0-9])/;
+      my $name_re = qr/perl-(linux|darwin)-(amd64|arm64)\.tar\.gz/;
+      return undef unless $str =~ m{ \Q$prefix\E / $version_re / $name_re }x;
+      return {
+          url => $str,
+          version => $1,
+          os => $2,
+          arch => $3,
+          original_filename => "perl-$2-$3.tar.gz",
+      };
+  }
+  
+  
+  sub _arch_compat {
+      my ($arch) = @_;
+      my $compat = {
+          x86_64 => "amd64"
+      };
+      return $compat->{$arch} || $arch;
+  }
+  
+  sub looks_like_sys_would_be_compatible_with_skaji_relocatable_perl {
+      my ($detail, $sys) = @_;
+  
+      return (
+          ($detail->{os} eq $sys->os)
+          && (_arch_compat($detail->{arch}) eq _arch_compat($sys->arch))
+      );
+  }
+  
+  sub make_skaji_relocatable_perl_url {
+      my ($str, $sys) = @_;
+      if ($str =~ m/\Askaji-relocatable-perl-(5\.[0-9][0-9]\.[0-9][0-9]?.[0-9])\z/) {
+          my $version = $1;
+          my $os = $sys->os;
+          my $arch = $sys->arch;
+          $arch = "amd64" if $arch eq 'x86_64';
+  
+          return "https://github.com/skaji/relocatable-perl/releases/download/$version/perl-$os-$arch.tar.gz";
+      }
+      return undef;
+  }
+  
   1;
 APP_PERLBREW_UTIL
 
@@ -498,7 +575,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use strict;
   use warnings;
   use 5.008;
-  our $VERSION = "0.99";
+  our $VERSION = "1.00";
   use Config qw( %Config );
   
   BEGIN {
@@ -517,13 +594,14 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use Getopt::Long ();
   use CPAN::Perl::Releases ();
   use JSON::PP qw( decode_json );
-  use File::Copy qw( copy );
+  use File::Copy qw( copy move );
   use Capture::Tiny ();
   
-  use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens );
+  use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl make_skaji_relocatable_perl_url );
   use App::Perlbrew::Path ();
   use App::Perlbrew::Path::Root ();
   use App::Perlbrew::HTTP qw( http_download http_get );
+  use App::Perlbrew::Sys;
   
   ### global variables
   
@@ -720,6 +798,8 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           @ext
       );
   }
+  
+  sub sys { App::Perlbrew::Sys:: }
   
   sub root {
       my ( $self, $new_root ) = @_;
@@ -1723,6 +1803,18 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           exit(-1);
       }
   
+      if ( my $url = make_skaji_relocatable_perl_url($dist, $self->sys) ) {
+          return $self->run_command_install($url);
+      }
+  
+      if ( my $detail = looks_like_url_of_skaji_relocatable_perl($dist) ) {
+          if (looks_like_sys_would_be_compatible_with_skaji_relocatable_perl($detail, $self->sys)) {
+              return $self->do_install_skaji_relocatable_perl($detail);
+          } else {
+              die "ERROR: The given url points to a tarball for different os/arch.\n";
+          }
+      }
+  
       $self->{dist_name} = $dist;    # for help msg generation, set to non
                                      # normalized name
   
@@ -2124,6 +2216,64 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           die $self->INSTALLATION_FAILURE_MESSAGE;
       }
       return;
+  }
+  
+  sub do_install_skaji_relocatable_perl {
+      my ($self, $detail) = @_;
+  
+      my $installation_name = $self->{as} || ("skaji-relocatable-perl-" . $detail->{version});
+      my $installation_path = $self->root->perls->child($installation_name);
+  
+      die "ERROR: Installation target \"${installation_name}\" already exists\n"
+          if $installation_path->exists;
+  
+      my $path = $self->root->dists
+          ->child("skaji-relocatable-perl")
+          ->child($detail->{version})
+          ->mkpath()
+          ->child($detail->{original_filename});
+  
+      if (-f $path) {
+          print "Re-using the downloaded $path\n";
+      } else {
+          my $url = $detail->{url};
+          print "Downloading $url as $path\n";
+          my $error = http_download( $detail->{url}, $path );
+          if ($error) {
+              die "Failed to download from $url\nError: $error";
+          }
+      }
+  
+      my $extracted_path = $self->do_extract_skaji_relocatable_perl_tarball($detail, $path);
+  
+      move $extracted_path, $installation_path;
+  
+      print "$installation_name is installed at $installation_path.\n";
+  
+      print "$installation_name is successfully installed.\n";
+  }
+  
+  sub do_extract_skaji_relocatable_perl_tarball {
+      my ($self, $detail, $tarball_path) = @_;
+  
+      my $workdir = $self->builddir
+          ->child("skaji-relocatable-perl")
+          ->child($detail->{version});
+  
+      $workdir->rmpath()
+          if $workdir->exists();
+  
+      $workdir->mkpath();
+  
+      my $tarx = "tar xzf";
+      my $extract_command = "cd $workdir; $tarx $tarball_path";
+  
+      system($extract_command) == 0
+          or die "Failed to extract $tarball_path";
+  
+      my ($extracted_path) = $workdir->children;
+  
+      return $extracted_path;
   }
   
   sub do_install_program_from_url {
@@ -4014,7 +4164,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20240609';
+  $CPAN::Perl::Releases::VERSION = '5.20240920';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -4322,6 +4472,10 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.40.0-RC1" => { id => 'HAARG' },
   "5.40.0-RC2" => { id => 'HAARG' },
   "5.40.0" => { id => 'HAARG' },
+  "5.41.1" => { id => 'BOOK' },
+  "5.41.2" => { id => 'ETHER' },
+  "5.41.3" => { id => 'BOOK' },
+  "5.41.4" => { id => 'CONTRA' },
   };
   
   sub perl_tarballs {
@@ -4391,7 +4545,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20240609
+  version 5.20240920
   
   =head1 SYNOPSIS
   

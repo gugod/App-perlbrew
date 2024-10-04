@@ -27,7 +27,7 @@
       },
       "runtime" : {
          "requires" : {
-            "CPAN::Perl::Releases" : "5.20240609",
+            "CPAN::Perl::Releases" : "5.20240920",
             "Capture::Tiny" : "0.48",
             "Devel::PatchPerl" : "2.08",
             "ExtUtils::MakeMaker" : "7.22",
@@ -64,12 +64,15 @@
       "App::Perlbrew::Path::Root" : {
          "file" : "lib/App/Perlbrew/Path/Root.pm"
       },
+      "App::Perlbrew::Sys" : {
+         "file" : "lib/App/Perlbrew/Sys.pm"
+      },
       "App::Perlbrew::Util" : {
          "file" : "lib/App/Perlbrew/Util.pm"
       },
       "App::perlbrew" : {
          "file" : "lib/App/perlbrew.pm",
-         "version" : "0.99"
+         "version" : "1.00"
       }
    },
    "release_status" : "stable",
@@ -83,7 +86,7 @@
          "web" : "https://github.com/gugod/App-perlbrew"
       }
    },
-   "version" : "0.99",
+   "version" : "1.00",
    "x_serialization_backend" : "JSON::PP version 4.16",
    "x_spdx_expression" : "MIT",
    "x_static_install" : "1"

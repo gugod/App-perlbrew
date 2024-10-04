@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "0.99";
+our $VERSION = "1.00";
 use Config qw( %Config );
 
 BEGIN {
@@ -21,13 +21,14 @@ BEGIN {
 use Getopt::Long ();
 use CPAN::Perl::Releases ();
 use JSON::PP qw( decode_json );
-use File::Copy qw( copy );
+use File::Copy qw( copy move );
 use Capture::Tiny ();
 
-use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens );
+use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl make_skaji_relocatable_perl_url );
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
+use App::Perlbrew::Sys;
 
 ### global variables
 
@@ -224,6 +225,8 @@ sub parse_cmdline {
         @ext
     );
 }
+
+sub sys { App::Perlbrew::Sys:: }
 
 sub root {
     my ( $self, $new_root ) = @_;
@@ -1227,6 +1230,18 @@ sub run_command_install {
         exit(-1);
     }
 
+    if ( my $url = make_skaji_relocatable_perl_url($dist, $self->sys) ) {
+        return $self->run_command_install($url);
+    }
+
+    if ( my $detail = looks_like_url_of_skaji_relocatable_perl($dist) ) {
+        if (looks_like_sys_would_be_compatible_with_skaji_relocatable_perl($detail, $self->sys)) {
+            return $self->do_install_skaji_relocatable_perl($detail);
+        } else {
+            die "ERROR: The given url points to a tarball for different os/arch.\n";
+        }
+    }
+
     $self->{dist_name} = $dist;    # for help msg generation, set to non
                                    # normalized name
 
@@ -1628,6 +1643,64 @@ INSTALL
         die $self->INSTALLATION_FAILURE_MESSAGE;
     }
     return;
+}
+
+sub do_install_skaji_relocatable_perl {
+    my ($self, $detail) = @_;
+
+    my $installation_name = $self->{as} || ("skaji-relocatable-perl-" . $detail->{version});
+    my $installation_path = $self->root->perls->child($installation_name);
+
+    die "ERROR: Installation target \"${installation_name}\" already exists\n"
+        if $installation_path->exists;
+
+    my $path = $self->root->dists
+        ->child("skaji-relocatable-perl")
+        ->child($detail->{version})
+        ->mkpath()
+        ->child($detail->{original_filename});
+
+    if (-f $path) {
+        print "Re-using the downloaded $path\n";
+    } else {
+        my $url = $detail->{url};
+        print "Downloading $url as $path\n";
+        my $error = http_download( $detail->{url}, $path );
+        if ($error) {
+            die "Failed to download from $url\nError: $error";
+        }
+    }
+
+    my $extracted_path = $self->do_extract_skaji_relocatable_perl_tarball($detail, $path);
+
+    move $extracted_path, $installation_path;
+
+    print "$installation_name is installed at $installation_path.\n";
+
+    print "$installation_name is successfully installed.\n";
+}
+
+sub do_extract_skaji_relocatable_perl_tarball {
+    my ($self, $detail, $tarball_path) = @_;
+
+    my $workdir = $self->builddir
+        ->child("skaji-relocatable-perl")
+        ->child($detail->{version});
+
+    $workdir->rmpath()
+        if $workdir->exists();
+
+    $workdir->mkpath();
+
+    my $tarx = "tar xzf";
+    my $extract_command = "cd $workdir; $tarx $tarball_path";
+
+    system($extract_command) == 0
+        or die "Failed to extract $tarball_path";
+
+    my ($extracted_path) = $workdir->children;
+
+    return $extracted_path;
 }
 
 sub do_install_program_from_url {
