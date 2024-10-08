@@ -22,7 +22,8 @@ jobs:
     needs: mbtiny-dist
     strategy:
       matrix:
-        version: ["5.40","5.38", "5.36", "5.34", "5.18"]
+        os: ["ubuntu-latest", "macos-latest", "macos-13"]
+        version: ["5.40","5.38", "5.18"]
     name: cpanm-dist-perl-${{ matrix.version }}
     runs-on: ubuntu-latest
     steps:
