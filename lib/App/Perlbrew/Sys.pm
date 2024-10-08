@@ -16,7 +16,7 @@ sub os {
 }
 
 sub arch {
-    (split(/-/, $Config{archname}, 2))[0]
+    (split(/-/, $Config{myarchname}, 2))[0]
 }
 
 1;
