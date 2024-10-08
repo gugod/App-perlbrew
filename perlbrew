@@ -408,7 +408,7 @@ $fatpacked{"App/Perlbrew/Sys.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   }
   
   sub arch {
-      (split(/-/, $Config{archname}, 2))[0]
+      (split(/-/, $Config{myarchname}, 2))[0]
   }
   
   1;
