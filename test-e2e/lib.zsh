@@ -39,3 +39,25 @@ assert-file-missing() {
         exit 1
     fi
 }
+
+assert-dir-exists() {
+    local path=$1
+
+    if [[ -d $path ]]; then
+        echo "OK - dir exists $path"
+    else
+        echo "FAIL - dir do not exist: $path"
+        exit 1
+    fi
+}
+
+assert-dir-missing() {
+    local path=$1
+
+    if [[ ! -d $path ]]; then
+        echo "OK - dir missing $path"
+    else
+        echo "FAIL - dir do exist: $path"
+        exit 1
+    fi
+}

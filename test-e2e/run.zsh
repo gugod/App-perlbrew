@@ -7,4 +7,12 @@ source $e2eDir/lib-tests.zsh
 echo "# uname -a"
 uname -a
 
+local testName=$1
+
+if [[ ! -z $testName ]]; then
+    $testName
+    exit 0
+fi
+
 test-perlbrew-self-install
+test-perlbrew-install-skaji-relocatable-perl
