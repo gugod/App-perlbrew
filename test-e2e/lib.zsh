@@ -1,7 +1,5 @@
-#!/usr/bin/zsh
 
 ## assert_ok <CMD> [ARGS]...
-
 assert-ok() {
     local what="$*"
 
