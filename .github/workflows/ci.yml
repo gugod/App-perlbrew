@@ -65,8 +65,11 @@ jobs:
       - run: ./test-e2e/run.zsh
 
   e2eMacos:
-    name: e2eMacos
-    runs-on: macos-latest
+    strategy:
+      matrix:
+        os: ["macos-latest", "macos-13"]
+    name: e2e-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: shogo82148/actions-setup-perl@v1.31.3
         with:

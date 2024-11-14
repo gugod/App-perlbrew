@@ -3,6 +3,9 @@
 local e2eDir=$(dirname $0)
 source $e2eDir/lib.zsh
 
+echo "# uname -a"
+uname -a
+
 test-perlbrew-self-install() {
     echo '# Test: perlbrew self-install'
 
