@@ -62,4 +62,4 @@ jobs:
       - run: |
           apt update
           apt install -y zsh
-      - run: ./test-e2e/run.sh
+      - run: ./test-e2e/run.zsh
