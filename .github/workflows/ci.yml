@@ -63,3 +63,13 @@ jobs:
           apt update
           apt install -y zsh
       - run: ./test-e2e/run.zsh
+
+  e2eMacos:
+    name: e2eMacos
+    runs-on: macos-latest
+    steps:
+      - uses: shogo82148/actions-setup-perl@v1.31.3
+        with:
+          perl-version: 5.40
+      - uses: actions/checkout@v4
+      - run: ./test-e2e/run.zsh
