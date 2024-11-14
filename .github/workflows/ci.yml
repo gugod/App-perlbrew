@@ -51,3 +51,15 @@ jobs:
           name: App-perlbrew-distdir
       - run: echo ./App-perlbrew-*
       - run: cpanm --verbose ./App-perlbrew-*
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    container:
+      image: perl:5.40
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          apt update
+          apt install -y zsh
+      - run: ./test-e2e/run.sh
