@@ -72,4 +72,4 @@ jobs:
         with:
           perl-version: "5.40"
       - uses: actions/checkout@v4
-      - run: ./test-e2e/run.zsh
+      - run: /bin/zsh ./test-e2e/run.zsh
