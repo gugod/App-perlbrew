@@ -143,7 +143,7 @@ sub make_skaji_relocatable_perl_url {
         my $version = $1;
         my $os = $sys->os;
         my $arch = $sys->arch;
-        $arch = "amd64" if $arch eq 'x86_64';
+        $arch = "amd64" if $arch eq 'x86_64' || $arch eq 'i386';
 
         return "https://github.com/skaji/relocatable-perl/releases/download/$version/perl-$os-$arch.tar.gz";
     }
