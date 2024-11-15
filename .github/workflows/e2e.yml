@@ -1,6 +1,9 @@
 name: E2E
 
 on:
+  pull_request:
+    paths:
+      - perlbrew
   push:
     paths:
       - perlbrew
