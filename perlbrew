@@ -540,8 +540,8 @@ $fatpacked{"App/Perlbrew/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   sub _arch_compat {
       my ($arch) = @_;
       my $compat = {
-          x86_64 => "amd64",
           i386   => "amd64",
+          x86_64 => "amd64",
       };
       return $compat->{$arch} || $arch;
   }
