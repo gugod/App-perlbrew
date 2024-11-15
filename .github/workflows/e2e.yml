@@ -14,8 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: |
-          apt update
-          apt install -y zsh
+          sudo apt-get update
+          sudo apt-get install zsh
       - run: zsh ./test-e2e/run.zsh
 
   macos:
