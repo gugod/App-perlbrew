@@ -1,0 +1,29 @@
+name: E2E
+
+on:
+  push:
+    paths:
+      - perlbrew
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          apt update
+          apt install -y zsh
+      - run: zsh ./test-e2e/run.zsh
+
+  macos:
+    strategy:
+      matrix:
+        os: ["macos-latest", "macos-13"]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: shogo82148/actions-setup-perl@v1.31.3
+        with:
+          perl-version: "5.40"
+      - uses: actions/checkout@v4
+      - run: /bin/zsh ./test-e2e/run.zsh
