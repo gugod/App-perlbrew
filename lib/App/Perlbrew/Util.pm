@@ -123,8 +123,8 @@ sub looks_like_url_of_skaji_relocatable_perl  {
 sub _arch_compat {
     my ($arch) = @_;
     my $compat = {
-        x86_64 => "amd64",
         i386   => "amd64",
+        x86_64 => "amd64",
     };
     return $compat->{$arch} || $arch;
 }
