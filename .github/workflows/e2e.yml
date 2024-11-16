@@ -26,12 +26,11 @@ jobs:
       - run: zsh ./test-e2e/run.zsh
 
     steps:
-      - uses: actions/checkout@v4
       - run: |
           sudo apt-get update
           sudo apt-get install zsh
+      - uses: actions/checkout@v4
       - run: zsh ./test-e2e/run.zsh
-
 
   macos:
     strategy:
