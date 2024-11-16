@@ -22,7 +22,7 @@ jobs:
     container:
       image: fedora:latest
     steps:
-      - run: sudo dnf install zsh
+      - run: sudo dnf install -y zsh
       - run: zsh ./test-e2e/run.zsh
 
   macos:
