@@ -25,6 +25,7 @@ jobs:
       image: fedora:latest
     steps:
       - run: sudo dnf install -y zsh
+      - uses: actions/checkout@v4
       - run: zsh ./test-e2e/run.zsh
 
     steps:
