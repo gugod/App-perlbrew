@@ -19,6 +19,22 @@ jobs:
           sudo apt-get install zsh
       - run: zsh ./test-e2e/run.zsh
 
+  fedora:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    steps:
+      - run: sudo dnf install zsh
+      - run: zsh ./test-e2e/run.zsh
+
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          sudo apt-get update
+          sudo apt-get install zsh
+      - run: zsh ./test-e2e/run.zsh
+
+
   macos:
     strategy:
       matrix:
