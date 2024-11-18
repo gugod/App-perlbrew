@@ -1,3 +1,7 @@
+1.01
+	- Released at 2024-11-18T20:46:04+0900
+	- fix: `perlbrew install skaji-relocatable-perl-$version` on macOS.
+
 1.00
 	- Released at 2024-10-04T10:48:40+0900
 	- Experimental: `perlbrew install` now accept names like skaji-relocatable-perl-$version.

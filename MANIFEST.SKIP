@@ -41,3 +41,4 @@
 ^.circleci
 ^.perlcriticrc
 ^metamerge.json
+^test-e2e/
