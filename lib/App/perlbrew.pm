@@ -2263,6 +2263,16 @@ sub run_command_self_upgrade {
     $TMP_PERLBREW->unlink;
 }
 
+sub run_command_rm {
+    my ($self, @args) = @_;
+    $self->run_command_uninstall(@args);
+}
+
+sub run_command_delete {
+    my ($self, @args) = @_;
+    $self->run_command_uninstall(@args);
+}
+
 sub run_command_uninstall {
     my ( $self, $target ) = @_;
 
