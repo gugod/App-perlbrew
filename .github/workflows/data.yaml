@@ -1,0 +1,6 @@
+fedora-init:
+  sudo dnf install -y zsh perl
+
+ubuntu-init: |
+  sudo apt-get update
+  sudo apt-get install zsh
