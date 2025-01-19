@@ -20,8 +20,8 @@ jobs:
     container:
       image: fedora:latest
     steps:
-    - run: sudo dnf install -y zsh perl
     - uses: actions/checkout@v4
+    - run: sudo dnf install -y zsh perl
     - run: zsh ./test-e2e/run.zsh
   macos:
     strategy:

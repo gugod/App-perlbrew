@@ -1,3 +1,15 @@
+--- !yamlscript/v0
+defn gen-linux-job(init image=nil)::
+  runs-on: ubuntu-latest
+  :when image::
+    container:
+      image:: image
+  steps:
+    - uses: actions/checkout@v4
+    - run:: init
+    - run: zsh ./test-e2e/run.zsh
+
+--- !yamlscript/v0:
 name: E2E
 
 on:
@@ -7,23 +19,9 @@ on:
       - perlbrew
 
 jobs:
-  ubuntu:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get update
-          sudo apt-get install zsh
-      - run: zsh ./test-e2e/run.zsh
-
-  fedora:
-    runs-on: ubuntu-latest
-    container:
-      image: fedora:latest
-    steps:
-      - run: sudo dnf install -y zsh perl
-      - uses: actions/checkout@v4
-      - run: zsh ./test-e2e/run.zsh
+  data =: yaml/load-file('data.yaml')
+  ubuntu:: gen-linux-job(data.ubuntu-init)
+  fedora:: gen-linux-job(data.fedora-init 'fedora:latest')
 
   macos:
     strategy:
