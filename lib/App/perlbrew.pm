@@ -2313,7 +2313,7 @@ sub run_command_exec {
 
     local (@ARGV) = @{ $self->{original_argv} };
 
-    Getopt::Long::Configure('require_order');
+    Getopt::Long::Configure( 'require_order', 'nopass_through' );
     my @command_options = ( 'with=s', 'halt-on-error', 'min=s', 'max=s' );
 
     $self->parse_cmdline( \%opts, @command_options );
