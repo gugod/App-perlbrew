@@ -1,0 +1,37 @@
+--- !yamlscript/v0
+defn gen-linux-job(init image=nil)::
+  runs-on: ubuntu-latest
+  :when image::
+    container:
+      image:: image
+  steps:
+    - uses: actions/checkout@v4
+    - run:: init
+    - run: zsh ./test-e2e/run.zsh
+
+--- !yamlscript/v0:
+name: E2E
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - perlbrew
+
+jobs:
+  data =: yaml/load-file('data.yaml')
+  ubuntu:: gen-linux-job(data.ubuntu-init)
+  fedora:: gen-linux-job(data.fedora-init 'fedora:latest')
+
+  macos:
+    strategy:
+      matrix:
+        os: ["macos-latest", "macos-13"]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: shogo82148/actions-setup-perl@v1.31.3
+        with:
+          perl-version: "5.40"
+      - uses: actions/checkout@v4
+      - run: /bin/zsh ./test-e2e/run.zsh

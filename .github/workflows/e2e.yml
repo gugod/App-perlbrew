@@ -1,39 +1,39 @@
-name: E2E
+# DO NOT EDIT - GENERATED FROM .github/workflows/e2e.ys
 
-on:
-  workflow_dispatch:
+name: E2E
+'on':
+  workflow_dispatch: null
   push:
     paths:
-      - perlbrew
-
+    - perlbrew
 jobs:
   ubuntu:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get update
-          sudo apt-get install zsh
-      - run: zsh ./test-e2e/run.zsh
-
+    - uses: actions/checkout@v4
+    - run: |
+        sudo apt-get update
+        sudo apt-get install zsh
+    - run: zsh ./test-e2e/run.zsh
   fedora:
     runs-on: ubuntu-latest
     container:
       image: fedora:latest
     steps:
-      - run: sudo dnf install -y zsh perl
-      - uses: actions/checkout@v4
-      - run: zsh ./test-e2e/run.zsh
-
+    - uses: actions/checkout@v4
+    - run: sudo dnf install -y zsh perl
+    - run: zsh ./test-e2e/run.zsh
   macos:
     strategy:
       matrix:
-        os: ["macos-latest", "macos-13"]
+        os:
+        - macos-latest
+        - macos-13
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: shogo82148/actions-setup-perl@v1.31.3
-        with:
-          perl-version: "5.40"
-      - uses: actions/checkout@v4
-      - run: /bin/zsh ./test-e2e/run.zsh
+    - uses: shogo82148/actions-setup-perl@v1.31.3
+      with:
+        perl-version: '5.40'
+    - uses: actions/checkout@v4
+    - run: /bin/zsh ./test-e2e/run.zsh
