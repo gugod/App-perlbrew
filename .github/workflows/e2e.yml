@@ -32,6 +32,15 @@ jobs:
     - run: |
         dnf install -y zsh perl
     - run: zsh ./test-e2e/run.zsh
+  alpine:
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:3.10
+    steps:
+    - uses: actions/checkout@v4
+    - run: |
+        apk add zsh perl
+    - run: zsh ./test-e2e/run.zsh
   macos:
     strategy:
       matrix:

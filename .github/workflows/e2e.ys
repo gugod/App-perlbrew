@@ -23,6 +23,7 @@ jobs:
   ubuntu:: gen-linux-job(data.ubuntu-init)
   fedora:: gen-linux-job(data.fedora-init 'fedora:latest')
   almalinux:: gen-linux-job(data.almalinux-init 'almalinux:latest')
+  alpine:: gen-linux-job(data.alpine-init 'alpine:3.10')
 
   macos:
     strategy:

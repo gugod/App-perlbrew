@@ -7,3 +7,6 @@ almalinux-init: |
 ubuntu-init: |
   sudo apt-get update
   sudo apt-get install zsh
+
+alpine-init: |
+  apk add zsh perl
