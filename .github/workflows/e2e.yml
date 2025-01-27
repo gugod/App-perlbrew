@@ -30,7 +30,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - run: |
-        dnf install -y perl
+        dnf install -y zsh perl
     - run: zsh ./test-e2e/run.zsh
   macos:
     strategy:
