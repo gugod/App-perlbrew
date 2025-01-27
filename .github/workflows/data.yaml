@@ -4,3 +4,6 @@ fedora-init:
 ubuntu-init: |
   sudo apt-get update
   sudo apt-get install zsh
+
+almalinux-init: |
+  dnf install -y perl
