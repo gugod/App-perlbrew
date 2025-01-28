@@ -1,39 +1,82 @@
-name: E2E
+# DO NOT EDIT - GENERATED FROM .github/workflows/e2e.ys
 
-on:
-  workflow_dispatch:
+name: E2E
+'on':
+  workflow_dispatch: null
   push:
     paths:
-      - perlbrew
-
+    - perlbrew
+    - .github/workflows/e2e.yml
 jobs:
+  debian:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:latest
+    steps:
+    - run: |
+        apt-get update -y
+        apt-get install -y zsh perl curl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
   ubuntu:
     runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
     steps:
-      - uses: actions/checkout@v4
-      - run: |
-          sudo apt-get update
-          sudo apt-get install zsh
-      - run: zsh ./test-e2e/run.zsh
-
+    - run: |
+        apt-get update -y
+        apt-get install -y zsh perl curl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
   fedora:
     runs-on: ubuntu-latest
     container:
       image: fedora:latest
     steps:
-      - run: sudo dnf install -y zsh perl
-      - uses: actions/checkout@v4
-      - run: zsh ./test-e2e/run.zsh
-
-  macos:
-    strategy:
-      matrix:
-        os: ["macos-latest", "macos-13"]
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    - run: |
+        dnf install -y zsh perl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
+  almalinux:
+    runs-on: ubuntu-latest
+    container:
+      image: almalinux:latest
     steps:
-      - uses: shogo82148/actions-setup-perl@v1.31.3
-        with:
-          perl-version: "5.40"
-      - uses: actions/checkout@v4
-      - run: /bin/zsh ./test-e2e/run.zsh
+    - run: |
+        dnf install -y zsh perl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
+  rockylinux:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/rockylinux/rockylinux:latest
+    steps:
+    - run: |
+        dnf install -y zsh perl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
+  opensuse:
+    runs-on: ubuntu-latest
+    container:
+      image: opensuse/tumbleweed:latest
+    steps:
+    - run: |
+        zypper install -y zsh perl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
+  macos-latest:
+    runs-on: macos-latest
+    steps:
+    - uses: shogo82148/actions-setup-perl@v1.31.3
+      with:
+        perl-version: '5.40'
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
+  macos-13:
+    runs-on: macos-13
+    steps:
+    - uses: shogo82148/actions-setup-perl@v1.31.3
+      with:
+        perl-version: '5.40'
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh

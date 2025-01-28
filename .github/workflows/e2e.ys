@@ -1,0 +1,42 @@
+--- !yamlscript/v0
+
+e2e-steps =::
+  - uses: actions/checkout@v4
+  - run: zsh ./test-e2e/run.zsh
+
+defn gen-container-job(init image=nil)::
+  runs-on: ubuntu-latest
+  container:
+    image:: image
+  steps:
+    - run:: init
+    - :: e2e-steps
+
+defn gen-macos-job(os)::
+  runs-on:: os
+  steps:
+    - uses: shogo82148/actions-setup-perl@v1.31.3
+      with:
+        perl-version: "5.40"
+    - :: e2e-steps
+
+--- !yamlscript/v0:
+name: E2E
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - perlbrew
+      - .github/workflows/e2e.yml
+
+jobs:
+  init =: load("src/init.yaml")
+  debian:: gen-container-job(init.ubuntu, 'debian:latest')
+  ubuntu:: gen-container-job(init.ubuntu, 'ubuntu:latest')
+  fedora:: gen-container-job(init.fedora 'fedora:latest')
+  almalinux:: gen-container-job(init.almalinux 'almalinux:latest')
+  rockylinux:: gen-container-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
+  opensuse:: gen-container-job(init.opensuse 'opensuse/tumbleweed:latest')
+  macos-latest:: gen-macos-job("macos-latest")
+  macos-13:: gen-macos-job("macos-13")
