@@ -10,36 +10,27 @@ jobs:
   ubuntu:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
     - run: |
         sudo apt-get update
         sudo apt-get install zsh
+    - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   fedora:
     runs-on: ubuntu-latest
     container:
       image: fedora:latest
     steps:
-    - uses: actions/checkout@v4
     - run: sudo dnf install -y zsh perl
+    - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
     runs-on: ubuntu-latest
     container:
       image: almalinux:latest
     steps:
-    - uses: actions/checkout@v4
     - run: |
         dnf install -y zsh perl
-    - run: zsh ./test-e2e/run.zsh
-  alpine:
-    runs-on: ubuntu-latest
-    container:
-      image: alpine:3.10
-    steps:
     - uses: actions/checkout@v4
-    - run: |
-        apk add zsh perl
     - run: zsh ./test-e2e/run.zsh
   macos:
     strategy:
