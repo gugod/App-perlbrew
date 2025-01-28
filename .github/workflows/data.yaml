@@ -13,3 +13,6 @@ ubuntu-init: |
 
 alpine-init: |
   apk add zsh perl
+
+opensuse-init: |
+  zypper install -y zsh perl

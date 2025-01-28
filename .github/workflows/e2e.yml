@@ -39,6 +39,15 @@ jobs:
     - run: dnf install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
+  opensuse:
+    runs-on: ubuntu-latest
+    container:
+      image: opensuse/tumbleweed:latest
+    steps:
+    - run: |
+        zypper install -y zsh perl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
   macos:
     strategy:
       matrix:
