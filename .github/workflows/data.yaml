@@ -1,8 +1,11 @@
-fedora-init:
-  sudo dnf install -y zsh perl
-
-almalinux-init: |
+dnf-install: &with-dnf-install
   dnf install -y zsh perl
+
+fedora-init: *with-dnf-install
+
+almalinux-init: *with-dnf-install
+
+rockylinux-init: *with-dnf-install
 
 ubuntu-init: |
   sudo apt-get update

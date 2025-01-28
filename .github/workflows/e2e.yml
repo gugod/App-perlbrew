@@ -20,7 +20,7 @@ jobs:
     container:
       image: fedora:latest
     steps:
-    - run: sudo dnf install -y zsh perl
+    - run: dnf install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
@@ -28,8 +28,15 @@ jobs:
     container:
       image: almalinux:latest
     steps:
-    - run: |
-        dnf install -y zsh perl
+    - run: dnf install -y zsh perl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
+  rockylinux:
+    runs-on: ubuntu-latest
+    container:
+      image: docker.io/rockylinux/rockylinux:latest
+    steps:
+    - run: dnf install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos:

@@ -23,7 +23,7 @@ jobs:
   ubuntu:: gen-linux-job(data.ubuntu-init)
   fedora:: gen-linux-job(data.fedora-init 'fedora:latest')
   almalinux:: gen-linux-job(data.almalinux-init 'almalinux:latest')
-
+  rockylinux:: gen-linux-job(data.rockylinux-init 'docker.io/rockylinux/rockylinux:latest')
   macos:
     strategy:
       matrix:
