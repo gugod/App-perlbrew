@@ -1,12 +1,16 @@
 --- !yamlscript/v0
+
+e2e-steps =::
+  - uses: actions/checkout@v4
+  - run: zsh ./test-e2e/run.zsh
+
 defn gen-container-job(init image=nil)::
   runs-on: ubuntu-latest
   container:
     image:: image
   steps:
     - run:: init
-    - uses: actions/checkout@v4
-    - run: zsh ./test-e2e/run.zsh
+    - :: e2e-steps
 
 defn gen-macos-job(os)::
   runs-on:: os
@@ -14,8 +18,7 @@ defn gen-macos-job(os)::
     - uses: shogo82148/actions-setup-perl@v1.31.3
       with:
         perl-version: "5.40"
-    - uses: actions/checkout@v4
-    - run: /bin/zsh ./test-e2e/run.zsh
+    - :: e2e-steps
 
 --- !yamlscript/v0:
 name: E2E

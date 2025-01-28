@@ -71,7 +71,7 @@ jobs:
       with:
         perl-version: '5.40'
     - uses: actions/checkout@v4
-    - run: /bin/zsh ./test-e2e/run.zsh
+    - run: zsh ./test-e2e/run.zsh
   macos-13:
     runs-on: macos-13
     steps:
@@ -79,4 +79,4 @@ jobs:
       with:
         perl-version: '5.40'
     - uses: actions/checkout@v4
-    - run: /bin/zsh ./test-e2e/run.zsh
+    - run: zsh ./test-e2e/run.zsh
