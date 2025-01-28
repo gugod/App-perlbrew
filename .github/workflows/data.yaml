@@ -7,10 +7,9 @@ almalinux-init: *with-dnf
 
 rockylinux-init: *with-dnf
 
-
 debian-init: &with-apt |
   apt-get update -y
-  apt-get install -y zsh perl
+  apt-get install -y zsh perl curl
 
 ubuntu-init: *with-apt
 
