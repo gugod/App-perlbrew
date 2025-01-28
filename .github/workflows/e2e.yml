@@ -7,12 +7,24 @@ name: E2E
     paths:
     - perlbrew
 jobs:
-  ubuntu:
+  debian:
     runs-on: ubuntu-latest
+    container:
+      image: debian:latest
     steps:
     - run: |
-        sudo apt-get update
-        sudo apt-get install zsh
+        apt-get update
+        apt-get install zsh perl
+    - uses: actions/checkout@v4
+    - run: zsh ./test-e2e/run.zsh
+  ubuntu:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:latest
+    steps:
+    - run: |
+        apt-get update
+        apt-get install zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   fedora:
@@ -20,7 +32,8 @@ jobs:
     container:
       image: fedora:latest
     steps:
-    - run: dnf install -y zsh perl
+    - run: |
+        dnf install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
@@ -28,7 +41,8 @@ jobs:
     container:
       image: almalinux:latest
     steps:
-    - run: dnf install -y zsh perl
+    - run: |
+        dnf install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   rockylinux:
@@ -36,7 +50,8 @@ jobs:
     container:
       image: docker.io/rockylinux/rockylinux:latest
     steps:
-    - run: dnf install -y zsh perl
+    - run: |
+        dnf install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   opensuse:

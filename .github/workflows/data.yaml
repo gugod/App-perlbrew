@@ -1,15 +1,18 @@
-dnf-install: &with-dnf-install
+dnf-install: &with-dnf |
   dnf install -y zsh perl
 
-fedora-init: *with-dnf-install
+fedora-init: *with-dnf
 
-almalinux-init: *with-dnf-install
+almalinux-init: *with-dnf
 
-rockylinux-init: *with-dnf-install
+rockylinux-init: *with-dnf
 
-ubuntu-init: |
-  sudo apt-get update
-  sudo apt-get install zsh
+
+debian-init: &with-apt |
+  apt-get update
+  apt-get install zsh perl
+
+ubuntu-init: *with-apt
 
 alpine-init: |
   apk add zsh perl
