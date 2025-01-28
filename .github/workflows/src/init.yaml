@@ -1,0 +1,20 @@
+---
+with-dnf: &with-dnf |
+  dnf install -y zsh perl
+
+with-apt: &with-apt |
+  apt-get update -y
+  apt-get install -y zsh perl curl
+
+fedora: *with-dnf
+almalinux: *with-dnf
+rockylinux: *with-dnf
+
+debian: *with-apt
+ubuntu: *with-apt
+
+opensuse: |
+  zypper install -y zsh perl
+
+alpine: |
+  apk add zsh perl

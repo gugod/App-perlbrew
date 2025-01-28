@@ -5,7 +5,7 @@ YS_PREFIX := /tmp/rapidyaml
 YS := $(YS_PREFIX)/bin/ys-$(YS_VERSION)
 
 INPUT_FILES := $(wildcard */*)
-SOURCE_FILES := $(wildcard *.ys)
+SOURCE_FILES := $(wildcard *.ys src/*.ys)
 SOURCE_FILES := e2e.ys
 TARGET_FILES := $(SOURCE_FILES:%.ys=%.yml)
 

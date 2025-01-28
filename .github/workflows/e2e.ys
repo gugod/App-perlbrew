@@ -20,13 +20,13 @@ on:
       - .github/workflows/e2e.yml
 
 jobs:
-  data =: yaml/load-file('data.yaml')
-  debian:: gen-linux-job(data.ubuntu-init, 'debian:latest')
-  ubuntu:: gen-linux-job(data.ubuntu-init, 'ubuntu:latest')
-  fedora:: gen-linux-job(data.fedora-init 'fedora:latest')
-  almalinux:: gen-linux-job(data.almalinux-init 'almalinux:latest')
-  rockylinux:: gen-linux-job(data.rockylinux-init 'docker.io/rockylinux/rockylinux:latest')
-  opensuse:: gen-linux-job(data.opensuse-init 'opensuse/tumbleweed:latest')
+  init =: load("src/init.yaml")
+  debian:: gen-linux-job(init.ubuntu, 'debian:latest')
+  ubuntu:: gen-linux-job(init.ubuntu, 'ubuntu:latest')
+  fedora:: gen-linux-job(init.fedora 'fedora:latest')
+  almalinux:: gen-linux-job(init.almalinux 'almalinux:latest')
+  rockylinux:: gen-linux-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
+  opensuse:: gen-linux-job(init.opensuse 'opensuse/tumbleweed:latest')
 
   macos:
     strategy:

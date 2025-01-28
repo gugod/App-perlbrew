@@ -6,6 +6,7 @@ name: E2E
   push:
     paths:
     - perlbrew
+    - .github/workflows/e2e.yml
 jobs:
   debian:
     runs-on: ubuntu-latest
