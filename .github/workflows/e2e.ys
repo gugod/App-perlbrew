@@ -17,6 +17,7 @@ on:
   push:
     paths:
       - perlbrew
+      - .github/workflows/e2e.yml
 
 jobs:
   data =: yaml/load-file('data.yaml')
