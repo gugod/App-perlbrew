@@ -1,23 +1,21 @@
 --- !yamlscript/v0
-defn gen-linux-job(init image=nil)::
+defn gen-container-job(init image=nil)::
   runs-on: ubuntu-latest
-  :when image::
-    container:
-      image:: image
+  container:
+    image:: image
   steps:
     - run:: init
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
 
 defn gen-macos-job(os)::
-    name:: os
-    runs-on:: os
-    steps:
-      - uses: shogo82148/actions-setup-perl@v1.31.3
-        with:
-          perl-version: "5.40"
-      - uses: actions/checkout@v4
-      - run: /bin/zsh ./test-e2e/run.zsh
+  runs-on:: os
+  steps:
+    - uses: shogo82148/actions-setup-perl@v1.31.3
+      with:
+        perl-version: "5.40"
+    - uses: actions/checkout@v4
+    - run: /bin/zsh ./test-e2e/run.zsh
 
 --- !yamlscript/v0:
 name: E2E
@@ -31,11 +29,11 @@ on:
 
 jobs:
   init =: load("src/init.yaml")
-  debian:: gen-linux-job(init.ubuntu, 'debian:latest')
-  ubuntu:: gen-linux-job(init.ubuntu, 'ubuntu:latest')
-  fedora:: gen-linux-job(init.fedora 'fedora:latest')
-  almalinux:: gen-linux-job(init.almalinux 'almalinux:latest')
-  rockylinux:: gen-linux-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
-  opensuse:: gen-linux-job(init.opensuse 'opensuse/tumbleweed:latest')
+  debian:: gen-container-job(init.ubuntu, 'debian:latest')
+  ubuntu:: gen-container-job(init.ubuntu, 'ubuntu:latest')
+  fedora:: gen-container-job(init.fedora 'fedora:latest')
+  almalinux:: gen-container-job(init.almalinux 'almalinux:latest')
+  rockylinux:: gen-container-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
+  opensuse:: gen-container-job(init.opensuse 'opensuse/tumbleweed:latest')
   macos-latest:: gen-macos-job("macos-latest")
   macos-13:: gen-macos-job("macos-13")
