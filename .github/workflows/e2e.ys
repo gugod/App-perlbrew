@@ -9,6 +9,16 @@ defn gen-linux-job(init image=nil)::
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
 
+defn gen-macos-job(os)::
+    name:: os
+    runs-on:: os
+    steps:
+      - uses: shogo82148/actions-setup-perl@v1.31.3
+        with:
+          perl-version: "5.40"
+      - uses: actions/checkout@v4
+      - run: /bin/zsh ./test-e2e/run.zsh
+
 --- !yamlscript/v0:
 name: E2E
 
@@ -27,16 +37,5 @@ jobs:
   almalinux:: gen-linux-job(init.almalinux 'almalinux:latest')
   rockylinux:: gen-linux-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
   opensuse:: gen-linux-job(init.opensuse 'opensuse/tumbleweed:latest')
-
-  macos:
-    strategy:
-      matrix:
-        os: ["macos-latest", "macos-13"]
-    name: ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: shogo82148/actions-setup-perl@v1.31.3
-        with:
-          perl-version: "5.40"
-      - uses: actions/checkout@v4
-      - run: /bin/zsh ./test-e2e/run.zsh
+  macos-latest:: gen-macos-job("macos-latest")
+  macos-13:: gen-macos-job("macos-13")
