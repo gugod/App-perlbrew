@@ -9,8 +9,8 @@ rockylinux-init: *with-dnf
 
 
 debian-init: &with-apt |
-  apt-get update
-  apt-get install zsh perl
+  apt-get update -y
+  apt-get install -y zsh perl
 
 ubuntu-init: *with-apt
 

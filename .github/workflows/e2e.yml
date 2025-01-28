@@ -13,8 +13,8 @@ jobs:
       image: debian:latest
     steps:
     - run: |
-        apt-get update
-        apt-get install zsh perl
+        apt-get update -y
+        apt-get install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   ubuntu:
@@ -23,8 +23,8 @@ jobs:
       image: ubuntu:latest
     steps:
     - run: |
-        apt-get update
-        apt-get install zsh perl
+        apt-get update -y
+        apt-get install -y zsh perl
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   fedora:
