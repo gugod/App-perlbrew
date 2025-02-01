@@ -103,6 +103,16 @@ for (@flavors) {
     }
 }
 
+my %command_aliases = (
+    'rm' => 'uninstall',
+    'delete' => 'uninstall',
+);
+
+sub resolve_command_alias {
+    my $x = shift;
+    $command_aliases{$x};
+}
+
 ### methods
 sub new {
     my ( $class, @argv ) = @_;
@@ -449,6 +459,12 @@ sub run_command {
     unless ($s) {
         $x =~ y/-/_/;
         $s = $self->can("run_command_$x");
+    }
+
+    unless ($s) {
+        if (my $x = resolve_command_alias($x)) {
+            $s = $self->can("run_command_$x")
+        }
     }
 
     unless ($s) {
