@@ -64,8 +64,8 @@ jobs:
         with:
           name: App-perlbrew-distdir
       - run: |
-          echo ./App-perlbrew-*
           curl https://cpanmin.us/ > ./cpanm
           chmod +x cpanm
+          ls -l
           ./cpanm --verbose ./App-perlbrew-*
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
