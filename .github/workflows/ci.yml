@@ -66,6 +66,8 @@ jobs:
       - run: |
           curl https://cpanmin.us/ > ./cpanm
           chmod +x cpanm
+          CPANM_PATH=$(cygpath -w $(pwd)/cpanm)
+          TARBALL_PATH=$(cygpath -w $(pwd)/App-perlbrew-*)
           ls -l
-          ./cpanm --verbose ./App-perlbrew-*
+          perl $CPANM_PATH --verbose $TARBALL_PATH
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
