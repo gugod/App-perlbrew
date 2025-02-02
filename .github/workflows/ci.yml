@@ -67,7 +67,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-distdir
-      - run: |
-          TARBALL_PATH=$(cygpath -w $(pwd)/App-perlbrew-*)
-          ls -l
-          perl cpanm --verbose $TARBALL_PATH
+      - run: |-
+          bash -c '
+            ls -l
+            perl cpanm --verbose App-perlbrew-*
+          '
