@@ -69,6 +69,6 @@ jobs:
           name: App-perlbrew-distdir
       - run: |
           cd "$GITHUB_WORKSPACE"
-          ls -l
+          ls -lR
           perl cpanm --verbose App-perlbrew-*
         shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
