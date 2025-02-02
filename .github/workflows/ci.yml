@@ -62,7 +62,7 @@ jobs:
           packages: bash curl make perl gcc-g++
           add-to-path: true
       - run: |
-          curl https://cpanmin.us/ > ./cpanm
+          curl https://cpanmin.us/ -o ./cpanm
           chmod +x cpanm
         shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
       - uses: actions/download-artifact@v4
