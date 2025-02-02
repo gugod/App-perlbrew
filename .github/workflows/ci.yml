@@ -51,3 +51,17 @@ jobs:
           name: App-perlbrew-distdir
       - run: echo ./App-perlbrew-*
       - run: cpanm --verbose ./App-perlbrew-*
+
+  cpanm-dist-cygwin:
+    needs: mbtiny-dist
+    name: cpanm-dist-cygwin
+    runs-on: windows-latest
+    steps:
+      - uses: cygwin/cygwin-install-action@master
+        with:
+          packages: bash curl make perl gcc-g++
+      - uses: actions/download-artifact@v4
+        with:
+          name: App-perlbrew-distdir
+      - run: echo ./App-perlbrew-*
+      - run: cpanm --verbose ./App-perlbrew-*
