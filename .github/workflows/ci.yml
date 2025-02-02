@@ -67,8 +67,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-distdir
-      - run: |-
-          bash -c '
-            ls -l
-            perl cpanm --verbose App-perlbrew-*
-          '
+      - run: |
+          cd "$GITHUB_WORKSPACE"
+          ls -l
+          perl cpanm --verbose App-perlbrew-*
+        shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail -c '{0}'
