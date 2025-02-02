@@ -1,3 +1,6 @@
+NEXT
+	- `uninstall` command now has shorter names: `rm` and `delete`.
+
 1.01
 	- Released at 2024-11-18T20:46:04+0900
 	- fix: `perlbrew install skaji-relocatable-perl-$version` on macOS.
