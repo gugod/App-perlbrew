@@ -499,13 +499,13 @@ sub run_command_version {
 # documentation via the POD of the class itself using the
 # section 'COMMAND: $x' with uppercase $x.
 sub run_command_help {
-    my ( $self, $status, $verbose, $return_text ) = @_;
+    my ( $self, $command, $verbose, $return_text ) = @_;
 
     require Pod::Usage;
 
-    if ( $status && !defined($verbose) ) {
-        if ( $self->can("run_command_help_${status}") ) {
-            $self->can("run_command_help_${status}")->($self);
+    if ( $command && !defined($verbose) ) {
+        if ( $self->can("run_command_help_$command") ) {
+            $self->can("run_command_help_$command")->($self);
         }
         else {
             my $out = "";
@@ -514,7 +514,7 @@ sub run_command_help {
             Pod::Usage::pod2usage(
                 -exitval   => "NOEXIT",
                 -verbose   => 99,
-                -sections  => "COMMAND: " . uc($status),
+                -sections  => "COMMAND: " . uc($command),
                 -output    => $fh,
                 -noperldoc => 1
             );
@@ -522,7 +522,7 @@ sub run_command_help {
             $out =~ s/^    //gm;
 
             if ( $out =~ /\A\s*\Z/ ) {
-                $out = "Cannot find documentation for '$status'\n\n";
+                $out = "Cannot find documentation for '$command'\n\n";
             }
 
             return "\n$out" if ($return_text);
@@ -534,7 +534,7 @@ sub run_command_help {
         Pod::Usage::pod2usage(
             -noperldoc => 1,
             -verbose   => $verbose || 0,
-            -exitval   => ( defined $status ? $status : 1 )
+            -exitval   => ( defined $command ? $command : 1 )
         );
     }
 }
