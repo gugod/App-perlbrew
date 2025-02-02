@@ -511,6 +511,10 @@ sub run_command_help {
             my $out = "";
             open my $fh, ">", \$out;
 
+            if (my $x = resolve_command_alias($command)) {
+                $command = $x;
+            }
+
             Pod::Usage::pod2usage(
                 -exitval   => "NOEXIT",
                 -verbose   => 99,
