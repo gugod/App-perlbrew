@@ -71,4 +71,4 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           ls -l
           perl cpanm --verbose App-perlbrew-*
-        shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail -c '{0}'
+        shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
