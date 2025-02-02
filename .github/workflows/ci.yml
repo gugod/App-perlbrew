@@ -61,12 +61,6 @@ jobs:
         with:
           packages: bash curl make perl gcc-g++
           add-to-path: true
-      - name: setup cygwin
-        env:
-          CYGWIN: winsymlinks:native
-        run: |
-          echo "PATH=/usr/bin:$(cygpath ${SYSTEMROOT})/system32:$PATH" >> $GITHUB_ENV
-          echo "SHELLOPTS=igncr" >> $GITHUB_ENV
       - run: |
           curl https://cpanmin.us/ > ./cpanm
           chmod +x cpanm
