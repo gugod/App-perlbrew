@@ -59,7 +59,7 @@ jobs:
     steps:
       - uses: cygwin/cygwin-install-action@master
         with:
-          packages: bash curl make perl gcc-g++ libcrypt-devel
+          packages: bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable
           add-to-path: true
       - run: |
           curl https://cpanmin.us/ -o ./cpanm
@@ -72,6 +72,5 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           ls -l
           perl -V
-          perl cpanm inc::latest Software::License
           perl cpanm --verbose $(pwd)/App-perlbrew-*
         shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
