@@ -67,7 +67,8 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-distdir
-      - run: |
+      - name: Install App-perlbrew with cpanm
+        run: |
           cd "$GITHUB_WORKSPACE"
           ls -l
           perl cpanm --verbose $(pwd)/App-perlbrew-*
