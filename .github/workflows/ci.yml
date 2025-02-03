@@ -59,7 +59,7 @@ jobs:
     steps:
       - uses: cygwin/cygwin-install-action@master
         with:
-          packages: bash curl make perl gcc-g++
+          packages: bash curl make perl gcc-g++ libcrypt-devel
           add-to-path: true
       - run: |
           curl https://cpanmin.us/ -o ./cpanm
