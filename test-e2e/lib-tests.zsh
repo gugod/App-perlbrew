@@ -2,6 +2,8 @@ PERLBREW_E2E=/tmp/e2e
 export PERLBREW_ROOT=$PERLBREW_E2E/root
 export PERLBREW_HOME=$PERLBREW_E2E/home
 
+PERLBREW=$PERLBREW_ROOT/bin/perlbrew
+
 e2e-begin() {
     mkdir $PERLBREW_E2E
     mkdir $PERLBREW_ROOT
@@ -22,53 +24,43 @@ test-perlbrew-self-install() {
     assert-ok ./perlbrew self-install
 
     assert-file-exists $PERLBREW_ROOT/bin/perlbrew
+
+    $PERLBREW_ROOT/bin/perlbrew install-patchperl
+    assert-file-exists $PERLBREW_ROOT/bin/patchperl
 }
 
-test-perlbrew-install-skaji-relocatable-perl() {
-    echo 'TEST - perlbrew install skaji-relocatable-perl'
+test-perlbrew-install() {
+    local installation=$1
+    shift
 
-    local PERLBREW=~/perl5/perlbrew/bin/perlbrew
+    echo "TEST - perlbrew install $installation"
 
     assert-file-exists $PERLBREW
 
-    assert-dir-missing ~/perl5/perlbrew/perls/skaji-relocatable-perl-5.40.0.1
+    assert-dir-missing $PERLBREW_ROOT/perls/$installation
 
-    $PERLBREW install skaji-relocatable-perl-5.40.0.1
+    $PERLBREW install $installation
 
-    assert-dir-exists ~/perl5/perlbrew/perls/skaji-relocatable-perl-5.40.0.1
-    assert-file-exists ~/perl5/perlbrew/perls/skaji-relocatable-perl-5.40.0.1/bin/perl
+    assert-dir-exists $PERLBREW_ROOT/perls/$installation
+    assert-file-exists $PERLBREW_ROOT/perls/$installation/bin/perl
 
-    assert-ok ~/perl5/perlbrew/perls/skaji-relocatable-perl-5.40.0.1/bin/perl -v
+    assert-ok $PERLBREW_ROOT/perls/$installation/bin/perl -v
 
-    echo 'OK - perlbrew install skaji-relocatable-perl-5.40.0.1'
+    echo "OK - perlbrew install $installation"
 }
 
-test-perlbrew-install-perl-5-40() {
-    echo 'TEST - perlbrew install perl-5.40.0'
+test-perlbrew-uninstall() {
+    local installation=$1
+    shift
 
-    local PERLBREW=~/perl5/perlbrew/bin/perlbrew
+    echo "TEST - perlbrew uninstall $installation"
 
-    assert-file-exists $PERLBREW
-    assert-dir-missing ~/perl5/perlbrew/perls/perl-5.40.0
+    assert-dir-exists $PERLBREW_ROOT/perls/$installation
+    assert-file-exists $PERLBREW_ROOT/perls/$installation/bin/perl
 
-    $PERLBREW install perl-5.40.0
+    $PERLBREW uninstall --yes $installation
 
-    assert-dir-exists ~/perl5/perlbrew/perls/perl-5.40.0
-    assert-file-exists ~/perl5/perlbrew/perls/perl-5.40.0/bin/perl
-    assert-ok ~/perl5/perlbrew/perls/perl-5.40.0/bin/perl -v
+    assert-dir-missing $PERLBREW_ROOT/perls/$installation
 
-    echo 'OK - perlbrew install perl-5.40.0'
-}
-
-test-perlbrew-uninstall-perl-5-40() {
-    echo 'TEST - perlbrew uninstall perl-5.40.0'
-
-    assert-dir-exists ~/perl5/perlbrew/perls/perl-5.40.0
-    assert-file-exists ~/perl5/perlbrew/perls/perl-5.40.0/bin/perl
-
-    $PERLBREW uninstall perl-5.40.0
-
-    assert-dir-missing ~/perl5/perlbrew/perls/perl-5.40.0
-
-    echo 'OK - perlbrew uninstall perl-5.40.0'
+    echo "OK - perlbrew uninstall $installation"
 }
