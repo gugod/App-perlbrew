@@ -1,10 +1,11 @@
 ---
 with-dnf: &with-dnf |
-  dnf install -y zsh perl
+  dnf install -y zsh perl make clang
+  dnf groupinstall -y "Development Tools" "Development Libraries"
 
 with-apt: &with-apt |
   apt-get update -y
-  apt-get install -y zsh perl curl
+  apt-get install -y zsh perl curl build-essentials
 
 fedora: *with-dnf
 almalinux: *with-dnf
