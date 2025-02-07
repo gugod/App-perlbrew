@@ -6,14 +6,19 @@ source $e2eDir/lib-tests.zsh
 
 echo "# uname -a"
 uname -a
-
 local testName=$1
+
+e2e-begin
+
+TRAPEXIT() {
+    e2e-end
+}
 
 if [[ ! -z $testName ]]; then
     $testName
-    exit 0
+else
+    test-perlbrew-self-install
+    test-perlbrew-install-skaji-relocatable-perl
+    test-perlbrew-install-perl-5-40
+    test-perlbrew-uninstall-perl-5-40
 fi
-
-test-perlbrew-self-install
-test-perlbrew-install-skaji-relocatable-perl
-test-perlbrew-install-perl-5-40
