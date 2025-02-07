@@ -62,7 +62,7 @@ jobs:
       image: opensuse/tumbleweed:latest
     steps:
     - run: |
-        zypper install -t pattern devel_basis
+        zypper install -y -t pattern devel_basis
         zypper install -y zsh perl awk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
