@@ -14,7 +14,8 @@ debian: *with-apt
 ubuntu: *with-apt
 
 opensuse: |
-  zypper install -y zsh perl
+  zypper install -t pattern devel_basis
+  zypper install -y zsh perl awk
 
 alpine: |
   apk add zsh perl
