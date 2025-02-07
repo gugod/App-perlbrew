@@ -103,6 +103,16 @@ for (@flavors) {
     }
 }
 
+my %command_aliases = (
+    'rm' => 'uninstall',
+    'delete' => 'uninstall',
+);
+
+sub resolve_command_alias {
+    my $x = shift;
+    $command_aliases{$x};
+}
+
 ### methods
 sub new {
     my ( $class, @argv ) = @_;
@@ -452,6 +462,12 @@ sub run_command {
     }
 
     unless ($s) {
+        if (my $x = resolve_command_alias($x)) {
+            $s = $self->can("run_command_$x")
+        }
+    }
+
+    unless ($s) {
         my @commands = $self->find_similar_commands($x);
 
         if ( @commands > 1 ) {
@@ -483,22 +499,26 @@ sub run_command_version {
 # documentation via the POD of the class itself using the
 # section 'COMMAND: $x' with uppercase $x.
 sub run_command_help {
-    my ( $self, $status, $verbose, $return_text ) = @_;
+    my ( $self, $command, $verbose, $return_text ) = @_;
 
     require Pod::Usage;
 
-    if ( $status && !defined($verbose) ) {
-        if ( $self->can("run_command_help_${status}") ) {
-            $self->can("run_command_help_${status}")->($self);
+    if ( $command && !defined($verbose) ) {
+        if ( $self->can("run_command_help_$command") ) {
+            $self->can("run_command_help_$command")->($self);
         }
         else {
             my $out = "";
             open my $fh, ">", \$out;
 
+            if (my $x = resolve_command_alias($command)) {
+                $command = $x;
+            }
+
             Pod::Usage::pod2usage(
                 -exitval   => "NOEXIT",
                 -verbose   => 99,
-                -sections  => "COMMAND: " . uc($status),
+                -sections  => "COMMAND: " . uc($command),
                 -output    => $fh,
                 -noperldoc => 1
             );
@@ -506,7 +526,7 @@ sub run_command_help {
             $out =~ s/^    //gm;
 
             if ( $out =~ /\A\s*\Z/ ) {
-                $out = "Cannot find documentation for '$status'\n\n";
+                $out = "Cannot find documentation for '$command'\n\n";
             }
 
             return "\n$out" if ($return_text);
@@ -518,7 +538,7 @@ sub run_command_help {
         Pod::Usage::pod2usage(
             -noperldoc => 1,
             -verbose   => $verbose || 0,
-            -exitval   => ( defined $status ? $status : 1 )
+            -exitval   => ( defined $command ? $command : 1 )
         );
     }
 }

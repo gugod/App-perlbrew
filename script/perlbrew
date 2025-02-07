@@ -296,7 +296,14 @@ Another example using custom compilation flags:
 
 =head1 COMMAND: UNINSTALL
 
-Usage: perlbrew uninstall <name>
+Usage:
+
+    perlbrew uninstall <name>
+
+Alternatively:
+
+    perlbrew delete <name>
+    perlbrew rm <name>
 
 Uninstalls the given perl installation. The name is the installation name as in
 the output of `perlbrew list`. This effectively deletes the specified perl installation,
