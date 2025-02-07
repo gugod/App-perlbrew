@@ -1,7 +1,6 @@
 ---
 with-dnf: &with-dnf |
-  dnf install -y zsh perl make clang
-  dnf groupinstall -y "Development Tools" "Development Libraries"
+  dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
 
 with-apt: &with-apt |
   apt-get update -y
