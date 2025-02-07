@@ -41,7 +41,7 @@ test-perlbrew-install() {
 
     assert-dir-missing $PERLBREW_ROOT/perls/$installation
 
-    $PERLBREW install $installation
+    $PERLBREW install --verbose $installation
 
     assert-dir-exists $PERLBREW_ROOT/perls/$installation
     assert-file-exists $PERLBREW_ROOT/perls/$installation/bin/perl
@@ -60,7 +60,7 @@ test-perlbrew-uninstall() {
     assert-dir-exists $PERLBREW_ROOT/perls/$installation
     assert-file-exists $PERLBREW_ROOT/perls/$installation/bin/perl
 
-    $PERLBREW uninstall --yes $installation
+    $PERLBREW uninstall --verbose --yes $installation
 
     assert-dir-missing $PERLBREW_ROOT/perls/$installation
 
