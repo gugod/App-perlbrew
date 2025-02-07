@@ -16,7 +16,7 @@ jobs:
     steps:
     - run: |
         apt-get update -y
-        apt-get install -y zsh perl curl build-essentials
+        apt-get install -y zsh perl curl build-essential
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   ubuntu:
@@ -26,7 +26,7 @@ jobs:
     steps:
     - run: |
         apt-get update -y
-        apt-get install -y zsh perl curl build-essentials
+        apt-get install -y zsh perl curl build-essential
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   fedora:
