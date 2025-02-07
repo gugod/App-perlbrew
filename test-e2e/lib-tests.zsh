@@ -27,6 +27,8 @@ test-perlbrew-self-install() {
 
     $PERLBREW_ROOT/bin/perlbrew install-patchperl
     assert-file-exists $PERLBREW_ROOT/bin/patchperl
+
+    eval "$($PERLBREW init-in-bash)"
 }
 
 test-perlbrew-install() {
