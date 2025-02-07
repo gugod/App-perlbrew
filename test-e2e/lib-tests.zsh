@@ -27,3 +27,20 @@ test-perlbrew-install-skaji-relocatable-perl() {
 
     echo 'OK - perlbrew install skaji-relocatable-perl-5.40.0.1'
 }
+
+test-perlbrew-install-perl-5-40() {
+    echo 'TEST - perlbrew install perl-5.40.0'
+
+    local PERLBREW=~/perl5/perlbrew/bin/perlbrew
+
+    assert-file-exists $PERLBREW
+    assert-dir-missing ~/perl5/perlbrew/perls/perl-5.40.0
+
+    $PERLBREW install perl-5.40.0
+
+    assert-dir-exists ~/perl5/perlbrew/perls/perl-5.40.0
+    assert-file-exists ~/perl5/perlbrew/perls/perl-5.40.0/bin/perl
+    assert-ok ~/perl5/perlbrew/perls/perl-5.40.0/bin/perl -v
+
+    echo 'OK - perlbrew install perl-5.40.0'
+}

@@ -16,3 +16,4 @@ fi
 
 test-perlbrew-self-install
 test-perlbrew-install-skaji-relocatable-perl
+test-perlbrew-install-perl-5-40
