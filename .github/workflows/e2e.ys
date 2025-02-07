@@ -29,6 +29,7 @@ on:
     paths:
       - perlbrew
       - .github/workflows/e2e.yml
+      - test-e2e/*.zsh
 
 jobs:
   init =: load("src/init.yaml")
