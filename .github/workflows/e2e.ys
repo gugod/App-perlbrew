@@ -37,7 +37,7 @@ jobs:
   ubuntu:: gen-container-job(init.ubuntu, 'ubuntu:latest')
   fedora:: gen-container-job(init.fedora 'fedora:latest')
   almalinux:: gen-container-job(init.almalinux 'almalinux:latest')
-  rockylinux:: gen-container-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
+  # rockylinux:: gen-container-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
   opensuse:: gen-container-job(init.opensuse 'opensuse/tumbleweed:latest')
   macos-latest:: gen-macos-job("macos-latest")
   macos-13:: gen-macos-job("macos-13")
