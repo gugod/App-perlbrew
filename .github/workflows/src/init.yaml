@@ -11,7 +11,11 @@ almalinux: *with-dnf
 rockylinux: *with-dnf
 
 debian: *with-apt
-ubuntu: *with-apt
+ubuntu: |
+  yes | unminimize
+  apt-get update -y
+  apt-get install -y zsh perl curl build-essential man-db
+
 
 opensuse: |
   zypper install -y -t pattern devel_basis
