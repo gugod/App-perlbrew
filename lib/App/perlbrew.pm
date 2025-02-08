@@ -1159,14 +1159,29 @@ sub do_extract_tarball {
     $workdir->mkpath;
     my $extracted_dir;
 
-    # Was broken on Solaris, where GNU tar is probably
-    # installed as 'gtar' - RT #61042
-    my $tarx = ( $^O =~ /solaris|aix/ ? 'gtar ' : 'tar ' )
-        . (
-          $dist_tarball =~ m/xz$/  ? 'xJf'
-        : $dist_tarball =~ m/bz2$/ ? 'xjf'
-        :                            'xzf'
-        );
+    my $tarx = do {
+        if ($^O eq 'cygwin') {
+            # https://github.com/gugod/App-perlbrew/issues/832
+            # https://github.com/gugod/App-perlbrew/issues/833
+            'tar --force-local -'
+        } elsif ($^O =~ /solaris|aix/) {
+            # On Solaris, GNU tar is installed as 'gtar' - RT #61042
+            # https://rt.cpan.org/Ticket/Display.html?id=61042
+            'gtar '
+        } else {
+            'tar '
+        }
+    };
+
+    $tarx .= do {
+        if ($dist_tarball =~ m/xz$/) {
+            'xJf'
+        } elsif ($dist_tarball =~ m/bz2$/) {
+            'xjf'
+        } else {
+            'xzf'
+        }
+    };
 
     my $extract_command = "cd $workdir; $tarx $dist_tarball";
     die "Failed to extract $dist_tarball" if system($extract_command);
