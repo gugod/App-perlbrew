@@ -15,9 +15,8 @@ jobs:
       image: debian:latest
     steps:
     - run: |
-        yes | unminimize
         apt-get update -y
-        apt-get install -y zsh perl curl build-essential man-db
+        apt-get install -y zsh perl curl build-essential
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   ubuntu:

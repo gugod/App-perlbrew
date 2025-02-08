@@ -2,20 +2,18 @@
 with-dnf: &with-dnf |
   dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
 
-with-apt: &with-apt |
-  apt-get update -y
-  apt-get install -y zsh perl curl build-essential
-
 fedora: *with-dnf
 almalinux: *with-dnf
 rockylinux: *with-dnf
 
-debian: *with-apt
+debian: |
+  apt-get update -y
+  apt-get install -y zsh perl curl build-essential
+
 ubuntu: |
   yes | unminimize
   apt-get update -y
   apt-get install -y zsh perl curl build-essential man-db
-
 
 opensuse: |
   zypper install -y -t pattern devel_basis

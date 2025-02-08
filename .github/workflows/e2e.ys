@@ -33,7 +33,7 @@ on:
 
 jobs:
   init =: load("src/init.yaml")
-  debian:: gen-container-job(init.ubuntu, 'debian:latest')
+  debian:: gen-container-job(init.debian, 'debian:latest')
   ubuntu:: gen-container-job(init.ubuntu, 'ubuntu:latest')
   fedora:: gen-container-job(init.fedora 'fedora:latest')
   almalinux:: gen-container-job(init.almalinux 'almalinux:latest')
