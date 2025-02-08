@@ -1143,7 +1143,7 @@ sub do_extract_tarball {
         if ($^O eq 'cygwin') {
             # https://github.com/gugod/App-perlbrew/issues/832
             # https://github.com/gugod/App-perlbrew/issues/833
-            'tar --force-local - '
+            'tar --force-local -'
         } elsif ($^O =~ /solaris|aix/) {
             # On Solaris, GNU tar is installed as 'gtar' - RT #61042
             # https://rt.cpan.org/Ticket/Display.html?id=61042
