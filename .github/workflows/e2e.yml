@@ -74,3 +74,16 @@ jobs:
         perl-version: '5.40'
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
+  cygwin:
+    runs-on: windows-latest
+    steps:
+    - uses: cygwin/cygwin-install-action@master
+      with:
+        packages: zsh bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable
+        add-to-path: true
+    - uses: actions/checkout@v4
+    - name: run e2e
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        zsh ./test-e2e/run.zsh
+      shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
