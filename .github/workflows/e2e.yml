@@ -62,6 +62,7 @@ jobs:
       image: docker.io/rockylinux/rockylinux:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel

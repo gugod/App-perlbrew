@@ -11,6 +11,8 @@ job-config =::
     init: *with-dnf
 
   rockylinux:
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     init: *with-dnf
   
   debian:
