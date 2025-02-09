@@ -31,6 +31,7 @@ defn gen-cygwin-job()::
     - name: run e2e
       run: |
         cd "$GITHUB_WORKSPACE"
+        export PERLBREW_E2E_INSTALL_NOTEST=1
         zsh ./test-e2e/run.zsh
       shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
 

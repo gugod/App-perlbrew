@@ -41,7 +41,12 @@ test-perlbrew-install() {
 
     assert-dir-missing $PERLBREW_ROOT/perls/$installation
 
-    $PERLBREW install --verbose $installation
+    if [[ -n "$PERLBREW_E2E_INSTALL_NOTEST" ]]
+    then
+        $PERLBREW install --verbose --notest $installation
+    else
+        $PERLBREW install --verbose $installation
+    fi
 
     assert-dir-exists $PERLBREW_ROOT/perls/$installation
     assert-file-exists $PERLBREW_ROOT/perls/$installation/bin/perl
