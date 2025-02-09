@@ -1,17 +1,51 @@
 --- !yamlscript/v0
 
+job-config =::
+  with-dnf =:: &with-dnf |
+    dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
+
+  fedora:
+    init: *with-dnf
+
+  almalinux:
+    init: *with-dnf
+
+  rockylinux:
+    init: *with-dnf
+  
+  debian:
+    init: |
+      apt-get update -y
+      apt-get install -y zsh perl curl build-essential
+  
+  ubuntu:
+    init: |
+      yes | unminimize
+      apt-get update -y
+      apt-get install -y zsh perl curl build-essential man-db
+  
+  opensuse:
+    init: |
+      zypper install -y -t pattern devel_basis
+      zypper install -y zsh perl awk
+  
+  alpine:
+    init: |
+      apk add zsh perl
+
 e2e-steps =::
   - uses: actions/checkout@v4
   - run: zsh ./test-e2e/run.zsh
 
-defn gen-container-job(init image=nil)::
+defn gen-container-job(config image=nil)::
   runs-on: ubuntu-latest
   container:
     image:: image
   env:
     PERLBREW_E2E: 1
+    :: config.env
   steps:
-    - run:: init
+    - run:: config.init
     - :: e2e-steps
 
 defn gen-macos-job(os)::
@@ -50,13 +84,12 @@ on:
       - test-e2e/*.zsh
 
 jobs:
-  init =: load("src/init.yaml")
-  debian:: gen-container-job(init.debian, 'debian:latest')
-  ubuntu:: gen-container-job(init.ubuntu, 'ubuntu:latest')
-  fedora:: gen-container-job(init.fedora 'fedora:latest')
-  almalinux:: gen-container-job(init.almalinux 'almalinux:latest')
-  rockylinux:: gen-container-job(init.rockylinux 'docker.io/rockylinux/rockylinux:latest')
-  opensuse:: gen-container-job(init.opensuse 'opensuse/tumbleweed:latest')
+  debian:: gen-container-job(job-config.debian, 'debian:latest')
+  ubuntu:: gen-container-job(job-config.ubuntu, 'ubuntu:latest')
+  fedora:: gen-container-job(job-config.fedora 'fedora:latest')
+  almalinux:: gen-container-job(job-config.almalinux 'almalinux:latest')
+  rockylinux:: gen-container-job(job-config.rockylinux 'docker.io/rockylinux/rockylinux:latest')
+  opensuse:: gen-container-job(job-config.opensuse 'opensuse/tumbleweed:latest')
   macos-latest:: gen-macos-job("macos-latest")
   macos-13:: gen-macos-job("macos-13")
   cygwin:: gen-cygwin-job()
