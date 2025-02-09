@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: debian:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
         apt-get update -y
@@ -23,6 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
         yes | unminimize
@@ -34,6 +38,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: fedora:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
@@ -43,6 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: almalinux:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
@@ -52,6 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: docker.io/rockylinux/rockylinux:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
@@ -61,6 +71,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: opensuse/tumbleweed:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
         zypper install -y -t pattern devel_basis
@@ -85,6 +97,8 @@ jobs:
     - run: zsh ./test-e2e/run.zsh
   cygwin:
     runs-on: windows-latest
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - uses: cygwin/cygwin-install-action@master
       with:
@@ -94,6 +108,5 @@ jobs:
     - name: run e2e
       run: |
         cd "$GITHUB_WORKSPACE"
-        export PERLBREW_E2E_INSTALL_NOTEST=1
         zsh ./test-e2e/run.zsh
       shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'
