@@ -7,61 +7,77 @@ name: E2E
     paths:
     - perlbrew
     - .github/workflows/e2e.yml
+    - test-e2e/*.zsh
 jobs:
   debian:
     runs-on: ubuntu-latest
     container:
       image: debian:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
         apt-get update -y
-        apt-get install -y zsh perl curl
+        apt-get install -y zsh perl curl build-essential
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   ubuntu:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
+        yes | unminimize
         apt-get update -y
-        apt-get install -y zsh perl curl
+        apt-get install -y zsh perl curl build-essential man-db
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   fedora:
     runs-on: ubuntu-latest
     container:
       image: fedora:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
-        dnf install -y zsh perl
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
     runs-on: ubuntu-latest
     container:
       image: almalinux:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
-        dnf install -y zsh perl
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   rockylinux:
     runs-on: ubuntu-latest
     container:
       image: docker.io/rockylinux/rockylinux:latest
+    env:
+      PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        dnf install -y zsh perl
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   opensuse:
     runs-on: ubuntu-latest
     container:
       image: opensuse/tumbleweed:latest
+    env:
+      PERLBREW_E2E: 1
     steps:
     - run: |
-        zypper install -y zsh perl
+        zypper install -y -t pattern devel_basis
+        zypper install -y zsh perl awk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-latest:
@@ -80,3 +96,18 @@ jobs:
         perl-version: '5.40'
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
+  cygwin:
+    runs-on: windows-latest
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
+    steps:
+    - uses: cygwin/cygwin-install-action@master
+      with:
+        packages: zsh bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable
+        add-to-path: true
+    - uses: actions/checkout@v4
+    - name: run e2e
+      run: |
+        cd "$GITHUB_WORKSPACE"
+        zsh ./test-e2e/run.zsh
+      shell: C:\cygwin\bin\bash.exe --login -o igncr -eo pipefail '{0}'

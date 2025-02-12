@@ -6,13 +6,24 @@ source $e2eDir/lib-tests.zsh
 
 echo "# uname -a"
 uname -a
-
 local testName=$1
+
+e2e-begin
+
+TRAPEXIT() {
+    e2e-end
+}
 
 if [[ ! -z $testName ]]; then
     $testName
-    exit 0
-fi
+else
+    test-perlbrew-self-install
 
-test-perlbrew-self-install
-test-perlbrew-install-skaji-relocatable-perl
+    if [[ ! ( "$OSTYPE" =~ ^cygwin ) ]]; then
+        test-perlbrew-install skaji-relocatable-perl-5.40.1.0
+        test-perlbrew-uninstall skaji-relocatable-perl-5.40.1.0
+    fi
+
+    test-perlbrew-install perl-5.40.1
+    test-perlbrew-uninstall perl-5.40.1
+fi
