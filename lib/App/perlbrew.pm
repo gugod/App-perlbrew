@@ -28,6 +28,7 @@ use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_li
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
+use App::Perlbrew::Patchperl qw( maybe_patchperl );
 use App::Perlbrew::Sys;
 
 ### global variables
@@ -1583,13 +1584,9 @@ INSTALL
 
     my @preconfigure_commands = ( "cd $dist_extracted_dir", "rm -f config.sh Policy.sh", );
 
-    unless ( $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl ) {
-        my $patchperl = $self->root->bin("patchperl");
-
-        unless ( -x $patchperl && -f _ ) {
-            $patchperl = "patchperl";
-        }
-
+    if ((not $self->{"no-patchperl"})
+        && (not $looks_like_we_are_installing_cperl)
+        && (my $patchperl = maybe_patchperl($self->root))) {
         push @preconfigure_commands, 'chmod -R +w .', $patchperl;
     }
 

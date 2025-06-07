@@ -1,5 +1,6 @@
 NEXT
 	- `uninstall` command now has shorter names: `rm` and `delete`.
+	- `patchperl` is now an optional dependency.
 
 1.01
 	- Released at 2024-11-18T20:46:04+0900
