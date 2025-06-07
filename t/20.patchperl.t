@@ -65,6 +65,24 @@ describe "App::Perlbrew::Patchperl maybe_patchperl" => sub {
             is $patchperl, string $app_root->bin("patchperl");
         };
     };
+
+    describe "When patchperl exist in PERLBREW_ROOT but it is not an executable file", sub {
+        before_each "put a non-exutable file named patchperl under PERLBREW_ROOT" => sub {
+            my $app_root_bin = App::perlbrew->new->root->bin();
+            $app_root_bin->mkpath;
+            my $path = $app_root_bin->child("patchperl");
+            open my $fh, ">", $path
+                or die "Failed to open $path for writing";
+            print $fh, "dummy\n";
+            close $fh;
+        };
+
+        it "should return undef", sub {
+            my $app_root = App::perlbrew->new->root;
+            my $patchperl = maybe_patchperl( $app_root );
+            is $patchperl, U();
+        };
+    };
 };
 
 done_testing;
