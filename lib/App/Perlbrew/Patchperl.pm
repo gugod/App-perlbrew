@@ -4,6 +4,7 @@ use warnings;
 use 5.008;
 
 use App::Perlbrew::Path::Root;
+use Capture::Tiny qw(capture);
 
 use Exporter 'import';
 our @EXPORT_OK = qw(maybe_patchperl);
@@ -28,9 +29,11 @@ sub maybe_patchperl_in_app_root {
 }
 
 sub maybe_patchperl_in_system {
-    my $code = system("patchperl --version");
+    my (undef, undef, $exit_status) = capture {
+        system("patchperl --version");
+    };
 
-    if ($code == 0) {
+    if ($exit_status == 0) {
         return "patchperl"
     } else {
         return undef;
