@@ -28,9 +28,9 @@ sub maybe_patchperl_in_app_root {
 }
 
 sub maybe_patchperl_in_system {
-    my $code = system("patchperl --version") >> 8;
+    my $code = system("patchperl --version");
 
-    if ($code != 127) {
+    if ($code == 0) {
         return "patchperl"
     } else {
         return undef;
