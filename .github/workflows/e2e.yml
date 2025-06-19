@@ -15,6 +15,7 @@ jobs:
       image: debian:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         apt-get update -y
@@ -27,6 +28,7 @@ jobs:
       image: ubuntu:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         yes | unminimize
@@ -40,6 +42,7 @@ jobs:
       image: fedora:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
@@ -51,6 +54,7 @@ jobs:
       image: almalinux:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
@@ -74,6 +78,7 @@ jobs:
       image: opensuse/tumbleweed:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         zypper install -y -t pattern devel_basis
