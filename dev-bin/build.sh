@@ -4,7 +4,7 @@ SHELL=/bin/bash
 eval "$(perlbrew init-in-bash)"
 # source $HOME/perl5/perlbrew/etc/bashrc
 
-wanted_perl_installation="perl-5.8.9@perlbrew"
+wanted_perl_installation="perl-5.36.3@perlbrew"
 
 perlbrew use ${wanted_perl_installation}
 
