@@ -20,10 +20,10 @@ else
     test-perlbrew-self-install
 
     if [[ ! ( "$OSTYPE" =~ ^cygwin ) ]]; then
-        test-perlbrew-install skaji-relocatable-perl-5.40.1.0
-        test-perlbrew-uninstall skaji-relocatable-perl-5.40.1.0
+        test-perlbrew-install skaji-relocatable-perl-5.40.2.1
+        test-perlbrew-uninstall skaji-relocatable-perl-5.40.2.1
     fi
 
-    test-perlbrew-install perl-5.40.1
-    test-perlbrew-uninstall perl-5.40.1
+    test-perlbrew-install perl-5.40.2
+    test-perlbrew-uninstall perl-5.40.2
 fi
