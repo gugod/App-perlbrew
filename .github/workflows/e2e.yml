@@ -87,6 +87,9 @@ jobs:
     - run: zsh ./test-e2e/run.zsh
   macos-latest:
     runs-on: macos-latest
+    env:
+      PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - uses: shogo82148/actions-setup-perl@v1.31.3
       with:
@@ -95,6 +98,9 @@ jobs:
     - run: zsh ./test-e2e/run.zsh
   macos-13:
     runs-on: macos-13
+    env:
+      PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - uses: shogo82148/actions-setup-perl@v1.31.3
       with:

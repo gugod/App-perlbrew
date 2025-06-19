@@ -64,6 +64,9 @@ defn gen-container-job(config image=nil)::
 
 defn gen-macos-job(os)::
   runs-on:: os
+  env:
+    PERLBREW_E2E: 1
+    PERLBREW_E2E_INSTALL_NOTEST: 1
   steps:
     - uses: shogo82148/actions-setup-perl@v1.31.3
       with:
