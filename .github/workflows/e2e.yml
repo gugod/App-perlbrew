@@ -42,7 +42,7 @@ jobs:
       PERLBREW_E2E: 1
     steps:
     - run: |
-        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel awk
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
@@ -53,7 +53,7 @@ jobs:
       PERLBREW_E2E: 1
     steps:
     - run: |
-        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel awk
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   rockylinux:
@@ -65,7 +65,7 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel awk
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   opensuse:

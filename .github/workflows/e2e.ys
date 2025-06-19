@@ -2,7 +2,7 @@
 
 job-config =::
   with-dnf =:: &with-dnf |
-    dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel awk
+    dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
 
   fedora:
     init: *with-dnf
