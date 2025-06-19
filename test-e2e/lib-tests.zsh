@@ -71,3 +71,9 @@ test-perlbrew-uninstall() {
 
     echo "OK - perlbrew uninstall $installation"
 }
+
+test-perlbrew-available() {
+    assert-file-exists $PERLBREW
+    assert-ok $PERLBREW available
+    assert-ok "$PERLBREW available | grep 'perl-5.40.2'"
+}

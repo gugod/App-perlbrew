@@ -5,7 +5,7 @@ assert-ok() {
 
     echo "RUN $what"
     echo "--------8<--------"
-    $*
+    eval "$@"
     rc=$?
     echo "-------->8--------"
 
