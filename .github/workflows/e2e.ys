@@ -2,12 +2,16 @@
 
 job-config =::
   with-dnf =:: &with-dnf |
-    dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
+    dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
 
   fedora:
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     init: *with-dnf
 
   almalinux:
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     init: *with-dnf
 
   rockylinux:
@@ -16,22 +20,30 @@ job-config =::
     init: *with-dnf
   
   debian:
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
       apt-get update -y
       apt-get install -y zsh perl curl build-essential
   
   ubuntu:
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
       yes | unminimize
       apt-get update -y
       apt-get install -y zsh perl curl build-essential man-db
   
   opensuse:
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
       zypper install -y -t pattern devel_basis
       zypper install -y zsh perl awk
   
   alpine:
+    env:
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
       apk add zsh perl
 
@@ -52,6 +64,9 @@ defn gen-container-job(config image=nil)::
 
 defn gen-macos-job(os)::
   runs-on:: os
+  env:
+    PERLBREW_E2E: 1
+    PERLBREW_E2E_INSTALL_NOTEST: 1
   steps:
     - uses: shogo82148/actions-setup-perl@v1.31.3
       with:
