@@ -2983,7 +2983,7 @@ __perlbrew_purify () {
         case "$path" in
             (*"$PERLBREW_HOME"*) ;;
             (*"$PERLBREW_ROOT"*) ;;
-            (*) printf '%s' "$outsep$path" ; outsep=: ;;
+            (*) printf '%s' "${outsep:-}$path" ; outsep=: ;;
         esac
     done
 }
@@ -3006,7 +3006,7 @@ __perlbrew_activate() {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
     if [[ -n "${PERLBREW_PERL:-}" ]]; then
-          __perlbrew_set_env "${PERLBREW_PERL:-}${PERLBREW_LIB:+@}$PERLBREW_LIB"
+          __perlbrew_set_env "${PERLBREW_PERL:-}${PERLBREW_LIB:+@}${PERLBREW_LIB:-}"
     fi
 
     __perlbrew_set_path
@@ -3035,7 +3035,7 @@ perlbrew () {
         (use)
             if [[ -z "$2" ]] ; then
                 echo -n "Currently using ${PERLBREW_PERL:-system perl}"
-                [ -n "$PERLBREW_LIB" ] && echo -n "@$PERLBREW_LIB"
+                [ -n "${PERLBREW_LIB:-}" ] && echo -n "@${PERLBREW_LIB:-}"
                 echo
             else
                 __perlbrew_set_env "$2" && { __perlbrew_set_path ; true ; }
@@ -3157,10 +3157,10 @@ function __perlbrew_activate
     functions -e perl
 
     if test -n "$PERLBREW_PERL"
-        if test -z "$PERLBREW_LIB"
+        if test -z "${PERLBREW_LIB:-}"
             __perlbrew_set_env $PERLBREW_PERL
         else
-            __perlbrew_set_env $PERLBREW_PERL@$PERLBREW_LIB
+            __perlbrew_set_env $PERLBREW_PERL@${PERLBREW_LIB:-}
         end
     end
 

@@ -15,6 +15,7 @@ jobs:
       image: debian:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         apt-get update -y
@@ -27,6 +28,7 @@ jobs:
       image: ubuntu:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         yes | unminimize
@@ -40,9 +42,10 @@ jobs:
       image: fedora:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
@@ -51,9 +54,10 @@ jobs:
       image: almalinux:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   rockylinux:
@@ -65,7 +69,7 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel
+        dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   opensuse:
@@ -74,6 +78,7 @@ jobs:
       image: opensuse/tumbleweed:latest
     env:
       PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
         zypper install -y -t pattern devel_basis
@@ -82,6 +87,9 @@ jobs:
     - run: zsh ./test-e2e/run.zsh
   macos-latest:
     runs-on: macos-latest
+    env:
+      PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - uses: shogo82148/actions-setup-perl@v1.31.3
       with:
@@ -90,6 +98,9 @@ jobs:
     - run: zsh ./test-e2e/run.zsh
   macos-13:
     runs-on: macos-13
+    env:
+      PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - uses: shogo82148/actions-setup-perl@v1.31.3
       with:
