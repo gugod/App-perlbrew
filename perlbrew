@@ -158,6 +158,52 @@ $fatpacked{"App/Perlbrew/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   1;
 APP_PERLBREW_HTTP
 
+$fatpacked{"App/Perlbrew/Patchperl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_PERLBREW_PATCHPERL';
+  package App::Perlbrew::Patchperl;
+  use strict;
+  use warnings;
+  use 5.008;
+  
+  use App::Perlbrew::Path::Root;
+  use Capture::Tiny qw(capture);
+  
+  use Exporter 'import';
+  our @EXPORT_OK = qw(maybe_patchperl);
+  
+  sub maybe_patchperl {
+      my App::Perlbrew::Path::Root $perlbrew_root = shift;
+      return (
+          maybe_patchperl_in_app_root($perlbrew_root) ||
+          maybe_patchperl_in_system()
+      );
+  }
+  
+  sub maybe_patchperl_in_app_root {
+      my App::Perlbrew::Path::Root $perlbrew_root = shift;
+      my $patchperl = $perlbrew_root->bin("patchperl");
+  
+      if (-x $patchperl && -f _) {
+          return $patchperl;
+      } else {
+          return undef;
+      }
+  }
+  
+  sub maybe_patchperl_in_system {
+      my (undef, undef, $exit_status) = capture {
+          system("patchperl --version");
+      };
+  
+      if ($exit_status == 0) {
+          return "patchperl"
+      } else {
+          return undef;
+      }
+  }
+  
+  1;
+APP_PERLBREW_PATCHPERL
+
 $fatpacked{"App/Perlbrew/Path.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_PERLBREW_PATH';
   use strict;
   use warnings;
@@ -602,6 +648,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   use App::Perlbrew::Path ();
   use App::Perlbrew::Path::Root ();
   use App::Perlbrew::HTTP qw( http_download http_get );
+  use App::Perlbrew::Patchperl qw( maybe_patchperl );
   use App::Perlbrew::Sys;
   
   ### global variables
@@ -675,6 +722,16 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       if ( my $implies = $_->{implies} ) {
           $flavor{$implies}{implied_by} = $_->{name};
       }
+  }
+  
+  my %command_aliases = (
+      'rm' => 'uninstall',
+      'delete' => 'uninstall',
+  );
+  
+  sub resolve_command_alias {
+      my $x = shift;
+      $command_aliases{$x};
   }
   
   ### methods
@@ -1026,6 +1083,12 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       }
   
       unless ($s) {
+          if (my $x = resolve_command_alias($x)) {
+              $s = $self->can("run_command_$x")
+          }
+      }
+  
+      unless ($s) {
           my @commands = $self->find_similar_commands($x);
   
           if ( @commands > 1 ) {
@@ -1057,22 +1120,26 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   # documentation via the POD of the class itself using the
   # section 'COMMAND: $x' with uppercase $x.
   sub run_command_help {
-      my ( $self, $status, $verbose, $return_text ) = @_;
+      my ( $self, $command, $verbose, $return_text ) = @_;
   
       require Pod::Usage;
   
-      if ( $status && !defined($verbose) ) {
-          if ( $self->can("run_command_help_${status}") ) {
-              $self->can("run_command_help_${status}")->($self);
+      if ( $command && !defined($verbose) ) {
+          if ( $self->can("run_command_help_$command") ) {
+              $self->can("run_command_help_$command")->($self);
           }
           else {
               my $out = "";
               open my $fh, ">", \$out;
   
+              if (my $x = resolve_command_alias($command)) {
+                  $command = $x;
+              }
+  
               Pod::Usage::pod2usage(
                   -exitval   => "NOEXIT",
                   -verbose   => 99,
-                  -sections  => "COMMAND: " . uc($status),
+                  -sections  => "COMMAND: " . uc($command),
                   -output    => $fh,
                   -noperldoc => 1
               );
@@ -1080,7 +1147,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
               $out =~ s/^    //gm;
   
               if ( $out =~ /\A\s*\Z/ ) {
-                  $out = "Cannot find documentation for '$status'\n\n";
+                  $out = "Cannot find documentation for '$command'\n\n";
               }
   
               return "\n$out" if ($return_text);
@@ -1092,7 +1159,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
           Pod::Usage::pod2usage(
               -noperldoc => 1,
               -verbose   => $verbose || 0,
-              -exitval   => ( defined $status ? $status : 1 )
+              -exitval   => ( defined $command ? $command : 1 )
           );
       }
   }
@@ -1713,14 +1780,29 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
       $workdir->mkpath;
       my $extracted_dir;
   
-      # Was broken on Solaris, where GNU tar is probably
-      # installed as 'gtar' - RT #61042
-      my $tarx = ( $^O =~ /solaris|aix/ ? 'gtar ' : 'tar ' )
-          . (
-            $dist_tarball =~ m/xz$/  ? 'xJf'
-          : $dist_tarball =~ m/bz2$/ ? 'xjf'
-          :                            'xzf'
-          );
+      my $tarx = do {
+          if ($^O eq 'cygwin') {
+              # https://github.com/gugod/App-perlbrew/issues/832
+              # https://github.com/gugod/App-perlbrew/issues/833
+              'tar --force-local -'
+          } elsif ($^O =~ /solaris|aix/) {
+              # On Solaris, GNU tar is installed as 'gtar' - RT #61042
+              # https://rt.cpan.org/Ticket/Display.html?id=61042
+              'gtar '
+          } else {
+              'tar '
+          }
+      };
+  
+      $tarx .= do {
+          if ($dist_tarball =~ m/xz$/) {
+              'xJf'
+          } elsif ($dist_tarball =~ m/bz2$/) {
+              'xjf'
+          } else {
+              'xzf'
+          }
+      };
   
       my $extract_command = "cd $workdir; $tarx $dist_tarball";
       die "Failed to extract $dist_tarball" if system($extract_command);
@@ -2122,13 +2204,9 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       my @preconfigure_commands = ( "cd $dist_extracted_dir", "rm -f config.sh Policy.sh", );
   
-      unless ( $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl ) {
-          my $patchperl = $self->root->bin("patchperl");
-  
-          unless ( -x $patchperl && -f _ ) {
-              $patchperl = "patchperl";
-          }
-  
+      if ((not $self->{"no-patchperl"})
+          && (not $looks_like_we_are_installing_cperl)
+          && (my $patchperl = maybe_patchperl($self->root))) {
           push @preconfigure_commands, 'chmod -R +w .', $patchperl;
       }
   
@@ -2887,7 +2965,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
   
       local (@ARGV) = @{ $self->{original_argv} };
   
-      Getopt::Long::Configure('require_order');
+      Getopt::Long::Configure( 'require_order', 'nopass_through' );
       my @command_options = ( 'with=s', 'halt-on-error', 'min=s', 'max=s' );
   
       $self->parse_cmdline( \%opts, @command_options );
@@ -4165,7 +4243,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20240920';
+  $CPAN::Perl::Releases::VERSION = '5.20250703';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -4477,6 +4555,27 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.41.2" => { id => 'ETHER' },
   "5.41.3" => { id => 'BOOK' },
   "5.41.4" => { id => 'CONTRA' },
+  "5.41.5" => { id => 'HYDAHY' },
+  "5.41.6" => { id => 'CONTRA' },
+  "5.41.7" => { id => 'CORION' },
+  "5.38.3-RC1" => { id => 'SHAY' },
+  "5.40.1-RC1" => { id => 'SHAY' },
+  "5.38.3" => { id => 'SHAY' },
+  "5.40.1" => { id => 'SHAY' },
+  "5.41.8" => { id => 'SHAY' },
+  "5.41.9" => { id => 'HYDAHY' },
+  "5.41.10" => { id => 'MAUKE' },
+  "5.38.4-RC1" => { id => 'SHAY' },
+  "5.40.2-RC1" => { id => 'SHAY' },
+  "5.38.4" => { id => 'SHAY' },
+  "5.40.2" => { id => 'SHAY' },
+  "5.41.11" => { id => 'ETHER' },
+  "5.41.12" => { id => 'ETHER' },
+  "5.41.13" => { id => 'BOOK' },
+  "5.42.0-RC1" => { id => 'CONTRA' },
+  "5.42.0-RC2" => { id => 'CONTRA' },
+  "5.42.0-RC3" => { id => 'CONTRA' },
+  "5.42.0" => { id => 'BOOK' },
   };
   
   sub perl_tarballs {
@@ -4546,7 +4645,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20240920
+  version 5.20250703
   
   =head1 SYNOPSIS
   
@@ -4611,7 +4710,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2024 by Chris Williams.
+  This software is copyright (c) 2025 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
@@ -4625,7 +4724,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   use warnings;
   package Capture::Tiny;
   # ABSTRACT: Capture STDOUT and STDERR from Perl, XS or external programs
-  our $VERSION = '0.48';
+  our $VERSION = '0.50';
   use Carp ();
   use Exporter ();
   use IO::Handle ();
@@ -5058,7 +5157,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head1 VERSION
   
-  version 0.48
+  version 0.50
   
   =head1 SYNOPSIS
   
@@ -5151,7 +5250,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   provide custom filehandles as a trailing list of option pairs:
   
     my $out_fh = IO::File->new("out.txt", "w+");
-    my $err_fh = IO::File->new("out.txt", "w+");
+    my $err_fh = IO::File->new("err.txt", "w+");
     capture { ... } stdout => $out_fh, stderr => $err_fh;
   
   The filehandles must be read/write and seekable.  Modifying the files or
@@ -5199,7 +5298,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   When called in void context, C<tee> saves memory and time by
   not reading back from the capture handles, except when the
-  original STDOUT OR STDERR were tied or opened to a scalar
+  original STDOUT or STDERR were tied or opened to a scalar
   handle.
   
   =head2 tee_stdout
@@ -5365,7 +5464,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   This module was inspired by L<IO::CaptureOutput>, which provides
   similar functionality without the ability to tee output and with more
   complicated code and API.  L<IO::CaptureOutput> does not handle layers
-  or most of the unusual cases described in the L</Limitations> section and
+  or most of the unusual cases described in the L</LIMITATIONS> section and
   I no longer recommend it.
   
   There are many other CPAN modules that provide some sort of output capture,
@@ -5461,7 +5560,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =back
   
-  =for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders metacpan
+  =for :stopwords cpan testmatrix url bugtracker rt cpants kwalitee diff irc mailto metadata placeholders metacpan
   
   =head1 SUPPORT
   
@@ -5486,7 +5585,7 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =head1 CONTRIBUTORS
   
-  =for stopwords Dagfinn Ilmari Mannsåker David E. Wheeler fecundf Graham Knop Peter Rabbitson
+  =for stopwords Dagfinn Ilmari Mannsåker David E. Wheeler Ed Sabol fecundf Graham Knop Karen Etheridge Mohammad S Anwar Peter Rabbitson Sven Kirmess
   
   =over 4
   
@@ -5500,6 +5599,10 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =item *
   
+  Ed Sabol <esabol@users.noreply.github.com>
+  
+  =item *
+  
   fecundf <not.com+github@gmail.com>
   
   =item *
@@ -5508,7 +5611,19 @@ $fatpacked{"Capture/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CA
   
   =item *
   
+  Karen Etheridge <ether@cpan.org>
+  
+  =item *
+  
+  Mohammad S Anwar <mohammad.anwar@yahoo.com>
+  
+  =item *
+  
   Peter Rabbitson <ribasushi@cpan.org>
+  
+  =item *
+  
+  Sven Kirmess <sven.kirmess@kzone.ch>
   
   =back
   
@@ -10683,7 +10798,14 @@ Another example using custom compilation flags:
 
 =head1 COMMAND: UNINSTALL
 
-Usage: perlbrew uninstall <name>
+Usage:
+
+    perlbrew uninstall <name>
+
+Alternatively:
+
+    perlbrew delete <name>
+    perlbrew rm <name>
 
 Uninstalls the given perl installation. The name is the installation name as in
 the output of `perlbrew list`. This effectively deletes the specified perl installation,
