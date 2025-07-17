@@ -4243,7 +4243,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20250528';
+  $CPAN::Perl::Releases::VERSION = '5.20250703';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -4572,6 +4572,10 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.41.11" => { id => 'ETHER' },
   "5.41.12" => { id => 'ETHER' },
   "5.41.13" => { id => 'BOOK' },
+  "5.42.0-RC1" => { id => 'CONTRA' },
+  "5.42.0-RC2" => { id => 'CONTRA' },
+  "5.42.0-RC3" => { id => 'CONTRA' },
+  "5.42.0" => { id => 'BOOK' },
   };
   
   sub perl_tarballs {
@@ -4641,7 +4645,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20250528
+  version 5.20250703
   
   =head1 SYNOPSIS
   

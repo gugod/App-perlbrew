@@ -14,7 +14,10 @@ else
    echo "!!! Fail to use ${wanted_perl_installation} for building. Please prepare it first."
 fi
 
-cpanm File::Path App::FatPacker
+# JSON::PP is part of the core. Doing an extra install here would
+# install a newer version of it to site_lib and it'll be correctly
+# copied into fatlib by update-fatlib.pl
+cpanm File::Path App::FatPacker JSON::PP
 
 cd $(dirname $0)/../
 cpanm --installdeps .
