@@ -4,7 +4,7 @@ SHELL=/bin/bash
 eval "$(perlbrew init-in-bash)"
 # source $HOME/perl5/perlbrew/etc/bashrc
 
-wanted_perl_installation="perl-5.8.9@perlbrew"
+wanted_perl_installation="perl-5.42.0@perlbrew"
 
 perlbrew use ${wanted_perl_installation}
 
@@ -14,7 +14,13 @@ else
    echo "!!! Fail to use ${wanted_perl_installation} for building. Please prepare it first."
 fi
 
-cpanm File::Path App::FatPacker
+# JSON::PP is part of the core. Doing an extra install here would
+# install a newer version of it to site_lib and it'll be correctly
+# copied into fatlib by update-fatlib.pl
+#
+# The `--reinstall` option is to make cpanm to still process JSON::PP
+# even if what's in core is already as new as one on CPAN.
+cpanm --reinstall File::Path App::FatPacker JSON::PP
 
 cd $(dirname $0)/../
 cpanm --installdeps .

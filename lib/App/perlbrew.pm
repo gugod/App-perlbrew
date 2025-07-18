@@ -2,7 +2,7 @@ package App::perlbrew;
 use strict;
 use warnings;
 use 5.008;
-our $VERSION = "1.01";
+our $VERSION = "1.02";
 use Config qw( %Config );
 
 BEGIN {
@@ -28,6 +28,7 @@ use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_li
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
+use App::Perlbrew::Patchperl qw( maybe_patchperl );
 use App::Perlbrew::Sys;
 
 ### global variables
@@ -101,6 +102,16 @@ for (@flavors) {
     if ( my $implies = $_->{implies} ) {
         $flavor{$implies}{implied_by} = $_->{name};
     }
+}
+
+my %command_aliases = (
+    'rm' => 'uninstall',
+    'delete' => 'uninstall',
+);
+
+sub resolve_command_alias {
+    my $x = shift;
+    $command_aliases{$x};
 }
 
 ### methods
@@ -452,6 +463,12 @@ sub run_command {
     }
 
     unless ($s) {
+        if (my $x = resolve_command_alias($x)) {
+            $s = $self->can("run_command_$x")
+        }
+    }
+
+    unless ($s) {
         my @commands = $self->find_similar_commands($x);
 
         if ( @commands > 1 ) {
@@ -483,22 +500,26 @@ sub run_command_version {
 # documentation via the POD of the class itself using the
 # section 'COMMAND: $x' with uppercase $x.
 sub run_command_help {
-    my ( $self, $status, $verbose, $return_text ) = @_;
+    my ( $self, $command, $verbose, $return_text ) = @_;
 
     require Pod::Usage;
 
-    if ( $status && !defined($verbose) ) {
-        if ( $self->can("run_command_help_${status}") ) {
-            $self->can("run_command_help_${status}")->($self);
+    if ( $command && !defined($verbose) ) {
+        if ( $self->can("run_command_help_$command") ) {
+            $self->can("run_command_help_$command")->($self);
         }
         else {
             my $out = "";
             open my $fh, ">", \$out;
 
+            if (my $x = resolve_command_alias($command)) {
+                $command = $x;
+            }
+
             Pod::Usage::pod2usage(
                 -exitval   => "NOEXIT",
                 -verbose   => 99,
-                -sections  => "COMMAND: " . uc($status),
+                -sections  => "COMMAND: " . uc($command),
                 -output    => $fh,
                 -noperldoc => 1
             );
@@ -506,7 +527,7 @@ sub run_command_help {
             $out =~ s/^    //gm;
 
             if ( $out =~ /\A\s*\Z/ ) {
-                $out = "Cannot find documentation for '$status'\n\n";
+                $out = "Cannot find documentation for '$command'\n\n";
             }
 
             return "\n$out" if ($return_text);
@@ -518,7 +539,7 @@ sub run_command_help {
         Pod::Usage::pod2usage(
             -noperldoc => 1,
             -verbose   => $verbose || 0,
-            -exitval   => ( defined $status ? $status : 1 )
+            -exitval   => ( defined $command ? $command : 1 )
         );
     }
 }
@@ -1139,14 +1160,29 @@ sub do_extract_tarball {
     $workdir->mkpath;
     my $extracted_dir;
 
-    # Was broken on Solaris, where GNU tar is probably
-    # installed as 'gtar' - RT #61042
-    my $tarx = ( $^O =~ /solaris|aix/ ? 'gtar ' : 'tar ' )
-        . (
-          $dist_tarball =~ m/xz$/  ? 'xJf'
-        : $dist_tarball =~ m/bz2$/ ? 'xjf'
-        :                            'xzf'
-        );
+    my $tarx = do {
+        if ($^O eq 'cygwin') {
+            # https://github.com/gugod/App-perlbrew/issues/832
+            # https://github.com/gugod/App-perlbrew/issues/833
+            'tar --force-local -'
+        } elsif ($^O =~ /solaris|aix/) {
+            # On Solaris, GNU tar is installed as 'gtar' - RT #61042
+            # https://rt.cpan.org/Ticket/Display.html?id=61042
+            'gtar '
+        } else {
+            'tar '
+        }
+    };
+
+    $tarx .= do {
+        if ($dist_tarball =~ m/xz$/) {
+            'xJf'
+        } elsif ($dist_tarball =~ m/bz2$/) {
+            'xjf'
+        } else {
+            'xzf'
+        }
+    };
 
     my $extract_command = "cd $workdir; $tarx $dist_tarball";
     die "Failed to extract $dist_tarball" if system($extract_command);
@@ -1548,13 +1584,9 @@ INSTALL
 
     my @preconfigure_commands = ( "cd $dist_extracted_dir", "rm -f config.sh Policy.sh", );
 
-    unless ( $self->{"no-patchperl"} || $looks_like_we_are_installing_cperl ) {
-        my $patchperl = $self->root->bin("patchperl");
-
-        unless ( -x $patchperl && -f _ ) {
-            $patchperl = "patchperl";
-        }
-
+    if ((not $self->{"no-patchperl"})
+        && (not $looks_like_we_are_installing_cperl)
+        && (my $patchperl = maybe_patchperl($self->root))) {
         push @preconfigure_commands, 'chmod -R +w .', $patchperl;
     }
 
@@ -2313,7 +2345,7 @@ sub run_command_exec {
 
     local (@ARGV) = @{ $self->{original_argv} };
 
-    Getopt::Long::Configure('require_order');
+    Getopt::Long::Configure( 'require_order', 'nopass_through' );
     my @command_options = ( 'with=s', 'halt-on-error', 'min=s', 'max=s' );
 
     $self->parse_cmdline( \%opts, @command_options );
@@ -2951,7 +2983,7 @@ __perlbrew_purify () {
         case "$path" in
             (*"$PERLBREW_HOME"*) ;;
             (*"$PERLBREW_ROOT"*) ;;
-            (*) printf '%s' "$outsep$path" ; outsep=: ;;
+            (*) printf '%s' "${outsep:-}$path" ; outsep=: ;;
         esac
     done
 }
@@ -2974,7 +3006,7 @@ __perlbrew_activate() {
     [[ -n $(alias perl 2>/dev/null) ]] && unalias perl 2>/dev/null
 
     if [[ -n "${PERLBREW_PERL:-}" ]]; then
-          __perlbrew_set_env "${PERLBREW_PERL:-}${PERLBREW_LIB:+@}$PERLBREW_LIB"
+          __perlbrew_set_env "${PERLBREW_PERL:-}${PERLBREW_LIB:+@}${PERLBREW_LIB:-}"
     fi
 
     __perlbrew_set_path
@@ -3003,7 +3035,7 @@ perlbrew () {
         (use)
             if [[ -z "$2" ]] ; then
                 echo -n "Currently using ${PERLBREW_PERL:-system perl}"
-                [ -n "$PERLBREW_LIB" ] && echo -n "@$PERLBREW_LIB"
+                [ -n "${PERLBREW_LIB:-}" ] && echo -n "@${PERLBREW_LIB:-}"
                 echo
             else
                 __perlbrew_set_env "$2" && { __perlbrew_set_path ; true ; }
@@ -3125,10 +3157,10 @@ function __perlbrew_activate
     functions -e perl
 
     if test -n "$PERLBREW_PERL"
-        if test -z "$PERLBREW_LIB"
+        if test -z "${PERLBREW_LIB:-}"
             __perlbrew_set_env $PERLBREW_PERL
         else
-            __perlbrew_set_env $PERLBREW_PERL@$PERLBREW_LIB
+            __perlbrew_set_env $PERLBREW_PERL@${PERLBREW_LIB:-}
         end
     end
 

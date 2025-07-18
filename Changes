@@ -1,3 +1,10 @@
+1.02
+	- Released at 2025-07-18T21:08:37+0900
+	- Thanks to our contributors: Andrii Nugged, Marius Feraru
+	- `uninstall` command now has shorter names: `rm` and `delete`.
+	- `patchperl` is now an optional dependency.
+	- bashrc now works better with `set -u` ("use strict" in bash) is in place. PR #850.
+
 1.01
 	- Released at 2024-11-18T20:46:04+0900
 	- fix: `perlbrew install skaji-relocatable-perl-$version` on macOS.
