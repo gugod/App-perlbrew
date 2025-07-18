@@ -9,9 +9,9 @@ build_requires:
   Test2::Plugin::NoWarnings: '0.10'
   Test2::V0: '0.000163'
 configure_requires:
-  Module::Build::Tiny: '0.039'
+  Module::Build::Tiny: '0.044'
 dynamic_config: 0
-generated_by: 'App::ModuleBuildTiny version 0.047, CPAN::Meta::Converter version 2.150010'
+generated_by: 'App::ModuleBuildTiny version 0.051, CPAN::Meta::Converter version 2.150010'
 license: mit
 meta-spec:
   url: http://module-build.sourceforge.net/META-spec-v1.4.html
@@ -20,6 +20,8 @@ name: App-perlbrew
 provides:
   App::Perlbrew::HTTP:
     file: lib/App/Perlbrew/HTTP.pm
+  App::Perlbrew::Patchperl:
+    file: lib/App/Perlbrew/Patchperl.pm
   App::Perlbrew::Path:
     file: lib/App/Perlbrew/Path.pm
   App::Perlbrew::Path::Installation:
@@ -34,7 +36,7 @@ provides:
     file: lib/App/Perlbrew/Util.pm
   App::perlbrew:
     file: lib/App/perlbrew.pm
-    version: '1.01'
+    version: '1.02'
 requires:
   CPAN::Perl::Releases: '5.20240920'
   Capture::Tiny: '0.48'
@@ -48,7 +50,8 @@ requires:
 resources:
   bugtracker: https://github.com/gugod/App-perlbrew/issues
   repository: https://github.com/gugod/App-perlbrew.git
-version: '1.01'
-x_serialization_backend: 'CPAN::Meta::YAML version 0.018'
+version: '1.02'
+x_generated_by_perl: v5.42.0
+x_serialization_backend: 'CPAN::Meta::YAML version 0.020'
 x_spdx_expression: MIT
 x_static_install: '1'
