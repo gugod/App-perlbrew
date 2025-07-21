@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest", "macos-13"]
-        version: ["5.42","5.40","5.38","5.18"]
+        version: ["5.40","5.38","5.18"]
     name: cpanm-dist-perl-${{ matrix.version }}-${{ matrix.os }}
     runs-on: ubuntu-latest
     steps:
@@ -40,7 +40,7 @@ jobs:
     needs: mbtiny-dist
     strategy:
       matrix:
-        version: ["5.41"]
+        version: ["5.42","5.41"]
     name: cpanm-dist-perl-${{ matrix.version }}
     runs-on: ubuntu-latest
     container:
