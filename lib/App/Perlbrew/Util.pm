@@ -10,6 +10,7 @@ our @EXPORT_OK = qw(
     looks_like_url_of_skaji_relocatable_perl
     looks_like_sys_would_be_compatible_with_skaji_relocatable_perl
     make_skaji_relocatable_perl_url
+    prompt
 );
 
 sub uniq {
@@ -149,6 +150,23 @@ sub make_skaji_relocatable_perl_url {
         return "https://github.com/skaji/relocatable-perl/releases/download/$version/perl-$os-$arch.tar.gz";
     }
     return undef;
+}
+
+sub prompt {
+    my ($message, $default) = @_;
+
+    print $message;
+
+    my $ans = <STDIN>;
+
+    if (defined($ans)) {
+        $ans =~ s{\015?\012$}{};
+    }
+
+    $ans = $default
+        if (!defined($ans) || ($ans eq ''));
+
+    return $ans;
 }
 
 1;
