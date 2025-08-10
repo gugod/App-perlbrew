@@ -8,7 +8,6 @@ requires 'File::Copy'           => '0';
 requires 'File::Temp'           => '0.2304';
 requires 'JSON::PP'             => '0';
 requires 'local::lib'           => '2.000014';
-requires 'ExtUtils::MakeMaker'  => '7.22';
 
 on test => sub {
     requires 'File::Temp'           => '0.2304';
