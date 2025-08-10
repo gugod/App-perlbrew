@@ -23,7 +23,7 @@ jobs:
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest", "macos-13"]
-        version: ["5.40","5.38","5.18"]
+        version: ["5.40","5.38","5.36","5.34","5.18"]
     name: cpanm-dist-perl-${{ matrix.version }}-${{ matrix.os }}
     runs-on: ubuntu-latest
     steps:
