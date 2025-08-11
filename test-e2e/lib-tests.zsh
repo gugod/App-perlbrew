@@ -81,15 +81,28 @@ test-perlbrew-available() {
 test-perlbrew-install-cpm() {
     assert-file-missing $PERLBREW_ROOT/bin/cpm
 
-    echo n | $PERLBREW install-cpm
-    assert-file-missing $PERLBREW_ROOT/bin/cpm
-
-    # Yes, specifically
-    echo y | $PERLBREW install-cpm
-    assert-file-exists $PERLBREW_ROOT/bin/cpm
-
-    # Default is "yes, but do not override."
-    rm $PERLBREW_ROOT/bin/cpm
+    echo '# Default is "yes, but do not override."'
     echo | $PERLBREW install-cpm
     assert-file-exists $PERLBREW_ROOT/bin/cpm
+
+    echo '# No, do not override'
+    echo "dummy" > $PERLBREW_ROOT/bin/cpm
+    echo n | $PERLBREW install-cpm
+    assert-file-exists $PERLBREW_ROOT/bin/cpm
+
+    if [[ `head -c 5 $PERLBREW_ROOT/bin/cpm` == "dummy" ]]; then
+        echo "OK - not overrided"
+    else
+        echo "FAIL - overrided"
+    fi
+
+    echo '# Yes, do override'
+    echo "dummy" > $PERLBREW_ROOT/bin/cpm
+    echo y | $PERLBREW install-cpm
+    assert-file-exists $PERLBREW_ROOT/bin/cpm
+    if [[ `head -c 5 $PERLBREW_ROOT/bin/cpm` == "dummy" ]]; then
+        echo "FAIL - not overrided"
+    else
+        echo "OK - overrided"
+    fi
 }
