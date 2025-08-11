@@ -84,11 +84,12 @@ test-perlbrew-install-cpm() {
     echo n | $PERLBREW install-cpm
     assert-file-missing $PERLBREW_ROOT/bin/cpm
 
-    # Default is "N"
-    echo | $PERLBREW install-cpm
-    assert-file-missing $PERLBREW_ROOT/bin/cpm
-
     # Yes, specifically
     echo y | $PERLBREW install-cpm
+    assert-file-exists $PERLBREW_ROOT/bin/cpm
+
+    # Default is "yes, but do not override."
+    rm $PERLBREW_ROOT/bin/cpm
+    echo | $PERLBREW install-cpm
     assert-file-exists $PERLBREW_ROOT/bin/cpm
 }
