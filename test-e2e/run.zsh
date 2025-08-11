@@ -28,4 +28,6 @@ else
 
     test-perlbrew-install perl-5.40.2
     test-perlbrew-uninstall perl-5.40.2
+
+    test-perlbrew-install-cpm
 fi

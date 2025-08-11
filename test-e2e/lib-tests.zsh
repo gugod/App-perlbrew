@@ -77,3 +77,18 @@ test-perlbrew-available() {
     assert-ok $PERLBREW available
     assert-ok "$PERLBREW available | grep 'perl-5.40.2'"
 }
+
+test-perlbrew-install-cpm() {
+    assert-file-missing $PERLBREW_ROOT/bin/cpm
+
+    echo n | $PERLBREW install-cpm
+    assert-file-missing $PERLBREW_ROOT/bin/cpm
+
+    # Default is "N"
+    echo | $PERLBREW install-cpm
+    assert-file-missing $PERLBREW_ROOT/bin/cpm
+
+    # Yes, specifically
+    echo y | $PERLBREW install-cpm
+    assert-file-exists $PERLBREW_ROOT/bin/cpm
+}
