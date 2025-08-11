@@ -157,6 +157,12 @@ sub prompt {
 
     print $message;
 
+    # perlbrew has been using ExtUtils::MakeMaker::prompt()
+    # and it makes sense to keep the support of PERL_MM_USE_DEFAULT for a few more versions.
+    if ($ENV{PERL_MM_USE_DEFAULT}) {
+        return $default;
+    }
+
     my $ans = <STDIN>;
 
     if (defined($ans)) {
