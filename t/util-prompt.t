@@ -18,28 +18,32 @@ sub withUserInput {
 }
 
 subtest "prompt", sub {
+    delete $ENV{PERL_MM_USE_DEFAULT};
+
     subtest "Support of PERL_MM_USE_DEFAULT. When true-y",
         withUserInput "dummy",
         => sub {
-            local $ENV{PERL_MM_USE_DEFAULT} = 1;
+            $ENV{PERL_MM_USE_DEFAULT} = 1;
             prompt("What's your name", "default");
         }
         => sub {
             my ($out, $ans) = @_;
             is $out, "What's your name";
             is $ans, "default";
+            delete $ENV{PERL_MM_USE_DEFAULT};
         };
 
     subtest "Support of PERL_MM_USE_DEFAULT. When falsy-y",
         withUserInput "dummy",
         => sub {
-            local $ENV{PERL_MM_USE_DEFAULT} = 0;
+            $ENV{PERL_MM_USE_DEFAULT} = 0;
             prompt("What's your name", "default");
         }
         => sub {
             my ($out, $ans) = @_;
             is $out, "What's your name";
             is $ans, "dummy";
+            delete $ENV{PERL_MM_USE_DEFAULT};
         };
 
     subtest "default answer on LF",
