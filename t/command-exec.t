@@ -1,6 +1,7 @@
 #!/usr/bin/env perl
 use Test2::V0;
 use Test2::Tools::Spec;
+use Test2::Tools::Compare qw(bag);
 
 use FindBin;
 use lib $FindBin::Bin;
@@ -382,11 +383,11 @@ describe "minimal perl version" => sub {
 
         $app->run;
 
-        # Don't care about the order, just the fact all of them were visited
-        is [sort @perl_paths], [sort (
-            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.2", "bin")->stringify(),
-            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin")->stringify(),
-        )];
+        is \@perl_paths, bag {
+            item(App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.2", "bin")->stringify());
+            item(App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.14.1", "bin")->stringify());
+            end();
+        };
 
         $mock->verify;
     };
@@ -407,10 +408,10 @@ describe "maximum perl version" => sub {
         $app->run;
 
         # Don't care about the order, just the fact all of them were visited
-        is [sort @perl_paths], [sort (
-            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.4", "bin")->stringify(),
-            App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.3", "bin")->stringify(),
-        )];
+        is \@perl_paths, bag {
+            item(App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.4", "bin")->stringify());
+            item(App::Perlbrew::Path->new($App::perlbrew::PERLBREW_ROOT, "perls", "perl-5.12.3", "bin")->stringify());
+        };
 
         $mock->verify;
     };
