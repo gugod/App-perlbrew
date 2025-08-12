@@ -24,7 +24,7 @@ use JSON::PP qw( decode_json );
 use File::Copy qw( copy move );
 use Capture::Tiny ();
 
-use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl make_skaji_relocatable_perl_url );
+use App::Perlbrew::Util qw( files_are_the_same uniq find_similar_tokens looks_like_url_of_skaji_relocatable_perl looks_like_sys_would_be_compatible_with_skaji_relocatable_perl make_skaji_relocatable_perl_url prompt );
 use App::Perlbrew::Path ();
 use App::Perlbrew::Path::Root ();
 use App::Perlbrew::HTTP qw( http_download http_get );
@@ -1741,9 +1741,7 @@ sub do_install_program_from_url {
     my $out = $self->root->bin($program_name);
 
     if ( -f $out && !$self->{force} && !$self->{yes} ) {
-        require ExtUtils::MakeMaker;
-
-        my $ans = ExtUtils::MakeMaker::prompt( "\n$out already exists, are you sure to override ? [y/N]", "N" );
+        my $ans = prompt( "\n$out already exists, are you sure to override ? [y/N]", "N" );
 
         if ( $ans !~ /^Y/i ) {
             print "\n$program_name installation skipped.\n\n" unless $self->{quiet};
@@ -2317,8 +2315,7 @@ sub run_command_uninstall {
 
     my $ans = ( $self->{yes} ) ? "Y" : undef;
     if ( !defined($ans) ) {
-        require ExtUtils::MakeMaker;
-        $ans = ExtUtils::MakeMaker::prompt(
+        $ans = prompt(
             "\nThe following perl+lib installation(s) will be deleted:\n\n\t"
                 . join( "\n\t", @dir_to_delete )
                 . "\n\n... are you sure ? [y/N]",
