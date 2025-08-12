@@ -30,7 +30,6 @@
             "CPAN::Perl::Releases" : "5.20240920",
             "Capture::Tiny" : "0.48",
             "Devel::PatchPerl" : "2.08",
-            "ExtUtils::MakeMaker" : "7.22",
             "File::Copy" : "0",
             "File::Temp" : "0.2304",
             "JSON::PP" : "0",
