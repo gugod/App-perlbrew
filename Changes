@@ -1,3 +1,7 @@
+NEXT
+	- fix: syntax error in the fish integration. PR #854
+	- No longer depends on ExtUtils::MakeMaker. PR #856
+
 1.02
 	- Released at 2025-07-18T21:08:37+0900
 	- Thanks to our contributors: Andrii Nugged, Marius Feraru
