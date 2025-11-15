@@ -28,8 +28,8 @@ else
         test-perlbrew-uninstall skaji-relocatable-perl-5.42.0.0
     fi
 
-    test-perlbrew-install perl-5.40.2
-    test-perlbrew-uninstall perl-5.40.2
+    test-perlbrew-install perl-5.40.3
+    test-perlbrew-uninstall perl-5.40.3
     test-perlbrew-install perl-5.42.0
     test-perlbrew-uninstall perl-5.42.0
 
