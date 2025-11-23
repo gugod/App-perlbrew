@@ -48,6 +48,14 @@ job-config =::
       apk add zsh perl
 
 e2e-steps =::
+  - name: print system info
+    run: |
+      echo "# env"
+      env
+      echo "# which perl"
+      which perl
+      echo "# perl -V"
+      perl -V
   - uses: actions/checkout@v4
   - run: zsh ./test-e2e/run.zsh
 

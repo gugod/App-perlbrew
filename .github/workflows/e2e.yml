@@ -20,6 +20,14 @@ jobs:
     - run: |
         apt-get update -y
         apt-get install -y zsh perl curl build-essential
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   ubuntu:
@@ -34,6 +42,14 @@ jobs:
         yes | unminimize
         apt-get update -y
         apt-get install -y zsh perl curl build-essential man-db
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   fedora:
@@ -46,6 +62,14 @@ jobs:
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
@@ -58,6 +82,14 @@ jobs:
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   rockylinux:
@@ -70,6 +102,14 @@ jobs:
     steps:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   opensuse:
@@ -83,6 +123,14 @@ jobs:
     - run: |
         zypper install -y -t pattern devel_basis
         zypper install -y zsh perl awk
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-latest:
@@ -91,6 +139,14 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-13:
@@ -99,6 +155,14 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-14:
@@ -107,6 +171,14 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-15:
@@ -115,6 +187,14 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-26:
@@ -123,6 +203,14 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
+    - name: print system info
+      run: |
+        echo "# env"
+        env
+        echo "# which perl"
+        which perl
+        echo "# perl -V"
+        perl -V
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   cygwin:
