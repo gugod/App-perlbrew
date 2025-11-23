@@ -91,9 +91,6 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
-    - uses: shogo82148/actions-setup-perl@v1.31.3
-      with:
-        perl-version: '5.40'
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-13:
@@ -102,9 +99,6 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
-    - uses: shogo82148/actions-setup-perl@v1.31.3
-      with:
-        perl-version: '5.40'
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-14:
@@ -113,9 +107,6 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
-    - uses: shogo82148/actions-setup-perl@v1.31.3
-      with:
-        perl-version: '5.40'
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-15:
@@ -124,9 +115,6 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
-    - uses: shogo82148/actions-setup-perl@v1.31.3
-      with:
-        perl-version: '5.40'
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-26:
@@ -135,9 +123,6 @@ jobs:
       PERLBREW_E2E: 1
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
-    - uses: shogo82148/actions-setup-perl@v1.31.3
-      with:
-        perl-version: '5.40'
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   cygwin:
