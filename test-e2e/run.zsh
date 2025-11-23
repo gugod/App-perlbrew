@@ -6,6 +6,11 @@ source $e2eDir/lib-tests.zsh
 
 echo "# uname -a"
 uname -a
+
+echo "# perl"
+which perl
+perl -V
+
 local testName=$1
 
 e2e-begin
