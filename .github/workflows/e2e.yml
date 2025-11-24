@@ -38,6 +38,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -68,6 +70,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -96,6 +100,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -124,6 +130,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -152,6 +160,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -181,6 +191,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -205,6 +217,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -229,6 +243,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -253,6 +269,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -277,6 +295,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
@@ -301,6 +321,8 @@ jobs:
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
             echo
+        else
+            true
         fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh

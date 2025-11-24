@@ -63,6 +63,8 @@ e2e-steps =::
           echo "# /usr/bin/perl -V"
           /usr/bin/perl -V
           echo
+      else
+          true
       fi
 
   - uses: actions/checkout@v4
