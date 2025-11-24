@@ -49,6 +49,7 @@ job-config =::
 
 e2e-steps =::
   - name: print system info
+    shell: bash
     run: |
       echo "# env"
       env

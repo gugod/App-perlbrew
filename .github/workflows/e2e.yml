@@ -24,6 +24,7 @@ jobs:
         apt-get update -y
         apt-get install -y zsh perl curl build-essential
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -63,6 +64,7 @@ jobs:
         apt-get update -y
         apt-get install -y zsh perl curl build-essential man-db
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -100,6 +102,7 @@ jobs:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk which
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -137,6 +140,7 @@ jobs:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk which
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -174,6 +178,7 @@ jobs:
     - run: |
         dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk which
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -212,6 +217,7 @@ jobs:
         zypper install -y -t pattern devel_basis
         zypper install -y zsh perl awk which
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -245,6 +251,7 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -278,6 +285,7 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -311,6 +319,7 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -344,6 +353,7 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
@@ -377,6 +387,7 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - name: print system info
+      shell: bash
       run: |
         echo "# env"
         env
