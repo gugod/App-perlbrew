@@ -105,6 +105,10 @@ on:
       - .github/workflows/e2e.yml
       - test-e2e/*.zsh
 
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
   debian:: gen-container-job(job-config.debian, 'debian:latest')
   ubuntu:: gen-container-job(job-config.ubuntu, 'ubuntu:latest')

@@ -8,6 +8,9 @@ name: E2E
     - perlbrew
     - .github/workflows/e2e.yml
     - test-e2e/*.zsh
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 jobs:
   debian:
     runs-on: ubuntu-latest
