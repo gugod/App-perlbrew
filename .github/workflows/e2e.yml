@@ -27,10 +27,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   ubuntu:
@@ -49,10 +57,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   fedora:
@@ -69,10 +85,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   almalinux:
@@ -89,10 +113,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   rockylinux:
@@ -109,10 +141,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   opensuse:
@@ -130,10 +170,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-latest:
@@ -146,10 +194,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-13:
@@ -162,10 +218,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-14:
@@ -178,10 +242,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-15:
@@ -194,10 +266,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   macos-26:
@@ -210,10 +290,18 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
         echo "# which perl"
         which perl
+        echo
         echo "# perl -V"
         perl -V
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+        fi
     - uses: actions/checkout@v4
     - run: zsh ./test-e2e/run.zsh
   cygwin:

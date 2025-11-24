@@ -52,10 +52,19 @@ e2e-steps =::
     run: |
       echo "# env"
       env
+      echo
       echo "# which perl"
       which perl
+      echo
       echo "# perl -V"
       perl -V
+      if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+      then
+          echo "# /usr/bin/perl -V"
+          /usr/bin/perl -V
+          echo
+      fi
+
   - uses: actions/checkout@v4
   - run: zsh ./test-e2e/run.zsh
 
