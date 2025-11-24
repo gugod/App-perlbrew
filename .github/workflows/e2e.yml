@@ -33,10 +33,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -65,10 +72,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -95,10 +109,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -125,10 +146,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -155,10 +183,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -186,10 +221,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -212,10 +254,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -238,10 +287,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -264,10 +320,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -290,10 +353,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
@@ -316,10 +386,17 @@ jobs:
         echo
         echo "# perl -V"
         perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
         if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
         then
             echo "# /usr/bin/perl -V"
             /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
             echo
         else
             true
