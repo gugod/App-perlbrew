@@ -122,7 +122,7 @@ jobs:
     steps:
     - run: |
         zypper install -y -t pattern devel_basis
-        zypper install -y zsh perl awk
+        zypper install -y zsh perl awk which
     - name: print system info
       run: |
         echo "# env"
