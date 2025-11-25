@@ -2,7 +2,7 @@
 
 job-config =::
   with-dnf =:: &with-dnf |
-    dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk
+    dnf install -y zsh perl make automake gcc gcc-c++ kernel-devel gawk which
 
   fedora:
     env:
@@ -39,7 +39,7 @@ job-config =::
       PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
       zypper install -y -t pattern devel_basis
-      zypper install -y zsh perl awk
+      zypper install -y zsh perl awk which
   
   alpine:
     env:
@@ -48,6 +48,33 @@ job-config =::
       apk add zsh perl
 
 e2e-steps =::
+  - name: print system info
+    shell: bash
+    run: |
+      echo "# env"
+      env
+      echo
+      echo "# which perl"
+      which perl
+      echo
+      echo "# perl -V"
+      perl -V
+      echo
+      echo "# perl -MConfig -V:myarchname"
+      perl -MConfig -V:myarchname
+      echo
+      if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+      then
+          echo "# /usr/bin/perl -V"
+          /usr/bin/perl -V
+          echo
+          echo "# /usr/bin/perl -MConfig -V:myarchname"
+          /usr/bin/perl -MConfig -V:myarchname
+          echo
+      else
+          true
+      fi
+
   - uses: actions/checkout@v4
   - run: zsh ./test-e2e/run.zsh
 
@@ -68,9 +95,6 @@ defn gen-macos-job(os)::
     PERLBREW_E2E: 1
     PERLBREW_E2E_INSTALL_NOTEST: 1
   steps:
-    - uses: shogo82148/actions-setup-perl@v1.31.3
-      with:
-        perl-version: "5.40"
     - :: e2e-steps
 
 defn gen-cygwin-job()::
@@ -99,6 +123,10 @@ on:
       - perlbrew
       - .github/workflows/e2e.yml
       - test-e2e/*.zsh
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   debian:: gen-container-job(job-config.debian, 'debian:latest')
