@@ -27,7 +27,7 @@ jobs:
     name: cpanm-dist-perl-${{ matrix.version }}-${{ matrix.os }}
     runs-on: ubuntu-latest
     steps:
-      - uses: shogo82148/actions-setup-perl@v1.35.0
+      - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.version }}
       - uses: actions/download-artifact@v4
