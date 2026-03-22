@@ -8,7 +8,7 @@ jobs:
     container:
       image: perl:5.38
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: cpanm --quiet --notest App::ModuleBuildTiny
       - run: mbtiny distdir
       - run: echo ./App-perlbrew-*
@@ -27,7 +27,7 @@ jobs:
     name: cpanm-dist-perl-${{ matrix.version }}-${{ matrix.os }}
     runs-on: ubuntu-latest
     steps:
-      - uses: shogo82148/actions-setup-perl@v1.35.0
+      - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.version }}
       - uses: actions/download-artifact@v4
@@ -40,7 +40,7 @@ jobs:
     needs: mbtiny-dist
     strategy:
       matrix:
-        version: ["5.41"]
+        version: ["5.42"]
     name: cpanm-dist-perl-${{ matrix.version }}
     runs-on: ubuntu-latest
     container:
