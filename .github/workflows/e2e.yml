@@ -49,7 +49,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   ubuntu:
     runs-on: ubuntu-latest
@@ -89,7 +89,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   fedora:
     runs-on: ubuntu-latest
@@ -127,7 +127,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   almalinux:
     runs-on: ubuntu-latest
@@ -165,7 +165,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   rockylinux:
     runs-on: ubuntu-latest
@@ -203,7 +203,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   opensuse:
     runs-on: ubuntu-latest
@@ -242,7 +242,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   macos-latest:
     runs-on: macos-latest
@@ -276,7 +276,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   macos-13:
     runs-on: macos-13
@@ -310,7 +310,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   macos-14:
     runs-on: macos-14
@@ -344,7 +344,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   macos-15:
     runs-on: macos-15
@@ -378,7 +378,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   macos-26:
     runs-on: macos-26
@@ -412,7 +412,7 @@ jobs:
         else
             true
         fi
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
   cygwin:
     runs-on: windows-latest
@@ -423,7 +423,7 @@ jobs:
       with:
         packages: zsh bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable
         add-to-path: true
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: run e2e
       run: |
         cd "$GITHUB_WORKSPACE"

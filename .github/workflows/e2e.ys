@@ -75,7 +75,7 @@ e2e-steps =::
           true
       fi
 
-  - uses: actions/checkout@v4
+  - uses: actions/checkout@v6
   - run: zsh ./test-e2e/run.zsh
 
 defn gen-container-job(config image=nil)::
@@ -106,7 +106,7 @@ defn gen-cygwin-job()::
       with:
         packages: zsh bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable
         add-to-path: true
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: run e2e
       run: |
         cd "$GITHUB_WORKSPACE"

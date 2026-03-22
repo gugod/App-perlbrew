@@ -8,7 +8,7 @@ jobs:
     container:
       image: perl:5.38
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: cpanm --quiet --notest App::ModuleBuildTiny
       - run: mbtiny distdir
       - run: echo ./App-perlbrew-*
