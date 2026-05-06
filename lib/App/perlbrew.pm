@@ -1101,6 +1101,14 @@ sub do_install_git {
 
     chdir $cwd_orig;
 
+    unless ( $dist_version ) {
+        die "Unable to determine Perl version from 'git describe'. "
+          . "Please use --as to specify an installation name.\n"
+          unless $self->{as};
+        $dist_name    = 'perl';
+        $dist_version = 'git';
+    }
+
     require File::Spec;
     my $dist_extracted_dir = File::Spec->rel2abs($dist);
     $self->do_install_this( App::Perlbrew::Path->new($dist_extracted_dir), $dist_version, "$dist_name-$dist_version" );
