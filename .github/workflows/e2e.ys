@@ -140,4 +140,5 @@ jobs:
   macos-14:: gen-macos-job("macos-14")
   macos-15:: gen-macos-job("macos-15")
   macos-26:: gen-macos-job("macos-26")
+  macos-26-intel:: gen-macos-job("macos-26-intel")
   cygwin:: gen-cygwin-job()

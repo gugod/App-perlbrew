@@ -414,6 +414,40 @@ jobs:
         fi
     - uses: actions/checkout@v6
     - run: zsh ./test-e2e/run.zsh
+  macos-26-intel:
+    runs-on: macos-26-intel
+    env:
+      PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
+    steps:
+    - name: print system info
+      shell: bash
+      run: |
+        echo "# env"
+        env
+        echo
+        echo "# which perl"
+        which perl
+        echo
+        echo "# perl -V"
+        perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
+            echo
+        else
+            true
+        fi
+    - uses: actions/checkout@v6
+    - run: zsh ./test-e2e/run.zsh
   cygwin:
     runs-on: windows-latest
     env:
