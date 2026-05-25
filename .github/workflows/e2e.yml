@@ -29,6 +29,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -69,6 +72,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -106,6 +112,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -145,6 +154,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -182,6 +194,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -222,6 +237,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -255,6 +273,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -290,6 +311,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -323,6 +347,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -358,6 +385,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -392,6 +422,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -425,6 +458,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl

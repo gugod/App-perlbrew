@@ -54,6 +54,9 @@ e2e-steps =::
       echo "# env"
       env
       echo
+      echo "# uname -m"
+      uname -m
+      echo
       echo "# which perl"
       which perl
       echo
