@@ -63,7 +63,6 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        yes | unminimize
         apt-get update -y
         apt-get install -y zsh perl curl build-essential man-db
     - name: print system info
