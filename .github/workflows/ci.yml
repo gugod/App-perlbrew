@@ -46,6 +46,7 @@ jobs:
     steps:
       - run: |
           which perl
+          perl -V:myarchname
           perl -V
       - run: |
           curl -L https://cpanmin.us | perl - --sudo App::cpanminus
