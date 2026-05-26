@@ -44,11 +44,10 @@ jobs:
     name: cpanm-dist-system-perl-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - name: Env
-        run: |
-          which perl
-          perl -V:myarchname
-          perl -V
+      - run: which perl
+      - run: |
+          perl -V:osname -V:archname -V:myarchname
+      - run: perl -V
       - name: Install cpanm
         run: |
           curl -L https://cpanmin.us/ -o cpanm
