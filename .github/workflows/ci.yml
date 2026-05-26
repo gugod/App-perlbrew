@@ -25,7 +25,7 @@ jobs:
         os: ["ubuntu-latest", "macos-26-intel", "macos-latest", "macos-13"]
         version: ["5.42","5.40","5.38","5.36","5.34","5.18"]
     name: cpanm-dist-perl-${{ matrix.version }}-${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: shogo82148/actions-setup-perl@v1
         with:
@@ -42,7 +42,7 @@ jobs:
       matrix:
         os: ["macos-26-intel", "macos-26"]
     name: cpanm-dist-system-perl-${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - run: |
           which perl
