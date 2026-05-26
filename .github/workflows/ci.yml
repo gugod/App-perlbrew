@@ -45,6 +45,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: |
+          which perl
+          perl -V
+      - run: |
           curl -L https://cpanmin.us | perl - --sudo App::cpanminus
       - uses: actions/download-artifact@v4
         with:
