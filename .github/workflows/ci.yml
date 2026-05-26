@@ -44,17 +44,20 @@ jobs:
     name: cpanm-dist-system-perl-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
-      - run: |
+      - name: Env
+        run: |
           which perl
           perl -V:myarchname
           perl -V
-      - run: |
-          curl -L https://cpanmin.us | perl - --sudo App::cpanminus
+      - name: Install cpanm
+        run: |
+          curl -L https://cpanmin.us/ -o cpanm
+          chmod +x cpanm
       - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-distdir
       - run: echo ./App-perlbrew-*
-      - run: cpanm --verbose ./App-perlbrew-*
+      - run: ./cpanm -L local/ --verbose ./App-perlbrew-*
 
   cpanm-dist-in-container:
     needs: mbtiny-dist
