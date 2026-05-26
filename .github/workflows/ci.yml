@@ -44,6 +44,7 @@ jobs:
     name: cpanm-dist-system-perl-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     steps:
+      - run: brew unlink perl
       - run: which perl
       - run: |
           perl -V:osname -V:archname -V:myarchname
