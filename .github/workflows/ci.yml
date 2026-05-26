@@ -36,6 +36,22 @@ jobs:
       - run: echo ./App-perlbrew-*
       - run: cpanm --verbose ./App-perlbrew-*
 
+  cpanm-dist-system-perl:
+    needs: mbtiny-dist
+    strategy:
+      matrix:
+        os: ["macos-26-intel", "macos-26"]
+    name: cpanm-dist-system-perl-${{ matrix.os }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -L https://cpanmin.us | perl - --sudo App::cpanminus
+      - uses: actions/download-artifact@v4
+        with:
+          name: App-perlbrew-distdir
+      - run: echo ./App-perlbrew-*
+      - run: cpanm --verbose ./App-perlbrew-*
+
   cpanm-dist-in-container:
     needs: mbtiny-dist
     strategy:
