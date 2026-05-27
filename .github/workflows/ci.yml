@@ -48,6 +48,9 @@ jobs:
       - run: which perl
       - run: |
           perl -V:osname -V:archname -V:myarchname
+      - run: |
+          uname -m
+          uname -a
       - run: perl -V
       - name: Install cpanm
         run: |
