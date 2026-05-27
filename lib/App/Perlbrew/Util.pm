@@ -141,11 +141,31 @@ sub looks_like_sys_would_be_compatible_with_skaji_relocatable_perl {
 
 sub make_skaji_relocatable_perl_url {
     my ($str, $sys) = @_;
+    # The downloadable distributions can be explored at the page of Release:
+    # https://github.com/skaji/relocatable-perl/releases
+
     if ($str =~ m/\Askaji-relocatable-perl-(5\.[0-9][0-9]\.[0-9][0-9]?.[0-9])\z/) {
         my $version = $1;
+
+        # Eath of these 2 on-URL terms has 2 variants.
+        #
+        #   OS is either 'darwin' or 'linux'
+        #   Arch is either 'arm64' or 'amd64'
+        #
+        # In here we map all our detected value to those 4 values.  If
+        # we encounter anything we do not recognize, then we return
+        # undef, meaning that there are no corresponding distribution
+        # of skaji-relocatable-perl for this system.
+
         my $os = $sys->os;
-        my $arch = $sys->arch;
-        $arch = "amd64" if $arch eq 'x86_64' || $arch eq 'i386';
+
+        my $arch = {
+            'i386' => 'amd64',
+            'x86_64' => 'amd64',
+            'arm64' => 'arm64',
+        }->{$sys->arch};
+
+        return undef unless defined($os) && defined($arch);
 
         return "https://github.com/skaji/relocatable-perl/releases/download/$version/perl-$os-$arch.tar.gz";
     }
