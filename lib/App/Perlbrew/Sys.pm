@@ -2,6 +2,7 @@ package App::Perlbrew::Sys;
 use strict;
 use warnings;
 use Config;
+use Capture::Tiny qw(capture);
 
 sub osname {
     $Config{osname}
@@ -16,7 +17,12 @@ sub os {
 }
 
 sub arch {
-    (split(/-/, $Config{myarchname}, 2))[0]
+    if (os() eq 'darwin' && $^X eq '/usr/bin/perl') {
+        my $output = qx(uname -m);
+        return $output;
+    } else {
+        return (split(/-/, $Config{myarchname}, 2))[0]
+    }
 }
 
 1;
