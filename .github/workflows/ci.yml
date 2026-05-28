@@ -30,6 +30,15 @@ jobs:
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.version }}
+      - run: which perl
+      - run: |
+          perl -V:osname -V:archname -V:myarchname
+      - run: |
+          uname -m
+          uname -a
+      - run: |
+          perl -E 'say $^X'
+      - run: perl -V
       - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-distdir
