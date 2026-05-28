@@ -23,7 +23,7 @@ sub perlpath {
 }
 
 sub _uname_m {
-    my $uname = qw(uname -m 2 >/dev/null);
+    my $uname = qx(uname -m 2 >/dev/null);
     chomp($uname);
     return $uname;
 }
