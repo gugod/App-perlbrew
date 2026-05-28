@@ -16,12 +16,6 @@ sub os {
     $Config{osname}
 }
 
-sub perlpath {
-    # Ref: perldoc: perlvar. On $EXECUTABLE_NAME / $^X
-    # https://perldoc.perl.org/perlvar#$%5EX
-    return $Config{perlpath} . ( $Config{perlpath} =~ m/$Config{_exe}$/i ? "" : $Config{_exe} );
-}
-
 sub _uname_m {
     my $uname = qx(uname -m 2 >/dev/null);
     chomp($uname);
