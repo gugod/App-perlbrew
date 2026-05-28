@@ -16,13 +16,18 @@ sub os {
     $Config{osname}
 }
 
+sub perlpath {
+    # Ref: perldoc: perlvar. On $EXECUTABLE_NAME / $^X
+    # https://perldoc.perl.org/perlvar#$%5EX
+    return $Config{perlpath} . ( $Config{perlpath} =~ m/$Config{_exe}$/i ? "" : $Config{_exe} );
+}
+
 sub arch {
-    print STDERR "DEBUG Sys: " . os() . " " . $^X . "\n";
-    if (os() eq 'darwin' && $^X eq '/usr/bin/perl') {
+    if (os() eq 'darwin' && perlpath() eq "/usr/bin/perl") {
         my $output = qx(uname -m);
         return $output;
     } else {
-        return (split(/-/, $Config{myarchname}, 2))[0]
+        return (split(/-/, $Config{myarchname}, 2))[0];
     }
 }
 
