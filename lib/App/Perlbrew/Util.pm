@@ -157,7 +157,11 @@ sub make_skaji_relocatable_perl_url {
         # undef, meaning that there are no corresponding distribution
         # of skaji-relocatable-perl for this system.
 
-        my $os = $sys->os;
+        my $os = {
+            'darwin' => 'darwin',
+            'linux' => 'linux',
+            'cygwin' => undef,
+        }->{$sys->os};
 
         my $arch = {
             'i386' => 'amd64',

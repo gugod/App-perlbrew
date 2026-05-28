@@ -2,6 +2,8 @@ use Test2::V0;
 use App::Perlbrew::Sys;
 use App::Perlbrew::Util qw(make_skaji_relocatable_perl_url);
 
+my $sys = 'App::Perlbrew::Sys';
+
 subtest 'make_skaji_relocatable_perl_url', sub {
     my $expected_os;
     my $expected_arch;
@@ -22,18 +24,23 @@ subtest 'make_skaji_relocatable_perl_url', sub {
 
     my $url = make_skaji_relocatable_perl_url(
         "skaji-relocatable-perl-5.42.2.0",
-        'App::Perlbrew::Sys'
+        $sys,
     );
 
-    like(
-        $url,
-        qr(/download/5.42.2.0/perl-
-           (linux|darwin)
-           -
-           (amd64|arm64)
-           \.tar\.gz
-           \z )x,
-        "With a generic pattern.");
+
+    if ($sys->os() eq 'cygwin') {
+        is $url, undef;
+    } else {
+        like(
+            $url,
+            qr(/download/5.42.2.0/perl-
+               (linux|darwin)
+               -
+               (amd64|arm64)
+               \.tar\.gz
+               \z )x,
+            "With a generic pattern.");
+    }
 
     if ($expected_os && $expected_arch) {
         like(
