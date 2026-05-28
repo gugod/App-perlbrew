@@ -19,7 +19,7 @@ subtest 'sys', sub {
             };
             $arch_by_uname =~ s/\n$//;
 
-            is $o->sys->archname(), $arch_by_uname, "archname: should match the output of `uname -m`.";
+            is $o->sys->arch(), $arch_by_uname, "archname: should match the output of `uname -m`.";
         };
     }
 };
