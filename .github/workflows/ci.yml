@@ -51,6 +51,8 @@ jobs:
       - run: |
           uname -m
           uname -a
+      - run: |
+          perl -E 'say $^X'
       - run: perl -V
       - name: Install cpanm
         run: |

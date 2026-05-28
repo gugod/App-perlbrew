@@ -17,6 +17,7 @@ sub os {
 }
 
 sub arch {
+    print STDERR "DEBUG Sys: " . os() . " " . $^X . "\n";
     if (os() eq 'darwin' && $^X eq '/usr/bin/perl') {
         my $output = qx(uname -m);
         return $output;
