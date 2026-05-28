@@ -22,10 +22,15 @@ sub perlpath {
     return $Config{perlpath} . ( $Config{perlpath} =~ m/$Config{_exe}$/i ? "" : $Config{_exe} );
 }
 
+sub _uname_m {
+    my $uname = qw(uname -m 2 >/dev/null);
+    chomp($uname);
+    return $uname;
+}
+
 sub arch {
-    if (os() eq 'darwin' && perlpath() eq "/usr/bin/perl") {
-        my $output = qx(uname -m);
-        return $output;
+    if (os() eq 'darwin') {
+        return _uname_m();
     } else {
         return (split(/-/, $Config{myarchname}, 2))[0];
     }
