@@ -117,7 +117,6 @@ test-perlbrew-use() {
     local installation=$1
     shift
 
-    echo "TEST - perlbrew use $installation"
 
     if (perlbrew list | grep $installation >/dev/null); then
         echo "OK - installation exist: $installation"
@@ -125,11 +124,13 @@ test-perlbrew-use() {
         echo "FAIL - installation exist: $installation"
     fi
 
+    echo "TEST - perlbrew use $installation"
     # This line (`perlbrew use ...`) is the target of our test and
     # cannot be put into a subshell.  Because it should effect env var
     # in current shell, putting it in a subshell makes it useless.
     perlbrew use $installation | while read line; do echo "# $line"; done
 
+    echo "# perlbrew use =>"
     perlbrew use | read line
 
     if [[ "$line" == "Currently using $installation" ]]; then
