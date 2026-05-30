@@ -122,6 +122,7 @@ test-perlbrew-use() {
         echo "OK - installation exist: $installation"
     else
         echo "FAIL - installation exist: $installation"
+        exit 1
     fi
 
     echo "TEST - perlbrew use $installation"
@@ -137,6 +138,7 @@ test-perlbrew-use() {
         echo "OK - installation is being used"
     else
         echo "FAIL - installation is being used"
+        exit 1
     fi
 
     (
