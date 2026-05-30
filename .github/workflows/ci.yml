@@ -98,7 +98,7 @@ jobs:
     steps:
       - uses: cygwin/cygwin-install-action@master
         with:
-          packages: bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable
+          packages: bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable git
           add-to-path: true
       - run: which perl
       - run: |
