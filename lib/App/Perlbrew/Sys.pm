@@ -2,7 +2,6 @@ package App::Perlbrew::Sys;
 use strict;
 use warnings;
 use Config;
-use Capture::Tiny qw(capture);
 
 sub osname {
     $Config{osname}
