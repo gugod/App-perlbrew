@@ -54,6 +54,13 @@ test-perlbrew-install() {
     assert-ok $PERLBREW_ROOT/perls/$installation/bin/perl -v
 
     echo "OK - perlbrew install $installation"
+
+    if [[ "$CI" ]]; then
+        echo "# CI"
+        (env | grep -E 'RUNNER_(OS|ARCH)') | while read line; do
+            echo "# $line"
+        done
+    fi
 }
 
 test-perlbrew-uninstall() {
@@ -105,4 +112,31 @@ test-perlbrew-install-cpm() {
     else
         echo "OK - overrided"
     fi
+}
+
+test-perlbrew-use() {
+    local installation=$1
+    shift
+
+    if [[ perlbrew list | grep $installation ]]; then
+        echo "OK - installation exist: $installation"
+    else
+        echo "FAIL - installation exist: $installation"
+    fi
+
+    (
+        perlbrew off
+        perlbrew use $installation
+    ) | while read line; do echo "# $line"; done
+
+    if [[ perlbrew use | grep $installation ]]; then
+        echo "OK - installation is being used'
+    else
+        echo "FAIL - installation is being used'
+    fi
+
+    (
+        which perl
+        perl -V:osname -V:archname -V:myarchname
+    ) | while read line; do echo "# $line"; done
 }
