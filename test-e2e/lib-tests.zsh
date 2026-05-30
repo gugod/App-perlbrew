@@ -1,7 +1,6 @@
 PERLBREW_E2E=/tmp/e2e
 export PERLBREW_ROOT=$PERLBREW_E2E/root
 export PERLBREW_HOME=$PERLBREW_E2E/home
-
 PERLBREW=$PERLBREW_ROOT/bin/perlbrew
 
 e2e-begin() {
@@ -55,11 +54,11 @@ test-perlbrew-install() {
 
     echo "OK - perlbrew install $installation"
 
-    if [[ "$CI" ]]; then
+    if [[ -n "$CI" ]]; then
         echo "# CI"
-        (env | grep -E 'RUNNER_(OS|ARCH)') | while read line; do
-            echo "# $line"
-        done
+        (
+            env | grep -E 'RUNNER_(OS|ARCH)'
+        ) | while read line; do echo "# $line"; done
     fi
 }
 
@@ -120,7 +119,7 @@ test-perlbrew-use() {
 
     echo "TEST - perlbrew use $installation"
 
-    if [[ perlbrew list | grep $installation ]]; then
+    if (perlbrew list | grep $installation); then
         echo "OK - installation exist: $installation"
     else
         echo "FAIL - installation exist: $installation"
@@ -131,10 +130,10 @@ test-perlbrew-use() {
         perlbrew use $installation
     ) | while read line; do echo "# $line"; done
 
-    if [[ perlbrew use | grep $installation ]]; then
-        echo "OK - installation is being used'
+    if (perlbrew use | grep $installation); then
+        echo "OK - installation is being used"
     else
-        echo "FAIL - installation is being used'
+        echo "FAIL - installation is being used"
     fi
 
     (
