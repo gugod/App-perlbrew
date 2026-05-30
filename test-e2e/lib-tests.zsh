@@ -125,10 +125,10 @@ test-perlbrew-use() {
         echo "FAIL - installation exist: $installation"
     fi
 
-    (
-        perlbrew use $installation
-        perlbrew use
-    ) | while read line; do echo "# $line"; done
+    # This line (`perlbrew use ...`) is the target of our test and
+    # cannot be put into a subshell.  Because it should effect env var
+    # in current shell, putting it in a subshell makes it useless.
+    perlbrew use $installation | while read line; do echo "# $line"; done
 
     perlbrew use | read line
 
@@ -150,9 +150,11 @@ test-perlbrew-use() {
         which perl
         perl -V:osname -V:archname -V:myarchname
 
-        echo "# Turning perlbrew off"
-        perlbrew off
     ) | while read line; do echo "# $line"; done
 
-
+    # Similarly, `perlbrew off` is meant to effect current shell, not
+    # subshells, and thus cannot be put into a subshell.
+    echo "# # Turning perlbrew off"
+    echo -n "# ";
+    perlbrew off
 }
