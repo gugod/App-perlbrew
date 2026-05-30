@@ -22,19 +22,58 @@ jobs:
     needs: mbtiny-dist
     strategy:
       matrix:
-        os: ["ubuntu-latest", "macos-latest", "macos-13"]
+        os: ["ubuntu-latest", "macos-26-intel", "macos-26", "macos-15-intel", "macos-15"]
         version: ["5.42","5.40","5.38","5.36","5.34","5.18"]
     name: cpanm-dist-perl-${{ matrix.version }}-${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: shogo82148/actions-setup-perl@v1
         with:
           perl-version: ${{ matrix.version }}
+      - run: which perl
+      - run: |
+          perl -V:osname -V:archname -V:myarchname
+      - run: |
+          uname -m
+          uname -s
+          uname -a
+      - run: |
+          perl -E 'say $^X'
+      - run: perl -V
       - uses: actions/download-artifact@v4
         with:
           name: App-perlbrew-distdir
       - run: echo ./App-perlbrew-*
       - run: cpanm --verbose ./App-perlbrew-*
+
+  cpanm-dist-system-perl:
+    needs: mbtiny-dist
+    strategy:
+      matrix:
+        os: ["macos-26-intel", "macos-26"]
+    name: cpanm-dist-system-perl-${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - run: brew unlink perl
+      - run: which perl
+      - run: |
+          perl -V:osname -V:archname -V:myarchname
+      - run: |
+          uname -m
+          uname -s
+          uname -a
+      - run: |
+          perl -E 'say $^X'
+      - run: perl -V
+      - name: Install cpanm
+        run: |
+          curl -L https://cpanmin.us/ -o cpanm
+          chmod +x cpanm
+      - uses: actions/download-artifact@v4
+        with:
+          name: App-perlbrew-distdir
+      - run: echo ./App-perlbrew-*
+      - run: ./cpanm -L local/ --verbose ./App-perlbrew-*
 
   cpanm-dist-in-container:
     needs: mbtiny-dist
@@ -61,6 +100,15 @@ jobs:
         with:
           packages: bash curl make perl gcc-g++ libcrypt-devel perl-Module-Build perl-Module-Pluggable git
           add-to-path: true
+      - run: which perl
+      - run: |
+          perl -V:osname -V:archname -V:myarchname
+      - run: |
+          uname -m
+          uname -s
+          uname -a
+      - run: |
+          perl -E 'say $^X'
       - run: |
           curl https://cpanmin.us/ -o ./cpanm
           chmod +x cpanm

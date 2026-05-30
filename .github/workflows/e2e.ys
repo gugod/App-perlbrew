@@ -30,7 +30,6 @@ job-config =::
     env:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
-      yes | unminimize
       apt-get update -y
       apt-get install -y zsh perl curl build-essential man-db
   
@@ -53,6 +52,9 @@ e2e-steps =::
     run: |
       echo "# env"
       env
+      echo
+      echo "# uname -m"
+      uname -m
       echo
       echo "# which perl"
       which perl
@@ -140,4 +142,5 @@ jobs:
   macos-14:: gen-macos-job("macos-14")
   macos-15:: gen-macos-job("macos-15")
   macos-26:: gen-macos-job("macos-26")
+  macos-26-intel:: gen-macos-job("macos-26-intel")
   cygwin:: gen-cygwin-job()

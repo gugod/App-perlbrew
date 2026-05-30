@@ -15,8 +15,18 @@ sub os {
     $Config{osname}
 }
 
+sub _uname_m {
+    my $uname = qx(uname -m 2>/dev/null);
+    chomp($uname);
+    return $uname;
+}
+
 sub arch {
-    (split(/-/, $Config{myarchname}, 2))[0]
+    if (os() eq 'darwin') {
+        return _uname_m();
+    } else {
+        return (split(/-/, $Config{myarchname}, 2))[0];
+    }
 }
 
 1;

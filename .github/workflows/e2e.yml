@@ -29,6 +29,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -60,7 +63,6 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        yes | unminimize
         apt-get update -y
         apt-get install -y zsh perl curl build-essential man-db
     - name: print system info
@@ -68,6 +70,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -107,6 +112,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -145,6 +153,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -182,6 +193,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -222,6 +236,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -255,6 +272,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -290,6 +310,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -323,6 +346,9 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
@@ -358,6 +384,9 @@ jobs:
         echo "# env"
         env
         echo
+        echo "# uname -m"
+        uname -m
+        echo
         echo "# which perl"
         which perl
         echo
@@ -391,6 +420,46 @@ jobs:
       run: |
         echo "# env"
         env
+        echo
+        echo "# uname -m"
+        uname -m
+        echo
+        echo "# which perl"
+        which perl
+        echo
+        echo "# perl -V"
+        perl -V
+        echo
+        echo "# perl -MConfig -V:myarchname"
+        perl -MConfig -V:myarchname
+        echo
+        if [[ (-x /usr/bin/perl) && ("$(which perl)" != "/usr/bin/perl") ]]
+        then
+            echo "# /usr/bin/perl -V"
+            /usr/bin/perl -V
+            echo
+            echo "# /usr/bin/perl -MConfig -V:myarchname"
+            /usr/bin/perl -MConfig -V:myarchname
+            echo
+        else
+            true
+        fi
+    - uses: actions/checkout@v6
+    - run: zsh ./test-e2e/run.zsh
+  macos-26-intel:
+    runs-on: macos-26-intel
+    env:
+      PERLBREW_E2E: 1
+      PERLBREW_E2E_INSTALL_NOTEST: 1
+    steps:
+    - name: print system info
+      shell: bash
+      run: |
+        echo "# env"
+        env
+        echo
+        echo "# uname -m"
+        uname -m
         echo
         echo "# which perl"
         which perl
