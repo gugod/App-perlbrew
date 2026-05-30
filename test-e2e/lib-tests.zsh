@@ -138,6 +138,8 @@ test-perlbrew-use() {
 
     (
         echo "Verifying the effect of perlbrew use $installation"
+        type perlbrew
+        perlbrew info
         which perl
         perl -V:osname -V:archname -V:myarchname
     ) | while read line; do echo "# $line"; done
