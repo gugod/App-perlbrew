@@ -126,8 +126,8 @@ test-perlbrew-use() {
     fi
 
     (
-        perlbrew off
         perlbrew use $installation
+        perlbrew use
     ) | while read line; do echo "# $line"; done
 
     if (perlbrew use | grep $installation); then
@@ -137,7 +137,10 @@ test-perlbrew-use() {
     fi
 
     (
+        echo "Verifying the effect of perlbrew use $installation"
         which perl
         perl -V:osname -V:archname -V:myarchname
     ) | while read line; do echo "# $line"; done
+
+    perlbrew off
 }
