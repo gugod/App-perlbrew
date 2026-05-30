@@ -118,6 +118,8 @@ test-perlbrew-use() {
     local installation=$1
     shift
 
+    echo "TEST - perlbrew use $installation"
+
     if [[ perlbrew list | grep $installation ]]; then
         echo "OK - installation exist: $installation"
     else
