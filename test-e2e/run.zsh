@@ -34,9 +34,9 @@ else
     test-perlbrew-use perl-5.40.3
 
     test-perlbrew-install perl-5.42.0
-    test-perlbrew-use perl-5.42.3
+    test-perlbrew-use perl-5.42.0
     test-perlbrew-use perl-5.40.3
-    test-perlbrew-use perl-5.42.3
+    test-perlbrew-use perl-5.42.0
 
     test-perlbrew-uninstall perl-5.40.3
     test-perlbrew-uninstall perl-5.42.0
