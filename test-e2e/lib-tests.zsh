@@ -119,7 +119,7 @@ test-perlbrew-use() {
 
     echo "TEST - perlbrew use $installation"
 
-    if (perlbrew list | grep $installation); then
+    if (perlbrew list | grep $installation >/dev/null); then
         echo "OK - installation exist: $installation"
     else
         echo "FAIL - installation exist: $installation"
@@ -130,19 +130,29 @@ test-perlbrew-use() {
         perlbrew use
     ) | while read line; do echo "# $line"; done
 
-    if (perlbrew use | grep $installation); then
+    perlbrew use | read line
+
+    if [[ "$line" == "Currently using $installation" ]]; then
         echo "OK - installation is being used"
     else
         echo "FAIL - installation is being used"
     fi
 
     (
-        echo "Verifying the effect of perlbrew use $installation"
+        echo "# Verifying the effect of perlbrew use $installation"
         type perlbrew
         perlbrew info
+
+        echo "# List of installations we have"
+        perlbrew list
+
+        echo "# inspecting info of current perl"
         which perl
         perl -V:osname -V:archname -V:myarchname
+
+        echo "# Turning perlbrew off"
+        perlbrew off
     ) | while read line; do echo "# $line"; done
 
-    perlbrew off
+
 }
