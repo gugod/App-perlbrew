@@ -20,15 +20,25 @@ else
     test-perlbrew-available
 
     if [[ ! ( "$OSTYPE" =~ ^cygwin ) ]]; then
-        test-perlbrew-install skaji-relocatable-perl-5.40.2.1
-        test-perlbrew-uninstall skaji-relocatable-perl-5.40.2.1
-        test-perlbrew-install skaji-relocatable-perl-5.42.0.0
-        test-perlbrew-uninstall skaji-relocatable-perl-5.42.0.0
+        test-perlbrew-install skaji-relocatable-perl-5.42.1.0
+        test-perlbrew-install skaji-relocatable-perl-5.42.2.0
+
+        test-perlbrew-use skaji-relocatable-perl-5.42.1.0
+        test-perlbrew-use skaji-relocatable-perl-5.42.2.0
+
+        test-perlbrew-uninstall skaji-relocatable-perl-5.42.1.0
+        test-perlbrew-uninstall skaji-relocatable-perl-5.42.2.0
     fi
 
     test-perlbrew-install perl-5.40.3
-    test-perlbrew-uninstall perl-5.40.3
+    test-perlbrew-use perl-5.40.3
+
     test-perlbrew-install perl-5.42.0
+    test-perlbrew-use perl-5.42.0
+    test-perlbrew-use perl-5.40.3
+    test-perlbrew-use perl-5.42.0
+
+    test-perlbrew-uninstall perl-5.40.3
     test-perlbrew-uninstall perl-5.42.0
 
     test-perlbrew-install-cpm

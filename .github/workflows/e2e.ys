@@ -138,7 +138,6 @@ jobs:
   rockylinux:: gen-container-job(job-config.rockylinux 'docker.io/rockylinux/rockylinux:latest')
   opensuse:: gen-container-job(job-config.opensuse 'opensuse/tumbleweed:latest')
   macos-latest:: gen-macos-job("macos-latest")
-  macos-13:: gen-macos-job("macos-13")
   macos-14:: gen-macos-job("macos-14")
   macos-15:: gen-macos-job("macos-15")
   macos-26:: gen-macos-job("macos-26")

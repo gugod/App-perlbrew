@@ -1,7 +1,6 @@
 PERLBREW_E2E=/tmp/e2e
 export PERLBREW_ROOT=$PERLBREW_E2E/root
 export PERLBREW_HOME=$PERLBREW_E2E/home
-
 PERLBREW=$PERLBREW_ROOT/bin/perlbrew
 
 e2e-begin() {
@@ -54,6 +53,13 @@ test-perlbrew-install() {
     assert-ok $PERLBREW_ROOT/perls/$installation/bin/perl -v
 
     echo "OK - perlbrew install $installation"
+
+    if [[ -n "$CI" ]]; then
+        echo "# CI"
+        (
+            env | grep -E 'RUNNER_(OS|ARCH)'
+        ) | while read line; do echo "# $line"; done
+    fi
 }
 
 test-perlbrew-uninstall() {
@@ -105,4 +111,53 @@ test-perlbrew-install-cpm() {
     else
         echo "OK - overrided"
     fi
+}
+
+test-perlbrew-use() {
+    local installation=$1
+    shift
+
+
+    if (perlbrew list | grep $installation >/dev/null); then
+        echo "OK - installation exist: $installation"
+    else
+        echo "FAIL - installation exist: $installation"
+        exit 1
+    fi
+
+    echo "TEST - perlbrew use $installation"
+    # This line (`perlbrew use ...`) is the target of our test and
+    # cannot be put into a subshell.  Because it should effect env var
+    # in current shell, putting it in a subshell makes it useless.
+    perlbrew use $installation
+
+    perlbrew use | read line
+    echo "# perlbrew use => [$line]"
+
+    if [[ "$line" == "Currently using $installation" ]]; then
+        echo "OK - installation is being used"
+    else
+        echo "FAIL - installation is being used"
+        exit 1
+    fi
+
+    (
+        echo "# Verifying the effect of perlbrew use $installation"
+        type perlbrew
+        perlbrew info
+
+        echo "# List of installations we have"
+        perlbrew list
+
+        echo "# inspecting info of current perl"
+        which perl
+        perl -V:osname -V:archname -V:myarchname
+
+    ) | while read line; do echo "# $line"; done
+
+    # Similarly, `perlbrew off` is meant to effect current shell, not
+    # subshells, and thus cannot be put into a subshell.
+    echo "# # Turning perlbrew off"
+    echo -n "# ";
+    perlbrew off
 }
