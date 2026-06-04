@@ -1,6 +1,7 @@
 NEXT
 	- fix: syntax error in the fish integration. PR #854
 	- No longer depends on ExtUtils::MakeMaker. PR #856
+        - on macOS, detection of CPU arch depends on `uname` command instead of /usr/bin/perl. Github Issue #861.
 
 1.02
 	- Released at 2025-07-18T21:08:37+0900
