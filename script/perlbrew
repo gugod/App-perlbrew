@@ -32,6 +32,7 @@ Commands:
     list           List perl installations
     use            Use the specified perl in current shell
     off            Turn off perlbrew in current shell
+    on             Turn on the installation in place when 'off' was run
     switch         Permanently use the specified perl as default
     switch-off     Permanently turn off perlbrew (revert to system perl)
     exec           Execute programs with specified perl environments.
@@ -350,10 +351,25 @@ To get a list of all perls ever released, inculding development and RC versions,
 
 =head1 COMMAND: OFF
 
-Usage: perlbrew off
+Usage: perlbrew off [-s [-f]]
 
 Temporarily disable perlbrew in the current shell. Effectively re-enables the
 default system Perl, whatever that is.
+
+If you use the '-s' option, then the current installation that you are turning
+off is saved in the environment variable PERLBREW_PERL_LAST, making it
+available for the C<on> command. If PERLBREW_PERL_LAST is already set, it is
+not overridden unless you also use the '-f' option.
+
+This command works only if you add the statement of `source $PERLBREW_ROOT/etc/bashrc`
+in your shell initialization (bashrc / zshrc).
+
+=head1 COMMAND: ON
+
+Usage: perlbrew on
+
+Runs C<perlbrew use $PERLBREW_PERL_LAST>. You must have run C<perlbrew off -s>
+to set PERLBREW_PERL_LAST.
 
 This command works only if you add the statement of `source $PERLBREW_ROOT/etc/bashrc`
 in your shell initialization (bashrc / zshrc).
