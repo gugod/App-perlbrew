@@ -3065,11 +3065,11 @@ perlbrew () {
             shift
             while [[ $# ]] && [[ "$exit_status" == '0' ]]; do
                 case "$1" in
-                    -s)  opt_s=1 ;;
-                    -f)  opt_f=1 ;;
+                    -s)  save_opt=1 ;;
+                    -f)  force_opt=1 ;;
                     -sf|-fs)
-                         opt_s=1
-                         opt_f=1
+                         save_opt=1
+                         force_opt=1
                          ;;
                     *)
                         echo "'$1; is an invalid option."
@@ -3268,12 +3268,12 @@ function perlbrew
             while test (count $argv) -gt 0; and test "$exit_status" = 0
                 switch $argv[1]
                     case -s
-                        set opt_s 1
+                        set save_opt 1
                     case -f
-                        set opt_f 1
+                        set force_opt 1
                     case -sf -fs
-                        set opt_s 1
-                        set opt_f 1
+                        set save_opt 1
+                        set force_opt 1
                     case '*'
                         echo "invalid option: $argv[1]"
                         set exit_status 1
@@ -3433,17 +3433,17 @@ switch ( "$1" )
         while ( $#argv > 0 && $exit_status == 0 )
             switch ( "$argv[1]" )
                 case "-s":
-                    set opt_s = 1
+                    set save_opt = 1
                     breaksw
 
                 case "-f":
-                    set opt_f = 1
+                    set force_opt = 1
                     breaksw
 
                 case "-sf":
                 case "-fs":
-                    set opt_s = 1
-                    set opt_f = 1
+                    set save_opt = 1
+                    set force_opt = 1
                     breaksw
 
                 default:
