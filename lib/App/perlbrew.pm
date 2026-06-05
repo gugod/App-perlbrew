@@ -3052,7 +3052,7 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2 && { __perlbrew_reinit $2 ; true ; }
+                  perlbrew use "$2" && { __perlbrew_reinit "$2" ; true ; }
                   exit_status=$?
               fi
               ;;
@@ -3063,7 +3063,7 @@ perlbrew () {
             exit_status=0
 
             shift
-            while [[ $# ]] && [[ "$exit_status" == '0' ]]; do
+            while [[ $# != '0' ]] && [[ "$exit_status" == '0' ]]; do
                 case "$1" in
                     -s)  save_opt=1 ;;
                     -f)  force_opt=1 ;;
@@ -3072,8 +3072,8 @@ perlbrew () {
                          force_opt=1
                          ;;
                     *)
-                        echo "'$1; is an invalid option."
-                        exit_status=$?
+                        echo "invalid option: $1."
+                        exit_status=1
                         ;;
                 esac
                 shift
@@ -3088,6 +3088,7 @@ perlbrew () {
                         fi
                     fi
                     if [[ "$exit_status" == '0' ]]; then
+                        echo "$PERLBREW_PERL is saved to PERLBREW_PERL_LAST."
                         export PERLBREW_PERL_LAST=$PERLBREW_PERL
                     fi
                 fi
@@ -3104,7 +3105,10 @@ perlbrew () {
                 echo "Sorry, PERLBREW_PERL_LAST is not set, cannot turn on last perlbrew installation you were using."
                 exit_status=1
             else
-                command perlbrew use "$PERLBREW_PERL_LAST"
+                __perlbrew_set_env "$PERLBREW_PERL_LAST" && { __perlbrew_set_path
+                                                              echo "perlbrew $PERLBREW_PERL_LAST is restored."
+                                                              unset PERLBREW_PERL_LAST
+                                                              true ; }
                 exit_status="$?"
             fi
             ;;
@@ -3116,7 +3120,7 @@ perlbrew () {
             ;;
 
         (*)
-            command perlbrew $short_option "$@"
+            command perlbrew "$short_option" "$@"
             exit_status=$?
             ;;
     esac
@@ -3305,7 +3309,12 @@ function perlbrew
                 echo "Sorry, PERLBREW_PERL_LAST is not set, cannot turn on last perlbrew installation you were using."
                 false
             else
-                command perlbrew use "$PERLBREW_PERL_LAST"
+                __perlbrew_set_env "$PERLBREW_PERL_LAST"
+                if test "$status" -eq 0
+                    __perlbrew_set_path
+                    echo "perlbrew $PERLBREW_PERL_LAST is restored."
+                    set -e PERLBREW_PERL_LAST
+                end
             fi
             ;;
 
@@ -3479,13 +3488,26 @@ switch ( "$1" )
         breaksw
 
     case on:
+        set perlbrew_exit_status=0
         if (! $?PERLBREW_PERL_LAST)
             echo "Sorry, PERLBREW_PERL_LAST is not set, cannot turn on last perlbrew installation you were using."
             set perlbrew_exit_status=1
         else
-            perlbrew use "$PERLBREW_PERL_LAST"
-            set perlbrew_exit_status="$?"
+            set perlbrew_line_count=0
+            foreach perlbrew_line ( "`\perlbrew env $PERLBREW_PERL_LAST:q`" )
+                eval "$perlbrew_line"
+                @ perlbrew_line_count++
+            end
+            if ( $perlbrew_line_count == 0 ) then
+                set perlbrew_exit_status=1
+            else
+                source "$PERLBREW_ROOT/etc/csh_set_path"
+                set perlbrew_exit_status="$?"
+                echo "perlbrew $PERLBREW_PERL_LAST is restored."
+                unsetenv PERLBREW_PERL_LAST
+            endif
         endif
+
         breaksw
 
     case switch-off:
