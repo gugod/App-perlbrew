@@ -228,8 +228,8 @@ jobs:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     steps:
     - run: |
-        zypper install -y -t pattern devel_basis
-        zypper install -y zsh perl awk which
+        zypper --non-interactive install -t pattern devel_basis
+        zypper --non-interactive install zsh perl awk which
     - name: print system info
       shell: bash
       run: |
