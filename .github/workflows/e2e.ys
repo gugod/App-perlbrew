@@ -37,7 +37,7 @@ job-config =::
     env:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
-      zypper --non-interactive install libncurses6=6.6.20260516-105.1
+      zypper --non-interactive install 'libncurses6<6.6.20260530'
       zypper --non-interactive install -t pattern devel_basis
       zypper --non-interactive install zsh perl awk which
   
