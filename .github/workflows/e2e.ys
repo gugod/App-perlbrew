@@ -37,6 +37,7 @@ job-config =::
     env:
       PERLBREW_E2E_INSTALL_NOTEST: 1
     init: |
+      zypper --non-interactive install libncurses6-6.6.20260516-105.1.x86_64
       zypper --non-interactive install -t pattern devel_basis
       zypper --non-interactive install zsh perl awk which
   
@@ -136,7 +137,7 @@ jobs:
   fedora:: gen-container-job(job-config.fedora 'fedora:latest')
   almalinux:: gen-container-job(job-config.almalinux 'almalinux:latest')
   rockylinux:: gen-container-job(job-config.rockylinux 'docker.io/rockylinux/rockylinux:latest')
-  opensuse:: gen-container-job(job-config.opensuse 'opensuse/leap:latest')
+  opensuse:: gen-container-job(job-config.opensuse 'opensuse/tumbleweed:latest')
   macos-14:: gen-macos-job("macos-14")
   macos-15:: gen-macos-job("macos-15")
   macos-26:: gen-macos-job("macos-26")
