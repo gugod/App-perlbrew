@@ -1,13 +1,3 @@
-NEXT - Added perlbrew off -s to save the current installation and perlbrew on to restore that saved installation. Avoids having to remember what the installation was in order to restore it.
-
-1.04
-	- Released at 2026-06-04T16:37:39-0400
-	- Thanks to our contributors: Kang-min Liu, Stevan Little, darrenf-adz, persicom
-
-1.03
-	- Released at 2026-06-04T16:29:30-0400
-	- Thanks to our contributors: Kang-min Liu, Stevan Little, darrenf-adz, persicom
-
 NEXT
 	- fix: syntax error in the fish integration. PR #854
 	- No longer depends on ExtUtils::MakeMaker. PR #856
