@@ -3052,14 +3052,65 @@ perlbrew () {
               if [[ -z "$2" ]] ; then
                   command perlbrew switch
               else
-                  perlbrew use $2 && { __perlbrew_reinit $2 ; true ; }
+                  perlbrew use "$2" && { __perlbrew_reinit "$2" ; true ; }
                   exit_status=$?
               fi
               ;;
 
         (off)
-            __perlbrew_deactivate
+            local save_opt
+            local force_opt
+            exit_status=0
+
+            shift
+            while [[ $# != '0' ]] && [[ "$exit_status" == '0' ]]; do
+                case "$1" in
+                    -s)  save_opt=1 ;;
+                    -f)  force_opt=1 ;;
+                    -sf|-fs)
+                         save_opt=1
+                         force_opt=1
+                         ;;
+                    *)
+                        echo "invalid option: $1."
+                        exit_status=1
+                        ;;
+                esac
+                shift
+            done
+
+            if [[ "$exit_status" == '0' ]]; then
+                if [[ "$save_opt" == '1' ]]; then
+                    if [[ -n "$PERLBREW_PERL_LAST" ]]; then
+                        if [[ "$force_opt" != '1' ]]; then
+                            echo "PERLBREW_PERL_LAST already set to '$PERLBREW_PERL_LAST'. Add '-f' option to override."
+                            exit_status=1;
+                        fi
+                    fi
+                    if [[ "$exit_status" == '0' ]]; then
+                        echo "$PERLBREW_PERL is saved to PERLBREW_PERL_LAST."
+                        export PERLBREW_PERL_LAST=$PERLBREW_PERL
+                    fi
+                fi
+            fi
+
+            if [[ "$exit_status" == '0' ]]; then
+                __perlbrew_deactivate
+            fi
             echo "perlbrew is turned off."
+            ;;
+
+        (on)
+            if [[ -z "$PERLBREW_PERL_LAST" ]] ; then
+                echo "Sorry, PERLBREW_PERL_LAST is not set, cannot turn on last perlbrew installation you were using."
+                exit_status=1
+            else
+                __perlbrew_set_env "$PERLBREW_PERL_LAST" && { __perlbrew_set_path
+                                                              echo "perlbrew $PERLBREW_PERL_LAST is restored."
+                                                              unset PERLBREW_PERL_LAST
+                                                              true ; }
+                exit_status="$?"
+            fi
             ;;
 
         (switch-off)
@@ -3069,7 +3120,7 @@ perlbrew () {
             ;;
 
         (*)
-            command perlbrew $short_option "$@"
+            command perlbrew "$short_option" "$@"
             exit_status=$?
             ;;
     esac
@@ -3213,8 +3264,60 @@ function perlbrew
             end
 
         case off
-            __perlbrew_deactivate
+            set -l save_opt
+            set -l force_opt
+            set -l exit_status 0
+
+            set -e argv[1]
+            while test (count $argv) -gt 0; and test "$exit_status" = 0
+                switch $argv[1]
+                    case -s
+                        set save_opt 1
+                    case -f
+                        set force_opt 1
+                    case -sf -fs
+                        set save_opt 1
+                        set force_opt 1
+                    case '*'
+                        echo "invalid option: $argv[1]"
+                        set exit_status 1
+                end
+                set -e argv[1]
+            end
+
+            if test "$exit_status" = 0
+                if test "$save_opt" = 1
+                    if set -q PERLBREW_PERL_LAST; and test -n "$PERLBREW_PERL_LAST"
+                        if test "$force_opt" != 1
+                            echo "PERLBREW_PERL_LAST already set to '$PERLBREW_PERL_LAST'. Add '-f' option to override."
+                            return 1
+                        end
+                    end
+                    if test "$exit_status" = 0
+                        set -gx PERLBREW_PERL_LAST $PERLBREW_PERL
+                    end
+                end
+            end
+
+            if test "$exit_status" = 0
+                __perlbrew_deactivate
+            end
             echo "perlbrew is turned off."
+
+        case on
+            if test -z "$PERLBREW_PERL_LAST
+                echo "Sorry, PERLBREW_PERL_LAST is not set, cannot turn on last perlbrew installation you were using."
+                false
+            else
+                __perlbrew_set_env "$PERLBREW_PERL_LAST"
+                if test "$status" -eq 0
+                    __perlbrew_set_path
+                    echo "perlbrew $PERLBREW_PERL_LAST is restored."
+                    set -e PERLBREW_PERL_LAST
+                end
+            fi
+            ;;
+
 
         case switch-off
             __perlbrew_deactivate
@@ -3331,12 +3434,80 @@ switch ( "$1" )
         breaksw
 
     case off:
-        unsetenv PERLBREW_PERL
-        foreach perlbrew_line ( "`\perlbrew env`" )
-            eval "$perlbrew_line"
+        set save_opt = 0
+        set force_opt = 0
+        set exit_status = 0
+
+        shift argv
+        while ( $#argv > 0 && $exit_status == 0 )
+            switch ( "$argv[1]" )
+                case "-s":
+                    set save_opt = 1
+                    breaksw
+
+                case "-f":
+                    set force_opt = 1
+                    breaksw
+
+                case "-sf":
+                case "-fs":
+                    set save_opt = 1
+                    set force_opt = 1
+                    breaksw
+
+                default:
+                    echo "invalid option: $argv[1]"
+                    set exit_status = 1
+                    breaksw
+            endsw
+            shift argv
         end
-        source "$PERLBREW_ROOT/etc/csh_set_path"
-        echo "perlbrew is turned off."
+
+        if ( $exit_status == 0 ) then
+            if ( $save_opt == 1 ) then
+                if ( $?PERLBREW_PERL_LAST ) then
+                    if ( $force_opt != 1 ) then
+                        echo "PERLBREW_PERL_LAST already set to '$PERLBREW_PERL_LAST'. Add '-f' option to override."
+                        set exit_status = 1
+                    endif
+                endif
+                if ( $exit_status == 0 ) then
+                    setenv PERLBREW_PERL_LAST "$PERLBREW_PERL"
+                endif
+            endif
+        endif
+
+        if ( $exit_status == 0 ) then
+            unsetenv PERLBREW_PERL
+            foreach perlbrew_line ( "`\perlbrew env`" )
+                eval "$perlbrew_line"
+            end
+            source "$PERLBREW_ROOT/etc/csh_set_path"
+            echo "perlbrew is turned off."
+
+        breaksw
+
+    case on:
+        set perlbrew_exit_status=0
+        if (! $?PERLBREW_PERL_LAST)
+            echo "Sorry, PERLBREW_PERL_LAST is not set, cannot turn on last perlbrew installation you were using."
+            set perlbrew_exit_status=1
+        else
+            set perlbrew_line_count=0
+            foreach perlbrew_line ( "`\perlbrew env $PERLBREW_PERL_LAST:q`" )
+                eval "$perlbrew_line"
+                @ perlbrew_line_count++
+            end
+            if ( $perlbrew_line_count == 0 ) then
+                set perlbrew_exit_status=1
+            else
+                source "$PERLBREW_ROOT/etc/csh_set_path"
+                set perlbrew_exit_status="$?"
+                echo "perlbrew $PERLBREW_PERL_LAST is restored."
+                unsetenv PERLBREW_PERL_LAST
+            endif
+        endif
+
         breaksw
 
     case switch-off:
@@ -3489,9 +3660,10 @@ App::perlbrew - Manage perl installations in your C<$HOME>
     # Turn it off and go back to the system perl.
     perlbrew off
 
-    # Turn it back on with 'switch', or 'use'
+    # Turn it back on with 'switch', 'use', or 'on'
     perlbrew switch perl-5.32.1
     perlbrew use perl-5.32.1
+    perlbrew on
 
     # Exec something with all perlbrew-ed perls
     perlbrew exec -- perl -E 'say $]'
@@ -3570,7 +3742,8 @@ upgrading.
 
 You should always use system cpan (like /usr/bin/cpan) to install
 C<App::perlbrew> because it will be installed under a system PATH like
-C</usr/bin>, which is not affected by perlbrew C<switch> or C<use> command.
+C</usr/bin>, which is not affected by perlbrew C<switch>, C<use> or C<on>
+command.
 
 The C<self-upgrade> command will not upgrade the perlbrew installed by cpan
 command, but it is also easy to upgrade perlbrew by running C<cpan App::perlbrew>

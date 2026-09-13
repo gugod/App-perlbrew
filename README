@@ -34,6 +34,7 @@ SYNOPSIS
         # Turn it back on with 'switch', or 'use'
         perlbrew switch perl-5.32.1
         perlbrew use perl-5.32.1
+        perlbrew on
     
         # Exec something with all perlbrew-ed perls
         perlbrew exec -- perl -E 'say $]'
@@ -113,7 +114,7 @@ INSTALLATION
 
     You should always use system cpan (like /usr/bin/cpan) to install
     App::perlbrew because it will be installed under a system PATH like
-    /usr/bin, which is not affected by perlbrew switch or use command.
+    /usr/bin, which is not affected by the perlbrew switch, use or on commands.
 
     The self-upgrade command will not upgrade the perlbrew installed by
     cpan command, but it is also easy to upgrade perlbrew by running cpan
@@ -165,4 +166,3 @@ DISCLAIMER OF WARRANTY
     FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
     SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
     DAMAGES.
-
