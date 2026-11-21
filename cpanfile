@@ -1,6 +1,6 @@
 # Always requires the latest for this two.
-requires 'CPAN::Perl::Releases' => '5.20240920';
-requires 'Devel::PatchPerl'     => '2.08';
+requires 'CPAN::Perl::Releases' => '5.20261119';
+requires 'Devel::PatchPerl'     => '2.14';
 
 requires 'Capture::Tiny'        => '0.48';
 requires 'Pod::Usage'           => '1.69';
