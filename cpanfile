@@ -10,7 +10,7 @@ requires 'JSON::PP'             => '0';
 requires 'local::lib'           => '2.000014';
 
 on test => sub {
-    requires 'File::Temp'           => '0.2304';
+    requires 'File::Temp'           => '0.2312';
     requires 'File::Which'          => '1.21';
     requires 'Path::Class'          => '0.33';
     requires 'Test2::V0'            => '0.000163';
