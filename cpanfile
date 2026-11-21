@@ -3,7 +3,7 @@ requires 'CPAN::Perl::Releases' => '5.20261119';
 requires 'Devel::PatchPerl'     => '2.14';
 
 requires 'Capture::Tiny'        => '0.50';
-requires 'Pod::Usage'           => '1.69';
+requires 'Pod::Usage'           => '2.05';
 requires 'File::Copy'           => '0';
 requires 'File::Temp'           => '0.2304';
 requires 'JSON::PP'             => '0';
