@@ -4479,7 +4479,7 @@ APP_PERLBREW
 
 $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'CPAN_PERL_RELEASES';
   package CPAN::Perl::Releases;
-  $CPAN::Perl::Releases::VERSION = '5.20250703';
+  $CPAN::Perl::Releases::VERSION = '5.20261119';
   #ABSTRACT: Mapping Perl releases on CPAN to the location of the tarballs
   
   use strict;
@@ -4800,7 +4800,6 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.40.1" => { id => 'SHAY' },
   "5.41.8" => { id => 'SHAY' },
   "5.41.9" => { id => 'HYDAHY' },
-  "5.41.10" => { id => 'MAUKE' },
   "5.38.4-RC1" => { id => 'SHAY' },
   "5.40.2-RC1" => { id => 'SHAY' },
   "5.38.4" => { id => 'SHAY' },
@@ -4812,6 +4811,39 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   "5.42.0-RC2" => { id => 'CONTRA' },
   "5.42.0-RC3" => { id => 'CONTRA' },
   "5.42.0" => { id => 'BOOK' },
+  "5.43.1" => { id => 'HYDAHY' },
+  "5.38.5-RC1" => { id => 'SHAY' },
+  "5.40.3-RC1" => { id => 'SHAY' },
+  "5.38.5" => { id => 'SHAY' },
+  "5.40.3" => { id => 'SHAY' },
+  "5.43.2" => { id => 'ETHER' },
+  "5.43.3" => { id => 'CONTRA' },
+  "5.43.4" => { id => 'EHERMAN' },
+  "5.43.5" => { id => 'CONTRA' },
+  "5.43.6" => { id => 'SHAY' },
+  "5.43.7" => { id => 'CORION' },
+  "5.43.8" => { id => 'HYDAHY' },
+  "5.42.1-RC1" => { id => 'SHAY' },
+  "5.42.1" => { id => 'SHAY' },
+  "5.43.9" => { id => 'EHERMAN' },
+  "5.40.4-RC1" => { id => 'SHAY' },
+  "5.42.2-RC1" => { id => 'SHAY' },
+  "5.40.4" => { id => 'SHAY' },
+  "5.42.2" => { id => 'SHAY' },
+  "5.43.10" => { id => 'BOOK' },
+  "5.43.11" => { id => 'PEVANS' },
+  "5.44.0-RC1" => { id => 'LEONT' },
+  "5.44.0-RC2" => { id => 'LEONT' },
+  "5.44.0" => { id => 'LEONT' },
+  "5.45.1" => { id => 'PEVANS' },
+  "5.40.5-RC1" => { id => 'SHAY' },
+  "5.42.3-RC1" => { id => 'SHAY' },
+  "5.40.5" => { id => 'SHAY' },
+  "5.42.3" => { id => 'SHAY' },
+  "5.45.2" => { id => 'ETHER' },
+  "5.45.3" => { id => 'BOOK' },
+  "5.45.4" => { id => 'EHERMAN' },
+  "5.45.5" => { id => 'EHERMAN' },
   };
   
   sub perl_tarballs {
@@ -4881,7 +4913,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 VERSION
   
-  version 5.20250703
+  version 5.20261119
   
   =head1 SYNOPSIS
   
@@ -4946,7 +4978,7 @@ $fatpacked{"CPAN/Perl/Releases.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
   =head1 COPYRIGHT AND LICENSE
   
-  This software is copyright (c) 2025 by Chris Williams.
+  This software is copyright (c) 2026 by Chris Williams.
   
   This is free software; you can redistribute it and/or modify it under
   the same terms as the Perl 5 programming language system itself.
