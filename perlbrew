@@ -3798,7 +3798,7 @@ $fatpacked{"App/perlbrew.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'AP
               ;;
   
           (*)
-              command perlbrew "$short_option" "$@"
+              command perlbrew ${short_option:+"$short_option"} "$@"
               exit_status=$?
               ;;
       esac
