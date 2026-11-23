@@ -3089,7 +3089,7 @@ perlbrew () {
                     fi
                     if [[ "$exit_status" == '0' ]]; then
                         echo "$PERLBREW_PERL is saved to PERLBREW_PERL_LAST."
-                        export PERLBREW_PERL_LAST=$PERLBREW_PERL
+                        export PERLBREW_PERL_LAST="${PERLBREW_PERL}${PERLBREW_LIB:+@$PERLBREW_LIB}"
                     fi
                 fi
             fi
