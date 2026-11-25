@@ -1,0 +1,47 @@
+name: Rebuild
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - develop
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rebuild:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential curl libssl-dev zlib1g-dev
+
+      - name: Bootstrap perlbrew and rebuild
+        run: |
+          ./perlbrew self-install
+          ./perlbrew install-patchperl
+          echo "$HOME/perl5/perlbrew/bin" >> "$GITHUB_PATH"
+
+          perlbrew install --notest perl-5.42.0
+          perlbrew lib create perl-5.42.0@perlbrew
+          perlbrew install-cpanm
+
+          ./dev-bin/build.sh
+
+      - name: Open or update rebuild PR
+        uses: peter-evans/create-pull-request@v7
+        with:
+          base: develop
+          branch: automation/rebuild-perlbrew
+          add-paths: perlbrew
+          commit-message: rebuild
+          title: Rebuild
+          body: Rebuild the standalone perlbrew executable after changes merged into develop branch.
