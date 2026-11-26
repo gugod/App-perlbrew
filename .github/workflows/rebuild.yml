@@ -48,7 +48,7 @@ jobs:
           ./dev-bin/build.sh
 
       - name: Open or update rebuild PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           base: develop
           branch: automation/rebuild-perlbrew
