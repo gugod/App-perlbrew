@@ -36,7 +36,7 @@ jobs:
           ./perlbrew self-install
           ./perlbrew install-patchperl
 
-          PATH="$HOME/perl5/perlbrew/bin:$PATH
+          PATH="$HOME/perl5/perlbrew/bin:$PATH"
           hash -r
 
           eval "$(perlbrew init-in-bash)"
