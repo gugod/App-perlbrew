@@ -35,7 +35,9 @@ jobs:
         run: |
           ./perlbrew self-install
           ./perlbrew install-patchperl
-          echo "$HOME/perl5/perlbrew/bin" >> "$GITHUB_PATH"
+
+          PATH="$HOME/perl5/perlbrew/bin:$PATH
+          hash -r
 
           eval "$(perlbrew init-in-bash)"
 
