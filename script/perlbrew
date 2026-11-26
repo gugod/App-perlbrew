@@ -171,7 +171,7 @@ Usage:
 
 Build and install the wanted perl. The last argument can be a short string designating a specific version which can be known from the output of C<perlbrew available>, a path to a pre-downloaded tarball, a path to a git-checkout of perl5 repo, or a URL to a tarball.
 
-The format of <perl-release> looks like:
+Supported <perl-release> format include:
 
 =over 4
 
@@ -189,7 +189,7 @@ The format of <perl-release> looks like:
 
 =back
 
-Version numbers usually look like "5.x.xx", or "perl-5.xx.x-RCx" for
+Version numbers typically follows the "5.xx.xx" format, or "perl-5.xx.xx-RCxx" for
 release candidates.
 
 Version "stable" is a special token that means whatever the latest
@@ -204,8 +204,8 @@ regardless of mirror settings:
 The specified perl is downloaded from the official CPAN website or from the
 mirror site configured before.
 
-Version number alone without the "perl-" prefix means the official
-release provided by perl5 porters.
+Specifying a version number without the 'perl-' prefix refers to the
+official release provided by perl5 porters.
 
 Options for C<install> command:
 
