@@ -1,6 +1,7 @@
 name: Rebuild
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [closed]
     branches:
@@ -12,7 +13,7 @@ permissions:
 
 jobs:
   rebuild:
-    if: github.event.pull_request.merged == true
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
