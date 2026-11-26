@@ -6,6 +6,9 @@ on:
     types: [closed]
     branches:
       - develop
+  push:
+    paths:
+      - .github/workflows/rebuild.yml
 
 permissions:
   contents: write
@@ -13,7 +16,10 @@ permissions:
 
 jobs:
   rebuild:
-    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event_name == 'push' ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
