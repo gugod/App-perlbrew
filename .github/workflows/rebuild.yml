@@ -47,7 +47,18 @@ jobs:
 
           ./dev-bin/build.sh
 
+      - name: Check generated changes
+        id: diff
+        run: |
+          if git diff --quiet -- perlbrew; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No changes to perlbrew; skipping PR."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Open or update rebuild PR
+        if: steps.diff.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v8
         with:
           base: develop
@@ -56,3 +67,7 @@ jobs:
           commit-message: rebuild
           title: Rebuild
           body: Rebuild the standalone perlbrew executable after changes merged into develop branch.
+          labels: |
+            automated
+            rebuild
+          draft: false
