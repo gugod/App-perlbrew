@@ -31,6 +31,8 @@ jobs:
           ./perlbrew install-patchperl
           echo "$HOME/perl5/perlbrew/bin" >> "$GITHUB_PATH"
 
+          eval "$(perlbrew init-in-bash)"
+
           perlbrew install --notest perl-5.42.0
           perlbrew lib create perl-5.42.0@perlbrew
           perlbrew install-cpanm
