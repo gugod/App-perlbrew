@@ -2,13 +2,13 @@ name: Rebuild
 
 on:
   workflow_dispatch:
-  pull_request:
-    types: [closed]
+  push:
     branches:
       - develop
-  push:
     paths:
       - .github/workflows/rebuild.yml
+      - 'lib/**'
+      - 'script/**'
 
 permissions:
   contents: write
