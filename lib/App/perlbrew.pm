@@ -3767,7 +3767,7 @@ Kang-min Liu  C<< <gugod@gugod.org> >>
 
 =head1 COPYRIGHT
 
-Copyright (c) 2023 Kang-min Liu C<< <gugod@gugod.org> >>.
+Copyright (c) 2026 Kang-min Liu C<< <gugod@gugod.org> >>.
 
 =head1 LICENCE
 
