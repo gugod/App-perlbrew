@@ -2244,7 +2244,7 @@ sub run_command_symlink_executables {
 sub run_command_install_patchperl {
     my ($self) = @_;
     $self->do_install_program_from_url(
-        'https://raw.githubusercontent.com/gugod/patchperl-packing/master/patchperl',
+        'https://raw.githubusercontent.com/gugod/patchperl-packing/6094dd0c9eb3ed5cfab195a7f40f5791cf65ebd2/patchperl',
         'patchperl',
         sub {
             my ($body) = @_;
