@@ -2264,7 +2264,10 @@ sub run_command_install_cpanm {
 
 sub run_command_install_cpm {
     my ($self) = @_;
-    $self->do_install_program_from_url( 'https://raw.githubusercontent.com/skaji/cpm/main/cpm' => 'cpm' );
+    $self->do_install_program_from_url(
+        'https://raw.githubusercontent.com/skaji/cpm/bcd4a1072bea4b21f8424eca574b81f627ccd18b/cpm',
+        'cpm'
+    );
 }
 
 sub run_command_self_upgrade {
