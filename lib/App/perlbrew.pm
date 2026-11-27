@@ -2257,7 +2257,9 @@ sub run_command_install_patchperl {
 sub run_command_install_cpanm {
     my ($self) = @_;
     $self->do_install_program_from_url(
-        'https://raw.githubusercontent.com/miyagawa/cpanminus/master/cpanm' => 'cpanm' );
+        'https://raw.githubusercontent.com/miyagawa/cpanminus/99cef089c7fc3188a19822f594515dbd5295b855/cpanm',
+        'cpanm'
+    )
 }
 
 sub run_command_install_cpm {
