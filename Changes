@@ -3,6 +3,7 @@ NEXT
 	- No longer depends on ExtUtils::MakeMaker. PR #856.
 	- on macOS, detection of CPU arch depends on `uname` command instead of /usr/bin/perl. Github Issue #861.
 	- Prevent rm aliases from affecting perlbrew switch. PR #878.
+	- Pin commit id when doing install-{cpm,cpanm,patchperl}. PR #888.
 
 1.02
 	- Released at 2025-07-18T21:08:37+0900
