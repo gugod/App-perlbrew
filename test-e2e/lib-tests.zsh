@@ -166,7 +166,7 @@ test-perlbrew-on-off() {
     local installation=$1
     shift
 
-    assert-ok "$PERLBREW available | grep $installation"
+    assert-ok "perlbrew list | grep $installation"
 
     echo "# Test on/off: $installation"
 
