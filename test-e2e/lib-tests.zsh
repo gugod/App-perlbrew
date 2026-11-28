@@ -161,3 +161,30 @@ test-perlbrew-use() {
     echo -n "# ";
     perlbrew off
 }
+
+test-perlbrew-on-off() {
+    local installation=$1
+    shift
+
+    assert-ok "$PERLBREW available | grep $installation"
+
+    echo "# Test on/off: $installation"
+
+    perlbrew use $installation
+
+    local expected=$(perlbrew use)
+    perlbrew use | read line
+    echo "# perlbrew use => [$line]"
+
+    perlbrew off -s
+    perlbrew on
+
+    local got=$(perlbrew use)
+
+    if [[ $got == $expected ]]; then
+        echo "OK -- turn off and on again, back to the original state"
+    else
+        echo "FAIL -- Got $got instead of $expected"
+        exit 1
+    fi
+}
