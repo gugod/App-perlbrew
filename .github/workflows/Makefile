@@ -1,7 +1,7 @@
 SHELL := bash
 
 YS_VERSION := 0.1.97
-YS_PREFIX := /tmp/rapidyaml
+YS_PREFIX := /tmp/in-1
 YS := $(YS_PREFIX)/bin/ys-$(YS_VERSION)
 
 INPUT_FILES := $(wildcard */*)
@@ -53,8 +53,7 @@ force:
 # Auto install a specific version of ys
 install-ys: $(YS)
 $(YS):
-	curl -s https://yamlscript.org/install | \
-	  BIN=1 VERSION=$(YS_VERSION) PREFIX=$(YS_PREFIX) bash
+	source <(curl -sL https://in-1.cc) --temp ys@$(YS_VERSION)
 
 stats:
 	@echo "ys : $$(wc -l *.ys)"
